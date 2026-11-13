@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>계정 삭제 · 전설의 검 강화하기</title>
+<style>
+body{margin:0;background:#121216;color:#e8e8f0;font-family:'Pretendard','Malgun Gothic',sans-serif;line-height:1.75;font-size:15px}
+main{max-width:620px;margin:0 auto;padding:24px 18px 60px}
+h1{color:#ffd700;font-size:24px;margin:0 0 4px}h2{color:#ffd700;font-size:17px;margin:26px 0 8px}
+a{color:#00e5ff}.sub{color:#9a9aae;font-size:13px}.box{background:#1e1e26;border:1px solid #333342;border-radius:12px;padding:14px 16px}
+input{width:100%;box-sizing:border-box;padding:12px;margin:6px 0;border-radius:10px;border:1px solid #333342;background:#14141a;color:#f0f0f5;font-size:15px}
+button{width:100%;padding:13px;border:none;border-radius:10px;font-size:15px;font-weight:700;color:#fff;background:#c0392b;cursor:pointer;margin-top:6px}
+button:disabled{opacity:.5}#msg{min-height:22px;margin-top:8px;font-weight:700}
+label{display:block;font-size:14px;margin-top:6px}label input{width:auto;margin:0 6px 0 0;vertical-align:middle}
+</style>
+</head>
+<body>
+<main>
+<h1>🗑️ 계정 삭제</h1>
+<p class="sub">전설의 검 강화하기 (웹 게임 및 Android 앱)</p>
+
+<p>계정을 삭제하면 아래 정보가 <b>바로, 영구적으로</b> 지워지며 되돌릴 수 없습니다.</p>
+<ul>
+<li>아이디와 비밀번호 확인값</li>
+<li>게임 기록 (골드, 검, 업적, 차단 목록 등)</li>
+<li>랭킹 기록, 월드 위치, 대련 기록, 내가 쓴 채팅 메시지</li>
+</ul>
+<p class="sub">이미 처리된 신고 기록 외에는 따로 보관하는 정보가 없습니다. 채팅은 원래 24시간 뒤 자동으로 지워집니다.</p>
+
+<h2>방법 1 · 게임 안에서 삭제</h2>
+<div class="box">📊 <b>기록·설정</b> 탭 → 👤 <b>내 계정 · 정책</b> → <b>🗑️ 내 계정 삭제</b> → 비밀번호 입력 → <b>영구 삭제</b></div>
+
+<h2>방법 2 · 이 페이지에서 바로 삭제</h2>
+<div class="box">
+<input id="id" type="text" maxlength="10" placeholder="아이디" autocomplete="username">
+<input id="pw" type="password" maxlength="30" placeholder="비밀번호" autocomplete="current-password">
+<label><input type="checkbox" id="ok">계정과 모든 게임 기록을 영구 삭제하는 데 동의합니다</label>
+<button id="go">계정 영구 삭제</button>
+<div id="msg"></div>
+</div>
+
+<h2>방법 3 · 이메일로 요청</h2>
+<div class="box">비밀번호를 잊었거나, 보호자가 자녀 계정의 삭제를 원하면 <b>아이디</b>를 적어 이메일을 보내 주세요. 확인 후 7일 안에 삭제하고 답장드립니다.<br>
+📧 <a href="mailto:hoho79mom@gmail.com?subject=%5B%EC%A0%84%EC%84%A4%EC%9D%98%20%EA%B2%80%5D%20%EA%B3%84%EC%A0%95%20%EC%82%AD%EC%A0%9C%20%EC%9A%94%EC%B2%AD">hoho79mom@gmail.com</a></div>
+
+<p class="sub" style="margin-top:24px"><a href="privacy.html">개인정보처리방침</a> · <a href="terms.html">이용 규칙</a> · <a href="./">게임으로 돌아가기</a></p>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+const app = initializeApp({
+  apiKey: "AIzaSyDrZTHaIBDEv5VzBk18k8Ig72jHqkNvwK8",
+  authDomain: "project-5483483620783210427.firebaseapp.com",
+  databaseURL: "https://project-5483483620783210427-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "project-5483483620783210427",
+  appId: "1:1047594997878:web:2a23ab277e287545bfe757"
+});
+const db = getDatabase(app);
+const CREATOR = "김명준";
+const $ = (id) => document.getElementById(id);
+const say = (t, ok) => { $("msg").textContent = t; $("msg").style.color = ok ? "#4cd137" : "#ff7675"; };
+const hashPw = (str) => {
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  str = "sword|" + str;
+  for (let i = 0; i < str.length; i++) { const ch = str.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h2 >>> 0).toString(16) + (h1 >>> 0).toString(16);
+};
+async function wipeWhere(node, field, id) {
+  const sn = await get(ref(db, node)), jobs = [];
+  sn.forEach((ch) => { const v = ch.val(); if (v && v[field] === id) { jobs.push(set(ref(db, node + "/" + ch.key), null)); } });
+  await Promise.all(jobs);
+}
+$("go").onclick = async () => {
+  const id = $("id").value.trim(), pw = $("pw").value;
+  if (!id || !pw) { say("아이디와 비밀번호를 입력하세요"); return; }
+  if (!$("ok").checked) { say("삭제 동의에 체크해 주세요"); return; }
+  if (id.normalize("NFC") === CREATOR) { say("제작자 계정은 이 페이지에서 삭제할 수 없어요"); return; }
+  $("go").disabled = true; say("확인 중...", true);
+  try {
+    const enc = encodeURIComponent(id);
+    const a = await get(ref(db, "accounts/" + enc));
+    if (!a.exists() || a.val().h !== hashPw(pw)) { say("아이디 또는 비밀번호가 맞지 않아요. 비밀번호를 잊었다면 방법 3(이메일)을 이용해 주세요."); $("go").disabled = false; return; }
+    say("삭제 중...", true);
+    await set(ref(db, "accounts/" + enc), null);
+    await set(ref(db, "saves/" + enc), null);
+    for (const nd of ["world", "duels", "duelResults", "chatMutes"]) { try { await set(ref(db, nd + "/" + enc), null); } catch (e) {} }
+    for (const nd of ["admins", "mods", "nobles", "commons"]) { try { await wipeWhere(nd, "id", id); } catch (e) {} }
+    try { await wipeWhere("rankings", "name", id); } catch (e) {}
+    try { await wipeWhere("chat", "id", id); } catch (e) {}
+    $("pw").value = "";
+    say("✅ " + id + " 계정과 게임 기록을 모두 삭제했어요.", true);
+  } catch (e) {
+    console.error(e); say("삭제 중 오류가 났어요. 잠시 후 다시 시도하거나 이메일로 요청해 주세요."); $("go").disabled = false;
+  }
+};
+</script>
+</body>
+</html>

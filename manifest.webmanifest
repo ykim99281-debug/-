@@ -1,0 +1,20 @@
+{
+  "name": "전설의 검 강화하기",
+  "short_name": "전설의 검",
+  "description": "망치를 두드려 +0 부러진 단검을 +15 우주 파괴검까지! 랭킹과 대련으로 경쟁하는 검 강화 게임",
+  "id": "./?src=app",
+  "start_url": "./?src=app",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#121216",
+  "theme_color": "#121216",
+  "lang": "ko",
+  "dir": "ltr",
+  "categories": ["games"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

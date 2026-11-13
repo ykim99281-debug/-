@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>전설의 검 강화하기 · 다운로드</title>
+<link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 50% 20%,#2b2350,#0d0b1a 70%);color:#f1f1f6;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif}
+.card{width:100%;max-width:400px;background:#1b1830;border:2px solid #fbc531;border-radius:20px;padding:28px 22px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+img{width:120px;height:120px;border-radius:26px;box-shadow:0 6px 24px rgba(251,197,49,.35)}
+h1{font-size:25px;margin:16px 0 6px;color:#fbc531;word-break:keep-all}
+p{margin:0 0 20px;font-size:14px;color:#b9b6cf;line-height:1.6;word-break:keep-all}
+a.btn{display:block;text-decoration:none;font-weight:900;border-radius:14px;padding:17px 10px;font-size:18px}
+#dl{background:linear-gradient(135deg,#00a8ff,#0097e6);color:#fff;box-shadow:0 6px 18px rgba(0,151,230,.45)}
+#dl:active{transform:scale(.97)}
+#play{margin-top:10px;background:transparent;color:#fbc531;border:1.5px solid #fbc531;font-size:15px;padding:13px 10px}
+#msg{min-height:22px;margin-top:12px;font-size:13.5px;font-weight:700;color:#4cd137}
+ol{text-align:left;font-size:13px;color:#b9b6cf;line-height:1.8;margin:18px 0 0;padding:14px 14px 14px 32px;background:#131124;border-radius:12px}
+small{display:block;margin-top:14px;font-size:11.5px;color:#7d7a96}
+</style>
+</head>
+<body>
+<div class="card">
+  <img src="icon-512.png" alt="전설의 검 강화하기 아이콘">
+  <h1>전설의 검 강화하기</h1>
+  <p>검을 +15강까지 강화하고, 펫을 키우고,<br>친구들과 길드를 만들어 보스를 잡아요!</p>
+  <a class="btn" id="dl" href="legend-sword.html" download="전설의검강화하기.html">⬇️ 게임 다운로드</a>
+  <a class="btn" id="play" href="./">▶ 다운로드 없이 바로 하기</a>
+  <div id="msg"></div>
+  <ol>
+    <li>「게임 다운로드」를 눌러요.</li>
+    <li>받은 <b>전설의검강화하기.html</b> 파일을 열어요.</li>
+    <li>열 때마다 자동으로 <b>최신 버전</b>이 켜져요. (인터넷 연결 필요)</li>
+  </ol>
+  <small>한 번만 받으면 돼요 · 다시 받을 필요 없음 · 제작 김명준</small>
+</div>
+<script>
+document.getElementById("dl").addEventListener("click",function(){document.getElementById("msg").textContent="✅ 다운로드를 시작했어요! 받은 파일을 열어 보세요."});
+</script>
+</body>
+</html>
