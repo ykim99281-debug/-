@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>전설의 검 강화하기</title>
+<noscript><meta http-equiv="refresh" content="0;url=https://inquisitive-cupcake-24046c.netlify.app/"></noscript>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at 50% 20%,#2b2350,#0d0b1a 70%);color:#f1f1f6;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif}
+.card{width:100%;max-width:380px;background:#1b1830;border:2px solid #fbc531;border-radius:20px;padding:30px 22px;text-align:center}
+.sw{font-size:64px;line-height:1}
+h1{font-size:24px;margin:14px 0 8px;color:#fbc531;word-break:keep-all}
+#st{font-size:14.5px;color:#b9b6cf;line-height:1.6;min-height:46px;word-break:keep-all}
+a{display:block;margin-top:16px;text-decoration:none;font-weight:900;border-radius:14px;padding:16px 10px;font-size:17px;background:linear-gradient(135deg,#00a8ff,#0097e6);color:#fff}
+small{display:block;margin-top:14px;font-size:11.5px;color:#7d7a96}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="sw">⚔️</div>
+  <h1>전설의 검 강화하기</h1>
+  <div id="st">최신 버전을 여는 중이에요...</div>
+  <a id="go" href="https://inquisitive-cupcake-24046c.netlify.app/">▶ 게임 열기</a>
+  <small>이 파일은 열 때마다 가장 새로운 버전으로 연결돼요</small>
+</div>
+<script>
+(function(){
+  var URL_GAME="https://inquisitive-cupcake-24046c.netlify.app/",st=document.getElementById("st");
+  function go(){st.textContent="최신 버전을 여는 중이에요...";setTimeout(function(){location.replace(URL_GAME)},500)}
+  if(navigator.onLine===false){st.textContent="인터넷에 연결되어 있지 않아요. 연결되면 자동으로 열려요.";window.addEventListener("online",go)}
+  else go();
+})();
+</script>
+</body>
+</html>
