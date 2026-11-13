@@ -225,7 +225,7 @@ window.addEventListener("unhandledrejection",function(e){var m=document.getEleme
     <div id="lgMsg"></div>
     <button class="b1" id="lgLogin" onclick="fbLogin()">로그인</button>
     <div style="text-align:left;font-size:11.5px;color:var(--sub);line-height:1.7;margin:2px 0 8px"><label style="display:block;cursor:pointer"><input type="checkbox" id="lgAgree" style="width:auto;padding:0;margin:0 5px 0 0;vertical-align:middle"><a href="terms.html" target="_blank" style="color:var(--cy)">이용 규칙</a>과 <a href="privacy.html" target="_blank" style="color:var(--cy)">개인정보처리방침</a>에 동의해요</label><label style="display:block;cursor:pointer"><input type="checkbox" id="lgAge" style="width:auto;padding:0;margin:0 5px 0 0;vertical-align:middle">만 14세 이상이거나, 보호자의 동의를 받았어요</label>(새 계정을 만들 때만 필요해요 · 아이디에 실명을 쓰지 마세요)</div><button class="b2" id="lgSignup" onclick="fbSignup()">계정 생성</button>
-    <div style="font-size:10.5px;color:var(--sub)">v20.0</div>
+    <div style="font-size:10.5px;color:var(--sub)">v21.0</div>
   </div>
 </div>
 
@@ -665,8 +665,22 @@ function fight(i){
   }else{S.l=Math.max(0,S.l-2);log("☠️ "+b[0]+"에게 패배... 검이 2단계 하락","var(--bad)");fx("bad")}
   ui();
 }
-const AH=[["첫 강화 성공",s=>s.s>=1,1000],["+5강 달성",s=>s.b>=5,3000],["+10강 달성",s=>s.b>=10,30000],["+15강 달성",s=>s.b>=15,500000],["100회 시도",s=>s.t>=100,5000],["500회 시도",s=>s.t>=500,50000],["파괴 10회",s=>s.d>=10,10000],["파괴 50회",s=>s.d>=50,100000],["환생 1회",s=>s.rb>=1,200000],["보스 5회 처치",s=>s.bk>=5,100000],["PERFECT 10회",s=>(s.pf||0)>=10,20000],["첫 펫 부화",s=>Object.keys(s.pets||{}).length>=1,5000],["펫 4종 모으기",s=>Object.keys(s.pets||{}).length>=4,50000],["전설 펫 획득",s=>Object.keys(s.pets||{}).some(k=>PETS[k]&&PETS[k].r===3),300000]];
+const AH=[["첫 강화 성공",s=>s.s>=1,1000],["+5강 달성",s=>s.b>=5,3000],["+10강 달성",s=>s.b>=10,30000],["+15강 달성",s=>s.b>=15,500000],["100회 시도",s=>s.t>=100,5000],["500회 시도",s=>s.t>=500,50000],["파괴 10회",s=>s.d>=10,10000],["파괴 50회",s=>s.d>=50,100000],["환생 1회",s=>s.rb>=1,200000],["보스 5회 처치",s=>s.bk>=5,100000],["PERFECT 10회",s=>(s.pf||0)>=10,20000],["첫 펫 부화",s=>Object.keys(s.pets||{}).length>=1,5000],["펫 4종 모으기",s=>Object.keys(s.pets||{}).length>=4,50000],["전설 펫 획득",s=>Object.keys(s.pets||{}).some(k=>PETS[k]&&PETS[k].r===3),300000],["탑 10층 돌파",s=>(s.tw||0)>=10,50000],["탑 30층 돌파",s=>(s.tw||0)>=30,500000],["광산 Lv.10",s=>(s.mnl||0)>=10,100000]];
 function checkAch(){AH.forEach((a,i)=>{if(!S.ach[i]&&a[1](S)){S.ach[i]=1;S.g+=a[2];log("🏆 업적: "+a[0]+" (+"+n(a[2])+" G)","var(--gold)")}})}
+const MINE_MAX=20,MINE_CAP=28800;
+function mineRate(l){return l>0?Math.round(1200*Math.pow(l,1.8)):0}
+function mineCost(l){return Math.round(6000*Math.pow(1.45,l))}
+function mineMul(){return (evOn()&&EVT.t==="mine2"?2:1)*(1+petB("gold")/100)}
+function mineCapG(){return Math.floor(mineRate(S.mnl||0)/3600*MINE_CAP*mineMul())}
+function mineStored(){const l=S.mnl||0;if(!l)return 0;const el=Math.min(MINE_CAP,Math.max(0,(Date.now()-(S.mnt||Date.now()))/1000));return Math.floor(mineRate(l)/3600*el*mineMul())}
+function mineCollect(){const g=mineStored();if(g<1){log("⛏️ 아직 캔 골드가 없어요. 조금만 기다려요!");return}S.g+=g;S.mng=(S.mng||0)+g;S.mnt=Date.now();log("⛏️ 광산에서 "+n(g)+" G를 캤어요!","var(--gold)");beep("ok");ui()}
+function mineUp(){const l=S.mnl||0;if(l>=MINE_MAX)return;const c=mineCost(l);if(S.g<c){log("골드가 부족합니다!","var(--bad)");return}const g=mineStored();if(g>0){S.g+=g;S.mng=(S.mng||0)+g}S.g-=c;S.mnl=l+1;S.mnt=Date.now();log(l?"⛏️ 광산 Lv."+S.mnl+" 강화! 시간당 "+n(mineRate(S.mnl))+" G":"⛏️ 광산을 열었어요! 시간이 지나면 골드가 쌓여요","var(--cy)");ui()}
+function minePanel(){const l=S.mnl||0,hd='<div style="font-size:15px;font-weight:900;color:var(--gold);text-align:left;margin-bottom:2px">⛏️ 광산</div><div style="font-size:11.5px;color:var(--sub);text-align:left;margin-bottom:8px">게임을 꺼 놔도 골드가 쌓여요 (최대 8시간치까지)</div>';
+  if(!l)return hd+'<div style="text-align:center;font-size:60px;line-height:1.3">⛰️</div><div class="it"><span>광산을 열면 시간마다 골드가 쌓여요</span><button class="sm" '+(S.g>=mineCost(0)?'':'disabled')+' onclick="mineUp()">⛏️ 열기 '+n(mineCost(0))+' G</button></div>';
+  const mx=l>=MINE_MAX;
+  return hd+'<div style="text-align:left;font-size:12.5px"><div style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);border-radius:10px;padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:14px"><span>⛏️ 광산 Lv.'+l+(mx?' (MAX)':'')+'</span><span style="color:var(--cy)">시간당 '+n(Math.round(mineRate(l)*mineMul()))+' G</span></div><div id="mnG" style="font-size:26px;font-weight:900;color:var(--gold);text-align:center;margin:10px 0 4px">💰 0 G</div><div style="height:12px;background:var(--bg);border:1px solid var(--line);border-radius:6px;overflow:hidden"><i id="mnBar" style="display:block;height:100%;width:0%;background:linear-gradient(90deg,#f7971e,#ffd200)"></i></div><div id="mnT" style="font-size:11.5px;color:var(--sub);margin:3px 0 8px">&nbsp;</div><button class="up" style="width:100%" onclick="mineCollect()">⛏️ 골드 캐기</button></div>'+(mx?'<div class="it"><span>최고 레벨이에요!</span></div>':'<div class="it"><span>Lv.'+(l+1)+' 강화 → 시간당 '+n(mineRate(l+1))+' G</span><button class="sm" '+(S.g>=mineCost(l)?'':'disabled')+' onclick="mineUp()">'+n(mineCost(l))+' G</button></div>')+'<div style="font-size:11.5px;color:var(--sub);margin-top:6px">지금까지 캔 골드 '+n(S.mng||0)+' G · 골드 펫을 데리고 있으면 더 많이 쌓여요</div></div>'}
+function mineLive(){const e=$("mnG");if(!e)return;const g=mineStored(),cap=mineCapG(),full=cap>0&&g>=cap;e.textContent="💰 "+n(g)+" G";$("mnBar").style.width=Math.min(100,cap?g/cap*100:0).toFixed(1)+"%";const t=$("mnT");t.textContent=full?"⚠️ 가득 찼어요! 캐야 다시 쌓여요":"최대 "+n(cap)+" G까지 쌓여요";t.style.color=full?"var(--bad)":"var(--sub)"}
+setInterval(()=>{if(typeof PG!=="undefined"&&PG===10)mineLive()},1000);
 function setPN(p,h){if(p.dataset.h!==h){const keep={},fo=document.activeElement&&document.activeElement.id;["gName","gIconSel","gcIn"].forEach(id=>{const e=$(id);if(e&&p.contains(e))keep[id]=e.value});p.dataset.h=h;p.innerHTML=h;Object.keys(keep).forEach(id=>{const e=$(id);if(e)e.value=keep[id]});if(fo&&$(fo)&&keep[fo]!==undefined)$(fo).focus()}}
 function achPanel(){const dn=AH.filter((a,i)=>S.ach[i]).length,pc=Math.round(dn/AH.length*100);return '<div style="font-size:15px;font-weight:900;color:var(--gold);text-align:left;margin-bottom:2px">🏆 업적</div><div style="font-size:11.5px;color:var(--sub);text-align:left;margin-bottom:6px">달성 '+dn+' / '+AH.length+' ('+pc+'%) · 조건을 채우면 골드가 자동으로 들어와요</div><div style="height:9px;background:var(--bg);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin-bottom:8px"><i style="display:block;height:100%;width:'+pc+'%;background:linear-gradient(90deg,#fbc531,#e1b12c)"></i></div>'+AH.map((a,i)=>'<div class="it" style="'+(S.ach[i]?'':'opacity:.6')+'"><span>'+(S.ach[i]?'✅ ':'⬜ ')+a[0]+'</span><span style="color:var(--gold);font-weight:700;white-space:nowrap">'+(S.ach[i]?'받음 · ':'')+'+'+n(a[2])+' G</span></div>').join("")}
 function renderPN(){
@@ -678,6 +692,9 @@ function renderPN(){
   if(PG===5&&$("pgPet"))setPN($("pgPet"),tt("🐾 펫","알을 부화시키고 펫을 데리고 다니면 능력이 올라가요")+petPanel());
   if(PG===6&&$("pgGuild")){setPN($("pgGuild"),tt("🏰 길드","친구들과 길드를 만들고 함께 보스를 잡아요")+(window.guildPanel?window.guildPanel():"불러오는 중..."));if(window.gParts)window.gParts()}
   if(PG===7&&$("pgAch"))setPN($("pgAch"),achPanel());
+  if(PG===8&&$("pgTower"))setPN($("pgTower"),window.towerPanel?window.towerPanel():"불러오는 중...");
+  if(PG===9&&$("pgTitle"))setPN($("pgTitle"),window.titlePanel?window.titlePanel():"불러오는 중...");
+  if(PG===10&&$("pgMine")){setPN($("pgMine"),minePanel());mineLive()}
 }
 const TT=["초보","견습","대장장이","명장","전설","신화","초월"];
 const ttl=()=>TT[Math.min(6,Math.floor(S.b/2.5))];
@@ -720,7 +737,7 @@ function initX(){
   g.insertBefore(box5,k[15]);
   const accb=mk2('<div style="font-size:12px;text-align:left;margin:4px 0">👤 내 계정 · 정책</div><div style="background:var(--panel);border-radius:10px;padding:8px 10px;margin-bottom:12px;text-align:left;font-size:12.5px;line-height:1.9"><a href="terms.html" target="_blank" style="color:var(--cy)">📜 이용 규칙</a> · <a href="privacy.html" target="_blank" style="color:var(--cy)">🔒 개인정보처리방침</a> · <a href="delete.html" target="_blank" style="color:var(--cy)">🗑️ 계정 삭제 안내</a><div id="blkList" style="margin-top:4px"></div><div class="row" style="margin-top:6px"><button class="sm" onclick="delMeOpen()">🗑️ 내 계정 삭제</button></div><div id="delMeBox" style="display:none;margin-top:6px;color:var(--bad)">⚠️ 계정과 모든 게임 기록이 영구 삭제되고 되돌릴 수 없어요.<div class="row" style="margin-top:6px"><input id="delMePw" type="password" placeholder="비밀번호 확인" autocomplete="current-password" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"><button class="sm" style="background:#c0392b;color:#fff;border:none" onclick="fbDeleteMe()">영구 삭제</button></div><div id="delMeMsg" style="min-height:16px;font-size:12px"></div></div></div>','');
   g.insertBefore(accb,k[15]);
-  const nav=mk2('<button class="sm">🔨<br>대장간</button><button class="sm">🛒<br>상점·보스</button><button class="sm">📊<br>기록·설정</button><button class="sm">🌍<br>월드</button><button class="sm">💬<br>채팅<span id="chatBadge" style="display:none;position:absolute;top:2px;right:4px;background:#e84118;color:#fff;border-radius:9px;padding:0 5px;font-size:10px;font-weight:800;line-height:16px"></span></button><button class="sm">🐾<br>펫</button><button class="sm">🏰<br>길드</button><button class="sm">🏆<br>업적</button>',"row");nav.style.display="grid";nav.style.gridTemplateColumns="repeat(4,1fr)";
+  const nav=mk2('<button class="sm">🔨<br>대장간</button><button class="sm">🛒<br>상점·보스</button><button class="sm">📊<br>기록·설정</button><button class="sm">🌍<br>월드</button><button class="sm">💬<br>채팅<span id="chatBadge" style="display:none;position:absolute;top:2px;right:4px;background:#e84118;color:#fff;border-radius:9px;padding:0 5px;font-size:10px;font-weight:800;line-height:16px"></span></button><button class="sm">🐾<br>펫</button><button class="sm">🏰<br>길드</button><button class="sm">🏆<br>업적</button><button class="sm">🗼<br>탑</button><button class="sm">🏅<br>칭호</button><button class="sm">⛏️<br>광산</button>',"row");nav.style.display="grid";nav.style.gridTemplateColumns="repeat(4,1fr)";
   nav.style.marginBottom="12px";nav.style.gap="5px";[...nav.children].forEach(b=>{b.style.padding="7px 1px";b.style.fontSize="11px";b.style.lineHeight="1.35";b.style.position="relative"});g.insertBefore(nav,k[1]);{const nb=document.createElement("div");nb.id="newsBar";nb.style.cssText="display:none;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 10px;margin-bottom:10px;font-size:12.5px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";g.insertBefore(nb,k[1])}
   if(!CHAT_ON)nav.children[4].style.display="none";NB=[...nav.children];NB.forEach((b,i)=>b.onclick=()=>showPg(i));
   const wb=mk2('<div id="wInfo" style="font-size:12px;text-align:left;margin:4px 0;color:var(--sub)"></div><div id="wWrap" style="position:relative;width:100%;height:58vh;min-height:300px;border:1px solid var(--line);border-radius:12px;overflow:hidden;touch-action:none;background:#2f6b2a"><canvas id="wc" style="width:100%;height:100%;display:block"></canvas></div><div id="wCard" style="background:var(--panel);border-radius:10px;padding:10px;margin-top:8px;font-size:13px;text-align:left;min-height:44px"></div><div style="font-size:11.5px;color:var(--sub);text-align:left;margin-top:6px;line-height:1.6">🕹️ 화면을 누르면 이동 (PC: 방향키/WASD) · 유저를 누르고 가까이 가면 ⚔️ 대련 신청<br>🏆 승리하면 상대 검 단계에 비례한 골드를 받습니다.</div>',"");
@@ -728,13 +745,13 @@ function initX(){
   const cbx=mk2('<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--gold);margin-bottom:6px"><span>💬 전체 채팅</span><span id="chatHead" style="font-weight:400;font-size:11.5px;color:var(--sub)"></span></div><div id="chatList" style="height:52vh;min-height:260px;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px;font-size:13px;line-height:1.5;text-align:left;user-select:text;-webkit-user-select:text"></div><div class="row" style="margin-top:8px"><input id="chatIn" type="text" maxlength="100" enterkeyhint="send" autocomplete="off" placeholder="메시지 입력 (최대 100자)" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:15px;user-select:text;-webkit-user-select:text"><button class="up" style="flex:none;padding:10px 16px;font-size:14px" onclick="chatSend()">보내기</button></div><div id="chatNote" style="font-size:12px;color:var(--sub);min-height:18px;margin-top:4px;text-align:left"></div><div style="font-size:11px;color:var(--sub);text-align:left;line-height:1.6">🙅 욕설과 전화번호는 자동으로 가려져요 · 메시지는 하루가 지나면 사라져요<br>👆 내 메시지를 누르면 지울 수 있어요</div>',"");
   cbx.id="chatBox";cbx.style.cssText="background:var(--panel);border-radius:12px;padding:10px;margin-bottom:12px";
   g.insertBefore(cbx,k[14]);
-  const xpg=["pgPet","pgGuild","pgAch"].map(id=>{const d=mk2("","");d.id=id;d.style.cssText="background:var(--panel);border-radius:12px;padding:10px;margin-bottom:12px";g.insertBefore(d,k[14]);return d});
+  const xpg=["pgPet","pgGuild","pgAch","pgTower","pgTitle","pgMine"].map(id=>{const d=mk2("","");d.id=id;d.style.cssText="background:var(--panel);border-radius:12px;padding:10px;margin-bottom:12px";g.insertBefore(d,k[14]);return d});
   const evb=mk2("","");evb.id="evb";evb.className="adm-hide";evb.style.cssText="background:linear-gradient(135deg,#7b2ff7,#f107a3);color:#fff;font-weight:800;font-size:13px;padding:9px;border-radius:10px;margin-bottom:10px";
   const stf=mk2("","");stf.id="stf";stf.style.cssText="font-size:12.5px;text-align:left;line-height:1.7;background:var(--panel);border-radius:10px;padding:8px 12px;margin-bottom:10px";
-  const adm=mk2('<div style="font-size:13px;font-weight:800;margin-bottom:8px">🛠️ 관리자 패널 (<span id="admRole"></span>) <span style="font-weight:400;color:var(--sub);font-size:11px">v20.0</span></div><div id="admE"><div class="row" style="margin-bottom:6px"><select id="admType" style="flex:2;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px"><option value="rate">🎯 성공 확률 +10%p</option><option value="rate2">🎯🎯 성공 확률 +30%p</option><option value="disc">💸 강화비 50% 할인</option><option value="free">🆓 강화비 무료</option><option value="keep">🛡️ 실패·파괴해도 단계 유지</option><option value="sellx">💰 AI 판매 대금 2배</option><option value="work">🔨 알바 보상 5배</option><option value="gift">🎁 골드 10만 지급 (1인 1회)</option></select></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admEvent(1)">⏱️ 1분 이벤트</button><button class="sm" onclick="admEvent(5)">⏱️ 5분 이벤트</button><button class="sm" onclick="admEventEnd()">⛔ 종료</button></div></div><div id="admC" class="adm-hide"><div class="row" style="margin-bottom:6px"><input id="admId" type="text" maxlength="10" placeholder="임명할 아이디" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admAppoint()">관리자 임명</button><button class="sm" onclick="admRemove()">해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointMod()">중간 관리자 임명</button><button class="sm" onclick="admRemoveMod()">중간 해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointNoble()">하급귀족 임명</button><button class="sm" onclick="admRemoveNoble()">하급귀족 해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointCommon()">상급평민 임명</button><button class="sm" onclick="admRemoveCommon()">상급평민 해임</button></div><div class="row" style="margin-bottom:6px"><input id="admPw" type="text" maxlength="30" placeholder="새 비밀번호 (4자 이상)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admResetPw()">🔑 재설정</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRoles()">🧹 계정 없는 직책 기록 정리 (<span id="admGhost">0</span>건)</button></div></div><div id="admD"><div class="row" style="margin-bottom:6px"><input id="admT" type="text" maxlength="10" placeholder="대상 아이디 (아래 목록 클릭)" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admBan()">🚫 벤</button><button class="sm" onclick="admUnban()">✅ 벤 해제</button><button class="sm" onclick="admDel()">🗑️ 계정 삭제</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRank()">🧹 계정 없는 랭킹 기록 정리 (두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanOld()">📦 구버전 계정 정리 (<span id="admOld">0</span>개, 두 번 탭)</button></div></div><div id="admMsg" style="font-size:12px;color:var(--sub);min-height:16px"></div><div style="font-size:12.5px;font-weight:800;margin:8px 0 4px">👥 전체 유저 (<span id="admUCnt">0</span>)</div><div id="admUsers" style="max-height:180px;overflow:auto;font-size:12.5px;line-height:1.9"></div><div id="admInfo" style="border-top:1px solid var(--line);margin-top:6px;padding-top:6px;font-size:12px;line-height:1.7;text-align:left;user-select:text">👆 유저를 누르면 정보가 표시됩니다</div><div style="font-size:12.5px;font-weight:800;margin:8px 0 4px">🚩 신고함 (<span id="admRCnt">0</span>)</div><div id="admReports" style="max-height:180px;overflow:auto;font-size:12px;line-height:1.6;text-align:left;user-select:text"></div>',"");
+  const adm=mk2('<div style="font-size:13px;font-weight:800;margin-bottom:8px">🛠️ 관리자 패널 (<span id="admRole"></span>) <span style="font-weight:400;color:var(--sub);font-size:11px">v21.0</span></div><div id="admStat" style="font-size:11.5px;color:var(--sub);line-height:1.5;margin-bottom:8px"></div><div id="admE"><div class="row" style="margin-bottom:6px"><select id="admType" style="flex:2;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px"><option value="rate">🎯 성공 확률 +10%p</option><option value="rate2">🎯🎯 성공 확률 +30%p</option><option value="disc">💸 강화비 50% 할인</option><option value="free">🆓 강화비 무료</option><option value="keep">🛡️ 실패·파괴해도 단계 유지</option><option value="sellx">💰 AI 판매 대금 2배</option><option value="work">🔨 알바 보상 5배</option><option value="gift">🎁 골드 10만 지급 (1인 1회)</option><option value="season2">🗓️ 시즌 점수 2배</option><option value="tower2">🗼 탑 보상 2배</option><option value="mine2">⛏️ 광산 수입 2배</option></select></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admEvent(1)">⏱️ 1분 이벤트</button><button class="sm" onclick="admEvent(5)">⏱️ 5분 이벤트</button><button class="sm" onclick="admEventEnd()">⛔ 종료</button></div></div><div id="admB" class="adm-hide"></div><div id="admC" class="adm-hide"><div class="row" style="margin-bottom:6px"><input id="admId" type="text" maxlength="10" placeholder="임명할 아이디" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admAppoint()">관리자 임명</button><button class="sm" onclick="admRemove()">해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointMod()">중간 관리자 임명</button><button class="sm" onclick="admRemoveMod()">중간 해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointNoble()">하급귀족 임명</button><button class="sm" onclick="admRemoveNoble()">하급귀족 해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointCommon()">상급평민 임명</button><button class="sm" onclick="admRemoveCommon()">상급평민 해임</button></div><div class="row" style="margin-bottom:6px"><input id="admPw" type="text" maxlength="30" placeholder="새 비밀번호 (4자 이상)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admResetPw()">🔑 재설정</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRoles()">🧹 계정 없는 직책 기록 정리 (<span id="admGhost">0</span>건)</button></div></div><div id="admD"><div class="row" style="margin-bottom:6px"><input id="admT" type="text" maxlength="10" placeholder="대상 아이디 (아래 목록 클릭)" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admBan()">🚫 벤</button><button class="sm" onclick="admUnban()">✅ 벤 해제</button><button class="sm" onclick="admDel()">🗑️ 계정 삭제</button></div><div style="font-size:12px;font-weight:800;margin:8px 0 4px">🎁 선물 보내기 (위 대상 아이디에게)</div><div class="row" style="margin-bottom:6px;gap:5px"><select id="admGiftG" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">골드 없음</option><option value="10000">1만 G</option><option value="100000">10만 G</option><option value="1000000">100만 G</option><option value="10000000">1000만 G</option></select><select id="admGiftE" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">알 없음</option><option value="1">🥚 1개</option><option value="3">🥚 3개</option><option value="5">🥚 5개</option></select><select id="admGiftP" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">방지권 없음</option><option value="1">🛡️ 1개</option><option value="3">🛡️ 3개</option><option value="5">🛡️ 5개</option></select></div><div class="row" style="margin-bottom:10px"><input id="admGiftM" type="text" maxlength="30" placeholder="한마디 (선택)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admGift()">🎁 보내기</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRank()">🧹 계정 없는 랭킹 기록 정리 (두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanOld()">📦 구버전 계정 정리 (<span id="admOld">0</span>개, 두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admReload()">🔄 접속한 모두 새로고침 (두 번 탭)</button></div></div><div id="admX" class="adm-hide"><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admWipe()">🧽 고른 유저의 탑·시즌 기록 지우기 (두 번 탭)</button></div></div><div id="admMsg" style="font-size:12px;color:var(--sub);min-height:16px"></div><div style="font-size:12.5px;font-weight:800;margin:8px 0 4px">👥 전체 유저 (<span id="admUCnt">0</span>)</div><div class="row" style="margin-bottom:6px"><input id="admFind" type="text" maxlength="10" placeholder="🔍 이름 검색" oninput="admFilter()" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"></div><div id="admUsers" style="max-height:340px;overflow:auto;font-size:13px;line-height:1.9;border:1px solid var(--line);border-radius:8px"></div><div id="admInfo" style="border-top:1px solid var(--line);margin-top:6px;padding-top:6px;font-size:12px;line-height:1.7;text-align:left;user-select:text">👆 유저를 누르면 정보가 표시됩니다</div><div style="font-size:12.5px;font-weight:800;margin:8px 0 4px">🚩 신고함 (<span id="admRCnt">0</span>)</div><div id="admReports" style="max-height:180px;overflow:auto;font-size:12px;line-height:1.6;text-align:left;user-select:text"></div>',"");
   adm.id="adm";adm.className="adm-hide";adm.style.cssText="";const adIn=adm.innerHTML;adm.innerHTML='<button id="admTab" onclick="admToggle()">🛠️</button><div style="overflow:auto;max-height:70vh;padding:10px">'+adIn+'</div>';document.body.appendChild(adm);
   g.insertBefore(evb,k[5]);g.insertBefore(stf,k[10]);
-  PGS=[[k[1],k[2],k[3],k[4],evb,k[5],k[6],k[7],box,k[8],k[9],stf,k[14]],[ex,box2,box3,k[11],k[12]],[k[10],st,k[13],hs,box4,box5,accb,k[15],k[16]],[wb],[cbx],[xpg[0]],[xpg[1]],[xpg[2]]];
+  PGS=[[k[1],k[2],k[3],k[4],evb,k[5],k[6],k[7],box,k[8],k[9],stf,k[14]],[ex,box2,box3,k[11],k[12]],[k[10],st,k[13],hs,box4,box5,accb,k[15],k[16]],[wb],[cbx],[xpg[0]],[xpg[1]],[xpg[2]],[xpg[3]],[xpg[4]],[xpg[5]]];
   setInterval(()=>{mk=Math.round((.8+Math.random()*.5)*100)/100;S.mh.push(mk);S.mh=S.mh.slice(-30);S.rv=S.rv.map((v,i)=>Math.round(v+(nw()*RF[i]*(.9+Math.random()*.2)+5000-v)*.15));ui()},20000);
   showPg(0);
   catchUp();setInterval(tick,1000);
@@ -946,7 +963,7 @@ function reset(){
   const canNotice = () => !!curUid && (isAdmin() || isMod() || isNoble() || isCommon());
   const canBoss = () => isAdmin() || isMod();
   const hasGold = () => isAdmin() || isNoble();
-  const EVN = { rate: "🎯 성공 확률 +10%p", rate2: "🎯🎯 성공 확률 +30%p", disc: "💸 강화비 50% 할인", free: "🆓 강화비 무료", keep: "🛡️ 실패·파괴해도 단계 유지", sellx: "💰 AI 판매 대금 2배", work: "🔨 알바 보상 5배", gift: "🎁 골드 10만 지급" };
+  const EVN = { rate: "🎯 성공 확률 +10%p", rate2: "🎯🎯 성공 확률 +30%p", disc: "💸 강화비 50% 할인", free: "🆓 강화비 무료", keep: "🛡️ 실패·파괴해도 단계 유지", sellx: "💰 AI 판매 대금 2배", work: "🔨 알바 보상 5배", gift: "🎁 골드 10만 지급", season2: "🗓️ 시즌 점수 2배", tower2: "🗼 탑 보상 2배", mine2: "⛏️ 광산 수입 2배" };
   const srvNow = () => Date.now() + (window.SRV_OFF || 0);
   const isStaffName = (n) => String(n).normalize("NFC") === CREATOR || inRole(admins, n) || inRole(nobles, n);
   const selfRow = () => (hasGold() && typeof S !== "undefined") ? '<div class="fb-row me"><span>🙋 내 기록 (랭킹 제외)</span><span style="color:var(--cy);font-weight:700">+' + (S.b || 0) + '강</span></div>' : "";
@@ -974,6 +991,8 @@ function reset(){
     const dd = $m("admD"); if (dd) dd.classList.toggle("adm-hide", !isAdmin());
     const de = $m("admE"); if (de) de.classList.toggle("adm-hide", !canEvent());
     const c = $m("admC"); if (c) c.classList.toggle("adm-hide", !isCreator());
+    const ax = $m("admX"); if (ax) ax.classList.toggle("adm-hide", !canBoss());
+    try { renderAdmBoss(); } catch (e) {}
     const rl = $m("admRole"); if (rl) rl.textContent = isCreator() ? "제작자" : isAdmin() ? "관리자" : isMod() ? "중간 관리자" : "하급귀족";
     if (!canPanel()) ad.classList.remove("open");
     grantCheck();
@@ -1168,13 +1187,15 @@ function reset(){
     const list = accList.slice().sort((a, b) => (rank(a) - rank(b)) || (a.t - b.t));
     $m("admUCnt").textContent = list.filter(u => !u.old).length + (list.some(u => u.old) ? " + 구버전 " + list.filter(u => u.old).length : "");
     const oc = $m("admOld"); if (oc) oc.textContent = list.filter(u => u.old).length;
-    box.innerHTML = list.map(u => {
+    const fq = ($m("admFind") ? $m("admFind").value : "").trim().toLowerCase(), shown = fq ? list.filter(u => u.id.toLowerCase().includes(fq)) : list;
+    box.innerHTML = (shown.length ? "" : '<div style="color:var(--sub);padding:6px">' + (fq ? "찾는 이름이 없어요" : "유저가 없어요") + "</div>") + shown.map(u => {
       const r = rank(u);
-      return '<div data-id="' + esc(u.id) + '" onclick="admPick(this.dataset.id)" style="cursor:pointer;padding:1px 4px;border-bottom:1px solid var(--line)">' +
+      return '<div data-id="' + esc(u.id) + '" onclick="admPick(this.dataset.id)" style="cursor:pointer;padding:3px 8px;border-bottom:1px solid var(--line)">' +
         (isBannedName(u.id) ? "🚫 " : icon[r] + " ") + esc(u.id) +
         (r !== 5 ? ' <span style="color:var(--sub);font-size:11px">' + label[r] + '</span>' : '') + '</div>';
     }).join("");
   }
+  window.admFilter = () => renderUsers();
   window.admPick = (id) => { const i = $m("admId"); if (i) i.value = id; const t = $m("admT"); if (t) t.value = id; if (canPanel()) window.admInfo(id); };
   const isBannedName = (n) => !!bans[encodeURIComponent(n)];
   function canTarget(id) {
@@ -1711,7 +1732,7 @@ function reset(){
     const enc = encodeURIComponent(id);
     const keys = [...new Set([enc].concat(accList.filter(u => u.id === id).map(u => u.k)))];
     for (const k of keys) { await set(ref(db, "accounts/" + k), null); try { await set(ref(db, "saves/" + k), null); } catch (e) {} }
-    for (const nd of ["world", "duels", "duelResults", "chatMutes"]) { try { await set(ref(db, nd + "/" + enc), null); } catch (e) {} }
+    for (const nd of ["world", "duels", "duelResults", "chatMutes", "titles", "tower", "mail"]) { try { await set(ref(db, nd + "/" + enc), null); } catch (e) {} }
     for (const nd of ["admins", "mods", "nobles", "commons"]) { try { await clearRole(nd, id); } catch (e) {} }
     try { await guildDrop(id); } catch (e) {}
     for (const [node, field] of [["rankings", "name"], ["chat", "id"]]) {
@@ -1767,6 +1788,7 @@ function reset(){
     if (x.k === "glv") return "🏰 길드 <b>" + esc(chatClean(x.g || "")) + "</b> Lv." + (Math.floor(+x.v) || 1) + " 달성! 길드원 성공 확률 UP";
     if (x.k === "pet") { const P = PETS[Object.keys(PETS)[Math.floor(+x.v) || 0]]; return P ? "🥚 <b>" + id + "</b>님이 전설 펫 <b>" + P.i + " " + P.n + "</b> 부화 성공!" : ""; }
     if (x.k === "boss") return "😈 <b>" + id + "</b>님이 마왕을 쓰러뜨렸어요!";
+    if (x.k === "tower") return "🗼 <b>" + id + "</b>님이 무한의 탑 " + Math.max(1, Math.floor(+x.v) || 1) + "층 돌파!";
     if (x.k === "rb") return "🌟 <b>" + id + "</b>님이 " + Math.max(1, Math.floor(+x.v) || 1) + "번째 환생!";
     if (x.k === "raidSpawn") { const b = raidBossOf(x.v); return "🐲 월드 보스 <b>" + b[0] + " " + b[1] + "</b> 등장! 상점·보스 탭에서 함께 공격해요"; }
     if (x.k === "raidKill") { const b = raidBossOf(x.v); return "🏆 <b>" + id + "</b>님이 월드 보스 " + b[0] + " " + b[1] + "에게 마지막 일격!"; }
@@ -1884,7 +1906,7 @@ function reset(){
   let raid = null, raidCd = 0, raidBusy = false, raidSpawnTry = 0, raidMsg = "", raidMsgT = 0;
   const num = (x) => Number(Math.round(+x || 0)).toLocaleString();
   const raidBase = (l) => Math.round(Math.pow(l + 1, 2.2) * 100);
-  const raidNote = (t) => { raidMsg = t; raidMsgT = Date.now(); renderRaid(); };
+  const raidNote = (t) => { raidMsg = t; raidMsgT = Date.now(); renderRaid(); try { if (canBoss()) admMsg(t); } catch (e) {} };
   {
     const rb = document.createElement("div");
     rb.innerHTML = '<div style="font-size:12px;text-align:left;margin:4px 0">🐲 월드 보스 · 모두 함께 공격해서 쓰러뜨려요</div><div id="raidBox" style="background:var(--panel);border:1px solid rgba(232,65,24,.45);border-radius:10px;padding:10px;margin-bottom:12px;text-align:left;font-size:13px"></div>';
@@ -1895,7 +1917,7 @@ function reset(){
   window.raidHpSet = (v) => { raidHpV = +v || 3000000; };
   function raidCreateUI() {
     const bo = RAID_BOSSES.map((b, i) => '<option value="' + i + '"' + (i === raidPickV ? " selected" : "") + ">" + b[0] + " " + b[1] + "</option>").join("");
-    const ho = [[1000000, "체력 100만"], [3000000, "체력 300만"], [10000000, "체력 1000만"]].map(([v, t]) => '<option value="' + v + '"' + (v === raidHpV ? " selected" : "") + ">" + t + "</option>").join("");
+    const ho = [[1000000, "체력 100만"], [3000000, "체력 300만"], [10000000, "체력 1000만"], [30000000, "체력 3000만"]].map(([v, t]) => '<option value="' + v + '"' + (v === raidHpV ? " selected" : "") + ">" + t + "</option>").join("");
     const sel = 'style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12.5px"';
     return '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)"><div style="font-size:12px;color:var(--sub);margin-bottom:6px">🧰 중간 관리자 이상 · 보스 생성</div><div class="row" style="gap:6px"><select ' + sel + ' onchange="raidPickSet(this.value)">' + bo + '</select><select ' + sel + ' onchange="raidHpSet(this.value)">' + ho + '</select></div><button class="up" style="width:100%;margin-top:6px" onclick="raidCreate()">🐲 보스 생성</button></div>';
   }
@@ -1904,7 +1926,7 @@ function reset(){
     let h;
     const boss = canBoss();
     if (!curUid || !loaded) h = '<div style="color:var(--sub)">로그인하면 월드 보스와 싸울 수 있어요</div>';
-    else if (!raid || !raid.max) h = '<div style="color:var(--sub)">🌫️ 지금은 월드 보스가 없어요. 중간 관리자 이상이 보스를 만들면 나타나요.</div>' + (boss ? raidCreateUI() : "");
+    else if (!raid || !raid.max) h = '<div style="color:var(--sub)">🌫️ 지금은 월드 보스가 없어요. 중간 관리자 이상이 보스를 만들면 나타나요.</div>' + (boss ? '<div style="font-size:12px;color:var(--cy);margin-top:6px">🛠️ 관리자 패널에서 보스를 만들 수 있어요</div>' : "");
     else {
       const alive = raid.hp > 0, pct = Math.max(0, Math.min(100, raid.hp / raid.max * 100));
       const hits = raid.hits || {}, ent = Object.entries(hits).map(([k, v]) => { let id = k; try { id = decodeURIComponent(k); } catch (e) {} return [id, +v || 0]; }).sort((a, b) => b[1] - a[1]);
@@ -1918,14 +1940,22 @@ function reset(){
       if (alive) {
         const can = S.l >= 1 && !cdLeft && !raidBusy;
         h += '<button class="up" style="width:100%;margin-top:8px" ' + (can ? "" : "disabled") + ' onclick="raidHit()">' + (S.l < 1 ? "검을 강화해야 공격할 수 있어요" : cdLeft ? "⏳ " + cdLeft + "초 뒤 다시 공격" : "⚔️ 공격! (약 " + num(raidBase(S.l)) + " 피해)") + "</button>";
-        if (boss) h += '<button class="sm" style="width:100%;margin-top:6px;font-size:11.5px" onclick="raidRemove()">' + (Date.now() < raidDelPending ? "⚠️ 한 번 더 누르면 보스를 내려요 (보상 없음)" : "🗑️ 보스 내리기 (중간 관리자 이상)") + "</button>";
       } else {
-        h += '<div style="margin-top:8px;color:var(--gold);font-weight:700">🏆 ' + esc(String(raid.killer || "?").slice(0, 12)) + "님이 마지막 일격!</div>" + (boss ? raidCreateUI() : '<div style="font-size:12px;color:var(--sub);margin-top:4px">다음 보스는 중간 관리자 이상이 만들 수 있어요.</div>');
+        h += '<div style="margin-top:8px;color:var(--gold);font-weight:700">🏆 ' + esc(String(raid.killer || "?").slice(0, 12)) + "님이 마지막 일격!</div>" + (boss ? '<div style="font-size:12px;color:var(--cy);margin-top:4px">🛠️ 관리자 패널에서 다음 보스를 만들 수 있어요</div>' : '<div style="font-size:12px;color:var(--sub);margin-top:4px">다음 보스는 중간 관리자 이상이 만들 수 있어요.</div>');
       }
       h += '<div style="font-size:11px;color:var(--sub);margin-top:6px;line-height:1.5">처치하면 피해를 넣은 만큼 ' + num(raid.max) + " G를 나눠 받아요 (최소 " + num(RAID_MIN) + " G · 마지막 일격 +" + num(raid.max * 0.1) + " G)</div>";
     }
+    try { renderAdmBoss(); } catch (e) {}
     if (raidMsg && Date.now() - raidMsgT < 4000) h += '<div style="font-size:12.5px;margin-top:6px;color:var(--cy);font-weight:700">' + esc(raidMsg) + "</div>";
     if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
+  }
+  function renderAdmBoss() {
+    const el = $m("admB"); if (!el) return;
+    const ok = canBoss(); el.classList.toggle("adm-hide", !ok); if (!ok) return;
+    let h;
+    if (raid && raid.max && raid.hp > 0) h = '<div style="margin:2px 0 8px;padding:8px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)"><div style="font-size:12px;margin-bottom:6px">🐲 지금 보스: <b>' + esc(raid.icon || "🐲") + " " + esc(raid.name || "월드 보스") + "</b> · HP " + num(raid.hp) + " / " + num(raid.max) + '</div><button class="sm" style="width:100%" onclick="raidRemove()">' + (Date.now() < raidDelPending ? "⚠️ 한 번 더 누르면 보스를 내려요 (보상 없음)" : "🗑️ 보스 내리기") + "</button></div>";
+    else h = raidCreateUI() + '<div style="height:10px"></div>';
+    if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
   }
   window.raidCreate = async function() {
     if (!curUid || !loaded) return;
@@ -2000,8 +2030,8 @@ function reset(){
   const gNeed = (lv) => G_XP * lv * lv;
   const gMembers = (g) => Object.entries((g && g.m) || {}).filter(([k, v]) => v && typeof v.id === "string").map(([k, v]) => Object.assign({ k }, v));
   const gOf = (id) => { const gid = guildIdx[id]; return gid && guilds[gid] ? Object.assign({ gid }, guilds[gid]) : null; };
-  function gTag(id) { const md = typeof champ !== "undefined" && champ[id] ? " " + ["🥇", "🥈", "🥉"][champ[id] - 1] : ""; return md + gTag0(id); }
-  function gTag0(id) { const g = gOf(id); return g ? ' <span style="font-size:10.5px;color:var(--sub);font-weight:400">' + esc(g.icon || "🏰") + esc(chatClean(g.name || "")) + "</span>" : ""; }
+  function gTag(id) { const md = typeof champ !== "undefined" && champ[id] ? " " + ["🥇", "🥈", "🥉"][champ[id] - 1] : ""; return md + tTag(id) + gTag0(id); }
+  function gTag0(id) { const g = gOf(id); return g ? ' <span style="font-size:10.5px;color:var(--sub);font-weight:400">' + (gwChampGid && g.gid === gwChampGid ? "🏆" : "") + esc(g.icon || "🏰") + esc(chatClean(g.name || "")) + "</span>" : ""; }
   function gIcon(id) { const g = gOf(id), md = typeof champ !== "undefined" && champ[id] ? ["🥇", "🥈", "🥉"][champ[id] - 1] + " " : ""; return md + (g ? (G_ICONS.includes(g.icon) ? g.icon : "🏰") + " " : ""); }
   const gNote = (t) => { gMsg = t; gMsgT = Date.now(); gRefresh(); };
   function gRefresh() {
@@ -2038,6 +2068,7 @@ function reset(){
       h += '<div style="color:var(--sub);font-size:12px;margin-bottom:6px">길드에 들어가면 길드 레벨 × ' + G_BUFF + "%p 만큼 강화 성공 확률이 올라요. 길드원과 함께 기부해서 레벨을 올려요!</div>" +
         '<div style="font-weight:800;margin-bottom:4px">🏰 길드 만들기 (' + n(G_COST) + ' G)</div><div class="row" style="gap:6px"><select id="gIconSel" style="flex:none;width:64px;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;font-size:18px">' + opts + '</select><input id="gName" type="text" maxlength="8" autocomplete="off" placeholder="길드 이름 (2~8자)" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;font-size:14px;user-select:text;-webkit-user-select:text">' + btn(true, "만들기", 'style="flex:none;padding:9px 12px" onclick="guildCreate()"') + "</div>";
     }
+    h += gwHtml();
     h += '<div style="font-weight:800;margin:10px 0 2px">🏆 길드 랭킹</div>' + (list.length ? list.slice(0, 15).map((g, i) => '<div class="it"><span>' + (i < 3 ? ["🥇", "🥈", "🥉"][i] : (i + 1) + "위") + " " + esc(g.icon || "🏰") + " <b>" + esc(chatClean(g.name)) + "</b> Lv." + g.lv + ' <span style="color:var(--sub)">👥 ' + g.n + "/" + G_MAX + " · 리더 " + esc(String(g.leader || "").slice(0, 12)) + "</span></span>" +
       '<span style="display:flex;gap:4px">' + (!me ? btn(g.n < G_MAX, g.n < G_MAX ? "가입" : "꽉 참", 'data-g="' + esc(g.gid) + '" onclick="guildJoin(this.dataset.g)"') : "") +
       (mod ? btn(true, gDelPending.k === g.gid && Date.now() < gDelPending.t ? "정말?" : "🗑️", 'data-g="' + esc(g.gid) + '" onclick="guildDelete(this.dataset.g)"') : "") + "</span></div>").join("") : '<div class="it">아직 길드가 없어요. 첫 길드를 만들어 보세요!</div>');
@@ -2198,7 +2229,9 @@ function reset(){
   window.seasonAdd = (p) => {
     if (!curUid || !loaded || hasGold()) return;
     const wk = curWk(); if (S.swk !== wk) { S.swk = wk; S.swp = 0; }
-    S.swp = (+S.swp || 0) + Math.max(0, Math.floor(+p) || 0); seasonDirty = true;
+    const pp = Math.max(0, Math.floor(+p) || 0) * (evOn() && EVT.t === "season2" ? 2 : 1);
+    S.swp = (+S.swp || 0) + pp; seasonDirty = true;
+    if (pp > 0 && gOf(curUid)) gwPend += pp;
   };
   async function seasonSync() {
     if (!seasonDirty || !curUid || !loaded || Date.now() - lastSeasonSync < 4000) return;
@@ -2225,13 +2258,14 @@ function reset(){
   function seasonClaim() {
     if (!curUid || !loaded || !champWk) return;
     const rk = champ[curUid]; if (!rk || S.sclaim === champWk) return;
-    S.sclaim = champWk; const g = SEASON_REWARD[rk - 1]; S.g += g;
+    S.sclaim = champWk; S.schamp = 1; const g = SEASON_REWARD[rk - 1]; S.g += g;
     log("🗓️ 지난주 시즌 " + rk + "위 보상! +" + num(g) + " G · 이번 주 동안 이름 옆에 " + MEDAL[rk - 1] + " 메달이 붙어요", "var(--gold)");
     if (typeof ui === "function") ui(); cloudSave(); window.newsPost("season", rk);
   }
   async function seasonClean() {
     if (!canBoss()) return;
     try { const sn = await get(ref(db, "season")), keep = [curWk(), prevWk()], jobs = []; sn.forEach((ch) => { if (!keep.includes(ch.key)) { jobs.push(set(ref(db, "season/" + ch.key), null)); } }); await Promise.all(jobs); } catch (e) {}
+    try { const sn = await get(ref(db, "gwar")), keep = [curWk(), prevWk()], jobs = []; sn.forEach((ch) => { if (!keep.includes(ch.key)) { jobs.push(set(ref(db, "gwar/" + ch.key), null)); } }); await Promise.all(jobs); } catch (e) {}
   }
   {
     const sb = document.createElement("div");
@@ -2249,12 +2283,272 @@ function reset(){
       h = '<div style="display:flex;justify-content:space-between;font-weight:800"><span>이번 주 (' + esc(curWk()) + ' ~)</span><span style="color:var(--sub);font-weight:400;font-size:11.5px">초기화까지 ' + (dd ? dd + "일 " : "") + hh + "시간 " + mm + "분</span></div>" +
         '<div style="margin:4px 0;color:var(--cy);font-weight:700">' + (hasGold() ? "골드 무한 계정은 시즌에 참여하지 않아요" : "내 점수 " + num(myP) + "점 · " + (myRank ? myRank + "위" : "순위 밖")) + "</div>" +
         (seasonTop.length ? seasonTop.slice(0, 10).map((v, i) => '<div style="display:flex;justify-content:space-between;padding:2px 4px;border-radius:6px;' + (v.id === curUid ? "background:rgba(0,229,255,.1);" : "") + '"><span>' + (i < 3 ? MEDAL[i] : (i + 1) + "위") + " " + esc(v.id) + gTag(v.id) + '</span><b>' + num(v.p) + "점</b></div>").join("") : '<div style="color:var(--sub)">아직 점수가 없어요. 첫 번째 주인공이 되어 보세요!</div>') +
-        '<div style="font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.6">🏅 보상: 1위 ' + num(SEASON_REWARD[0]) + " · 2위 " + num(SEASON_REWARD[1]) + " · 3위 " + num(SEASON_REWARD[2]) + " G + 다음 주 내내 이름 옆 메달<br>점수: 강화 성공(오른 단계만큼) · PERFECT +1 · 보스 처치 · 월드·길드 보스 공격 · 대련 승리 +5</div>" +
+        '<div style="font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.6">🏅 보상: 1위 ' + num(SEASON_REWARD[0]) + " · 2위 " + num(SEASON_REWARD[1]) + " · 3위 " + num(SEASON_REWARD[2]) + " G + 다음 주 내내 이름 옆 메달<br>점수: 강화 성공(오른 단계만큼) · PERFECT +1 · 보스 처치 · 월드·길드 보스 공격 · 탑 돌파 · 대련 승리 +5</div>" +
         (champTop.length ? '<div style="font-size:12px;margin-top:4px">지난주 우승: ' + champTop.map((v, i) => MEDAL[i] + " " + esc(v.id)).join(" · ") + "</div>" : "");
     }
     if (box.dataset.h !== h) { box.dataset.h = h; box.innerHTML = h; }
   }
   setInterval(() => { seasonSub(); loadChamp(); seasonClaim(); seasonSync(); renderSeason(); }, 2000);
+
+  // ===== 전투 연출 (탑 공용) =====
+  function fightShow(o) {
+    const old = $m("duelOv"); if (old) old.remove();
+    const R = (o.rounds || []).slice(0, 30), ov = document.createElement("div");
+    ov.id = "duelOv";
+    ov.style.cssText = "position:fixed;inset:0;z-index:160000;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:12px";
+    const fighter = (side) => '<div style="flex:1;min-width:0;position:relative"><div style="font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(o.names[side]) + '</div><div style="font-size:11px;color:var(--gold)">' + esc(o.subs[side]) + '</div><div style="height:10px;background:var(--bg);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin:5px 0"><i id="dHp' + side + '" style="display:block;height:100%;width:100%;background:linear-gradient(90deg,#4cd137,#fbc531);transition:width .35s"></i></div><div id="dF' + side + '" style="font-size:58px;line-height:1.1;display:inline-block' + (side === 1 ? ";transform:scaleX(-1)" : "") + '">' + esc(o.icons[side]) + '</div><div id="dN' + side + '" style="position:absolute;left:50%;top:58px;font-weight:900;font-size:18px;pointer-events:none"></div></div>';
+    ov.innerHTML = '<div style="width:min(380px,94vw);background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:16px;text-align:center;color:var(--tx)"><div style="font-weight:900;color:var(--gold);font-size:18px">' + esc(o.title) + '</div><div style="display:flex;align-items:flex-start;gap:8px;margin-top:10px">' + fighter(0) + '<div style="align-self:center;font-weight:900;color:var(--sub)">VS</div>' + fighter(1) + '</div><div id="dLog" style="min-height:22px;margin-top:6px;font-weight:700;font-size:13.5px"></div><div id="dEnd" style="min-height:24px"></div></div>';
+    document.body.appendChild(ov);
+    const hp = [100, 100];
+    let i = 0, fin = false;
+    const finish = () => { if (fin) return; fin = true; try { if (o.done) o.done(); } catch (e) {} };
+    setTimeout(finish, 1500 + R.length * 650);
+    const step = () => {
+      if (!ov.parentNode) { finish(); return; }
+      if (i >= R.length) {
+        const e = ov.querySelector("#dEnd");
+        if (e) e.innerHTML = '<div style="font-size:16px;font-weight:900;margin-top:8px;color:' + (o.won ? "var(--gold)" : "var(--bad)") + '">' + esc(o.end) + '</div><button class="sm" style="margin-top:10px;width:100%" onclick="document.getElementById(\'duelOv\').remove()">닫기</button>';
+        finish();
+        setTimeout(() => { if (ov.parentNode) ov.remove(); }, 5000);
+        return;
+      }
+      const [side, d0, c] = R[i++], tgt = 1 - side, d = Math.max(0, Math.min(100, Math.floor(+d0) || 0));
+      hp[tgt] = Math.max(0, hp[tgt] - d);
+      const q = (id) => ov.querySelector("#" + id), fa = q("dF" + side), fd = q("dF" + tgt), nt = q("dN" + tgt);
+      fa.classList.remove("dhL", "dhR"); void fa.offsetWidth; fa.classList.add(side === 0 ? "dhL" : "dhR");
+      if (d > 0) { fd.classList.remove("dsL", "dsR"); void fd.offsetWidth; fd.classList.add(tgt === 0 ? "dsL" : "dsR"); }
+      q("dHp" + tgt).style.width = hp[tgt] + "%";
+      nt.textContent = d > 0 ? "-" + d : "🛡️"; nt.style.color = c ? "#ff4757" : "#fff"; nt.style.animation = "none"; void nt.offsetWidth; nt.style.animation = "dpop .6s forwards";
+      q("dLog").textContent = d === 0 ? "🛡️ " + o.names[tgt] + " 막았다!" : (c ? "💥 치명타! " : "⚔️ ") + o.names[side] + " → " + d + " 피해";
+      if (typeof clang === "function") clang();
+      setTimeout(step, 650);
+    };
+    setTimeout(step, 600);
+  }
+  const pgHead = (t, sub) => '<div style="font-size:15px;font-weight:900;color:var(--gold);text-align:left;margin-bottom:2px">' + t + '</div><div style="font-size:11.5px;color:var(--sub);text-align:left;margin-bottom:8px">' + sub + "</div>";
+  const rePage = (i) => { if (typeof PG !== "undefined" && PG === i && typeof renderPN === "function") renderPN(); };
+
+  // ===== 🗼 무한의 탑 =====
+  const TW_MON = [["🟢", "슬라임"], ["🐺", "늑대"], ["👹", "오크"], ["💀", "해골 기사"], ["🦂", "전갈 여왕"], ["🧟", "망령"], ["🦅", "와이번"], ["🧙", "흑마법사"], ["🐲", "고룡"], ["😈", "마왕의 그림자"]];
+  const twMon = (f) => { const m = TW_MON[Math.floor((f - 1) / 5) % TW_MON.length]; return f % 10 === 0 ? ["👑", m[1] + " 대장"] : m; };
+  const twFP = (f) => Math.round((100 + 45 * f + 0.6 * f * f) * (f % 10 === 0 ? 1.15 : 1));
+  const twMyP = () => 100 + (S.l || 0) * 60 + (S.b || 0) * 90 + (S.sk || []).reduce((a, b) => a + (+b || 0), 0) * 15 + (S.pe && PETS[S.pe] ? petLv(S.pe) * 40 : 0) + (S.rb || 0) * 150 + Math.round((window.GUILD_B || 0) * 100);
+  const twChance = (P, FP) => Math.max(5, Math.min(95, Math.round(50 + (P - FP) / FP * 200)));
+  const twGold = (f) => Math.round(1500 * Math.pow(f, 1.6) * (1 + petB("gold") / 100) * (evOn() && EVT.t === "tower2" ? 2 : 1));
+  const twDaily = (f) => Math.round(800 * Math.pow(f, 1.5));
+  const kstDay = () => { const d = new Date(srvNow() + 9 * 3600000); return d.getUTCFullYear() + "-" + (d.getUTCMonth() + 1) + "-" + d.getUTCDate(); };
+  let twCd = 0, twBusy = false, twTop = [];
+  onValue(query(ref(db, "tower"), orderByChild("f"), limitToLast(20)), (snap) => {
+    const a = []; snap.forEach((ch) => { const v = ch.val(); if (v && typeof v.id === "string" && typeof v.f === "number") { a.push(v); } });
+    twTop = a.filter(v => v.f > 0 && !isStaffName(v.id) && !isBannedName(v.id)).sort((x, y) => y.f - x.f || (+x.t || 0) - (+y.t || 0));
+    rePage(8);
+  }, () => {});
+  window.towerFight = function() {
+    if (!curUid || !loaded || twBusy || Date.now() < twCd) return;
+    const f = (S.tw || 0) + 1, P = twMyP(), FP = twFP(f), ch = twChance(P, FP), win = Math.random() * 100 < ch, mon = twMon(f);
+    twBusy = true; twCd = Date.now() + (win ? 4000 : 10000);
+    let g = 0, ex = "";
+    if (win) {
+      g = twGold(f); S.g += g; S.tw = f;
+      if (f % 5 === 0) { S.p = (S.p || 0) + 1; ex += " · 🛡️ 방지권 +1"; }
+      if (f % 10 === 0) { S.egg = (S.egg || 0) + 1; ex += " · 🥚 알 +1"; }
+      window.seasonAdd(2 + Math.floor(f / 5));
+      if (!hasGold()) { set(ref(db, "tower/" + wEnc(curUid)), { id: curUid, f, t: srvNow() }).catch(() => {}); if (f % 10 === 0) window.newsPost("tower", f); }
+      cloudSave();
+    }
+    fightShow({ title: "🗼 무한의 탑 " + f + "층", names: [curUid, mon[1]], subs: ["전투력 " + num(P), "전투력 " + num(FP)], icons: ["🤺", mon[0]], rounds: duelRounds(S.l || 0, Math.min(15, Math.floor(f / 3)), win), won: win,
+      end: win ? "🏆 " + f + "층 돌파! +" + num(g) + " G" + ex : "💥 패배... 더 강해져서 다시 도전해요",
+      done: () => { twBusy = false; if (win) log("🗼 무한의 탑 " + f + "층 돌파! +" + num(g) + " G" + ex, "var(--gold)"); else log("🗼 " + f + "층 " + mon[1] + "에게 패배... (승률 " + ch + "%)", "var(--bad)"); if (typeof ui === "function") ui(); } });
+    if (typeof ui === "function") ui();
+  };
+  window.towerDaily = function() {
+    if (!curUid || !loaded) return;
+    const cur = S.tw || 0, d = kstDay(); if (cur < 1 || S.twd === d) return;
+    S.twd = d; const g = twDaily(cur); S.g += g;
+    log("🎁 오늘의 탑 보상 +" + num(g) + " G (" + cur + "층 기록)", "var(--gold)"); if (typeof ui === "function") ui(); cloudSave();
+  };
+  window.towerPanel = function() {
+    const hd = pgHead("🗼 무한의 탑", "한 층씩 올라가며 몬스터를 쓰러뜨려요. 검·펫·스킬이 강할수록 유리해요");
+    if (!curUid || !loaded) return hd + '<div class="it">로그인 후 이용할 수 있어요</div>';
+    const cur = S.tw || 0, f = cur + 1, P = twMyP(), FP = twFP(f), ch = twChance(P, FP), mon = twMon(f), cd = Math.max(0, Math.ceil((twCd - Date.now()) / 1000)), dOk = cur >= 1 && S.twd !== kstDay();
+    let h = hd + '<div style="text-align:left;font-size:12.5px">' +
+      '<div style="background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.35);border-radius:10px;padding:10px;margin-bottom:8px">' +
+      '<div style="display:flex;justify-content:space-between;font-weight:800;font-size:14px"><span>🚩 ' + cur + '층까지 돌파</span><span style="color:var(--cy)">내 전투력 ' + num(P) + "</span></div>" +
+      '<div style="display:flex;align-items:center;gap:10px;margin:8px 0"><div style="font-size:46px;line-height:1">' + mon[0] + '</div><div><div style="font-weight:800">' + f + "층 · " + esc(mon[1]) + (f % 10 === 0 ? ' <span style="color:var(--bad)">BOSS</span>' : "") + '</div><div style="color:var(--sub)">적 전투력 ' + num(FP) + ' · 승률 <b style="color:' + (ch >= 60 ? "var(--ok)" : ch >= 30 ? "var(--gold)" : "var(--bad)") + '">' + ch + '%</b></div><div style="color:var(--gold)">보상 ' + num(twGold(f)) + " G" + (f % 5 === 0 ? " · 🛡️ 방지권" : "") + (f % 10 === 0 ? " · 🥚 알" : "") + "</div></div></div>" +
+      '<button class="up" style="width:100%" ' + (cd || twBusy ? "disabled" : "") + ' onclick="towerFight()">' + (cd ? "⏳ " + cd + "초 뒤 다시 도전" : "⚔️ " + f + "층 도전!") + "</button></div>";
+    h += '<div class="it"><span>🎁 오늘의 탑 보상 <span style="color:var(--sub)">(' + (cur >= 1 ? num(twDaily(cur)) + " G" : "1층을 깨면 열려요") + ')</span></span><button class="sm" ' + (dOk ? "" : "disabled") + ' onclick="towerDaily()">' + (cur >= 1 && !dOk ? "받음" : "받기") + "</button></div>";
+    h += '<div style="font-weight:800;margin:10px 0 2px">🏆 탑 랭킹</div>' + (twTop.length ? twTop.slice(0, 10).map((v, i) => '<div class="it" style="' + (v.id === curUid ? "background:rgba(0,229,255,.1);border-radius:6px" : "") + '"><span>' + (i < 3 ? MEDAL[i] : (i + 1) + "위") + " " + esc(v.id) + gTag(v.id) + "</span><b>" + Math.floor(v.f) + "층</b></div>").join("") : '<div class="it">아직 기록이 없어요. 첫 번째로 올라가 보세요!</div>');
+    h += '<div style="font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.6">전투력 = 지금 검 + 최고 기록 + 스킬 + 데리고 있는 펫 + 환생 + 길드 레벨<br>5층마다 🛡️ 방지권 · 10층마다 🥚 알 · 지면 10초 쉬어요' + (hasGold() ? "<br>골드 무한 계정은 탑 랭킹에 오르지 않아요" : "") + "</div>";
+    return h + "</div>";
+  };
+  setInterval(() => { if (twCd && Date.now() < twCd + 1500) rePage(8); }, 1000);
+
+  // ===== 🏅 칭호 =====
+  const TITLES = [
+    ["new", "새내기", "#b9b6cf", () => true, "처음부터 가지고 있어요"],
+    ["sm1", "견습 대장장이", "#4cd137", () => S.b >= 5, "최고 +5강 달성"],
+    ["sm2", "강철의 명장", "#00a8ff", () => S.b >= 10, "최고 +10강 달성"],
+    ["sm3", "전설의 대장장이", "#ffd700", () => S.b >= 15, "최고 +15강 달성"],
+    ["brk", "파괴왕", "#e84118", () => S.d >= 50, "검 50번 파괴"],
+    ["bss", "보스 사냥꾼", "#ff7f50", () => S.bk >= 20, "보스 20번 처치"],
+    ["aim", "명사수", "#fbc531", () => (S.pf || 0) >= 50, "PERFECT 50번"],
+    ["pet", "펫 수집가", "#9c88ff", () => Object.keys(S.pets || {}).length >= 4, "펫 4종 모으기"],
+    ["leg", "전설 조련사", "#ff00ff", () => Object.keys(S.pets || {}).some(k => PETS[k] && PETS[k].r === 3), "전설 펫 획득"],
+    ["tw1", "탑 등반가", "#00d2d3", () => (S.tw || 0) >= 10, "무한의 탑 10층"],
+    ["tw2", "탑의 지배자", "#ff4757", () => (S.tw || 0) >= 30, "무한의 탑 30층"],
+    ["mine", "광산왕", "#e1b12c", () => (S.mnl || 0) >= 10, "광산 Lv.10"],
+    ["gld", "길드장", "#f7971e", () => { const g = gOf(curUid); return !!g && g.leader === curUid; }, "길드를 이끌고 있을 때"],
+    ["chp", "시즌 챔피언", "#ffd700", () => !!S.schamp || !!champ[curUid], "주간 시즌 3위 안에 들기"],
+    ["rb", "환생자", "#8c7ae6", () => S.rb >= 1, "환생 1회"]
+  ];
+  const TT_MAP = {}; TITLES.forEach(t => { TT_MAP[t[0]] = t; });
+  let titleMap = {}, ttSyncT = 0;
+  const ttBoot = Date.now();
+  onValue(ref(db, "titles"), (snap) => {
+    const m = {}; snap.forEach((ch) => { const v = ch.val(); if (v && typeof v.id === "string" && TT_MAP[v.k]) { m[v.id] = v.k; } });
+    titleMap = m; if (window.__rb) window.__rb(); rePage(8); rePage(9);
+  }, () => {});
+  function tTag(id) { const t = TT_MAP[titleMap[id]]; return t ? ' <span style="font-size:10.5px;font-weight:700;color:' + t[2] + '">[' + t[1] + "]</span>" : ""; }
+  const ttOwned = (t) => { try { return !!t[3](); } catch (e) { return false; } };
+  window.titleSet = async function(k) {
+    if (!curUid || !loaded) return;
+    const t = TT_MAP[k]; if (k && (!t || !ttOwned(t))) return;
+    S.tt = k || ""; ttSyncT = Date.now();
+    log(k ? "🏅 칭호 [" + t[1] + "] 를 달았어요!" : "🏅 칭호를 뗐어요", "var(--cy)");
+    if (typeof ui === "function") ui(); rePage(9);
+    try { await set(ref(db, "titles/" + wEnc(curUid)), k ? { id: curUid, k } : null); } catch (e) { log("칭호 저장 실패: 파이어베이스 규칙(titles) 확인", "var(--bad)"); }
+    cloudSave();
+  };
+  window.titlePanel = function() {
+    const hd = pgHead("🏅 칭호", "조건을 채우면 칭호를 얻어요. 하나를 골라 이름 옆에 달 수 있어요");
+    if (!curUid || !loaded) return hd + '<div class="it">로그인 후 이용할 수 있어요</div>';
+    const own = TITLES.filter(ttOwned).length, cur = TT_MAP[S.tt];
+    let h = hd + '<div style="text-align:left;font-size:12.5px"><div style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);border-radius:10px;padding:9px 10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><span>지금: ' + (cur ? '<b style="color:' + cur[2] + '">[' + cur[1] + "]</b> " + esc(curUid) : esc(curUid) + ' <span style="color:var(--sub)">(칭호 없음)</span>') + '</span><span style="color:var(--sub)">보유 ' + own + " / " + TITLES.length + "</span></div>";
+    h += TITLES.map(t => { const ok = ttOwned(t), on = S.tt === t[0]; return '<div class="it" style="' + (ok ? "" : "opacity:.55") + '"><span><b style="color:' + t[2] + '">[' + t[1] + ']</b> <span style="color:var(--sub)">' + t[4] + '</span></span><button class="sm" ' + (ok ? "" : "disabled") + ' onclick="titleSet(\'' + (on ? "" : t[0]) + '\')">' + (!ok ? "🔒" : on ? "떼기" : "달기") + "</button></div>"; }).join("");
+    return h + '<div style="font-size:11.5px;color:var(--sub);margin-top:6px">칭호는 채팅·랭킹·시즌 순위·탑 랭킹에서 이름 옆에 보여요</div></div>';
+  };
+  setInterval(() => {
+    if (!curUid || !loaded || !S.tt) return;
+    const t = TT_MAP[S.tt];
+    if (!t) { S.tt = ""; return; }
+    if (!ttOwned(t)) { if (Date.now() - ttBoot > 20000) window.titleSet(""); return; }
+    if (titleMap[curUid] !== S.tt && Date.now() - ttSyncT > 30000) { ttSyncT = Date.now(); set(ref(db, "titles/" + wEnc(curUid)), { id: curUid, k: S.tt }).catch(() => {}); }
+  }, 5000);
+
+  // ===== ⚔️ 길드전 (주간) =====
+  const GW_REWARD = [500000, 300000, 150000], GW_MIN = 10;
+  let gwWk = "", gwUnsub = null, gwTop = [], gwPend = 0, gwLast = 0, gwPrevWk = "", gwPrev = [], gwChampGid = "";
+  const gwRows = (snap) => { const a = []; snap.forEach((ch) => { const v = ch.val(); if (v && typeof v.p === "number" && v.p > 0) { a.push({ gid: ch.key, n: String(v.n || "").slice(0, 8), i: G_ICONS.includes(v.i) ? v.i : "🏰", p: v.p, m: v.m && typeof v.m === "object" ? v.m : {} }); } }); return a.sort((x, y) => y.p - x.p); };
+  function gwSub() {
+    const wk = curWk(); if (wk === gwWk) return;
+    gwWk = wk;
+    if (gwUnsub) { try { gwUnsub(); } catch (e) {} }
+    gwUnsub = onValue(ref(db, "gwar/" + wk), (snap) => { gwTop = gwRows(snap); gRefresh(); }, () => {});
+  }
+  async function gwLoadPrev() {
+    const pw = prevWk(); if (gwPrevWk === pw) return;
+    try { const rows = gwRows(await get(ref(db, "gwar/" + pw))).slice(0, 3); gwPrev = rows; gwPrevWk = pw; gwChampGid = rows[0] ? rows[0].gid : ""; gwClaim(); gRefresh(); if (window.__rb) window.__rb(); } catch (e) {}
+  }
+  function gwClaim() {
+    if (!curUid || !loaded || !gwPrevWk || S.gwclaim === gwPrevWk) return;
+    const k = wEnc(curUid), i = gwPrev.findIndex(g => (+g.m[k] || 0) >= GW_MIN); if (i < 0) return;
+    S.gwclaim = gwPrevWk; const g = GW_REWARD[i]; S.g += g;
+    log("⚔️ 지난주 길드전 " + (i + 1) + "위 [" + chatClean(gwPrev[i].n) + "] 보상! +" + num(g) + " G", "var(--gold)");
+    if (typeof ui === "function") ui(); cloudSave();
+  }
+  async function gwSync() {
+    if (gwPend <= 0 || !curUid || !loaded || Date.now() - gwLast < 5000) return;
+    const g = gOf(curUid); if (!g) { gwPend = 0; return; }
+    const d = gwPend, k = wEnc(curUid); gwPend = 0; gwLast = Date.now();
+    try { await runTransaction(ref(db, "gwar/" + curWk() + "/" + g.gid), (cur) => { const c = cur || {}, m = c.m && typeof c.m === "object" ? c.m : {}; m[k] = (+m[k] || 0) + d; return { n: String(g.name || "").slice(0, 8), i: g.icon || "🏰", p: (+c.p || 0) + d, m }; }); } catch (e) { gwPend += d; }
+  }
+  function gwHtml() {
+    const me = curUid && loaded ? gOf(curUid) : null, k = curUid ? wEnc(curUid) : "";
+    const left = Math.max(0, kstMonday(srvNow()) + 7 * 86400000 - srvNow()), dd = Math.floor(left / 86400000), hh = Math.floor(left % 86400000 / 3600000);
+    const mine = me ? gwTop.find(g => g.gid === me.gid) : null, myRank = me ? gwTop.findIndex(g => g.gid === me.gid) + 1 : 0;
+    let h = '<div style="font-weight:800;margin:10px 0 3px;display:flex;justify-content:space-between"><span>⚔️ 길드전 (이번 주)</span><span style="font-weight:400;font-size:11.5px;color:var(--sub)">끝나기까지 ' + (dd ? dd + "일 " : "") + hh + "시간</span></div>" +
+      '<div style="background:var(--bg);border:1px solid rgba(156,136,255,.55);border-radius:8px;padding:8px">';
+    if (me) h += '<div style="color:var(--cy);font-weight:700;margin-bottom:4px">우리 길드 ' + num(mine ? mine.p : 0) + "점 · " + (myRank ? myRank + "위" : "순위 밖") + " · 내 기여 " + num(mine ? +mine.m[k] || 0 : 0) + "점</div>";
+    else h += '<div style="color:var(--sub);margin-bottom:4px">길드에 들어가면 참가할 수 있어요</div>';
+    h += gwTop.length ? gwTop.slice(0, 5).map((g, i) => '<div style="display:flex;justify-content:space-between;padding:2px 4px;border-radius:6px;' + (me && g.gid === me.gid ? "background:rgba(0,229,255,.1);" : "") + '"><span>' + (i < 3 ? MEDAL[i] : (i + 1) + "위") + " " + esc(g.i) + " " + esc(chatClean(g.n)) + ' <span style="color:var(--sub)">참여 ' + Object.keys(g.m).length + "명</span></span><b>" + num(g.p) + "점</b></div>").join("") : '<div style="color:var(--sub)">아직 점수가 없어요. 강화·보스·탑·대련으로 점수를 모아요!</div>';
+    h += '<div style="font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.6">🏅 보상(길드원 각자): 1위 ' + num(GW_REWARD[0]) + " · 2위 " + num(GW_REWARD[1]) + " · 3위 " + num(GW_REWARD[2]) + " G<br>그 주에 " + GW_MIN + "점 이상 모은 길드원만 받아요 · 길드원이 모은 시즌 점수가 길드 점수가 돼요</div>";
+    if (gwPrev.length) h += '<div style="font-size:12px;margin-top:4px">지난주: ' + gwPrev.map((g, i) => MEDAL[i] + " " + esc(g.i) + esc(chatClean(g.n))).join(" · ") + "</div>";
+    return h + "</div>";
+  }
+  setInterval(() => { gwSub(); gwLoadPrev(); gwClaim(); gwSync(); }, 2000);
+
+  // ===== 🎁 선물(우편) · 관리자 도구 =====
+  let mailUid = "", mailUnsub = null;
+  const mailBusy = {};
+  function mailSub() {
+    const u = curUid && loaded ? curUid : "";
+    if (u === mailUid) return;
+    if (mailUnsub) { try { mailUnsub(); } catch (e) {} mailUnsub = null; }
+    mailUid = u; if (!u) return;
+    mailUnsub = onValue(ref(db, "mail/" + wEnc(u)), (snap) => { snap.forEach((ch) => { mailTake(u, ch.key); }); }, () => {});
+  }
+  async function mailTake(u, key) {
+    if (mailBusy[key] || curUid !== u || !loaded) return;
+    mailBusy[key] = 1;
+    try {
+      let got = null;
+      const r = await runTransaction(ref(db, "mail/" + wEnc(u) + "/" + key), (cur) => { if (!cur) return cur; got = cur; return null; });
+      if (r && r.committed && got && curUid === u && loaded) {
+        const g = Math.max(0, Math.min(1e8, Math.floor(+got.g) || 0)), e = Math.max(0, Math.min(10, Math.floor(+got.e) || 0)), p = Math.max(0, Math.min(10, Math.floor(+got.p) || 0));
+        S.g += g; S.egg = (S.egg || 0) + e; S.p = (S.p || 0) + p;
+        const parts = []; if (g) parts.push(num(g) + " G"); if (e) parts.push("🥚 알 " + e + "개"); if (p) parts.push("🛡️ 방지권 " + p + "개");
+        const from = String(got.from || "관리자").slice(0, 12), msg = chatClean(got.m || "").slice(0, 30);
+        log("🎁 " + from + "님의 선물! " + (parts.join(" · ") || "마음") + (msg ? " — “" + msg + "”" : ""), "var(--gold)");
+        const d = document.createElement("div"); d.className = "bn";
+        d.innerHTML = '<div style="font-size:96px;line-height:1.1">🎁</div><b style="color:var(--gold)">선물 도착!</b><span>' + esc(parts.join(" · ")) + "</span>";
+        document.body.appendChild(d); setTimeout(() => d.remove(), 2300);
+        if (typeof ui === "function") ui(); cloudSave();
+      }
+    } catch (e) {} finally { delete mailBusy[key]; }
+  }
+  window.admGift = async function() {
+    if (!isAdmin()) return;
+    const id = admTarget(); if (!id) { admMsg("대상 아이디를 고르세요"); return; }
+    if (accLoaded && !accList.some(u => u.id === id)) { admMsg("없는 계정이에요: " + id); return; }
+    const g = +$m("admGiftG").value || 0, e = +$m("admGiftE").value || 0, p = +$m("admGiftP").value || 0, m = chatClean($m("admGiftM").value || "").slice(0, 30);
+    if (!g && !e && !p) { admMsg("보낼 선물을 고르세요"); return; }
+    try { await push(ref(db, "mail/" + wEnc(id)), { g, e, p, m, from: curUid, t: srvNow() }); admMsg("🎁 " + id + "님에게 선물을 보냈어요"); $m("admGiftM").value = ""; }
+    catch (err) { admMsg("실패: 파이어베이스 규칙(mail) 확인"); }
+  };
+  let ctl0, admReloadPend = 0, admWipePend = 0;
+  onValue(ref(db, "ctl/reload"), (sn) => { const v = +sn.val() || 0; if (ctl0 === undefined) { ctl0 = v; return; } if (v > ctl0) { ctl0 = v; if (!updGoing) updStart(); } }, () => {});
+  window.admReload = async function() {
+    if (!isAdmin()) return;
+    if (Date.now() > admReloadPend) { admReloadPend = Date.now() + 5000; admMsg("⚠️ 한 번 더 누르면 접속한 모두가 새로고침돼요"); return; }
+    admReloadPend = 0;
+    try { await set(ref(db, "ctl/reload"), srvNow()); admMsg("🔄 모두에게 새로고침 신호를 보냈어요"); } catch (e) { admMsg("실패: 파이어베이스 규칙(ctl) 확인"); }
+  };
+  window.admWipe = async function() {
+    if (!canBoss()) return;
+    const id = admTarget(); if (!id) { admMsg("아래 목록에서 유저를 먼저 누르세요"); return; }
+    if (Date.now() > admWipePend) { admWipePend = Date.now() + 5000; admMsg("⚠️ 한 번 더 누르면 " + id + "님의 탑·시즌 기록을 지워요"); return; }
+    admWipePend = 0; const k = wEnc(id);
+    try { await Promise.all([set(ref(db, "tower/" + k), null), set(ref(db, "season/" + curWk() + "/" + k), null)]); admMsg("🧽 " + id + "님의 탑·시즌 기록을 지웠어요"); } catch (e) { admMsg("실패: DB 규칙 확인"); }
+  };
+  function renderAdmStat() {
+    const el = $m("admStat"); if (!el || !canPanel()) return;
+    const gc = Object.values(guilds).filter(g => g && typeof g.name === "string").length;
+    const h = "📊 계정 " + (accLoaded ? accList.length : "?") + "개 · 월드 " + Object.keys(others).length + "명 · 길드 " + gc + "개 · 탑 1위 " + (twTop[0] ? esc(twTop[0].id) + " " + Math.floor(twTop[0].f) + "층" : "없음") + " · 보스 " + (raid && raid.hp > 0 ? "진행 중" : "없음");
+    if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
+  }
+  setInterval(() => { mailSub(); renderAdmStat(); }, 2000);
+
+  // ===== 🎉 업데이트 소식 =====
+  let wnDone = false;
+  setInterval(() => {
+    if (wnDone || !curUid || !loaded) return;
+    wnDone = true;
+    try { if (localStorage.getItem("sword_news_ver") === "21") return; localStorage.setItem("sword_news_ver", "21"); } catch (e) { return; }
+    const ov = document.createElement("div"); ov.id = "wnOv";
+    ov.style.cssText = "position:fixed;inset:0;z-index:150000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:14px";
+    ov.innerHTML = '<div style="width:min(380px,94vw);max-height:86vh;overflow:auto;background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:18px;color:var(--tx);text-align:left"><div style="font-weight:900;color:var(--gold);font-size:19px;text-align:center">🎉 v21 대규모 업데이트!</div><div style="font-size:13.5px;line-height:1.8;margin-top:10px">🗼 <b>무한의 탑</b> — 한 층씩 올라가며 보상을 받아요<br>⚔️ <b>길드전</b> — 매주 길드끼리 점수 대결 (길드 칸)<br>🏅 <b>칭호</b> — 조건을 채워 이름 옆에 달아요<br>⛏️ <b>광산</b> — 게임을 꺼 놔도 골드가 쌓여요<br>🎁 <b>선물</b> — 관리자가 보낸 선물이 바로 도착해요</div><div style="font-size:12px;color:var(--sub);margin-top:8px">위쪽 메뉴에 🗼 탑 · 🏅 칭호 · ⛏️ 광산 칸이 새로 생겼어요</div><button class="up" style="width:100%;margin-top:14px" onclick="document.getElementById(\'wnOv\').remove()">확인</button></div>';
+    document.body.appendChild(ov);
+  }, 1500);
 
   // ===== 💬 길드 채팅 =====
   let gcGid = "", gcUnsub = null, gcMsgs = [], gcHtml = "", gcLast = 0;

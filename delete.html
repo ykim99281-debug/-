@@ -87,7 +87,7 @@ $("go").onclick = async () => {
     say("삭제 중...", true);
     await set(ref(db, "accounts/" + enc), null);
     await set(ref(db, "saves/" + enc), null);
-    for (const nd of ["world", "duels", "duelResults", "chatMutes"]) { try { await set(ref(db, nd + "/" + enc), null); } catch (e) {} }
+    for (const nd of ["world", "duels", "duelResults", "chatMutes", "titles", "tower", "mail"]) { try { await set(ref(db, nd + "/" + enc), null); } catch (e) {} }
     for (const nd of ["admins", "mods", "nobles", "commons"]) { try { await wipeWhere(nd, "id", id); } catch (e) {} }
     try { await wipeWhere("rankings", "name", id); } catch (e) {}
     try { await wipeWhere("chat", "id", id); } catch (e) {}
