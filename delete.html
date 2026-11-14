@@ -58,7 +58,7 @@ const app = initializeApp({
   appId: "1:1047594997878:web:2a23ab277e287545bfe757"
 });
 const db = getDatabase(app);
-const CREATOR = "김명준";
+const CREATOR = "검의제왕", CR_OLD_H = "1bb962cbb4251d81";
 const $ = (id) => document.getElementById(id);
 const say = (t, ok) => { $("msg").textContent = t; $("msg").style.color = ok ? "#4cd137" : "#ff7675"; };
 const hashPw = (str) => {
@@ -103,7 +103,7 @@ $("go").onclick = async () => {
   const id = $("id").value.trim(), pw = $("pw").value;
   if (!id || !pw) { say("아이디와 비밀번호를 입력하세요"); return; }
   if (!$("ok").checked) { say("삭제 동의에 체크해 주세요"); return; }
-  if (id.normalize("NFC") === CREATOR) { say("제작자 계정은 이 페이지에서 삭제할 수 없어요"); return; }
+  if (id.normalize("NFC") === CREATOR || hashPw("cr|" + id.normalize("NFC")) === CR_OLD_H) { say("제작자 계정은 이 페이지에서 삭제할 수 없어요"); return; }
   $("go").disabled = true; say("확인 중...", true);
   try {
     const enc = encodeURIComponent(id);
