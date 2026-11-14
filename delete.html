@@ -58,6 +58,32 @@ const app = initializeApp({
   appId: "1:1047594997878:web:2a23ab277e287545bfe757"
 });
 const db = getDatabase(app);
+// 🔐 로그인 확인 (v30): 새 규칙에서는 본인 확인을 거쳐야 지울 수 있어요
+let auth = null, authMod = null;
+const authReady = import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js").then((m) => { authMod = m; auth = m.getAuth(app); return auth.authStateReady ? auth.authStateReady() : null; }).catch(() => {});
+const permErr = (e) => /permission|denied/i.test(String((e && (e.code || e.message)) || e));
+const randEm = () => { const a = new Uint8Array(12); crypto.getRandomValues(a); return "u" + Array.from(a, (b) => b.toString(16).padStart(2, "0")).join("") + "@sword-game.example.com"; };
+async function probeNew() { try { await get(ref(db, "names/__p")); return true; } catch (e) { return false; } }
+async function authSettle(uid, h) {
+  for (const ms of [0, 250, 500, 1000, 2000, 3000]) {
+    if (ms) await new Promise((r) => setTimeout(r, ms));
+    try { await set(ref(db, "claims/" + uid), h); return true; } catch (e) { if (!permErr(e)) return false; }
+  }
+  return false;
+}
+async function authLogin(id, h) {
+  const k = encodeURIComponent(id), pw = "sw_" + h;
+  await authReady; if (!auth) return "err";
+  try { if (auth.currentUser) await authMod.signOut(auth); } catch (e) {}
+  const bound = async () => { try { return (await get(ref(db, "accounts/" + k + "/uid"))).val() === auth.currentUser.uid; } catch (e) { return false; } };
+  let em = null; try { const sn = await get(ref(db, "ems/" + k)); if (sn.exists()) em = String(sn.val()); } catch (e) {}
+  if (em) { try { const c0 = await authMod.signInWithEmailAndPassword(auth, em, pw); if ((await authSettle(c0.user.uid, h)) && (await bound())) { await set(ref(db, "uids/" + auth.currentUser.uid), k); return ""; } } catch (e) { if (/network|too-many/i.test(String(e && e.code))) return "err"; } try { if (auth.currentUser) await authMod.signOut(auth); } catch (e) {} }
+  let cred; try { cred = await authMod.createUserWithEmailAndPassword(auth, randEm(), pw); } catch (e) { return "err"; }
+  if (!(await authSettle(cred.user.uid, h))) { try { await authMod.deleteUser(cred.user); } catch (e2) {} return "err"; }
+  try { await set(ref(db, "accounts/" + k + "/uid"), cred.user.uid); await set(ref(db, "uids/" + cred.user.uid), k); }
+  catch (e) { try { await authMod.deleteUser(cred.user); } catch (e2) {} return permErr(e) ? "bad" : "err"; }
+  return "";
+}
 const CREATOR = "검의제왕", CR_OLD_H = "1bb962cbb4251d81";
 const $ = (id) => document.getElementById(id);
 const say = (t, ok) => { $("msg").textContent = t; $("msg").style.color = ok ? "#4cd137" : "#ff7675"; };
@@ -96,7 +122,7 @@ async function wipeOther(id, enc) {
 }
 async function wipeWhere(node, field, id) {
   const sn = await get(ref(db, node)), jobs = [];
-  sn.forEach((ch) => { const v = ch.val(); if (v && v[field] === id) { jobs.push(set(ref(db, node + "/" + ch.key), null)); } });
+  sn.forEach((ch) => { const v = ch.val(); if (v && v[field] === id) { jobs.push(set(ref(db, node + "/" + ch.key), null).catch(() => {})); } });
   await Promise.all(jobs);
 }
 $("go").onclick = async () => {
@@ -106,17 +132,27 @@ $("go").onclick = async () => {
   if (id.normalize("NFC") === CREATOR || hashPw("cr|" + id.normalize("NFC")) === CR_OLD_H) { say("제작자 계정은 이 페이지에서 삭제할 수 없어요"); return; }
   $("go").disabled = true; say("확인 중...", true);
   try {
-    const enc = encodeURIComponent(id);
-    const a = await get(ref(db, "accounts/" + enc));
-    if (!a.exists() || a.val().h !== hashPw(pw)) { say("아이디 또는 비밀번호가 맞지 않아요. 비밀번호를 잊었다면 방법 3(이메일)을 이용해 주세요."); $("go").disabled = false; return; }
+    const enc = encodeURIComponent(id), bad = () => { say("아이디 또는 비밀번호가 맞지 않아요. 비밀번호를 잊었다면 방법 3(이메일)을 이용해 주세요."); $("go").disabled = false; };
+    const nw = await probeNew();
+    if (nw) {
+      const r = await authLogin(id, hashPw(pw));
+      if (r === "bad") { bad(); return; }
+      if (r) { say("확인하지 못했어요. 잠시 후 다시 시도해 주세요."); $("go").disabled = false; return; }
+    } else {
+      const a = await get(ref(db, "accounts/" + enc));
+      if (!a.exists() || a.val().h !== hashPw(pw)) { bad(); return; }
+    }
     say("삭제 중...", true);
-    await set(ref(db, "accounts/" + enc), null);
-    await set(ref(db, "saves/" + enc), null);
     for (const nd of ["world", "duels", "duelResults", "chatMutes", "titles", "tower", "mail", "arena", "online"]) { try { await set(ref(db, nd + "/" + enc), null); } catch (e) {} }
     try { await wipeOther(id, enc); } catch (e) {}
     for (const nd of ["admins", "mods", "nobles", "knights", "commons"]) { try { await wipeWhere(nd, "id", id); } catch (e) {} }
     try { await wipeWhere("rankings", "name", id); } catch (e) {}
     try { await wipeWhere("chat", "id", id); } catch (e) {}
+    try { await set(ref(db, "saves/" + enc), null); } catch (e) {}
+    await set(ref(db, "accounts/" + enc), null);
+    try { await set(ref(db, "names/" + id), null); } catch (e) {}
+    try { await set(ref(db, "ems/" + enc), null); } catch (e) {}
+    if (nw && auth && auth.currentUser) { try { await set(ref(db, "uids/" + auth.currentUser.uid), null); } catch (e) {} try { await authMod.deleteUser(auth.currentUser); } catch (e) {} }
     $("pw").value = "";
     say("✅ " + id + " 계정과 게임 기록을 모두 삭제했어요.", true);
   } catch (e) {

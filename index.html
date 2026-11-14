@@ -247,7 +247,7 @@ window.addEventListener("unhandledrejection",function(e){var m=document.getEleme
     <div id="lgMsg"></div>
     <button class="b1" id="lgLogin" onclick="fbLogin()">로그인</button>
     <div style="text-align:left;font-size:11.5px;color:var(--sub);line-height:1.7;margin:2px 0 8px"><label style="display:block;cursor:pointer"><input type="checkbox" id="lgAgree" style="width:auto;padding:0;margin:0 5px 0 0;vertical-align:middle"><a href="terms.html" target="_blank" style="color:var(--cy)">이용 규칙</a>과 <a href="privacy.html" target="_blank" style="color:var(--cy)">개인정보처리방침</a>에 동의해요</label><label style="display:block;cursor:pointer"><input type="checkbox" id="lgAge" style="width:auto;padding:0;margin:0 5px 0 0;vertical-align:middle">만 14세 이상이거나, 보호자의 동의를 받았어요</label>(새 계정을 만들 때만 필요해요 · 아이디에 실명을 쓰지 마세요)</div><button class="b2" id="lgSignup" onclick="fbSignup()">계정 생성</button>
-    <div style="font-size:10.5px;color:var(--sub)">v28.0</div>
+    <div style="font-size:10.5px;color:var(--sub)">v30.0</div>
   </div>
 </div>
 
@@ -846,7 +846,7 @@ function initX(){
   const xpg=["pgPet","pgGuild","pgAch","pgTower","pgTitle","pgMine","pgEq","pgArena","pgPass","pgQuest","pgFps"].map(id=>{const d=mk2("","");d.id=id;d.style.cssText="background:var(--panel);border-radius:12px;padding:10px;margin-bottom:12px";g.insertBefore(d,k[14]);return d});
   const evb=mk2("","");evb.id="evb";evb.className="adm-hide";evb.style.cssText="background:linear-gradient(135deg,#7b2ff7,#f107a3);color:#fff;font-weight:800;font-size:13px;padding:9px;border-radius:10px;margin-bottom:10px";
   const stf=mk2("","");stf.id="stf";stf.style.cssText="font-size:12.5px;text-align:left;line-height:1.7;background:var(--panel);border-radius:10px;padding:8px 12px;margin-bottom:10px";
-  const adm=mk2('<div style="font-size:13px;font-weight:800;margin-bottom:6px">🛠️ 관리자 패널 (<span id="admRole"></span>) <span style="font-weight:400;color:var(--sub);font-size:11px">v28.0</span></div><div id="admStat" style="font-size:11.5px;color:var(--sub);line-height:1.5;margin-bottom:8px"></div><div id="admTabs" class="row" style="gap:4px;margin-bottom:4px"><button class="sm" style="padding:8px 2px;font-size:12px" data-t="0" onclick="admGo(0)">👤 유저</button><button class="sm" style="padding:8px 2px;font-size:12px" data-t="1" onclick="admGo(1)">🎉 이벤트</button><button class="sm" style="padding:8px 2px;font-size:12px" data-t="2" onclick="admGo(2)">🌐 서버</button><button class="sm" style="padding:8px 2px;font-size:12px" data-t="3" onclick="admGo(3)">🧹 정리</button></div><div id="admMsg" style="position:sticky;top:0;z-index:2;background:var(--panel);font-size:12px;font-weight:700;color:var(--cy);min-height:18px;padding:3px 0 4px"></div><div class="admPg" data-p="0"><div style="font-size:12.5px;font-weight:800;margin:2px 0 4px">👥 전체 유저 (<span id="admUCnt">0</span>)</div><div class="row" style="margin-bottom:6px"><input id="admFind" type="text" maxlength="12" placeholder="🔍 이름 검색" oninput="admFilter()" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"></div><div id="admUsers" style="max-height:190px;overflow:auto;font-size:13px;line-height:1.9;border:1px solid var(--line);border-radius:8px"></div><div style="font-size:12px;font-weight:800;margin:10px 0 4px">🎯 고른 유저</div><div class="row" style="margin-bottom:6px"><input id="admT" type="text" maxlength="12" placeholder="위 목록에서 유저를 누르세요" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"><input id="admId" type="hidden"></div><div id="admInfo" style="font-size:12px;line-height:1.7;text-align:left;user-select:text;-webkit-user-select:text;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 9px">👆 유저를 누르면 정보가 표시됩니다</div><div id="admX" class="adm-hide"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🧰 고른 유저 다루기 (중간 관리자 이상)</div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admKick()">🚪 게임에서 내보내기 (두 번 탭)</button></div><div style="font-size:11.5px;color:var(--sub);margin:0 0 4px">🔇 채팅 금지</div><div class="row" style="margin-bottom:6px;gap:5px"><button class="sm" onclick="admMute(10)">10분</button><button class="sm" onclick="admMute(60)">1시간</button><button class="sm" onclick="admMute(0)">🔊 해제</button></div><div class="row" style="margin-bottom:6px"><input id="admWarnM" type="text" maxlength="30" placeholder="경고 내용 (30자)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"><button class="sm" onclick="admWarn()">⚠️ 경고</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admWipe()">🧽 탑·아레나·시즌 기록 지우기 (두 번 탭)</button></div></div><div id="admD"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🛡️ 벤 · 선물 (관리자 이상)</div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admBan()">🚫 벤</button><button class="sm" onclick="admUnban()">✅ 벤 해제</button><button class="sm" onclick="admDel()">🗑️ 계정 삭제</button></div><div style="font-size:11.5px;color:var(--sub);margin:0 0 4px">🎁 선물 고르기</div><div class="row" style="margin-bottom:6px;gap:5px"><select id="admGiftG" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">골드 없음</option><option value="10000">1만 G</option><option value="100000">10만 G</option><option value="1000000">100만 G</option><option value="10000000">1000만 G</option></select><select id="admGiftE" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">알 없음</option><option value="1">🥚 1개</option><option value="3">🥚 3개</option><option value="5">🥚 5개</option></select><select id="admGiftP" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">방지권 없음</option><option value="1">🛡️ 1개</option><option value="3">🛡️ 3개</option><option value="5">🛡️ 5개</option></select></div><div class="row" style="margin-bottom:6px"><input id="admGiftM" type="text" maxlength="30" placeholder="한마디 (선택)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"></div><div class="row" style="margin-bottom:6px;gap:5px"><button class="sm" onclick="admGift()">🎁 고른 유저에게</button><button class="sm" onclick="admGiftAll()">🎁 모두에게 (두 번 탭)</button></div></div><div id="admC" class="adm-hide"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">👑 직급 (제작자만)</div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">🛡️ 관리자</span><button class="sm" style="padding:7px 4px" onclick="admAppoint()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemove()">해임</button></div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">🧰 중간 관리자</span><button class="sm" style="padding:7px 4px" onclick="admAppointMod()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemoveMod()">해임</button></div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">🎩 하급귀족</span><button class="sm" style="padding:7px 4px" onclick="admAppointNoble()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemoveNoble()">해임</button></div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">⚜️ 기사</span><button class="sm" style="padding:7px 4px" onclick="admAppointKnight()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemoveKnight()">해임</button></div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">🔰 상급평민</span><button class="sm" style="padding:7px 4px" onclick="admAppointCommon()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemoveCommon()">해임</button></div><div style="font-size:11.5px;color:var(--sub);margin:8px 0 4px">🔑 비밀번호 다시 정해 주기</div><div class="row" style="margin-bottom:6px"><input id="admPw" type="text" maxlength="30" placeholder="새 비밀번호 (4자 이상)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"><button class="sm" onclick="admResetPw()">🔑 재설정</button></div></div><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🚩 신고함 (<span id="admRCnt">0</span>)</div><div id="admReports" style="max-height:180px;overflow:auto;font-size:12px;line-height:1.6;text-align:left;user-select:text;-webkit-user-select:text"></div></div><div class="admPg" data-p="1" style="display:none"><div id="admE"><div style="font-size:12px;font-weight:800;margin:2px 0 6px">🎉 이벤트 열기</div><div class="row" style="margin-bottom:6px"><select id="admType" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px"><option value="rate">🎯 성공 확률 +10%p</option><option value="rate2">🎯🎯 성공 확률 +30%p</option><option value="disc">💸 강화비 50% 할인</option><option value="free">🆓 강화비 무료</option><option value="keep">🛡️ 실패·파괴해도 단계 유지</option><option value="sellx">💰 AI 판매 대금 2배</option><option value="work">🔨 알바 보상 5배</option><option value="gift">🎁 골드 10만 지급 (1인 1회)</option><option value="season2">🗓️ 시즌 점수 2배</option><option value="tower2">🗼 탑 보상 2배</option></select></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admEvent(1)">⏱️ 1분</button><button class="sm" onclick="admEvent(5)">⏱️ 5분</button><button class="sm" onclick="admEventEnd()">⛔ 종료</button></div></div><div id="admB" class="adm-hide"></div></div><div class="admPg" data-p="2" style="display:none"><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admSrvList()">🌐 서버 현황 보기 (누가 어느 서버에 있는지)</button></div><div id="admSrv" style="font-size:12px;line-height:1.6;margin-bottom:8px;color:var(--sub);text-align:left"></div><div class="adm-rM adm-hide"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">📣 모두에게 이 서버로 모이라고 알리기 (두 번 탭)</div><div class="row" style="margin-bottom:6px;gap:5px"><button class="sm" onclick="admGather(0)">1서버</button><button class="sm" onclick="admGather(1)">2서버</button><button class="sm" onclick="admGather(2)">3서버</button></div><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🧪 베타 테스트 (AI 와 연습)</div><div class="row" style="margin-bottom:6px"><button class="sm" id="betaBtn" onclick="betaToggle()">🧪 베타 테스트 서버 들어가기</button></div></div><div class="adm-rA adm-hide"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🛠️ 점검 모드 (켜면 일반 유저는 게임을 못 해요)</div><div class="row" style="margin-bottom:6px"><input id="admMaintM" type="text" maxlength="40" placeholder="점검 안내 글 (선택)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"></div><div class="row" style="margin-bottom:6px;gap:5px"><button class="sm" onclick="admMaint(1)">🛠️ 점검 시작</button><button class="sm" onclick="admMaint(0)">✅ 점검 끝</button></div><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🔄 새로고침</div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admReload()">🔄 접속한 모두 새로고침 (두 번 탭)</button></div></div></div><div class="admPg" data-p="3" style="display:none"><div style="font-size:11.5px;color:var(--sub);line-height:1.6;margin:2px 0 8px;text-align:left">쓸모없어진 옛 기록만 지워요. 지금 게임하는 유저에게는 아무 일도 없어요.</div><div class="adm-rA adm-hide"><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRank()">🧹 계정 없는 랭킹 기록 정리 (두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanOld()">📦 구버전 계정 정리 (<span id="admOld">0</span>개, 두 번 탭)</button></div></div><div class="adm-rC adm-hide"><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRoles()">🧹 계정 없는 직책 기록 정리 (<span id="admGhost">0</span>건)</button></div></div></div>',"");
+  const adm=mk2('<div style="font-size:13px;font-weight:800;margin-bottom:6px">🛠️ 관리자 패널 (<span id="admRole"></span>) <span style="font-weight:400;color:var(--sub);font-size:11px">v30.0</span></div><div id="admStat" style="font-size:11.5px;color:var(--sub);line-height:1.5;margin-bottom:8px"></div><div id="admTabs" class="row" style="gap:4px;margin-bottom:4px"><button class="sm" style="padding:8px 2px;font-size:12px" data-t="0" onclick="admGo(0)">👤 유저</button><button class="sm" style="padding:8px 2px;font-size:12px" data-t="1" onclick="admGo(1)">🎉 이벤트</button><button class="sm" style="padding:8px 2px;font-size:12px" data-t="2" onclick="admGo(2)">🌐 서버</button><button class="sm" style="padding:8px 2px;font-size:12px" data-t="3" onclick="admGo(3)">🧹 정리</button></div><div id="admMsg" style="position:sticky;top:0;z-index:2;background:var(--panel);font-size:12px;font-weight:700;color:var(--cy);min-height:18px;padding:3px 0 4px"></div><div class="admPg" data-p="0"><div style="font-size:12.5px;font-weight:800;margin:2px 0 4px">👥 전체 유저 (<span id="admUCnt">0</span>)</div><div class="row" style="margin-bottom:6px"><input id="admFind" type="text" maxlength="12" placeholder="🔍 이름 검색" oninput="admFilter()" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"></div><div id="admUsers" style="max-height:190px;overflow:auto;font-size:13px;line-height:1.9;border:1px solid var(--line);border-radius:8px"></div><div style="font-size:12px;font-weight:800;margin:10px 0 4px">🎯 고른 유저</div><div class="row" style="margin-bottom:6px"><input id="admT" type="text" maxlength="12" placeholder="위 목록에서 유저를 누르세요" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"><input id="admId" type="hidden"></div><div id="admInfo" style="font-size:12px;line-height:1.7;text-align:left;user-select:text;-webkit-user-select:text;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 9px">👆 유저를 누르면 정보가 표시됩니다</div><div id="admX" class="adm-hide"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🧰 고른 유저 다루기 (중간 관리자 이상)</div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admKick()">🚪 게임에서 내보내기 (두 번 탭)</button></div><div style="font-size:11.5px;color:var(--sub);margin:0 0 4px">🔇 채팅 금지</div><div class="row" style="margin-bottom:6px;gap:5px"><button class="sm" onclick="admMute(10)">10분</button><button class="sm" onclick="admMute(60)">1시간</button><button class="sm" onclick="admMute(0)">🔊 해제</button></div><div class="row" style="margin-bottom:6px"><input id="admWarnM" type="text" maxlength="30" placeholder="경고 내용 (30자)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"><button class="sm" onclick="admWarn()">⚠️ 경고</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admWipe()">🧽 탑·아레나·시즌 기록 지우기 (두 번 탭)</button></div></div><div id="admD"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🛡️ 벤 · 선물 (관리자 이상)</div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admBan()">🚫 벤</button><button class="sm" onclick="admUnban()">✅ 벤 해제</button><button class="sm" onclick="admDel()">🗑️ 계정 삭제</button></div><div style="font-size:11.5px;color:var(--sub);margin:0 0 4px">🎁 선물 고르기</div><div class="row" style="margin-bottom:6px;gap:5px"><select id="admGiftG" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">골드 없음</option><option value="10000">1만 G</option><option value="100000">10만 G</option><option value="1000000">100만 G</option><option value="10000000">1000만 G</option></select><select id="admGiftE" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">알 없음</option><option value="1">🥚 1개</option><option value="3">🥚 3개</option><option value="5">🥚 5개</option></select><select id="admGiftP" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">방지권 없음</option><option value="1">🛡️ 1개</option><option value="3">🛡️ 3개</option><option value="5">🛡️ 5개</option></select></div><div class="row" style="margin-bottom:6px"><input id="admGiftM" type="text" maxlength="30" placeholder="한마디 (선택)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"></div><div class="row" style="margin-bottom:6px;gap:5px"><button class="sm" onclick="admGift()">🎁 고른 유저에게</button><button class="sm" onclick="admGiftAll()">🎁 모두에게 (두 번 탭)</button></div></div><div id="admC" class="adm-hide"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">👑 직급 (제작자만)</div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">🛡️ 관리자</span><button class="sm" style="padding:7px 4px" onclick="admAppoint()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemove()">해임</button></div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">🧰 중간 관리자</span><button class="sm" style="padding:7px 4px" onclick="admAppointMod()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemoveMod()">해임</button></div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">🎩 하급귀족</span><button class="sm" style="padding:7px 4px" onclick="admAppointNoble()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemoveNoble()">해임</button></div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">⚜️ 기사</span><button class="sm" style="padding:7px 4px" onclick="admAppointKnight()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemoveKnight()">해임</button></div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">🔰 상급평민</span><button class="sm" style="padding:7px 4px" onclick="admAppointCommon()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemoveCommon()">해임</button></div><div style="font-size:11.5px;color:var(--sub);margin:8px 0 4px">🔑 비밀번호 다시 정해 주기</div><div class="row" style="margin-bottom:6px"><input id="admPw" type="text" maxlength="30" placeholder="새 비밀번호 (4자 이상)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"><button class="sm" onclick="admResetPw()">🔑 재설정</button></div></div><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🚩 신고함 (<span id="admRCnt">0</span>)</div><div id="admReports" style="max-height:180px;overflow:auto;font-size:12px;line-height:1.6;text-align:left;user-select:text;-webkit-user-select:text"></div></div><div class="admPg" data-p="1" style="display:none"><div id="admE"><div style="font-size:12px;font-weight:800;margin:2px 0 6px">🎉 이벤트 열기</div><div class="row" style="margin-bottom:6px"><select id="admType" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px"><option value="rate">🎯 성공 확률 +10%p</option><option value="rate2">🎯🎯 성공 확률 +30%p</option><option value="disc">💸 강화비 50% 할인</option><option value="free">🆓 강화비 무료</option><option value="keep">🛡️ 실패·파괴해도 단계 유지</option><option value="sellx">💰 AI 판매 대금 2배</option><option value="work">🔨 알바 보상 5배</option><option value="gift">🎁 골드 10만 지급 (1인 1회)</option><option value="season2">🗓️ 시즌 점수 2배</option><option value="tower2">🗼 탑 보상 2배</option></select></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admEvent(1)">⏱️ 1분</button><button class="sm" onclick="admEvent(5)">⏱️ 5분</button><button class="sm" onclick="admEventEnd()">⛔ 종료</button></div></div><div id="admB" class="adm-hide"></div></div><div class="admPg" data-p="2" style="display:none"><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admSrvList()">🌐 서버 현황 보기 (누가 어느 서버에 있는지)</button></div><div id="admSrv" style="font-size:12px;line-height:1.6;margin-bottom:8px;color:var(--sub);text-align:left"></div><div class="adm-rM adm-hide"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">📣 모두에게 이 서버로 모이라고 알리기 (두 번 탭)</div><div class="row" style="margin-bottom:6px;gap:5px"><button class="sm" onclick="admGather(0)">1서버</button><button class="sm" onclick="admGather(1)">2서버</button><button class="sm" onclick="admGather(2)">3서버</button></div><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🧪 베타 테스트 (AI 와 연습)</div><div class="row" style="margin-bottom:6px"><button class="sm" id="betaBtn" onclick="betaToggle()">🧪 베타 테스트 서버 들어가기</button></div></div><div class="adm-rA adm-hide"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🛠️ 점검 모드 (켜면 일반 유저는 게임을 못 해요)</div><div class="row" style="margin-bottom:6px"><input id="admMaintM" type="text" maxlength="40" placeholder="점검 안내 글 (선택)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"></div><div class="row" style="margin-bottom:6px;gap:5px"><button class="sm" onclick="admMaint(1)">🛠️ 점검 시작</button><button class="sm" onclick="admMaint(0)">✅ 점검 끝</button></div><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🔄 새로고침</div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admReload()">🔄 접속한 모두 새로고침 (두 번 탭)</button></div></div></div><div class="admPg" data-p="3" style="display:none"><div style="font-size:11.5px;color:var(--sub);line-height:1.6;margin:2px 0 8px;text-align:left">쓸모없어진 옛 기록만 지워요. 지금 게임하는 유저에게는 아무 일도 없어요.</div><div class="adm-rA adm-hide"><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRank()">🧹 계정 없는 랭킹 기록 정리 (두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanOld()">📦 구버전 계정 정리 (<span id="admOld">0</span>개, 두 번 탭)</button></div></div><div class="adm-rC adm-hide"><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRoles()">🧹 계정 없는 직책 기록 정리 (<span id="admGhost">0</span>건)</button></div></div></div>',"");
   adm.id="adm";adm.className="adm-hide";adm.style.cssText="";const adIn=adm.innerHTML;adm.innerHTML='<button id="admTab" onclick="admToggle()">🛠️</button><div style="overflow:auto;max-height:70vh;padding:10px">'+adIn+'</div>';document.body.appendChild(adm);
   g.insertBefore(evb,k[5]);g.insertBefore(stf,k[10]);
   PGS=[[k[1],k[2],k[3],k[4],evb,k[5],k[6],k[7],box,k[8],k[9],stf,k[14]],[ex,box2,box3,k[11],k[12]],[k[10],st,k[13],hs,box4,box5,accb,k[15],k[16]],[wb],[cbx],[xpg[0]],[xpg[1]],[xpg[2]],[xpg[3]],[xpg[4]],[xpg[5]],[xpg[6]],[xpg[7]],[xpg[8]],[xpg[9]],[xpg[10]]];
@@ -892,6 +892,103 @@ function reset(){
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
+  // ===== 🔐 로그인 확인 (v30) — 계정을 파이어베이스 로그인에 묶어서, 내 데이터는 나만 고칠 수 있게 함 =====
+  let auth = null, authMod = null;
+  const authReady = import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js").then((m) => { authMod = m; auth = m.getAuth(app); return auth.authStateReady ? auth.authStateReady() : null; }).catch((e) => { console.error("auth load", e); });
+  const authUser = () => (auth && auth.currentUser) || null;
+  const permErr = (e) => /permission|denied/i.test(String((e && (e.code || e.message)) || e));
+  // 지금 규칙이 '새 규칙(잠긴 규칙)'인지 확인: names는 새 규칙에서만 읽을 수 있음
+  let rulesNew = null, rulesNewT = 0;
+  async function probeNew(force) {
+    if (!force && rulesNew !== null && Date.now() - rulesNewT < 60000) return rulesNew;
+    try { await get(ref(db, "names/__p")); rulesNew = true; } catch (e) { rulesNew = false; }
+    rulesNewT = Date.now();
+    return rulesNew;
+  }
+  const authPw = (h) => "sw_" + h;
+  let authErr = "";
+  const authWhy = (d) => /operation-not-allowed|configuration-not-found|admin-restricted/.test(authErr) ? "로그인 확인 기능이 꺼져 있어요. 제작자에게 알려 주세요" : /too-many/.test(authErr) ? "요청이 너무 많아요. 몇 분 뒤에 다시 해 주세요" : d;
+  const randEm = () => { const a = new Uint8Array(12); crypto.getRandomValues(a); return "u" + Array.from(a, (b) => b.toString(16).padStart(2, "0")).join("") + "@sword-game.example.com"; };
+  async function authOut() { try { await authReady; if (authUser()) await authMod.signOut(auth); } catch (e) {} }
+  async function authDrop() { try { if (authUser()) await authMod.deleteUser(authUser()); } catch (e) { await authOut(); } }
+  // 방금 한 로그인이 데이터베이스에 전달될 때까지 잠깐 기다림 (전달 전에 쓰면 거절될 수 있어서)
+  async function authSettle(uid, h) {
+    for (const ms of [0, 250, 500, 1000, 2000, 3000]) {
+      if (ms) await new Promise((r) => setTimeout(r, ms));
+      try { await set(ref(db, "claims/" + uid), h); return true; } catch (e) { if (!permErr(e)) return false; }
+    }
+    return false;
+  }
+  // 지금 로그인이 이 계정에 묶여 있는지
+  async function authBound(k) {
+    const u = authUser(); if (!u) return false;
+    try {
+      const a = await get(ref(db, "accounts/" + k + "/uid"));
+      if (a.val() !== u.uid) return false;
+      const m = await get(ref(db, "uids/" + u.uid));
+      if (m.val() !== k) await set(ref(db, "uids/" + u.uid), k);
+      return true;
+    } catch (e) { return false; }
+  }
+  // 새 규칙에서 로그인: "" 성공 / "bad" 아이디·비밀번호 틀림 / "err" 연결 문제
+  async function authLogin(id, h, keep) {
+    const k = encodeURIComponent(id), pw = authPw(h);
+    await authReady;
+    if (!auth) return "err";
+    if (keep && authUser() && await authBound(k)) return "";
+    await authOut();
+    let em = null;
+    try { const sn = await get(ref(db, "ems/" + k)); if (sn.exists()) em = String(sn.val()); } catch (e) {}
+    if (em) {
+      try { const c = await authMod.signInWithEmailAndPassword(auth, em, pw); if (await authSettle(c.user.uid, h)) { const ok = await authBound(k); set(ref(db, "claims/" + c.user.uid), null).catch(() => {}); if (ok) return ""; } }
+      catch (e) { if (/network|too-many/i.test(String(e && e.code))) return "err"; }
+      await authOut();
+    }
+    // 처음 들어오는 예전 계정(또는 비밀번호가 재설정된 계정): 비밀번호가 맞는지는 규칙이 확인함
+    let cred; const nem = randEm();
+    try { cred = await authMod.createUserWithEmailAndPassword(auth, nem, pw); } catch (e) { console.error("auth create", e); authErr = String((e && e.code) || e); return "err"; }
+    const uid = cred.user.uid;
+    if (!(await authSettle(uid, h))) { await authDrop(); return "err"; }
+    try {
+      await set(ref(db, "accounts/" + k + "/uid"), uid);
+    } catch (e) { try { await set(ref(db, "claims/" + uid), null); } catch (e2) {} await authDrop(); return permErr(e) ? "bad" : "err"; }
+    try {
+      let a = {}; try { a = (await get(ref(db, "accounts/" + k))).val() || {}; } catch (e) {}
+      if (typeof a.id !== "string") { try { await set(ref(db, "accounts/" + k + "/id"), id); } catch (e) {} }
+      await set(ref(db, "uids/" + uid), k);
+      try { await set(ref(db, "names/" + id), { k, t: +a.t || 0 }); } catch (e) {}
+      await set(ref(db, "ems/" + k), nem);
+      set(ref(db, "claims/" + uid), null).catch(() => {});
+    } catch (e) { console.error("auth bind", e); return "err"; }
+    return "";
+  }
+  // 새 규칙에서 가입: "" 성공 / "dup" 이미 있음 / "err"
+  async function authSignup(id, h) {
+    const k = encodeURIComponent(id), pw = authPw(h);
+    await authReady;
+    if (!auth) return "err";
+    try { if ((await get(ref(db, "ems/" + k))).exists()) return "dup"; } catch (e) {}
+    try {
+      if ((await get(ref(db, "names/" + id))).exists()) {
+        try { await set(ref(db, "names/" + id), null); } catch (e) {}   // 주인 없는 이름표만 지워짐
+        if ((await get(ref(db, "names/" + id))).exists()) return "dup";
+      }
+    } catch (e) {}
+    await authOut();
+    let cred; const nem = randEm();
+    try { cred = await authMod.createUserWithEmailAndPassword(auth, nem, pw); } catch (e) { console.error("auth create", e); authErr = String((e && e.code) || e); return "err"; }
+    const uid = cred.user.uid, t = Date.now() + (window.SRV_OFF || 0);
+    if (!(await authSettle(uid, h))) { await authDrop(); return "err"; }
+    try { await set(ref(db, "accounts/" + k), { uid, id, h, t, agree: t }); }
+    catch (e) { try { await set(ref(db, "claims/" + uid), null); } catch (e2) {} await authDrop(); return permErr(e) ? "dup" : "err"; }
+    try {
+      await set(ref(db, "uids/" + uid), k);
+      await set(ref(db, "names/" + id), { k, t });
+      await set(ref(db, "ems/" + k), nem);
+      set(ref(db, "claims/" + uid), null).catch(() => {});
+    } catch (e) { console.error("auth signup bind", e); return "err"; }
+    return "";
+  }
 
   // ===== 🌐 서버 3개 =====
   // 서버마다 따로: 월드 · 전체 채팅 · 월드 대련 · 3D 대결 · 접속 인원
@@ -1116,9 +1213,15 @@ function reset(){
     lgScreen.classList.add("hidden");
     applyRole();
     cloudSave();
-    if (crOld(id)) setTimeout(crMove, 600);
+    if (crOld(id) && rulesNew === false) setTimeout(crMove, 600);
+    setTimeout(() => { accSub(); repSub(); prefill(); authSelfTest(); }, 300);
     return true;
   }
+  // 규칙이 새것으로 바뀌었는데 아직 예전 방식으로 들어와 있으면, 새로고침해서 새 방식으로 다시 들어옴
+  setInterval(async () => {
+    if (!curUid || !loaded || authUser() || document.hidden) return;
+    if (await probeNew(true)) { try { sessionStorage.setItem("sword_rules_sw", "1"); } catch (e) {} location.reload(); }
+  }, 20000);
   // ===== 제작자 계정 이름 바꾸기 (예전 이름 → 별명). 기록은 그대로 옮기고 예전 이름은 모두 지움 =====
   let crBusy = false;
   function crBox(html) {
@@ -1197,11 +1300,17 @@ function reset(){
     if (isCr(c.id)) { lgMsg.textContent = "사용할 수 없는 아이디입니다"; return; }
     lgMsg.textContent = "처리 중...";
     try {
-      const snap = await get(accRef(c.id));
-      if (snap.exists()) { lgMsg.textContent = "이미 있는 아이디입니다"; return; }
       const bn = await get(ref(db, "bans/" + encodeURIComponent(c.id)));
       if (bn.exists()) { lgMsg.textContent = "사용할 수 없는 아이디입니다"; return; }
-      await set(accRef(c.id), { h: c.h, t: Date.now(), agree: Date.now() });
+      if (await probeNew(true)) {
+        const r = await authSignup(c.id, c.h);
+        if (r === "dup") { lgMsg.textContent = "이미 있는 아이디입니다"; return; }
+        if (r) { lgMsg.textContent = authWhy("가입하지 못했어요. 잠시 후 다시 해 주세요"); return; }
+      } else {
+        const snap = await get(accRef(c.id));
+        if (snap.exists()) { lgMsg.textContent = "이미 있는 아이디입니다"; return; }
+        await set(accRef(c.id), { h: c.h, t: Date.now(), agree: Date.now() });
+      }
       await enter(c.id, c.h);
     } catch (e) { console.error(e); lgMsg.textContent = "오류: DB 규칙을 확인해 주세요"; }
   };
@@ -1209,10 +1318,16 @@ function reset(){
     const c = readCred(); if (!c) return;
     lgMsg.textContent = "처리 중...";
     try {
-      const snap = await get(accRef(c.id));
-      if (!snap.exists() || snap.val().h !== c.h) { lgMsg.textContent = "아이디 또는 비밀번호가 틀렸습니다"; return; }
       const bn = await get(ref(db, "bans/" + encodeURIComponent(c.id)));
       if (bn.exists()) { lgMsg.textContent = "🚫 정지된 계정입니다"; return; }
+      if (await probeNew(true)) {
+        const r = await authLogin(c.id, c.h, false);
+        if (r === "bad") { lgMsg.textContent = "아이디 또는 비밀번호가 틀렸습니다"; return; }
+        if (r) { lgMsg.textContent = authWhy("로그인하지 못했어요. 잠시 후 다시 해 주세요"); return; }
+      } else {
+        const snap = await get(accRef(c.id));
+        if (!snap.exists() || snap.val().h !== c.h) { lgMsg.textContent = "아이디 또는 비밀번호가 틀렸습니다"; return; }
+      }
       await enter(c.id, c.h);
     } catch (e) { console.error(e); lgMsg.textContent = "오류: DB 규칙을 확인해 주세요"; }
   };
@@ -1225,6 +1340,8 @@ function reset(){
     if (save) await cloudSave();
     loaded = false; curUid = null;
     localStorage.removeItem(SESS_KEY);
+    try { if (srvOnUid) { const ou = srvOnUid; srvOnUid = ""; await set(ref(sdb, "online/" + encodeURIComponent(ou)), null); } } catch (e) {}
+    await authOut();
     if (typeof stopAuto === "function") { try { stopAuto(); } catch (e) {} }
     if (nameInput) { nameInput.value = ""; nameInput.readOnly = false; }
     document.getElementById("lgPw").value = "";
@@ -1235,7 +1352,45 @@ function reset(){
   async function cloudSave() {
     if (!curUid || !loaded || typeof S === "undefined") return;
     try { await set(ref(db, "saves/" + encodeURIComponent(curUid)), JSON.parse(JSON.stringify(S))); }
-    catch (e) { console.error("cloud save error:", e); }
+    catch (e) { console.error("cloud save error:", e); if (permErr(e)) authFix(); }
+  }
+  let fixBusy = false, fixT = 0;
+  async function authFix() {
+    if (fixBusy || Date.now() - fixT < 15000 || !curUid || !loaded) return;
+    fixBusy = true; fixT = Date.now();
+    try {
+      if (await probeNew(true)) {
+        let ss = null; try { ss = JSON.parse(localStorage.getItem(SESS_KEY) || "null"); } catch (e) {}
+        const id = curUid;
+        if (ss && ss.id === id && typeof ss.h === "string") {
+          const wasOut = !authUser();
+          const r = await authLogin(id, ss.h, true);
+          if (r === "bad" && curUid === id) { loaded = false; await doLogout(false); lgMsg.textContent = "다시 로그인해 주세요"; }
+          else if (!r && wasOut && curUid === id && loaded) {   // 규칙이 방금 새것으로 바뀐 경우: 지금까지 한 것을 저장하고 새 방식으로 다시 들어옴
+            try { await set(ref(db, "saves/" + encodeURIComponent(id)), JSON.parse(JSON.stringify(S))); } catch (e) {}
+            location.reload();
+          }
+        }
+      }
+    } catch (e) {}
+    fixBusy = false;
+  }
+  // 제작자용 준비 확인 (예전 규칙일 때): 로그인 확인 기능이 켜져 있는지 미리 시험해 봄
+  let stDone = false;
+  async function authSelfTest() {
+    if (stDone || rulesNew !== false || !isCreator() || !loaded) return;
+    stDone = true;
+    await authReady;
+    let ok = false, why = "";
+    try {
+      if (!auth) throw new Error("모듈을 불러오지 못함");
+      const c = await authMod.createUserWithEmailAndPassword(auth, randEm(), "sw_test_" + Date.now());
+      try { await authMod.deleteUser(c.user); } catch (e) { await authOut(); }
+      ok = true;
+    } catch (e) { why = String((e && (e.code || e.message)) || e); }
+    const m = ok ? "🔐 준비 확인 ✅ 로그인 확인 기능이 켜져 있어요. 이제 새 규칙을 붙여넣어도 돼요" : "🔐 준비 확인 ❌ 아직 안 돼요. 파이어베이스 Authentication에서 이메일/비밀번호를 켜 주세요 (" + why + ")";
+    if (typeof log === "function") log(m, ok ? "var(--gold)" : "var(--bad)");
+    admMsg(m);
   }
   // ===== 제작자 / 관리자 / 이벤트 =====
   const CREATOR = "검의제왕", CR_OLD_H = "1bb962cbb4251d81";
@@ -1399,7 +1554,13 @@ function reset(){
     box.textContent = "불러오는 중...";
     try {
       const enc = encodeURIComponent(id);
-      const a = await get(ref(db, "accounts/" + enc));
+      let a;
+      try { a = await get(ref(db, "accounts/" + enc)); }
+      catch (e) {
+        const u = accList.find(x => x.id === id && !x.old); let t = u ? u.t : 0;
+        try { const ts = await get(ref(db, "accounts/" + enc + "/t")); if (ts.exists()) t = +ts.val() || t; } catch (e2) {}
+        a = { exists: () => !!u, val: () => ({ t }) };
+      }
       const olds = accList.filter(u => u.id === id && u.old);
       if (!a.exists()) {
         if (olds.length) { box.innerHTML = '<b>' + esc(id) + '</b> · 📦 구버전 계정<br>예전 버전 게임에서 만든 계정이라 지금 버전에서는 로그인할 수 없습니다.<br>필요 없으면 🗑️ 계정 삭제 또는 📦 구버전 계정 정리로 지우세요.'; return; }
@@ -1648,7 +1809,8 @@ function reset(){
     const keys = [...new Set([enc].concat(accList.filter(u => u.id === id).map(u => u.k)))];
     try {
       for (const k of keys) await set(ref(db, "accounts/" + k), null);
-      for (const k of keys) { const chk = await get(ref(db, "accounts/" + k)); if (chk.exists()) { admMsg("❌ 삭제되지 않았습니다 (파이어베이스 규칙 게시 확인)"); return; } }
+      for (const k of keys) { let gone = true; try { gone = !(await get(ref(db, "accounts/" + k))).exists(); } catch (e2) {} if (!gone) { admMsg("❌ 삭제되지 않았습니다 (파이어베이스 규칙 게시 확인)"); return; } }
+      await tagDrop(id, keys);
     } catch (e) { console.error(e); admMsg("❌ 실패: 파이어베이스 규칙(accounts) 확인"); return; }
     accList = accList.filter(u => u.id !== id);
     renderUsers();
@@ -1677,17 +1839,52 @@ function reset(){
     }
   });
 
-  onValue(ref(db, "accounts"), (snap) => {
-    const v = snap.val() || {};
-    accList = Object.keys(v).map(k => { let id = k; try { id = decodeURIComponent(k); } catch (e) {} return { id, k, t: (v[k] && v[k].t) || 0, old: k !== encodeURIComponent(id) }; });
-    accLoaded = true;
+  let acV = null, nmV = null, pfDone = false, acOn = false, nmOn = false;
+  function accBuild() {
+    let has = null;
+    if (acV) {
+      accList = Object.keys(acV).map(k => { let id = k; try { id = decodeURIComponent(k); } catch (e) {} return { id, k, t: (acV[k] && acV[k].t) || 0, old: k !== encodeURIComponent(id) }; });
+      accLoaded = true; has = (id) => encodeURIComponent(id) in acV;
+    } else if (nmV) {
+      accList = Object.keys(nmV).filter(id => nmV[id] && typeof nmV[id].k === "string").map(id => ({ id, k: nmV[id].k, t: +nmV[id].t || 0, old: nmV[id].k !== encodeURIComponent(id) }));
+      accLoaded = pfDone; has = (id) => id in nmV;
+    } else return;
     applyRole();
     if (window.__rb) window.__rb();
-    if (curUid && loaded && !(encodeURIComponent(curUid) in v)) {
+    if (accLoaded && curUid && loaded && !has(curUid)) {
       loaded = false;
       doLogout(false).then(() => { lgMsg.textContent = "삭제된 계정입니다"; });
     }
-  });
+  }
+  function accSub() {
+    if (!nmOn) { nmOn = true; onValue(ref(db, "names"), (snap) => { nmV = snap.val() || {}; accBuild(); }, () => { nmOn = false; nmV = null; }); }
+    if (!acOn && (rulesNew !== true || isCreator())) { acOn = true; onValue(ref(db, "accounts"), (snap) => { acV = snap.val() || {}; accBuild(); }, () => { acOn = false; acV = null; accBuild(); }); }
+  }
+  onValue(ref(db, "ctl/pf"), (sn) => { pfDone = sn.val() === 1; accBuild(); }, () => {});
+  probeNew(true).then(accSub);
+  setInterval(accSub, 15000);
+  // 제작자가 처음 한 번: 예전 계정들에 이름표를 달아 줌 (새 규칙에서 아이디 가로채기 방지)
+  let pfBusy = false;
+  async function prefill() {
+    if (pfBusy || pfDone || rulesNew !== true || !isCreator() || !loaded) return;
+    pfBusy = true;
+    try {
+      const all = (await get(ref(db, "accounts"))).val() || {};
+      const nm = (await get(ref(db, "names"))).val() || {};
+      let n = 0;
+      for (const k of Object.keys(all)) {
+        const a = all[k]; let id = k; try { id = decodeURIComponent(k); } catch (e) { continue; }
+        if (!a || typeof a.h !== "string" || k !== encodeURIComponent(id) || !/^[0-9A-Za-z가-힣_]{2,10}$/.test(id)) continue;
+        try {
+          if (typeof a.id !== "string") await set(ref(db, "accounts/" + k + "/id"), id);
+          if (!nm[id]) { await set(ref(db, "names/" + id), { k, t: +a.t || 0 }); n++; }
+        } catch (e) { console.error("prefill", k, e); }
+      }
+      await set(ref(db, "ctl/pf"), 1);
+      if (typeof log === "function") log("🔐 데이터 보호 준비 완료 — 계정 " + n + "개에 이름표를 달았어요", "var(--gold)");
+    } catch (e) { console.error("prefill", e); }
+    pfBusy = false;
+  }
   renderStaff();
 
   // ===== 오픈월드 / 대련 =====
@@ -2235,12 +2432,13 @@ function reset(){
     try { await set(ref(db, "reports/" + k), null); admMsg("✅ 신고를 처리 완료로 정리했습니다"); }
     catch (e) { admMsg("실패: 파이어베이스 규칙(reports) 확인"); }
   };
-  onValue(ref(db, "reports"), (snap) => { reports = snap.val() || {}; renderReports(); }, () => {});
+  let repOn = false;
+  function repSub() { if (repOn || !(isAdmin() || isMod())) return; repOn = true; onValue(ref(db, "reports"), (snap) => { reports = snap.val() || {}; renderReports(); }, () => { repOn = false; }); }
+  repSub(); setInterval(repSub, 5000);
   setInterval(renderReports, 2000);
   async function purgeUser(id) {
     const enc = encodeURIComponent(id);
     const keys = [...new Set([enc].concat(accList.filter(u => u.id === id).map(u => u.k)))];
-    for (const k of keys) { await set(ref(db, "accounts/" + k), null); try { await set(ref(db, "saves/" + k), null); } catch (e) {} }
     for (const nd of ["world", "duels", "duelResults", "chatMutes", "titles", "tower", "mail", "arena", "online"]) { try { await set(ref(db, nd + "/" + enc), null); } catch (e) {} }
     try { await srvPurge(id); } catch (e) {}
     for (const nd of ["admins", "mods", "nobles", "knights", "commons"]) { try { await clearRole(nd, id); } catch (e) {} }
@@ -2248,10 +2446,19 @@ function reset(){
     for (const [node, field] of [["rankings", "name"], ["chat", "id"]]) {
       try {
         const sn = await get(ref(db, node)), jobs = [];
-        sn.forEach((ch) => { const v = ch.val(); if (v && v[field] === id) { jobs.push(set(ref(db, node + "/" + ch.key), null)); } });
+        sn.forEach((ch) => { const v = ch.val(); if (v && v[field] === id) { jobs.push(set(ref(db, node + "/" + ch.key), null).catch(() => {})); } });
         await Promise.all(jobs);
       } catch (e) {}
     }
+    for (const k of keys) { try { await set(ref(db, "saves/" + k), null); } catch (e) {} }
+    for (const k of keys) await set(ref(db, "accounts/" + k), null);
+    await tagDrop(id, keys);
+    if (id === curUid && authUser()) { try { await set(ref(db, "uids/" + authUser().uid), null); } catch (e) {} await authDrop(); }
+  }
+  // 이름표(names)와 로그인 주소(ems) 지우기 — 예전 규칙에서는 없는 칸이라 실패해도 괜찮음
+  async function tagDrop(id, keys) {
+    try { await set(ref(db, "names/" + id), null); } catch (e) {}
+    for (const k of keys) { try { await set(ref(db, "ems/" + k), null); } catch (e) {} }
   }
   window.delMeOpen = () => { const b = $m("delMeBox"); if (b) b.style.display = b.style.display === "none" ? "block" : "none"; };
   window.fbDeleteMe = async function() {
@@ -3029,7 +3236,7 @@ function reset(){
   function renderAdmStat() {
     const el = $m("admStat"); if (!el || !canPanel()) return;
     const gc = Object.values(guilds).filter(g => g && typeof g.name === "string").length;
-    const h = "📊 계정 " + (accLoaded ? accList.length : "?") + "개 · 🌐 " + (SRV + 1) + "서버 (서버별 " + srvSt.map(x => x.n === null ? "-" : x.n).join("/") + "명) · 월드 " + Object.keys(others).length + "명 · 길드 " + gc + "개 · 탑 1위 " + (twTop[0] ? esc(twTop[0].id) + " " + Math.floor(twTop[0].f) + "층" : "없음") + " · 보스 " + (raid && raid.hp > 0 ? "진행 중" : "없음") + (maintOn() ? " · 🛠️ 점검 중" : "");
+    const h = (rulesNew === true ? "🔐 보호 켜짐 · " : rulesNew === false ? "🔓 보호 꺼짐(예전 규칙) · " : "") + "📊 계정 " + (accLoaded ? accList.length : "?") + "개 · 🌐 " + (SRV + 1) + "서버 (서버별 " + srvSt.map(x => x.n === null ? "-" : x.n).join("/") + "명) · 월드 " + Object.keys(others).length + "명 · 길드 " + gc + "개 · 탑 1위 " + (twTop[0] ? esc(twTop[0].id) + " " + Math.floor(twTop[0].f) + "층" : "없음") + " · 보스 " + (raid && raid.hp > 0 ? "진행 중" : "없음") + (maintOn() ? " · 🛠️ 점검 중" : "");
     if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
   }
   setInterval(() => { mailSub(); renderAdmStat(); }, 2000);
@@ -3867,10 +4074,11 @@ function reset(){
   (async () => {
     try {
       const ss = JSON.parse(localStorage.getItem(SESS_KEY) || "null");
-      if (!ss) return;
-      const snap = await get(accRef(ss.id));
+      if (!ss || typeof ss.id !== "string" || typeof ss.h !== "string") { await authOut(); return; }
       const bn = await get(ref(db, "bans/" + encodeURIComponent(ss.id)));
-      if (snap.exists() && snap.val().h === ss.h && !bn.exists()) await enter(ss.id, ss.h);
+      if (bn.exists()) return;
+      if (await probeNew(true)) { if (!(await authLogin(ss.id, ss.h, true))) await enter(ss.id, ss.h); }
+      else { const snap = await get(accRef(ss.id)); if (snap.exists() && snap.val().h === ss.h) await enter(ss.id, ss.h); }
     } catch (e) {}
   })();
   setInterval(cloudSave, 5000);
