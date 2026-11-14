@@ -69,6 +69,31 @@ const hashPw = (str) => {
   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
   return (h2 >>> 0).toString(16) + (h1 >>> 0).toString(16);
 };
+// 2번·3번 서버(월드·채팅만 따로 쓰는 서버)에 남은 흔적도 지움
+const OTHER = [
+  ["srv2", { apiKey: "AIzaSyAEJZ9BI4ZEsklUqeUC8bV0bqUdYWP6aEY", authDomain: "project-1180520264260755609.firebaseapp.com", projectId: "project-1180520264260755609", appId: "1:871826948331:web:6ec617512368ff6af33eae" },
+    ["https://project-1180520264260755609-default-rtdb.asia-southeast1.firebasedatabase.app"]],
+  ["srv3", { apiKey: "AIzaSyBeNVjtxrn7iMDwcwfOhN7qI9K4W6pgp5c", authDomain: "gwiwvuw-1460e.firebaseapp.com", projectId: "gwiwvuw-1460e", appId: "1:892458507499:web:ea59b9f6c8201e0f9bb2ae" },
+    ["https://gwiwvuw-1460e-default-rtdb.asia-southeast1.firebasedatabase.app"]]
+];
+const otherDb = {};
+async function reach(u) {
+  const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 2500);
+  try { const r = await fetch(u + "/online.json", { cache: "no-store", signal: ac.signal }); return r.ok; } catch (e) { return false; } finally { clearTimeout(tm); }
+}
+async function wipeOther(id, enc) {
+  const lim = (p) => Promise.race([p, new Promise((r) => setTimeout(r, 6000))]);
+  for (const [name, cfg, urls] of OTHER) {
+    try {
+      if (!otherDb[name]) { let url = ""; for (const u of urls) { if (await reach(u)) { url = u; break; } } if (!url) continue; otherDb[name] = getDatabase(initializeApp(Object.assign({ databaseURL: url }, cfg), name)); }
+      const d = otherDb[name];
+      await lim(Promise.all(["world", "duels", "duelResults", "online"].map(nd => set(ref(d, nd + "/" + enc), null).catch(() => {}))));
+      const sn = await lim(get(ref(d, "chat"))), jobs = [];
+      if (sn) sn.forEach((ch) => { const v = ch.val(); if (v && v.id === id) jobs.push(set(ref(d, "chat/" + ch.key), null).catch(() => {})); });
+      await lim(Promise.all(jobs));
+    } catch (e) {}
+  }
+}
 async function wipeWhere(node, field, id) {
   const sn = await get(ref(db, node)), jobs = [];
   sn.forEach((ch) => { const v = ch.val(); if (v && v[field] === id) { jobs.push(set(ref(db, node + "/" + ch.key), null)); } });
@@ -87,7 +112,8 @@ $("go").onclick = async () => {
     say("삭제 중...", true);
     await set(ref(db, "accounts/" + enc), null);
     await set(ref(db, "saves/" + enc), null);
-    for (const nd of ["world", "duels", "duelResults", "chatMutes", "titles", "tower", "mail"]) { try { await set(ref(db, nd + "/" + enc), null); } catch (e) {} }
+    for (const nd of ["world", "duels", "duelResults", "chatMutes", "titles", "tower", "mail", "arena", "online"]) { try { await set(ref(db, nd + "/" + enc), null); } catch (e) {} }
+    try { await wipeOther(id, enc); } catch (e) {}
     for (const nd of ["admins", "mods", "nobles", "commons"]) { try { await wipeWhere(nd, "id", id); } catch (e) {} }
     try { await wipeWhere("rankings", "name", id); } catch (e) {}
     try { await wipeWhere("chat", "id", id); } catch (e) {}
