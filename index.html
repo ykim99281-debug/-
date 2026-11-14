@@ -225,7 +225,7 @@ window.addEventListener("unhandledrejection",function(e){var m=document.getEleme
     <div id="lgMsg"></div>
     <button class="b1" id="lgLogin" onclick="fbLogin()">로그인</button>
     <div style="text-align:left;font-size:11.5px;color:var(--sub);line-height:1.7;margin:2px 0 8px"><label style="display:block;cursor:pointer"><input type="checkbox" id="lgAgree" style="width:auto;padding:0;margin:0 5px 0 0;vertical-align:middle"><a href="terms.html" target="_blank" style="color:var(--cy)">이용 규칙</a>과 <a href="privacy.html" target="_blank" style="color:var(--cy)">개인정보처리방침</a>에 동의해요</label><label style="display:block;cursor:pointer"><input type="checkbox" id="lgAge" style="width:auto;padding:0;margin:0 5px 0 0;vertical-align:middle">만 14세 이상이거나, 보호자의 동의를 받았어요</label>(새 계정을 만들 때만 필요해요 · 아이디에 실명을 쓰지 마세요)</div><button class="b2" id="lgSignup" onclick="fbSignup()">계정 생성</button>
-    <div style="font-size:10.5px;color:var(--sub)">v21.0</div>
+    <div style="font-size:10.5px;color:var(--sub)">v26.0</div>
   </div>
 </div>
 
@@ -304,7 +304,8 @@ const PETS={chick:{i:"🐣",n:"병아리",r:0,e:"gold",v:3},cat:{i:"🐱",n:"고
 const RAR=[["일반","#bdbdc8",60],["희귀","#4cd137",28],["영웅","#b388ff",10],["전설","#ffd700",2]];
 const EGGP=30000,PETMAX=10;
 const petLv=k=>(S.pets&&+S.pets[k])||0;
-function petB(e){const k=S.pe;if(!k||!PETS[k]||PETS[k].e!==e)return 0;return Math.round(PETS[k].v*petLv(k)*10)/10}
+function petB0(e){const k=S.pe;if(!k||!PETS[k]||PETS[k].e!==e)return 0;return Math.round(PETS[k].v*petLv(k)*10)/10}
+function petB(e){const v=Math.round((petB0(e)+eqB(e))*10)/10;return e==="dest"?Math.min(80,v):v}
 const petIcon=()=>S.pe&&PETS[S.pe]&&petLv(S.pe)?PETS[S.pe].i:"";
 function petEff(k){const P=PETS[k],x=Math.round(P.v*petLv(k)*10)/10;return P.e==="succ"?"성공 +"+x+"%p":P.e==="cost"?"강화비 -"+Math.min(50,x)+"%":P.e==="gold"?"골드 +"+x+"%":"파괴 확률 -"+Math.min(60,x)+"%"}
 const petFeedCost=lv=>Math.round(3000*Math.pow(1.8,lv-1));
@@ -659,14 +660,50 @@ function fight(i){
   if(Date.now()<cd){log("⏳ 재정비 중... 잠시 후 도전하세요.");return}
   cd=Date.now()+6000;const b=BS[i];
   if(Math.random()*100<chance(i)){
-    const bg=Math.round(b[2]*(1+petB("gold")/100));S.g+=bg;S.bk++;if(window.seasonAdd)window.seasonAdd(5*(i+1));let m="⚔️ "+b[0]+" 처치! +"+n(bg)+" G";if(i===4&&window.newsPost)window.newsPost("boss",S.l);
+    const bg=Math.round(b[2]*(1+petB("gold")/100));S.g+=bg;S.bk++;if(window.seasonAdd)window.seasonAdd(5*(i+1));eqDrop(20+i*10,0,1+i*.5,"보스 전리품");let m="⚔️ "+b[0]+" 처치! +"+n(bg)+" G";if(i===4&&window.newsPost)window.newsPost("boss",S.l);
     if(Math.random()<.3){S.p++;m+=" · 🛡️ 방지권 드롭"}if(i===4||Math.random()<.12){S.egg=(S.egg||0)+1;m+=" · 🥚 알 드롭"}
     log(m,"var(--ok)");fx("ok");
   }else{S.l=Math.max(0,S.l-2);log("☠️ "+b[0]+"에게 패배... 검이 2단계 하락","var(--bad)");fx("bad")}
   ui();
 }
-const AH=[["첫 강화 성공",s=>s.s>=1,1000],["+5강 달성",s=>s.b>=5,3000],["+10강 달성",s=>s.b>=10,30000],["+15강 달성",s=>s.b>=15,500000],["100회 시도",s=>s.t>=100,5000],["500회 시도",s=>s.t>=500,50000],["파괴 10회",s=>s.d>=10,10000],["파괴 50회",s=>s.d>=50,100000],["환생 1회",s=>s.rb>=1,200000],["보스 5회 처치",s=>s.bk>=5,100000],["PERFECT 10회",s=>(s.pf||0)>=10,20000],["첫 펫 부화",s=>Object.keys(s.pets||{}).length>=1,5000],["펫 4종 모으기",s=>Object.keys(s.pets||{}).length>=4,50000],["전설 펫 획득",s=>Object.keys(s.pets||{}).some(k=>PETS[k]&&PETS[k].r===3),300000],["탑 10층 돌파",s=>(s.tw||0)>=10,50000],["탑 30층 돌파",s=>(s.tw||0)>=30,500000],["광산 Lv.10",s=>(s.mnl||0)>=10,100000]];
-function checkAch(){AH.forEach((a,i)=>{if(!S.ach[i]&&a[1](S)){S.ach[i]=1;S.g+=a[2];log("🏆 업적: "+a[0]+" (+"+n(a[2])+" G)","var(--gold)")}})}
+const AH=[["첫 강화 성공",s=>s.s>=1,1000],["+5강 달성",s=>s.b>=5,3000],["+10강 달성",s=>s.b>=10,30000],["+15강 달성",s=>s.b>=15,500000],["100회 시도",s=>s.t>=100,5000],["500회 시도",s=>s.t>=500,50000],["파괴 10회",s=>s.d>=10,10000],["파괴 50회",s=>s.d>=50,100000],["환생 1회",s=>s.rb>=1,200000],["보스 5회 처치",s=>s.bk>=5,100000],["PERFECT 10회",s=>(s.pf||0)>=10,20000],["첫 펫 부화",s=>Object.keys(s.pets||{}).length>=1,5000],["펫 4종 모으기",s=>Object.keys(s.pets||{}).length>=4,50000],["전설 펫 획득",s=>Object.keys(s.pets||{}).some(k=>PETS[k]&&PETS[k].r===3),300000],["탑 10층 돌파",s=>(s.tw||0)>=10,50000],["탑 30층 돌파",s=>(s.tw||0)>=30,500000],["광산 Lv.10",s=>(s.mnl||0)>=10,100000],["아레나 10승",s=>(s.arw||0)>=10,100000],["필드 몬스터 100마리 사냥",s=>(s.wk||0)>=100,100000],["3D 대결 10킬",s=>(s.fk||0)>=10,100000]];
+function checkAch(){return;AH.forEach((a,i)=>{if(!S.ach[i]&&a[1](S)){S.ach[i]=1;S.g+=a[2];log("🏆 업적: "+a[0]+" (+"+n(a[2])+" G)","var(--gold)")}})}
+// ===== 🛡️ 장비 · 직업 =====
+const EQ_SLOT=[["🪖","투구","succ"],["🛡️","갑옷","pow"],["🧤","장갑","gold"],["🥾","신발","dest"],["💍","반지","cost"]];
+const EQ_RAR=[["일반","#b9b6cf","낡은"],["희귀","#00a8ff","단단한"],["영웅","#c56cf0","영웅의"],["전설","#ffd700","전설의"]];
+const EQ_POW=[40,90,160,280],EQ_VAL={succ:[.3,.6,1,1.5],gold:[3,6,10,15],dest:[3,6,10,15],cost:[2,4,6,10]},EQ_MAXLV=10,EQ_INV=30;
+const JOBS={war:{i:"⚔️",n:"전사",d:"탑·아레나·사냥 전투력 +15%",b:{}},mer:{i:"💰",n:"상인",d:"골드 획득 +10%",b:{gold:10}},smi:{i:"🔨",n:"대장장이",d:"강화 성공 +1%p · 강화비 -5%",b:{succ:1,cost:5}}};
+function eqOk(it){return !!it&&typeof it==="object"&&it.s>=0&&it.s<5&&it.r>=0&&it.r<4&&Number.isInteger(it.s)&&Number.isInteger(it.r)}
+function eqLv(it){return Math.min(EQ_MAXLV,Math.max(0,Math.floor(+it.lv||0)))}
+function eqPow(it){return Math.round(EQ_POW[it.r]*(1+.1*eqLv(it))*(EQ_SLOT[it.s][2]==="pow"?2:1))}
+function eqVal(it){const t=EQ_SLOT[it.s][2];return t==="pow"?0:Math.round(EQ_VAL[t][it.r]*(1+.1*eqLv(it))*10)/10}
+function eqName(it){return EQ_RAR[it.r][2]+" "+EQ_SLOT[it.s][1]+(eqLv(it)?" +"+eqLv(it):"")}
+function eqStat(it){const t=EQ_SLOT[it.s][2],v=eqVal(it);return "전투력 +"+eqPow(it)+(t==="succ"?" · 성공 +"+v+"%p":t==="gold"?" · 골드 +"+v+"%":t==="dest"?" · 파괴 -"+v+"%":t==="cost"?" · 강화비 -"+v+"%":"")}
+function eqWorn(){const o=S.eq&&typeof S.eq==="object"?S.eq:{};return [0,1,2,3,4].map(i=>eqOk(o[i])&&o[i].s===i?o[i]:null)}
+function eqPower(){return eqWorn().reduce((a,it)=>a+(it?eqPow(it):0),0)}
+function eqB(e){let v=0;eqWorn().forEach(it=>{if(it&&EQ_SLOT[it.s][2]===e)v+=eqVal(it)});const j=JOBS[S.job];if(j&&j.b[e])v+=j.b[e];return v}
+function eqStone(it){return [1,3,8,20][it.r]*(1+eqLv(it))}
+function eqRoll(minR,luck){const x=Math.random()*100/(luck||1),r=x<2?3:x<12?2:x<40?1:0;return {s:Math.floor(Math.random()*5),r:Math.max(minR||0,r),lv:0}}
+function eqGive(it,why){if(!eqOk(it))return "";if(!S.eq||typeof S.eq!=="object")S.eq={};if(!Array.isArray(S.inv))S.inv=[];let m;
+  if(!eqWorn()[it.s]){S.eq[it.s]=it;m="바로 착용했어요"}else if(S.inv.length>=EQ_INV){const st=eqStone(it);S.es=(S.es||0)+st;m="가방이 가득 차서 분해했어요 (강화석 +"+st+")"}else{S.inv.push(it);m="가방에 넣었어요"}
+  log("🎁 "+(why||"장비 획득")+": ["+EQ_RAR[it.r][0]+"] "+eqName(it)+" · "+m,EQ_RAR[it.r][1]);return eqName(it)}
+function eqDrop(pct,minR,luck,why){return Math.random()*100<pct?eqGive(eqRoll(minR,luck),why):""}
+function eqWear(i){const it=Array.isArray(S.inv)?S.inv[i]:null;if(!eqOk(it))return;const cur=eqWorn()[it.s];S.inv.splice(i,1);if(cur)S.inv.push(cur);if(!S.eq||typeof S.eq!=="object")S.eq={};S.eq[it.s]=it;log("🛡️ "+eqName(it)+" 착용","var(--cy)");ui()}
+function eqBreak(i){const it=Array.isArray(S.inv)?S.inv[i]:null;if(!eqOk(it))return;S.inv.splice(i,1);const st=eqStone(it);S.es=(S.es||0)+st;log("🔨 "+eqName(it)+" 분해 → 강화석 +"+st);ui()}
+function eqBreakAll(r){if(!Array.isArray(S.inv))return;let st=0,c=0;S.inv=S.inv.filter(it=>{if(eqOk(it)&&it.r<=r){st+=eqStone(it);c++;return false}return true});if(!c){log("분해할 장비가 없어요.");return}S.es=(S.es||0)+st;log("🔨 장비 "+c+"개 분해 → 강화석 +"+st);ui()}
+function eqUpCost(it){return {st:(eqLv(it)+1)*2*(it.r+1),g:5000*(eqLv(it)+1)*(it.r+1)}}
+function eqUp(sl){const it=eqWorn()[sl];if(!it||eqLv(it)>=EQ_MAXLV)return;const c=eqUpCost(it);if((S.es||0)<c.st){log("강화석이 부족해요! (필요 "+c.st+"개 · 장비를 분해하면 생겨요)","var(--bad)");return}if(S.g<c.g){log("골드가 부족합니다!","var(--bad)");return}S.es-=c.st;S.g-=c.g;it.lv=eqLv(it)+1;log("✨ "+eqName(it)+" 강화 성공!","var(--ok)");beep("ok");ui()}
+function jobSet(k){if(!JOBS[k]||S.job===k)return;if(S.job){if(S.g<100000){log("직업을 바꾸려면 100,000 G가 필요해요.","var(--bad)");return}S.g-=100000}S.job=k;log(JOBS[k].i+" 직업을 정했어요: "+JOBS[k].n+" ("+JOBS[k].d+")","var(--gold)");ui()}
+function eqPanel(){const w=eqWorn(),inv=Array.isArray(S.inv)?S.inv:[],sums={succ:0,gold:0,dest:0,cost:0};w.forEach(it=>{if(it){const t=EQ_SLOT[it.s][2];if(t!=="pow")sums[t]+=eqVal(it)}});
+  let h='<div style="font-size:15px;font-weight:900;color:var(--gold);text-align:left;margin-bottom:2px">🛡️ 장비</div><div style="font-size:11.5px;color:var(--sub);text-align:left;margin-bottom:8px">탑·보스·아레나·필드 몬스터에서 장비가 나와요. 맨 아래에서 이름 색과 오라로 꾸밀 수 있어요</div><div style="text-align:left;font-size:12.5px">';
+  h+='<div style="font-weight:800;margin:0 0 3px">🧙 직업 '+(S.job?'<span style="font-weight:400;color:var(--sub);font-size:11.5px">(바꾸기 100,000 G)</span>':'<span style="font-weight:400;color:var(--cy);font-size:11.5px">(처음은 무료!)</span>')+'</div><div class="row" style="gap:5px;margin-bottom:8px">'+Object.keys(JOBS).map(k=>'<button class="sm" style="flex:1;padding:8px 2px;font-size:11.5px;line-height:1.5;'+(S.job===k?'border-color:var(--gold);background:rgba(255,215,0,.12)':'')+'" onclick="jobSet(\''+k+'\')">'+JOBS[k].i+' <b>'+JOBS[k].n+'</b><br><span style="font-size:10.5px;color:var(--sub)">'+JOBS[k].d+'</span></button>').join("")+'</div>';
+  h+='<div style="background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.35);border-radius:10px;padding:8px 10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-weight:800"><span>입고 있는 장비</span><span style="color:var(--cy)">전투력 +'+n(eqPower())+'</span></div>'+
+    w.map((it,i)=>{if(!it)return '<div class="it"><span>'+EQ_SLOT[i][0]+' '+EQ_SLOT[i][1]+' <span style="color:var(--sub)">비어 있음</span></span></div>';const c=eqUpCost(it),mx=eqLv(it)>=EQ_MAXLV;return '<div class="it"><span>'+EQ_SLOT[i][0]+' <b style="color:'+EQ_RAR[it.r][1]+'">'+eqName(it)+'</b><br><span style="color:var(--sub);font-size:11.5px">'+eqStat(it)+'</span></span><button class="sm" style="font-size:11px;line-height:1.4" '+(mx||(S.es||0)<c.st||S.g<c.g?'disabled':'')+' onclick="eqUp('+i+')">'+(mx?'MAX':'강화<br>💎'+c.st+' · '+n(c.g)+'G')+'</button></div>'}).join("")+
+    '<div style="font-size:11.5px;color:var(--sub);margin-top:4px">장비 효과: 성공 +'+sums.succ.toFixed(1)+'%p · 골드 +'+sums.gold.toFixed(1)+'% · 파괴 -'+sums.dest.toFixed(1)+'% · 강화비 -'+sums.cost.toFixed(1)+'%</div></div>';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;font-weight:800;margin:6px 0 3px"><span>🎒 가방 ('+inv.length+'/'+EQ_INV+')</span><span style="color:var(--cy)">💎 강화석 '+n(S.es||0)+'개</span></div>';
+  if(!inv.length)h+='<div class="it"><span style="color:var(--sub)">가방이 비어 있어요</span></div>';
+  else h+=inv.map((it,i)=>eqOk(it)?[it,i]:null).filter(Boolean).sort((a,b)=>b[0].r-a[0].r||a[0].s-b[0].s).map(([it,i])=>{const cur=w[it.s],up=!cur||eqPow(it)>eqPow(cur);return '<div class="it"><span>'+EQ_SLOT[it.s][0]+' <b style="color:'+EQ_RAR[it.r][1]+'">['+EQ_RAR[it.r][0]+'] '+eqName(it)+'</b>'+(up?' <span style="color:var(--ok)">▲</span>':'')+'<br><span style="color:var(--sub);font-size:11.5px">'+eqStat(it)+'</span></span><span style="display:flex;gap:4px"><button class="sm" onclick="eqWear('+i+')">입기</button><button class="sm" onclick="eqBreak('+i+')">분해 💎'+eqStone(it)+'</button></span></div>'}).join("")+'<div class="row" style="gap:5px;margin-top:6px"><button class="sm" style="font-size:11.5px" onclick="eqBreakAll(0)">일반 모두 분해</button><button class="sm" style="font-size:11.5px" onclick="eqBreakAll(1)">희귀 이하 모두 분해</button></div>';
+  return h+'<div style="font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.6">등급: <span style="color:'+EQ_RAR[0][1]+'">일반</span> · <span style="color:'+EQ_RAR[1][1]+'">희귀</span> · <span style="color:'+EQ_RAR[2][1]+'">영웅</span> · <span style="color:'+EQ_RAR[3][1]+'">전설</span><br>안 쓰는 장비를 분해하면 💎 강화석이 생기고, 강화석으로 입은 장비를 +10까지 강화해요</div>'+(window.cosHtml?window.cosHtml():'')+'</div>'}
 const MINE_MAX=20,MINE_CAP=28800;
 function mineRate(l){return l>0?Math.round(1200*Math.pow(l,1.8)):0}
 function mineCost(l){return Math.round(6000*Math.pow(1.45,l))}
@@ -695,6 +732,11 @@ function renderPN(){
   if(PG===8&&$("pgTower"))setPN($("pgTower"),window.towerPanel?window.towerPanel():"불러오는 중...");
   if(PG===9&&$("pgTitle"))setPN($("pgTitle"),window.titlePanel?window.titlePanel():"불러오는 중...");
   if(PG===10&&$("pgMine")){setPN($("pgMine"),minePanel());mineLive()}
+  if(PG===11&&$("pgEq"))setPN($("pgEq"),eqPanel());
+  if(PG===12&&$("pgArena"))setPN($("pgArena"),window.arenaPanel?window.arenaPanel():"불러오는 중...");
+  if(PG===13&&$("pgPass"))setPN($("pgPass"),window.passPanel?window.passPanel():"불러오는 중...");
+  if(PG===14&&$("pgQuest"))setPN($("pgQuest"),window.questPanel?window.questPanel():"불러오는 중...");
+  if(PG===15&&$("pgFps"))setPN($("pgFps"),window.fpsPanel?window.fpsPanel():"불러오는 중...");
 }
 const TT=["초보","견습","대장장이","명장","전설","신화","초월"];
 const ttl=()=>TT[Math.min(6,Math.floor(S.b/2.5))];
@@ -737,21 +779,21 @@ function initX(){
   g.insertBefore(box5,k[15]);
   const accb=mk2('<div style="font-size:12px;text-align:left;margin:4px 0">👤 내 계정 · 정책</div><div style="background:var(--panel);border-radius:10px;padding:8px 10px;margin-bottom:12px;text-align:left;font-size:12.5px;line-height:1.9"><a href="terms.html" target="_blank" style="color:var(--cy)">📜 이용 규칙</a> · <a href="privacy.html" target="_blank" style="color:var(--cy)">🔒 개인정보처리방침</a> · <a href="delete.html" target="_blank" style="color:var(--cy)">🗑️ 계정 삭제 안내</a><div id="blkList" style="margin-top:4px"></div><div class="row" style="margin-top:6px"><button class="sm" onclick="delMeOpen()">🗑️ 내 계정 삭제</button></div><div id="delMeBox" style="display:none;margin-top:6px;color:var(--bad)">⚠️ 계정과 모든 게임 기록이 영구 삭제되고 되돌릴 수 없어요.<div class="row" style="margin-top:6px"><input id="delMePw" type="password" placeholder="비밀번호 확인" autocomplete="current-password" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"><button class="sm" style="background:#c0392b;color:#fff;border:none" onclick="fbDeleteMe()">영구 삭제</button></div><div id="delMeMsg" style="min-height:16px;font-size:12px"></div></div></div>','');
   g.insertBefore(accb,k[15]);
-  const nav=mk2('<button class="sm">🔨<br>대장간</button><button class="sm">🛒<br>상점·보스</button><button class="sm">📊<br>기록·설정</button><button class="sm">🌍<br>월드</button><button class="sm">💬<br>채팅<span id="chatBadge" style="display:none;position:absolute;top:2px;right:4px;background:#e84118;color:#fff;border-radius:9px;padding:0 5px;font-size:10px;font-weight:800;line-height:16px"></span></button><button class="sm">🐾<br>펫</button><button class="sm">🏰<br>길드</button><button class="sm">🏆<br>업적</button><button class="sm">🗼<br>탑</button><button class="sm">🏅<br>칭호</button><button class="sm">⛏️<br>광산</button>',"row");nav.style.display="grid";nav.style.gridTemplateColumns="repeat(4,1fr)";
+  const nav=mk2('<button class="sm">🔨<br>대장간</button><button class="sm">🛒<br>상점·보스</button><button class="sm">📊<br>기록·설정</button><button class="sm">🌍<br>월드</button><button class="sm">💬<br>채팅<span id="chatBadge" style="display:none;position:absolute;top:2px;right:4px;background:#e84118;color:#fff;border-radius:9px;padding:0 5px;font-size:10px;font-weight:800;line-height:16px"></span></button><button class="sm">🐾<br>펫</button><button class="sm">🏰<br>길드</button><button class="sm">🏆<br>업적</button><button class="sm">🗼<br>탑</button><button class="sm">🏅<br>칭호</button><button class="sm">⛏️<br>광산</button><button class="sm">🛡️<br>장비</button><button class="sm">🏟️<br>아레나</button><button class="sm">🎖️<br>패스</button><button class="sm">📜<br>일지</button><button class="sm" style="font-weight:900;background:linear-gradient(135deg,#ff4757,#ff6348);color:#fff">🎯<br>3D 대결</button>',"row");nav.style.display="grid";nav.style.gridTemplateColumns="repeat(4,1fr)";
   nav.style.marginBottom="12px";nav.style.gap="5px";[...nav.children].forEach(b=>{b.style.padding="7px 1px";b.style.fontSize="11px";b.style.lineHeight="1.35";b.style.position="relative"});g.insertBefore(nav,k[1]);{const nb=document.createElement("div");nb.id="newsBar";nb.style.cssText="display:none;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 10px;margin-bottom:10px;font-size:12.5px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";g.insertBefore(nb,k[1])}
-  if(!CHAT_ON)nav.children[4].style.display="none";NB=[...nav.children];NB.forEach((b,i)=>b.onclick=()=>showPg(i));
-  const wb=mk2('<div id="wInfo" style="font-size:12px;text-align:left;margin:4px 0;color:var(--sub)"></div><div id="wWrap" style="position:relative;width:100%;height:58vh;min-height:300px;border:1px solid var(--line);border-radius:12px;overflow:hidden;touch-action:none;background:#2f6b2a"><canvas id="wc" style="width:100%;height:100%;display:block"></canvas></div><div id="wCard" style="background:var(--panel);border-radius:10px;padding:10px;margin-top:8px;font-size:13px;text-align:left;min-height:44px"></div><div style="font-size:11.5px;color:var(--sub);text-align:left;margin-top:6px;line-height:1.6">🕹️ 화면을 누르면 이동 (PC: 방향키/WASD) · 유저를 누르고 가까이 가면 ⚔️ 대련 신청<br>🏆 승리하면 상대 검 단계에 비례한 골드를 받습니다.</div>',"");
+  if(!CHAT_ON)nav.children[4].style.display="none";NB=[...nav.children];[7,9,10,14].forEach(i=>{if(NB[i])NB[i].style.display="none"});NB.forEach((b,i)=>b.onclick=()=>showPg(i));
+  const wb=mk2('<div id="wInfo" style="font-size:12px;text-align:left;margin:4px 0;color:var(--sub)"></div><div id="wWrap" style="position:relative;width:100%;height:58vh;min-height:300px;border:1px solid var(--line);border-radius:12px;overflow:hidden;touch-action:none;background:#2f6b2a"><canvas id="wc" style="width:100%;height:100%;display:block"></canvas></div><div id="wCard" style="background:var(--panel);border-radius:10px;padding:10px;margin-top:8px;font-size:13px;text-align:left;min-height:44px"></div><div style="font-size:11.5px;color:var(--sub);text-align:left;margin-top:6px;line-height:1.6">🕹️ 화면을 누르면 이동 (PC: 방향키/WASD) · 유저를 누르고 가까이 가면 ⚔️ 대련 신청<br>👾 몬스터를 누르면 사냥 (이름 색: 초록=쉬움, 노랑=보통, 빨강=위험) · 🏠 건물에 다가가면 들어가기</div>',"");
   g.insertBefore(wb,k[14]);
-  const cbx=mk2('<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--gold);margin-bottom:6px"><span>💬 전체 채팅</span><span id="chatHead" style="font-weight:400;font-size:11.5px;color:var(--sub)"></span></div><div id="chatList" style="height:52vh;min-height:260px;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px;font-size:13px;line-height:1.5;text-align:left;user-select:text;-webkit-user-select:text"></div><div class="row" style="margin-top:8px"><input id="chatIn" type="text" maxlength="100" enterkeyhint="send" autocomplete="off" placeholder="메시지 입력 (최대 100자)" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:15px;user-select:text;-webkit-user-select:text"><button class="up" style="flex:none;padding:10px 16px;font-size:14px" onclick="chatSend()">보내기</button></div><div id="chatNote" style="font-size:12px;color:var(--sub);min-height:18px;margin-top:4px;text-align:left"></div><div style="font-size:11px;color:var(--sub);text-align:left;line-height:1.6">🙅 욕설과 전화번호는 자동으로 가려져요 · 메시지는 하루가 지나면 사라져요<br>👆 내 메시지를 누르면 지울 수 있어요</div>',"");
+  const cbx=mk2('<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:800;color:var(--gold);margin-bottom:6px"><span>💬 전체 채팅 <span id="chatSrv" style="font-weight:400;font-size:11.5px;color:var(--cy)"></span></span><span id="chatHead" style="font-weight:400;font-size:11.5px;color:var(--sub)"></span></div><div id="chatList" style="height:52vh;min-height:260px;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px;font-size:13px;line-height:1.5;text-align:left;user-select:text;-webkit-user-select:text"></div><div class="row" style="margin-top:8px"><input id="chatIn" type="text" maxlength="100" enterkeyhint="send" autocomplete="off" placeholder="메시지 입력 (최대 100자)" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:15px;user-select:text;-webkit-user-select:text"><button class="up" style="flex:none;padding:10px 16px;font-size:14px" onclick="chatSend()">보내기</button></div><div id="chatNote" style="font-size:12px;color:var(--sub);min-height:18px;margin-top:4px;text-align:left"></div><div style="font-size:11px;color:var(--sub);text-align:left;line-height:1.6">🙅 욕설과 전화번호는 자동으로 가려져요 · 메시지는 하루가 지나면 사라져요<br>👆 내 메시지를 누르면 지울 수 있어요</div>',"");
   cbx.id="chatBox";cbx.style.cssText="background:var(--panel);border-radius:12px;padding:10px;margin-bottom:12px";
   g.insertBefore(cbx,k[14]);
-  const xpg=["pgPet","pgGuild","pgAch","pgTower","pgTitle","pgMine"].map(id=>{const d=mk2("","");d.id=id;d.style.cssText="background:var(--panel);border-radius:12px;padding:10px;margin-bottom:12px";g.insertBefore(d,k[14]);return d});
+  const xpg=["pgPet","pgGuild","pgAch","pgTower","pgTitle","pgMine","pgEq","pgArena","pgPass","pgQuest","pgFps"].map(id=>{const d=mk2("","");d.id=id;d.style.cssText="background:var(--panel);border-radius:12px;padding:10px;margin-bottom:12px";g.insertBefore(d,k[14]);return d});
   const evb=mk2("","");evb.id="evb";evb.className="adm-hide";evb.style.cssText="background:linear-gradient(135deg,#7b2ff7,#f107a3);color:#fff;font-weight:800;font-size:13px;padding:9px;border-radius:10px;margin-bottom:10px";
   const stf=mk2("","");stf.id="stf";stf.style.cssText="font-size:12.5px;text-align:left;line-height:1.7;background:var(--panel);border-radius:10px;padding:8px 12px;margin-bottom:10px";
-  const adm=mk2('<div style="font-size:13px;font-weight:800;margin-bottom:8px">🛠️ 관리자 패널 (<span id="admRole"></span>) <span style="font-weight:400;color:var(--sub);font-size:11px">v21.0</span></div><div id="admStat" style="font-size:11.5px;color:var(--sub);line-height:1.5;margin-bottom:8px"></div><div id="admE"><div class="row" style="margin-bottom:6px"><select id="admType" style="flex:2;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px"><option value="rate">🎯 성공 확률 +10%p</option><option value="rate2">🎯🎯 성공 확률 +30%p</option><option value="disc">💸 강화비 50% 할인</option><option value="free">🆓 강화비 무료</option><option value="keep">🛡️ 실패·파괴해도 단계 유지</option><option value="sellx">💰 AI 판매 대금 2배</option><option value="work">🔨 알바 보상 5배</option><option value="gift">🎁 골드 10만 지급 (1인 1회)</option><option value="season2">🗓️ 시즌 점수 2배</option><option value="tower2">🗼 탑 보상 2배</option><option value="mine2">⛏️ 광산 수입 2배</option></select></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admEvent(1)">⏱️ 1분 이벤트</button><button class="sm" onclick="admEvent(5)">⏱️ 5분 이벤트</button><button class="sm" onclick="admEventEnd()">⛔ 종료</button></div></div><div id="admB" class="adm-hide"></div><div id="admC" class="adm-hide"><div class="row" style="margin-bottom:6px"><input id="admId" type="text" maxlength="10" placeholder="임명할 아이디" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admAppoint()">관리자 임명</button><button class="sm" onclick="admRemove()">해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointMod()">중간 관리자 임명</button><button class="sm" onclick="admRemoveMod()">중간 해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointNoble()">하급귀족 임명</button><button class="sm" onclick="admRemoveNoble()">하급귀족 해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointCommon()">상급평민 임명</button><button class="sm" onclick="admRemoveCommon()">상급평민 해임</button></div><div class="row" style="margin-bottom:6px"><input id="admPw" type="text" maxlength="30" placeholder="새 비밀번호 (4자 이상)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admResetPw()">🔑 재설정</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRoles()">🧹 계정 없는 직책 기록 정리 (<span id="admGhost">0</span>건)</button></div></div><div id="admD"><div class="row" style="margin-bottom:6px"><input id="admT" type="text" maxlength="10" placeholder="대상 아이디 (아래 목록 클릭)" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admBan()">🚫 벤</button><button class="sm" onclick="admUnban()">✅ 벤 해제</button><button class="sm" onclick="admDel()">🗑️ 계정 삭제</button></div><div style="font-size:12px;font-weight:800;margin:8px 0 4px">🎁 선물 보내기 (위 대상 아이디에게)</div><div class="row" style="margin-bottom:6px;gap:5px"><select id="admGiftG" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">골드 없음</option><option value="10000">1만 G</option><option value="100000">10만 G</option><option value="1000000">100만 G</option><option value="10000000">1000만 G</option></select><select id="admGiftE" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">알 없음</option><option value="1">🥚 1개</option><option value="3">🥚 3개</option><option value="5">🥚 5개</option></select><select id="admGiftP" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">방지권 없음</option><option value="1">🛡️ 1개</option><option value="3">🛡️ 3개</option><option value="5">🛡️ 5개</option></select></div><div class="row" style="margin-bottom:10px"><input id="admGiftM" type="text" maxlength="30" placeholder="한마디 (선택)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admGift()">🎁 보내기</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRank()">🧹 계정 없는 랭킹 기록 정리 (두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanOld()">📦 구버전 계정 정리 (<span id="admOld">0</span>개, 두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admReload()">🔄 접속한 모두 새로고침 (두 번 탭)</button></div></div><div id="admX" class="adm-hide"><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admWipe()">🧽 고른 유저의 탑·시즌 기록 지우기 (두 번 탭)</button></div></div><div id="admMsg" style="font-size:12px;color:var(--sub);min-height:16px"></div><div style="font-size:12.5px;font-weight:800;margin:8px 0 4px">👥 전체 유저 (<span id="admUCnt">0</span>)</div><div class="row" style="margin-bottom:6px"><input id="admFind" type="text" maxlength="10" placeholder="🔍 이름 검색" oninput="admFilter()" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"></div><div id="admUsers" style="max-height:340px;overflow:auto;font-size:13px;line-height:1.9;border:1px solid var(--line);border-radius:8px"></div><div id="admInfo" style="border-top:1px solid var(--line);margin-top:6px;padding-top:6px;font-size:12px;line-height:1.7;text-align:left;user-select:text">👆 유저를 누르면 정보가 표시됩니다</div><div style="font-size:12.5px;font-weight:800;margin:8px 0 4px">🚩 신고함 (<span id="admRCnt">0</span>)</div><div id="admReports" style="max-height:180px;overflow:auto;font-size:12px;line-height:1.6;text-align:left;user-select:text"></div>',"");
+  const adm=mk2('<div style="font-size:13px;font-weight:800;margin-bottom:8px">🛠️ 관리자 패널 (<span id="admRole"></span>) <span style="font-weight:400;color:var(--sub);font-size:11px">v26.0</span></div><div id="admStat" style="font-size:11.5px;color:var(--sub);line-height:1.5;margin-bottom:8px"></div><div id="admE"><div class="row" style="margin-bottom:6px"><select id="admType" style="flex:2;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px"><option value="rate">🎯 성공 확률 +10%p</option><option value="rate2">🎯🎯 성공 확률 +30%p</option><option value="disc">💸 강화비 50% 할인</option><option value="free">🆓 강화비 무료</option><option value="keep">🛡️ 실패·파괴해도 단계 유지</option><option value="sellx">💰 AI 판매 대금 2배</option><option value="work">🔨 알바 보상 5배</option><option value="gift">🎁 골드 10만 지급 (1인 1회)</option><option value="season2">🗓️ 시즌 점수 2배</option><option value="tower2">🗼 탑 보상 2배</option></select></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admEvent(1)">⏱️ 1분 이벤트</button><button class="sm" onclick="admEvent(5)">⏱️ 5분 이벤트</button><button class="sm" onclick="admEventEnd()">⛔ 종료</button></div></div><div id="admB" class="adm-hide"></div><div id="admC" class="adm-hide"><div class="row" style="margin-bottom:6px"><input id="admId" type="text" maxlength="10" placeholder="임명할 아이디" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admAppoint()">관리자 임명</button><button class="sm" onclick="admRemove()">해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointMod()">중간 관리자 임명</button><button class="sm" onclick="admRemoveMod()">중간 해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointNoble()">하급귀족 임명</button><button class="sm" onclick="admRemoveNoble()">하급귀족 해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointCommon()">상급평민 임명</button><button class="sm" onclick="admRemoveCommon()">상급평민 해임</button></div><div class="row" style="margin-bottom:6px"><input id="admPw" type="text" maxlength="30" placeholder="새 비밀번호 (4자 이상)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admResetPw()">🔑 재설정</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRoles()">🧹 계정 없는 직책 기록 정리 (<span id="admGhost">0</span>건)</button></div></div><div id="admD"><div class="row" style="margin-bottom:6px"><input id="admT" type="text" maxlength="10" placeholder="대상 아이디 (아래 목록 클릭)" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admBan()">🚫 벤</button><button class="sm" onclick="admUnban()">✅ 벤 해제</button><button class="sm" onclick="admDel()">🗑️ 계정 삭제</button></div><div style="font-size:12px;font-weight:800;margin:8px 0 4px">🎁 선물 보내기 (위 대상 아이디에게)</div><div class="row" style="margin-bottom:6px;gap:5px"><select id="admGiftG" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">골드 없음</option><option value="10000">1만 G</option><option value="100000">10만 G</option><option value="1000000">100만 G</option><option value="10000000">1000만 G</option></select><select id="admGiftE" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">알 없음</option><option value="1">🥚 1개</option><option value="3">🥚 3개</option><option value="5">🥚 5개</option></select><select id="admGiftP" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">방지권 없음</option><option value="1">🛡️ 1개</option><option value="3">🛡️ 3개</option><option value="5">🛡️ 5개</option></select></div><div class="row" style="margin-bottom:10px"><input id="admGiftM" type="text" maxlength="30" placeholder="한마디 (선택)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admGift()">🎁 보내기</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRank()">🧹 계정 없는 랭킹 기록 정리 (두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanOld()">📦 구버전 계정 정리 (<span id="admOld">0</span>개, 두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admReload()">🔄 접속한 모두 새로고침 (두 번 탭)</button></div></div><div id="admX" class="adm-hide"><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admWipe()">🧽 고른 유저의 탑·아레나·시즌 기록 지우기 (두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" id="betaBtn" onclick="betaToggle()">🧪 베타 테스트 서버 들어가기</button></div></div><div id="admMsg" style="font-size:12px;color:var(--sub);min-height:16px"></div><div style="font-size:12.5px;font-weight:800;margin:8px 0 4px">👥 전체 유저 (<span id="admUCnt">0</span>)</div><div class="row" style="margin-bottom:6px"><input id="admFind" type="text" maxlength="10" placeholder="🔍 이름 검색" oninput="admFilter()" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"></div><div id="admUsers" style="max-height:340px;overflow:auto;font-size:13px;line-height:1.9;border:1px solid var(--line);border-radius:8px"></div><div id="admInfo" style="border-top:1px solid var(--line);margin-top:6px;padding-top:6px;font-size:12px;line-height:1.7;text-align:left;user-select:text">👆 유저를 누르면 정보가 표시됩니다</div><div style="font-size:12.5px;font-weight:800;margin:8px 0 4px">🚩 신고함 (<span id="admRCnt">0</span>)</div><div id="admReports" style="max-height:180px;overflow:auto;font-size:12px;line-height:1.6;text-align:left;user-select:text"></div>',"");
   adm.id="adm";adm.className="adm-hide";adm.style.cssText="";const adIn=adm.innerHTML;adm.innerHTML='<button id="admTab" onclick="admToggle()">🛠️</button><div style="overflow:auto;max-height:70vh;padding:10px">'+adIn+'</div>';document.body.appendChild(adm);
   g.insertBefore(evb,k[5]);g.insertBefore(stf,k[10]);
-  PGS=[[k[1],k[2],k[3],k[4],evb,k[5],k[6],k[7],box,k[8],k[9],stf,k[14]],[ex,box2,box3,k[11],k[12]],[k[10],st,k[13],hs,box4,box5,accb,k[15],k[16]],[wb],[cbx],[xpg[0]],[xpg[1]],[xpg[2]],[xpg[3]],[xpg[4]],[xpg[5]]];
+  PGS=[[k[1],k[2],k[3],k[4],evb,k[5],k[6],k[7],box,k[8],k[9],stf,k[14]],[ex,box2,box3,k[11],k[12]],[k[10],st,k[13],hs,box4,box5,accb,k[15],k[16]],[wb],[cbx],[xpg[0]],[xpg[1]],[xpg[2]],[xpg[3]],[xpg[4]],[xpg[5]],[xpg[6]],[xpg[7]],[xpg[8]],[xpg[9]],[xpg[10]]];
   setInterval(()=>{mk=Math.round((.8+Math.random()*.5)*100)/100;S.mh.push(mk);S.mh=S.mh.slice(-30);S.rv=S.rv.map((v,i)=>Math.round(v+(nw()*RF[i]*(.9+Math.random()*.2)+5000-v)*.15));ui()},20000);
   showPg(0);
   catchUp();setInterval(tick,1000);
@@ -794,6 +836,145 @@ function reset(){
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
+
+  // ===== 🌐 서버 3개 =====
+  // 서버마다 따로: 월드 · 전체 채팅 · 월드 대련 · 3D 대결 · 접속 인원
+  // 모든 서버 공통: 계정 · 저장 · 랭킹 · 길드 · 탑 · 아레나 · 우편 등 (1번 프로젝트)
+  const SRV_CAP = 10, SRV_KEY = "sword_srv", SRV_UKEY = "sword_srv_u";
+  const SRV_LIST = [
+    { urls: [firebaseConfig.databaseURL] },
+    { cfg: { apiKey: "AIzaSyAEJZ9BI4ZEsklUqeUC8bV0bqUdYWP6aEY", authDomain: "project-1180520264260755609.firebaseapp.com", projectId: "project-1180520264260755609", appId: "1:871826948331:web:6ec617512368ff6af33eae" },
+      urls: ["https://project-1180520264260755609-default-rtdb.asia-southeast1.firebasedatabase.app"] },
+    { cfg: { apiKey: "AIzaSyBeNVjtxrn7iMDwcwfOhN7qI9K4W6pgp5c", authDomain: "gwiwvuw-1460e.firebaseapp.com", projectId: "gwiwvuw-1460e", appId: "1:892458507499:web:ea59b9f6c8201e0f9bb2ae" },
+      urls: ["https://gwiwvuw-1460e-default-rtdb.asia-southeast1.firebasedatabase.app"] }
+  ];
+  // url: 확인된 DB 주소, n: 접속 인원(모르면 null), ok: 지금 쓸 수 있는지
+  const srvSt = SRV_LIST.map((x, i) => ({ url: i === 0 ? x.urls[0] : null, n: null, ok: i === 0 }));
+  const srvDbs = [db];
+  let SRV = 0, sdb = db, srvOk = false, srvRes = null, srvOnUid = "", srvBeatT = 0, srvBarH = "", srvPend = -1, srvPendT = 0, srvNote = "", srvNoteT = 0, srvPollN = 0;
+  const srvReady = new Promise((r) => { srvRes = r; });
+  const srvOn = (mk, cb, err) => { srvReady.then(() => { try { onValue(mk(), cb, err); } catch (e) { console.error("server listen", e); } }); };
+  function srvDb(i) {
+    if (!srvDbs[i]) srvDbs[i] = getDatabase(initializeApp(Object.assign({ databaseURL: srvSt[i].url }, SRV_LIST[i].cfg), "srv" + (i + 1)));
+    return srvDbs[i];
+  }
+  async function srvGet(url) {
+    const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 2500);
+    try {
+      const r = await fetch(url + "/online.json", { cache: "no-store", signal: ac.signal });
+      if (!r.ok) throw new Error("http " + r.status);
+      const v = await r.json(), known = typeof window.SRV_OFF === "number", now = Date.now() + (window.SRV_OFF || 0); let n = 0;
+      if (v && typeof v === "object") Object.keys(v).forEach((k) => { const o = v[k]; if (o && (!known || Math.abs(now - (+o.t || 0)) < 300000)) n++; });
+      return n;
+    } finally { clearTimeout(tm); }
+  }
+  async function srvCount(i, probe) {
+    const st = srvSt[i], all = SRV_LIST[i].urls;
+    const cands = st.url ? [st.url] : (probe || all.length === 1 ? all : []);
+    if (!cands.length) return;
+    const got = await Promise.all(cands.map(u => srvGet(u).then(n => ({ u, n }), () => null)));
+    const hit = got.find(x => x);
+    if (hit) { st.url = hit.u; st.n = hit.n; st.ok = true; }
+    else { st.n = null; st.ok = i === 0; }
+  }
+  const srvPoll = (probe) => Promise.all(SRV_LIST.map((x, i) => srvCount(i, probe))).then(srvBar, srvBar);
+  // 1번이 10명 차면 2번, 2번이 10명 차면 3번, 3번도 차면 다시 1번(20명까지) ... 순서
+  function srvAuto() {
+    const av = srvSt.map((x, i) => i).filter(i => i === 0 || (srvSt[i].ok && srvSt[i].url));
+    for (let r = 1; r <= 100; r++) for (const i of av) if ((srvSt[i].n || 0) < SRV_CAP * r) return i;
+    return 0;
+  }
+  function srvUse(i) {
+    try { sdb = i > 0 ? srvDb(i) : db; } catch (e) { console.error("server init", e); i = 0; sdb = db; }
+    SRV = i; srvOk = true;
+    try { sessionStorage.setItem(SRV_KEY, String(i)); if (i > 0) localStorage.setItem(SRV_UKEY + i, srvSt[i].url); } catch (e) {}
+    srvRes(); srvBar();
+  }
+  function srvSay(t) { srvNote = t; srvNoteT = Date.now() + 6000; srvBar(); }
+  function srvBar() {
+    const nb = document.getElementById("newsBar"); if (!nb) return;
+    let el = document.getElementById("srvBar");
+    if (!el) { el = document.createElement("div"); el.id = "srvBar"; el.style.cssText = "margin-bottom:10px;font-size:11.5px;text-align:left"; nb.parentNode.insertBefore(el, nb); }
+    let h = '<div style="display:flex;align-items:center;gap:5px"><span style="color:var(--sub);white-space:nowrap">🌐 서버</span>';
+    if (!srvOk) h += '<span style="color:var(--sub)">고르는 중...</span>';
+    else h += srvSt.map((st, i) => {
+      const cur = i === SRV, ok = cur || i === 0 || (st.ok && !!st.url);
+      const cnt = !ok ? "준비 중" : st.n === null ? (cur ? "접속 중" : "열림") : st.n + "명";
+      const col = !ok ? "var(--sub)" : st.n !== null && st.n >= SRV_CAP ? "#ffa502" : "var(--ok)";
+      return '<button class="sm" style="flex:1;min-width:0;padding:5px 2px;font-size:11.5px;line-height:1.3;white-space:nowrap' + (cur ? ";border-color:var(--cy);font-weight:800" : "") + (ok ? "" : ";opacity:.55") + '" onclick="srvSwitch(' + i + ')">' + (cur ? "✅ " : "") + (i + 1) + '서버 <span style="color:' + col + '">' + cnt + "</span></button>";
+    }).join("");
+    h += "</div>";
+    if (srvNote && Date.now() < srvNoteT) h += '<div style="margin-top:4px;color:var(--cy);font-weight:700">' + srvNote + "</div>";
+    if (h !== srvBarH) { srvBarH = h; el.innerHTML = h; }
+    const cs = document.getElementById("chatSrv"); if (cs) { const t = srvOk ? "· " + (SRV + 1) + "서버" : ""; if (cs.textContent !== t) cs.textContent = t; }
+  }
+  window.srvSwitch = async function(i) {
+    if (!srvOk || !SRV_LIST[i]) return;
+    if (i === SRV) { srvSay("지금 " + (i + 1) + "서버에 있어요. 월드·채팅·3D 대결은 같은 서버 사람끼리 만나요"); return; }
+    if (i > 0 && !(srvSt[i].ok && srvSt[i].url)) { srvSay((i + 1) + "서버는 아직 준비 중이에요"); return; }
+    if (F3.on || F3.loading) { srvSay("3D 대결에서 나온 뒤에 옮겨 주세요"); return; }
+    if (srvPend !== i || Date.now() > srvPendT) { srvPend = i; srvPendT = Date.now() + 5000; srvSay("👉 한 번 더 누르면 " + (i + 1) + "서버로 옮겨요 (골드·장비는 그대로예요)"); return; }
+    srvPend = -1; srvSay((i + 1) + "서버로 옮기는 중...");
+    try { sessionStorage.setItem(SRV_KEY, String(i)); if (i > 0) localStorage.setItem(SRV_UKEY + i, srvSt[i].url); } catch (e) {}
+    try { wLeave(); } catch (e) {}
+    try { if (srvOnUid) { const u = srvOnUid; srvOnUid = ""; await set(ref(sdb, "online/" + encodeURIComponent(u)), null); } } catch (e) {}
+    srvOk = false;
+    try { await cloudSave(); } catch (e) {}
+    location.reload();
+  };
+  // 접속 표시: 내가 있는 서버의 online/ 에 이름을 올려 두고 1분마다 새로 고침 (끊기면 자동으로 지워짐)
+  function srvBeat() {
+    if (!srvOk) return;
+    const uid = curUid && loaded ? curUid : "";
+    if (srvOnUid && srvOnUid !== uid) { set(ref(sdb, "online/" + encodeURIComponent(srvOnUid)), null).catch(() => {}); srvOnUid = ""; }
+    if (!uid) return;
+    const first = uid !== srvOnUid;
+    if (first || Date.now() - srvBeatT > 60000) {
+      srvOnUid = uid; srvBeatT = Date.now();
+      const r = ref(sdb, "online/" + encodeURIComponent(uid));
+      try { onDisconnect(r).remove().catch(() => {}); } catch (e) {}
+      set(r, { id: uid, t: Date.now() + (window.SRV_OFF || 0) }).catch(() => {});
+      if (first) { if (srvSt[SRV].n !== null) { srvSt[SRV].n++; srvBar(); } setTimeout(() => srvPoll(false), 2500); }
+    }
+  }
+  setInterval(srvBeat, 3000);
+  setInterval(() => { if (srvNote && Date.now() >= srvNoteT) { srvNote = ""; srvBar(); } else if (!document.getElementById("srvBar")) srvBar(); }, 1000);
+  setInterval(() => { if (document.hidden || !srvOk) return; srvPollN++; srvPoll(srvPollN % 5 === 0); }, 45000);
+  // 다른 서버(2·3번)에 남은 내 흔적 지우기 (계정 삭제용)
+  async function srvPurge(id) {
+    const enc = encodeURIComponent(id), lim = (p) => Promise.race([p, new Promise((r) => setTimeout(r, 6000))]);
+    for (let i = 1; i < SRV_LIST.length; i++) {
+      if (!(srvSt[i].ok && srvSt[i].url)) continue;
+      try {
+        const d = srvDb(i);
+        await lim(Promise.all(["world", "duels", "duelResults", "online"].map(nd => set(ref(d, nd + "/" + enc), null).catch(() => {}))));
+        const sn = await lim(get(ref(d, "chat"))), jobs = [];
+        if (sn) sn.forEach((ch) => { const v = ch.val(); if (v && v.id === id) jobs.push(set(ref(d, "chat/" + ch.key), null).catch(() => {})); });
+        await lim(Promise.all(jobs));
+      } catch (e) {}
+    }
+  }
+  // 시작: 이 탭에서 이미 고른 서버가 있으면 그대로, 없으면 인원을 세어 자동 배정
+  Promise.resolve().then(async () => {
+    let pick = -1;
+    try {
+      const v = sessionStorage.getItem(SRV_KEY);
+      if (v !== null && v !== "") {
+        const i = +v;
+        if (i === 0) pick = 0;
+        else if (SRV_LIST[i]) { const u = localStorage.getItem(SRV_UKEY + i); if (u && SRV_LIST[i].urls.includes(u)) { srvSt[i].url = u; srvSt[i].ok = true; pick = i; } }
+      }
+    } catch (e) {}
+    try { for (let i = 1; i < SRV_LIST.length; i++) { if (!srvSt[i].url) { const u = localStorage.getItem(SRV_UKEY + i); if (u && SRV_LIST[i].urls.includes(u)) srvSt[i].url = u; } } } catch (e) {}
+    if (pick >= 0) {
+      srvUse(pick);
+      srvPoll(true).then(() => { if (SRV > 0 && !srvSt[SRV].ok) { srvNote = "⚠️ " + (SRV + 1) + "서버에 연결이 잘 안 돼요. 다른 서버를 눌러 옮겨 주세요"; srvNoteT = Date.now() + 20000; srvBar(); } });
+      return;
+    }
+    srvBar();
+    try { await Promise.all(SRV_LIST.map((x, i) => srvCount(i, true))); } catch (e) {}
+    srvUse(srvAuto());
+  });
   const rankRef = ref(db, "rankings");
 
   const NAME_KEY = "sword_fb_name_v1";
@@ -1326,6 +1507,14 @@ function reset(){
   const wcam = { x: 0, y: 0 };
   const others = {};
   const wkeys = {};
+  const WPLACES = [{ x: 1200, y: 250, i: "🔨", n: "대장간", pg: 0 }, { x: 1200, y: 1350, i: "🛒", n: "상점", pg: 1 }, { x: 400, y: 330, i: "🗼", n: "무한의 탑", pg: 8 }, { x: 2000, y: 330, i: "🏟️", n: "아레나", pg: 12 }, { x: 400, y: 1270, i: "🎯", n: "3D 대결장", pg: 15 }, { x: 2000, y: 1270, i: "🏰", n: "길드 회관", pg: 6 }];
+  const WEMO = ["👋", "😀", "😂", "👍", "❤️", "😡", "💤"];
+  const WMON = [["🟢", "슬라임", 150, 300, 4], ["🐗", "멧돼지", 350, 800, 6], ["🐺", "늑대", 650, 1800, 8], ["👹", "오크", 1100, 4000, 10], ["🐻", "큰곰", 1700, 8000, 13], ["🐲", "어린 용", 2600, 16000, 18]];
+  const WMON_MAX = 12;
+  let wmons = [], wmTarget = null, wmCd = 0, wmNext = 0, wNearPl = null, wfx = [];
+  const wEm = { e: "", t: 0 };
+  const WBOT_N = ["🤖 AI 루나", "🤖 AI 카이", "🤖 AI 제로", "🤖 AI 미르", "🤖 AI 솔", "🤖 AI 노바"];
+  let wbots = [], wBotSel = null, wBotNear = false, wAiBusy = false;
   let wsel = "", wInWorld = false, lastWSend = 0, lastWX = -1, lastWY = -1, wLast = performance.now();
   let wmsg = "", wCardHtml = "", pendingOut = null, incoming = null, dismissedId = "", popKey = "";
   let duelsData = {}, resData = {};
@@ -1343,10 +1532,16 @@ function reset(){
   function renderCard() {
     const c = $m("wCard"); if (!c || typeof S === "undefined") return;
     const info = $m("wInfo");
-    if (info) info.textContent = "🌍 접속 중 " + (Object.keys(others).length + (wInWorld ? 1 : 0)) + "명 · 내 대련 " + (S.vw || 0) + "승 " + (S.vl || 0) + "패 · 내 검 +" + S.l;
+    if (info) info.textContent = "🌍 " + (SRV + 1) + "서버 · 접속 중 " + (Object.keys(others).length + (wInWorld ? 1 : 0)) + "명" + (BETA && wbots.length ? " + 🤖 AI " + wbots.length + "명" : "") + " · 내 대련 " + (S.vw || 0) + "승 " + (S.vl || 0) + "패 · 내 검 +" + S.l;
     let h;
+    if (BETA && wBotSel) {
+      const b = wBotSel, nr = Math.hypot(b.x - me.x, b.y - me.y) <= WRANGE;
+      h = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span><b>' + esc(b.id) + '</b> <span style="color:var(--gold)">+' + b.l + '강</span><br><span style="color:var(--sub);font-size:11.5px">🧪 베타 테스트용 AI 유저</span></span><button class="sm" ' + (nr && !wAiBusy ? "" : "disabled") + ' onclick="wAiDuel()">' + (nr ? "⚔️ AI와 대련" : "가까이 가세요") + "</button></div>" + (wmsg ? '<div style="margin-top:6px;font-size:12px;color:var(--sub)">' + esc(wmsg) + "</div>" : "");
+      if (h !== wCardHtml) { wCardHtml = h; c.innerHTML = h; }
+      return;
+    }
     const o = wsel && others[wsel];
-    if (!o) h = esc(wmsg || "화면을 눌러 이동하세요. 다른 유저를 누르면 대련을 신청할 수 있습니다.");
+    if (!o) h = (wNearPl ? '<button class="up" style="width:100%;margin-bottom:6px" onclick="wGo(' + wNearPl.pg + ')">' + wNearPl.i + " " + wNearPl.n + " 들어가기</button>" : "") + esc(wmsg || "화면을 눌러 이동해요. 몬스터를 누르면 사냥하고, 건물에 다가가면 들어갈 수 있어요.");
     else {
       const dist = Math.round(Math.hypot(o.dx - me.x, o.dy - me.y));
       h = '<b>' + roleIcon(o.id) + esc(o.id) + '</b> · 검 +' + o.l + '강 · 거리 ' + (dist > WRANGE ? '<span style="color:var(--bad)">' + dist + ' (너무 멀어요)</span>' : dist) +
@@ -1361,18 +1556,18 @@ function reset(){
     const mx = Math.round(me.x), my = Math.round(me.y);
     if (!force && mx === lastWX && my === lastWY && now - lastWSend < 5000) return;
     lastWSend = now; lastWX = mx; lastWY = my;
-    set(ref(db, "world/" + wEnc(curUid)), { id: curUid, x: mx, y: my, l: S.l, p: petIcon(), t: srvNow() }).catch(() => {});
+    set(ref(sdb, "world/" + wEnc(curUid)), { id: curUid, x: mx, y: my, l: S.l, p: petIcon(), t: srvNow(), e: Date.now() - wEm.t < 4000 ? wEm.e : "", et: Date.now() - wEm.t < 4000 ? srvNow() - (Date.now() - wEm.t) : 0 }).catch(() => {});
   }
   function wEnter() {
-    wInWorld = true;
+    wInWorld = true; if (!S.wv) { S.wv = 1; }
     if (!me.init) { me.init = true; me.x = me.tx = 1050 + Math.random() * 300; me.y = me.ty = 650 + Math.random() * 300; }
-    try { onDisconnect(ref(db, "world/" + wEnc(curUid))).remove(); } catch (e) {}
+    try { onDisconnect(ref(sdb, "world/" + wEnc(curUid))).remove(); } catch (e) {}
     wPresence(true); wCardHtml = ""; renderCard();
   }
   function wLeave() {
     if (!wInWorld) return;
     wInWorld = false; wsel = "";
-    if (curUid) set(ref(db, "world/" + wEnc(curUid)), null).catch(() => {});
+    if (curUid) set(ref(sdb, "world/" + wEnc(curUid)), null).catch(() => {});
   }
   function wMove(dt) {
     const kx = (wkeys.ArrowRight || wkeys.d ? 1 : 0) - (wkeys.ArrowLeft || wkeys.a ? 1 : 0);
@@ -1388,7 +1583,9 @@ function reset(){
       o.dx += (o.x - o.dx) * Math.min(1, dt * 8); o.dy += (o.y - o.dy) * Math.min(1, dt * 8);
     });
   }
-  function wDrawPlayer(px, py, id, l, isMe, selected, near, pet) {
+  function wDrawPlayer(px, py, id, l, isMe, selected, near, pet, em) {
+    const co = cosMap[id] || {}, au = AURA[co.a], col = NCOL[co.c], tt = TT_MAP[titleMap[id]];
+    if (au) { const g = wx.createRadialGradient(px, py + 4, 4, px, py + 4, 34 + Math.sin(Date.now() / 260) * 3); g.addColorStop(0, au[1] + "cc"); g.addColorStop(1, au[1] + "00"); wx.fillStyle = g; wx.beginPath(); wx.arc(px, py + 4, 38, 0, 7); wx.fill(); }
     wx.fillStyle = "rgba(0,0,0,.35)"; wx.beginPath(); wx.ellipse(px, py + 16, 16, 6, 0, 0, 7); wx.fill();
     if (selected || isMe || near) {
       wx.lineWidth = 3; wx.strokeStyle = selected ? "#ffd700" : isMe ? "#00e5ff" : "#7bed9f";
@@ -1397,8 +1594,119 @@ function reset(){
     wx.font = "28px serif"; wx.textAlign = "center"; wx.fillStyle = "#fff"; wx.fillText("🤺", px, py + 10);
     if (pet) { wx.font = "18px serif"; wx.fillText(pet, px + 22, py + 16); }
     wx.font = "bold 12px sans-serif"; wx.lineWidth = 3; wx.strokeStyle = "rgba(0,0,0,.8)";
-    const nm = gIcon(id) + roleIcon(id) + id; wx.strokeText(nm, px, py - 28); wx.fillStyle = isMe ? "#00e5ff" : "#fff"; wx.fillText(nm, px, py - 28);
-    wx.fillStyle = "#ffd700"; wx.strokeText("+" + l + "강", px, py + 32); wx.fillText("+" + l + "강", px, py + 32);
+    const nm = gIcon(id) + roleIcon(id) + id; wx.strokeText(nm, px, py - 28); wx.fillStyle = col ? col[1] : isMe ? "#00e5ff" : "#fff"; wx.fillText(nm, px, py - 28);
+    if (tt) { wx.font = "bold 10px sans-serif"; wx.strokeText("[" + tt[1] + "]", px, py - 42); wx.fillStyle = tt[2]; wx.fillText("[" + tt[1] + "]", px, py - 42); }
+    wx.font = "bold 12px sans-serif"; wx.fillStyle = "#ffd700"; wx.strokeText("+" + l + "강", px, py + 32); wx.fillText("+" + l + "강", px, py + 32);
+    if (em) { const by = py - (tt ? 74 : 62); wx.fillStyle = "rgba(255,255,255,.95)"; wx.beginPath(); wx.arc(px, by, 17, 0, 7); wx.fill(); wx.beginPath(); wx.moveTo(px - 5, by + 15); wx.lineTo(px, by + 23); wx.lineTo(px + 5, by + 15); wx.fill(); wx.font = "20px serif"; wx.fillStyle = "#000"; wx.fillText(em, px, by + 7); }
+  }
+  function wDrawPlaces(cx, cy, W, H) {
+    WPLACES.forEach((p) => {
+      const px = p.x - cx, py = p.y - cy; if (px < -120 || py < -120 || px > W + 120 || py > H + 120) return;
+      wx.fillStyle = p === wNearPl ? "rgba(255,215,0,.4)" : "rgba(255,255,255,.16)"; wx.beginPath(); wx.arc(px, py, 80, 0, 7); wx.fill();
+      wx.textAlign = "center"; wx.font = "54px serif"; wx.fillStyle = "#fff"; wx.fillText(p.i, px, py + 12);
+      wx.font = "bold 13px sans-serif"; wx.lineWidth = 3; wx.strokeStyle = "rgba(0,0,0,.8)"; wx.strokeText(p.n, px, py + 46); wx.fillText(p.n, px, py + 46);
+    });
+  }
+  function wDrawMons(cx, cy, W, H) {
+    const P = twMyP();
+    wmons.forEach((m) => {
+      const px = m.x - cx, py = m.y - cy; if (px < -60 || py < -60 || px > W + 60 || py > H + 60) return;
+      const T = WMON[m.k], ch = 50 + (P - T[2]) / T[2] * 150;
+      wx.fillStyle = "rgba(0,0,0,.3)"; wx.beginPath(); wx.ellipse(px, py + 14, 15, 5, 0, 0, 7); wx.fill();
+      if (m === wmTarget) { wx.lineWidth = 3; wx.strokeStyle = "#ff4757"; wx.beginPath(); wx.arc(px, py, 22, 0, 7); wx.stroke(); }
+      wx.textAlign = "center"; wx.font = "30px serif"; wx.fillStyle = "#fff"; wx.fillText(T[0], px, py + 10);
+      wx.font = "bold 11px sans-serif"; wx.lineWidth = 3; wx.strokeStyle = "rgba(0,0,0,.8)"; const t = T[1] + " " + num(T[2]);
+      wx.strokeText(t, px, py - 22); wx.fillStyle = ch >= 60 ? "#7bed9f" : ch >= 30 ? "#ffd32a" : "#ff6b6b"; wx.fillText(t, px, py - 22);
+    });
+  }
+  function wDrawFx(cx, cy) {
+    const now = Date.now();
+    wfx.forEach((f) => { const a = (now - f.t) / 1100; if (a < 0 || a > 1) return; wx.globalAlpha = 1 - a; wx.font = "bold 14px sans-serif"; wx.textAlign = "center"; wx.lineWidth = 3; wx.strokeStyle = "rgba(0,0,0,.85)"; wx.strokeText(f.s, f.x - cx, f.y - cy - 30 - a * 34); wx.fillStyle = f.c; wx.fillText(f.s, f.x - cx, f.y - cy - 30 - a * 34); wx.globalAlpha = 1; });
+  }
+  function wDrawMini(W, H) {
+    const mw = 96, mh = 64, x0 = W - mw - 8, y0 = 8, sx = mw / WW, sy = mh / WH;
+    wx.fillStyle = "rgba(0,0,0,.45)"; wx.fillRect(x0, y0, mw, mh); wx.strokeStyle = "rgba(255,255,255,.5)"; wx.lineWidth = 1; wx.strokeRect(x0 + .5, y0 + .5, mw, mh);
+    const dot = (x, y, c, r) => { wx.fillStyle = c; wx.beginPath(); wx.arc(x0 + x * sx, y0 + y * sy, r, 0, 7); wx.fill(); };
+    WPLACES.forEach(p => dot(p.x, p.y, "#ffd700", 2.5)); wmons.forEach(m => dot(m.x, m.y, "#ff6b6b", 1.5));
+    Object.values(others).forEach(o => dot(o.dx, o.dy, "#fff", 2)); wbots.forEach(o => dot(o.x, o.y, "#c8d6e5", 2)); dot(me.x, me.y, "#00e5ff", 3);
+  }
+  function wMonSpawn() {
+    if (wmons.filter(m => m.k === 0).length < 3) { const an = Math.random() * 6.283, r = 300 + Math.random() * 220, x = wClamp(WW / 2 + Math.cos(an) * r, 60, WW - 60), y = wClamp(WH / 2 + Math.sin(an) * r, 60, WH - 60); if (Math.hypot(x - me.x, y - me.y) > 120 && !WPLACES.some(p => Math.hypot(x - p.x, y - p.y) < 150)) { wmons.push({ x, y, hx: x, hy: y, tx: x, ty: y, k: 0, nt: 0 }); return; } }
+    for (let k = 0; k < 20; k++) {
+      const x = 80 + Math.random() * (WW - 160), y = 80 + Math.random() * (WH - 160);
+      if (Math.hypot(x - WW / 2, y - WH / 2) < 260 || WPLACES.some(p => Math.hypot(x - p.x, y - p.y) < 170) || Math.hypot(x - me.x, y - me.y) < 180) continue;
+      const d = Math.hypot(x - WW / 2, y - WH / 2) / 1000, t = Math.max(0, Math.min(WMON.length - 1, Math.floor(d * 4.0 + Math.random() * 1.4 - 1.1)));
+      wmons.push({ x, y, hx: x, hy: y, tx: x, ty: y, k: t, nt: 0 }); return;
+    }
+  }
+  function wMonFight(m) {
+    const T = WMON[m.k], P = twMyP(), ch = Math.max(5, Math.min(95, Math.round(50 + (P - T[2]) / T[2] * 150))), win = Math.random() * 100 < ch, now = Date.now();
+    wmCd = now + (win ? 900 : 3500); wmTarget = null; me.tx = me.x; me.ty = me.y;
+    if (win) {
+      const g = Math.round(T[3] * (1 + petB("gold") / 100)); S.g += g; S.wk = (S.wk || 0) + 1; window.seasonAdd(1);
+      wmons.splice(wmons.indexOf(m), 1); wmNext = now + 5000;
+      wfx.push({ x: m.x, y: m.y, t: now, s: "+" + num(g) + " G", c: "#ffd700" });
+      const dn = eqDrop(T[4], 0, 1 + m.k * 0.3, "사냥 전리품"); if (dn) wfx.push({ x: m.x, y: m.y - 20, t: now + 150, s: "🎁 " + dn, c: "#e0b0ff" });
+      if (typeof beep === "function") beep("ok");
+      wMsg("⚔️ " + T[1] + " 처치! +" + num(g) + " G" + (dn ? " · 🎁 " + dn : "") + " · 지금까지 " + num(S.wk) + "마리");
+      if (typeof ui === "function") ui(); if (S.wk % 5 === 0) cloudSave();
+    } else {
+      wfx.push({ x: me.x, y: me.y, t: now, s: "💥 패배! (승률 " + ch + "%)", c: "#ff6b6b" });
+      const dx = me.x - m.x, dy = me.y - m.y, d = Math.hypot(dx, dy) || 1; me.x = wClamp(me.x + dx / d * 70, 20, WW - 20); me.y = wClamp(me.y + dy / d * 70, 20, WH - 20); me.tx = me.x; me.ty = me.y;
+      wMsg(T[1] + "에게 졌어요. 적 전투력 " + num(T[2]) + " · 내 전투력 " + num(P) + " — 더 강해져서 다시 와요!");
+    }
+  }
+  function wMonTick(dt) {
+    const now = Date.now();
+    if (wmons.length < WMON_MAX && now > wmNext) { wMonSpawn(); wmNext = now + 1200; }
+    wmons.forEach((m) => {
+      if (now > m.nt) { m.nt = now + 2000 + Math.random() * 3000; m.tx = wClamp(m.hx + (Math.random() - .5) * 140, 30, WW - 30); m.ty = wClamp(m.hy + (Math.random() - .5) * 140, 30, WH - 30); }
+      const dx = m.tx - m.x, dy = m.ty - m.y, d = Math.hypot(dx, dy); if (d > 2) { const st = Math.min(d, 35 * dt); m.x += dx / d * st; m.y += dy / d * st; }
+    });
+    if (wmTarget) {
+      if (!wmons.includes(wmTarget)) wmTarget = null;
+      else { me.tx = wmTarget.x; me.ty = wmTarget.y; if (Math.hypot(wmTarget.x - me.x, wmTarget.y - me.y) < 46 && now > wmCd) wMonFight(wmTarget); }
+    }
+    if (wfx.length) wfx = wfx.filter(f => now - f.t < 1100);
+  }
+  function wNear() { const pl = WPLACES.find(p => Math.hypot(p.x - me.x, p.y - me.y) < 105) || null; if (pl !== wNearPl) { wNearPl = pl; wCardHtml = ""; renderCard(); } }
+  function wBotGoal(b) {
+    const r = Math.random();
+    if (r < 0.3) { const p = WPLACES[Math.floor(Math.random() * WPLACES.length)]; b.tx = p.x + (Math.random() - 0.5) * 120; b.ty = p.y + 95 + Math.random() * 40; }
+    else if (r < 0.5) { b.tx = me.x + (Math.random() - 0.5) * 260; b.ty = me.y + (Math.random() - 0.5) * 260; }
+    else { b.tx = WW / 2 + (Math.random() - 0.5) * 900; b.ty = WH / 2 + (Math.random() - 0.5) * 700; }
+    b.tx = wClamp(b.tx, 40, WW - 40); b.ty = wClamp(b.ty, 40, WH - 40); b.nt = Date.now() + 5000 + Math.random() * 7000; b.arr = 0;
+  }
+  function wBotTick(dt) {
+    if (!BETA) { if (wbots.length) { wbots = []; wBotSel = null; wCardHtml = ""; renderCard(); } return; }
+    const now = Date.now();
+    if (!wbots.length) { const pets = Object.values(PETS).map(P => P.i); WBOT_N.forEach((nm) => { const b = { id: nm, x: WW / 2 + (Math.random() - 0.5) * 500, y: WH / 2 + (Math.random() - 0.5) * 400, tx: 0, ty: 0, nt: 0, arr: 0, wait: 0, l: 3 + Math.floor(Math.random() * 13), p: Math.random() < 0.6 ? pets[Math.floor(Math.random() * pets.length)] : "", em: "", emT: 0, emN: now + 3000 + Math.random() * 9000 }; wBotGoal(b); wbots.push(b); }); renderCard(); }
+    wbots.forEach((b) => {
+      const dx = b.tx - b.x, dy = b.ty - b.y, d = Math.hypot(dx, dy);
+      if (d > 4) { const st = Math.min(d, 115 * dt); b.x += dx / d * st; b.y += dy / d * st; }
+      else if (!b.arr) { b.arr = 1; b.wait = now + 1000 + Math.random() * 2500; }
+      if (now > b.nt || (b.arr && now > b.wait)) wBotGoal(b);
+      if (now > b.emN) { b.em = WEMO[Math.floor(Math.random() * WEMO.length)]; b.emT = now + 3500; b.emN = now + 9000 + Math.random() * 14000; }
+    });
+    if (wBotSel) { const nr = Math.hypot(wBotSel.x - me.x, wBotSel.y - me.y) <= WRANGE; if (nr !== wBotNear) { wBotNear = nr; wCardHtml = ""; renderCard(); } }
+  }
+  window.wAiDuel = function() {
+    const b = wBotSel; if (!BETA || !b || wAiBusy || !curUid || !loaded) return;
+    if (Math.hypot(b.x - me.x, b.y - me.y) > WRANGE) return;
+    const myL = S.l || 0, win = Math.random() < Math.max(0.1, Math.min(0.9, 0.5 + (myL - b.l) * 0.06));
+    wAiBusy = true;
+    fightShow({ title: "⚔️ AI 대련 (베타 테스트)", names: [curUid, b.id], subs: ["+" + myL + "강", "+" + b.l + "강"], icons: ["🤺", "🤖"], rounds: duelRounds(myL, b.l, win), won: win,
+      end: win ? "🏆 승리! (테스트라서 보상은 없어요)" : "💥 패배... (테스트라서 잃는 것도 없어요)",
+      done: () => { wAiBusy = false; wMsg(win ? "🏆 " + b.id + "에게 이겼어요! (베타 테스트 · 보상 없음)" : "💥 " + b.id + "에게 졌어요 (베타 테스트)"); wCardHtml = ""; renderCard(); } });
+    wCardHtml = ""; renderCard();
+  };
+  window.wGo = (pg) => { if (typeof showPg === "function") showPg(+pg || 0); };
+  window.wEmote = (e) => { if (!WEMO.includes(e) || !wInWorld) return; wEm.e = e; wEm.t = Date.now(); wPresence(true); };
+  window.__wdbg = () => ({ me: { x: Math.round(me.x), y: Math.round(me.y) }, cam: { x: Math.round(wcam.x), y: Math.round(wcam.y) }, mons: wmons.map(m => ({ x: Math.round(m.x), y: Math.round(m.y), k: m.k })), near: wNearPl ? wNearPl.n : "", bots: wbots.map(b => ({ id: b.id, x: Math.round(b.x), y: Math.round(b.y), l: b.l })), others: Object.values(others).map(o => ({ id: o.id, e: o.e || "" })) });
+  {
+    const eb = document.createElement("div"); eb.id = "wEmo"; eb.className = "row"; eb.style.cssText = "gap:4px;margin-top:8px";
+    eb.innerHTML = WEMO.map(e => '<button class="sm" style="flex:1;padding:7px 0;font-size:17px" onclick="wEmote(\'' + e + '\')">' + e + "</button>").join("");
+    const cd = $m("wCard"); if (cd && cd.parentNode) cd.parentNode.insertBefore(eb, cd);
   }
   function wDraw() {
     const wrap = $m("wWrap"); if (!wrap || !wx) return;
@@ -1417,28 +1725,38 @@ function reset(){
       const px = gx * T - cx, py = gy * T - cy;
       if ((gx + gy) % 2 === 0) { wx.fillStyle = "rgba(255,255,255,.03)"; wx.fillRect(px, py, T, T); }
       if (Math.abs(gx * T + T / 2 - WW / 2) < 170 && Math.abs(gy * T + T / 2 - WH / 2) < 170) continue;
+      if (WPLACES.some(p => Math.hypot(gx * T + T / 2 - p.x, gy * T + T / 2 - p.y) < 125)) continue;
       const h = whash(gx, gy);
       const e = h < .1 ? "🌲" : h < .14 ? "🪨" : h < .18 ? "🌼" : "";
       if (e) { wx.fillStyle = "#fff"; wx.fillText(e, px + T / 2 + (h * 37 % 20 - 10), py + T / 2 + 10); }
     }
     wx.fillStyle = "rgba(240,220,160,.35)"; wx.beginPath(); wx.arc(WW / 2 - cx, WH / 2 - cy, 150, 0, 7); wx.fill();
     wx.fillStyle = "#fff"; wx.font = "bold 13px sans-serif"; wx.fillText("⚔️ 대련 광장", WW / 2 - cx, WH / 2 - cy + 5);
+    wDrawPlaces(cx, cy, W, H); wDrawMons(cx, cy, W, H);
     wx.strokeStyle = "rgba(0,229,255,.25)"; wx.lineWidth = 2; wx.beginPath(); wx.arc(me.x - cx, me.y - cy, WRANGE, 0, 7); wx.stroke();
     if (Math.hypot(me.tx - me.x, me.ty - me.y) > 6) { wx.fillStyle = "rgba(255,255,255,.7)"; wx.beginPath(); wx.arc(me.tx - cx, me.ty - cy, 5, 0, 7); wx.fill(); }
-    Object.values(others).forEach((o) => wDrawPlayer(o.dx - cx, o.dy - cy, o.id, o.l, false, o.id === wsel, Math.hypot(o.dx - me.x, o.dy - me.y) <= WRANGE, o.p));
-    wDrawPlayer(me.x - cx, me.y - cy, curUid, S.l, true, false, false, petIcon());
+    Object.values(others).forEach((o) => wDrawPlayer(o.dx - cx, o.dy - cy, o.id, o.l, false, o.id === wsel, Math.hypot(o.dx - me.x, o.dy - me.y) <= WRANGE, o.p, srvNow() - (o.et || 0) < 4000 ? o.e : ""));
+    if (BETA) wbots.forEach(b => wDrawPlayer(b.x - cx, b.y - cy, b.id, b.l, false, wBotSel === b, Math.hypot(b.x - me.x, b.y - me.y) <= WRANGE, b.p, Date.now() < b.emT ? b.em : ""));
+    wDrawPlayer(me.x - cx, me.y - cy, curUid, S.l, true, false, false, petIcon(), Date.now() - wEm.t < 4000 ? wEm.e : "");
+    wDrawFx(cx, cy); wDrawMini(W, H);
   }
   function wLoop(ts) {
     const dt = Math.min(.1, (ts - wLast) / 1000); wLast = ts;
-    const on = typeof PG !== "undefined" && PG === 3 && !!curUid && loaded && !document.hidden;
+    const on = srvOk && typeof PG !== "undefined" && PG === 3 && !!curUid && loaded && !document.hidden;
     if (on && !wInWorld) wEnter(); else if (!on && wInWorld) wLeave();
-    if (on) { wMove(dt); wPresence(false); wDraw(); }
+    if (on) { wMove(dt); wMonTick(dt); wBotTick(dt); wNear(); wPresence(false); wDraw(); }
     requestAnimationFrame(wLoop);
   }
   if (wc) {
     wc.addEventListener("pointerdown", (e) => {
       const r = wc.getBoundingClientRect();
       const px = e.clientX - r.left + wcam.x, py = e.clientY - r.top + wcam.y;
+      const mh = wmons.find(m => Math.hypot(m.x - px, m.y - py) < 38);
+      if (mh) { wmTarget = mh; wsel = ""; wmsg = ""; me.tx = mh.x; me.ty = mh.y; wCardHtml = ""; renderCard(); return; }
+      wmTarget = null;
+      const bh = BETA ? wbots.find(o => Math.hypot(o.x - px, o.y - py) < 36) : null;
+      if (bh) { wBotSel = bh; wBotNear = Math.hypot(bh.x - me.x, bh.y - me.y) <= WRANGE; wsel = ""; wmsg = ""; wCardHtml = ""; renderCard(); return; }
+      if (wBotSel) { wBotSel = null; wCardHtml = ""; }
       let hit = "", bd = 36;
       Object.values(others).forEach((o) => { const d = Math.hypot(o.dx - px, o.dy - py); if (d < bd) { bd = d; hit = o.id; } });
       wmsg = "";
@@ -1456,7 +1774,7 @@ function reset(){
   window.addEventListener("keyup", (e) => { wkeys[e.key.length === 1 ? e.key.toLowerCase() : e.key] = false; });
   window.addEventListener("pagehide", wLeave);
 
-  onValue(ref(db, "world"), (snap) => {
+  srvOn(() => ref(sdb, "world"), (snap) => {
     const v = snap.val() || {}; const now = srvNow(); const seen = new Set();
     Object.keys(v).forEach((k) => {
       const o = v[k];
@@ -1466,9 +1784,9 @@ function reset(){
       if (Array.isArray(S.blk) && S.blk.includes(o.id)) return;
       seen.add(o.id);
       const c = others[o.id], ox = wClamp(+o.x || 0, 0, WW), oy = wClamp(+o.y || 0, 0, WH), ol = lv(o.l), ot = +o.t || 0;
-      const op = Object.values(PETS).some(P => P.i === o.p) ? o.p : "";
-      if (!c) others[o.id] = { id: o.id, x: ox, y: oy, dx: ox, dy: oy, l: ol, t: ot, p: op };
-      else { c.x = ox; c.y = oy; c.l = ol; c.t = ot; c.p = op; }
+      const op = Object.values(PETS).some(P => P.i === o.p) ? o.p : "", oe = WEMO.includes(o.e) ? o.e : "", oet = +o.et || 0;
+      if (!c) others[o.id] = { id: o.id, x: ox, y: oy, dx: ox, dy: oy, l: ol, t: ot, p: op, e: oe, et: oet };
+      else { c.x = ox; c.y = oy; c.l = ol; c.t = ot; c.p = op; c.e = oe; c.et = oet; }
     });
     Object.keys(others).forEach((id) => { if (!seen.has(id)) { delete others[id]; if (wsel === id) wsel = ""; } });
   });
@@ -1484,7 +1802,7 @@ function reset(){
     if (pendingOut && srvNow() - pendingOut.t < 30000) { wMsg("이미 대련을 신청 중입니다 (최대 30초)"); return; }
     const rid = srvNow() + "_" + curUid;
     try {
-      await set(ref(db, "duels/" + wEnc(o.id)), { id: rid, from: curUid, to: o.id, fromL: S.l, t: srvNow() });
+      await set(ref(sdb, "duels/" + wEnc(o.id)), { id: rid, from: curUid, to: o.id, fromL: S.l, t: srvNow() });
       pendingOut = { id: rid, to: o.id, t: srvNow() };
       wMsg("⚔️ " + o.id + "님에게 대련을 신청했습니다. 응답을 기다리는 중... (30초)");
     } catch (e) { wMsg("신청 실패: 파이어베이스 규칙(duels) 확인"); }
@@ -1511,15 +1829,15 @@ function reset(){
     const fromWins = Math.random() < wa / (wa + wb2);
     const res = { id: r.id, from: r.from, to: curUid, fromL: a, toL: b, winner: fromWins ? r.from : curUid, t: srvNow(), rounds: duelRounds(a, b, fromWins) };
     try {
-      await set(ref(db, "duelResults/" + wEnc(r.from)), res);
-      await set(ref(db, "duelResults/" + wEnc(curUid)), res);
-      await set(ref(db, "duels/" + wEnc(curUid)), null);
+      await set(ref(sdb, "duelResults/" + wEnc(r.from)), res);
+      await set(ref(sdb, "duelResults/" + wEnc(curUid)), res);
+      await set(ref(sdb, "duels/" + wEnc(curUid)), null);
     } catch (e) { wMsg("대련 처리 실패: 파이어베이스 규칙(duelResults) 확인"); }
   };
   async function sendDecline(r) {
     try {
-      await set(ref(db, "duelResults/" + wEnc(r.from)), { id: r.id, declined: true, from: r.from, to: curUid, t: srvNow() });
-      await set(ref(db, "duels/" + wEnc(curUid)), null);
+      await set(ref(sdb, "duelResults/" + wEnc(r.from)), { id: r.id, declined: true, from: r.from, to: curUid, t: srvNow() });
+      await set(ref(sdb, "duels/" + wEnc(curUid)), null);
     } catch (e) {}
   }
   window.wDecline = async function() {
@@ -1533,7 +1851,7 @@ function reset(){
     if (!r || r.id === S.vid) return;
     if (srvNow() - (r.t || 0) > 180000) return;
     S.vid = r.id;
-    set(ref(db, "duelResults/" + wEnc(curUid)), null).catch(() => {});
+    set(ref(sdb, "duelResults/" + wEnc(curUid)), null).catch(() => {});
     const opp = r.from === curUid ? r.to : r.from;
     pendingOut = null;
     if (r.declined) { if (typeof log === "function") log("❌ " + opp + "님이 대련을 거절했습니다.", "var(--sub)"); wMsg(opp + "님이 대련을 거절했습니다"); return; }
@@ -1552,8 +1870,8 @@ function reset(){
     if (Array.isArray(r.rounds) && r.rounds.length) duelShow(r, opp, oppL, myL, r.winner === curUid ? 2000 * (oppL + 1) : 0);
     if (typeof ui === "function") ui();
   }
-  onValue(ref(db, "duels"), (snap) => { duelsData = snap.val() || {}; evalIncoming(); });
-  onValue(ref(db, "duelResults"), (snap) => { resData = snap.val() || {}; procResult(); });
+  srvOn(() => ref(sdb, "duels"), (snap) => { duelsData = snap.val() || {}; evalIncoming(); });
+  srvOn(() => ref(sdb, "duelResults"), (snap) => { resData = snap.val() || {}; procResult(); });
   setInterval(() => {
     evalIncoming(); procResult();
     if (pendingOut && srvNow() - pendingOut.t > 30000) { pendingOut = null; wMsg("응답이 없어 대련 신청이 취소되었습니다"); }
@@ -1563,7 +1881,6 @@ function reset(){
 
   // ===== 채팅 =====
   const CHAT_MAX = 100, CHAT_GAP = 2000, CHAT_KEEP = 86400000, CHAT_SHOW = 60;
-  const chatRef = ref(db, "chat");
   const CHAT_SEEN_KEY = "sword_chat_seen_v1";
   let chatMsgs = [], chatMutes = {}, chatLast = 0, chatLastTxt = "", chatSel = "", chatHtml = "", chatErr = false, chatStick = false, chatAuth = "";
   let chatClrPending = false, chatClrTimer = null;
@@ -1590,7 +1907,7 @@ function reset(){
     else h = chatMsgs.filter(m => !(Array.isArray(S.blk) && S.blk.includes(m.id))).map(m => {
       const mine = m.id === curUid, sel = m.k === chatSel, mu = muteOf(m.id);
       let row = '<div data-k="' + esc(m.k) + '" onclick="chatPick(this.dataset.k)" style="padding:4px 6px;border-radius:8px;margin-bottom:2px;cursor:pointer;' + (mine ? 'background:rgba(0,229,255,.10);' : '') + (sel ? 'outline:1px solid var(--gold);' : '') + '">' +
-        '<span style="font-weight:700;color:' + (mine ? 'var(--cy)' : 'var(--gold)') + '">' + roleIcon(m.id) + esc(m.id) + '</span>' + gTag(m.id) + (mu ? ' 🔇' : '') +
+        '<span style="font-weight:700;color:' + (nmCol(m.id) || (mine ? 'var(--cy)' : 'var(--gold)')) + '">' + roleIcon(m.id) + esc(m.id) + '</span>' + gTag(m.id) + (mu ? ' 🔇' : '') +
         ' <span style="font-size:11px;color:var(--sub)">+' + m.l + '강 · ' + chatTime(m.t) + '</span><br>' +
         '<span style="word-break:break-all">' + esc(chatClean(m.m)) + '</span>';
       if (sel) {
@@ -1622,7 +1939,7 @@ function reset(){
     chatSel = chatSel === k ? "" : k; renderChat();
   };
   window.chatSend = async function() {
-    if (!CHAT_ON) return;
+    if (!CHAT_ON || !srvOk) return;
     const inp = $m("chatIn"); if (!inp) return;
     if (!curUid || !loaded) { chatNote("로그인 후 이용할 수 있습니다"); return; }
     const raw = inp.value.replace(/\s+/g, " ").trim();
@@ -1633,22 +1950,22 @@ function reset(){
     if (now - chatLast < CHAT_GAP) { chatNote("⏳ 너무 빨라요. 잠시 후 보내 주세요"); return; }
     if (raw === chatLastTxt && now - chatLast < 15000) { chatNote("같은 말은 잠시 후에 다시 보낼 수 있어요"); return; }
     chatLast = now; chatLastTxt = raw; inp.value = ""; chatNote(""); chatStick = true;
-    try { await push(chatRef, { id: curUid, m: chatClean(raw), l: S.l || 0, t: srvNow() }); }
+    try { await push(ref(sdb, "chat"), { id: curUid, m: chatClean(raw), l: S.l || 0, t: srvNow() }); }
     catch (e) { console.error("chat send error:", e); chatNote("전송 실패: 파이어베이스 규칙(chat) 확인"); inp.value = raw; return; }
     chatPrune();
   };
   async function chatPrune() {
     try {
-      const sn = await get(query(chatRef, limitToFirst(20)));
+      const sn = await get(query(ref(sdb, "chat"), limitToFirst(20)));
       const cut = srvNow() - CHAT_KEEP, jobs = [];
-      sn.forEach((ch) => { const v = ch.val(); if (!v || !(+v.t > cut)) jobs.push(set(ref(db, "chat/" + ch.key), null)); });
+      sn.forEach((ch) => { const v = ch.val(); if (!v || !(+v.t > cut)) jobs.push(set(ref(sdb, "chat/" + ch.key), null)); });
       await Promise.all(jobs);
     } catch (e) {}
   }
   window.chatDel = async function() {
     const m = chatMsgs.find(x => x.k === chatSel); if (!m) return;
     if (!(m.id === curUid || chatCanAct(m.id))) return;
-    try { await set(ref(db, "chat/" + m.k), null); chatSel = ""; chatNote("🗑️ 메시지를 삭제했습니다"); }
+    try { await set(ref(sdb, "chat/" + m.k), null); chatSel = ""; chatNote("🗑️ 메시지를 삭제했습니다"); }
     catch (e) { chatNote("삭제 실패: 파이어베이스 규칙(chat) 확인"); }
   };
   window.chatMute = async function(min) {
@@ -1668,10 +1985,10 @@ function reset(){
       return;
     }
     chatClrPending = false; clearTimeout(chatClrTimer);
-    try { await set(chatRef, null); chatNote("🧹 채팅을 모두 지웠습니다"); }
+    try { await set(ref(sdb, "chat"), null); chatNote("🧹 " + (SRV + 1) + "서버 채팅을 모두 지웠습니다"); }
     catch (e) { chatNote("실패: 파이어베이스 규칙(chat) 확인"); }
   };
-  if (CHAT_ON) onValue(query(chatRef, limitToLast(CHAT_SHOW)), (snap) => {
+  if (CHAT_ON) srvOn(() => query(ref(sdb, "chat"), limitToLast(CHAT_SHOW)), (snap) => {
     chatErr = false;
     const arr = [];
     snap.forEach((ch) => { const v = ch.val(); if (v && typeof v.id === "string" && typeof v.m === "string") { arr.push({ k: ch.key, id: v.id.slice(0, 12), m: v.m, l: lv(v.l), t: +v.t || 0 }); } });
@@ -1732,7 +2049,8 @@ function reset(){
     const enc = encodeURIComponent(id);
     const keys = [...new Set([enc].concat(accList.filter(u => u.id === id).map(u => u.k)))];
     for (const k of keys) { await set(ref(db, "accounts/" + k), null); try { await set(ref(db, "saves/" + k), null); } catch (e) {} }
-    for (const nd of ["world", "duels", "duelResults", "chatMutes", "titles", "tower", "mail"]) { try { await set(ref(db, nd + "/" + enc), null); } catch (e) {} }
+    for (const nd of ["world", "duels", "duelResults", "chatMutes", "titles", "tower", "mail", "arena", "online"]) { try { await set(ref(db, nd + "/" + enc), null); } catch (e) {} }
+    try { await srvPurge(id); } catch (e) {}
     for (const nd of ["admins", "mods", "nobles", "commons"]) { try { await clearRole(nd, id); } catch (e) {} }
     try { await guildDrop(id); } catch (e) {}
     for (const [node, field] of [["rankings", "name"], ["chat", "id"]]) {
@@ -2282,7 +2600,7 @@ function reset(){
       const myP = S.swk === curWk() ? (+S.swp || 0) : 0, myRank = seasonTop.findIndex(v => v.id === curUid) + 1;
       h = '<div style="display:flex;justify-content:space-between;font-weight:800"><span>이번 주 (' + esc(curWk()) + ' ~)</span><span style="color:var(--sub);font-weight:400;font-size:11.5px">초기화까지 ' + (dd ? dd + "일 " : "") + hh + "시간 " + mm + "분</span></div>" +
         '<div style="margin:4px 0;color:var(--cy);font-weight:700">' + (hasGold() ? "골드 무한 계정은 시즌에 참여하지 않아요" : "내 점수 " + num(myP) + "점 · " + (myRank ? myRank + "위" : "순위 밖")) + "</div>" +
-        (seasonTop.length ? seasonTop.slice(0, 10).map((v, i) => '<div style="display:flex;justify-content:space-between;padding:2px 4px;border-radius:6px;' + (v.id === curUid ? "background:rgba(0,229,255,.1);" : "") + '"><span>' + (i < 3 ? MEDAL[i] : (i + 1) + "위") + " " + esc(v.id) + gTag(v.id) + '</span><b>' + num(v.p) + "점</b></div>").join("") : '<div style="color:var(--sub)">아직 점수가 없어요. 첫 번째 주인공이 되어 보세요!</div>') +
+        (seasonTop.length ? seasonTop.slice(0, 10).map((v, i) => '<div style="display:flex;justify-content:space-between;padding:2px 4px;border-radius:6px;' + (v.id === curUid ? "background:rgba(0,229,255,.1);" : "") + '"><span>' + (i < 3 ? MEDAL[i] : (i + 1) + "위") + " " + nmHtml(v.id) + gTag(v.id) + '</span><b>' + num(v.p) + "점</b></div>").join("") : '<div style="color:var(--sub)">아직 점수가 없어요. 첫 번째 주인공이 되어 보세요!</div>') +
         '<div style="font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.6">🏅 보상: 1위 ' + num(SEASON_REWARD[0]) + " · 2위 " + num(SEASON_REWARD[1]) + " · 3위 " + num(SEASON_REWARD[2]) + " G + 다음 주 내내 이름 옆 메달<br>점수: 강화 성공(오른 단계만큼) · PERFECT +1 · 보스 처치 · 월드·길드 보스 공격 · 탑 돌파 · 대련 승리 +5</div>" +
         (champTop.length ? '<div style="font-size:12px;margin-top:4px">지난주 우승: ' + champTop.map((v, i) => MEDAL[i] + " " + esc(v.id)).join(" · ") + "</div>" : "");
     }
@@ -2332,7 +2650,7 @@ function reset(){
   const TW_MON = [["🟢", "슬라임"], ["🐺", "늑대"], ["👹", "오크"], ["💀", "해골 기사"], ["🦂", "전갈 여왕"], ["🧟", "망령"], ["🦅", "와이번"], ["🧙", "흑마법사"], ["🐲", "고룡"], ["😈", "마왕의 그림자"]];
   const twMon = (f) => { const m = TW_MON[Math.floor((f - 1) / 5) % TW_MON.length]; return f % 10 === 0 ? ["👑", m[1] + " 대장"] : m; };
   const twFP = (f) => Math.round((100 + 45 * f + 0.6 * f * f) * (f % 10 === 0 ? 1.15 : 1));
-  const twMyP = () => 100 + (S.l || 0) * 60 + (S.b || 0) * 90 + (S.sk || []).reduce((a, b) => a + (+b || 0), 0) * 15 + (S.pe && PETS[S.pe] ? petLv(S.pe) * 40 : 0) + (S.rb || 0) * 150 + Math.round((window.GUILD_B || 0) * 100);
+  const twMyP = () => Math.round((eqPower() + 100 + (S.l || 0) * 60 + (S.b || 0) * 90 + (S.sk || []).reduce((a, b) => a + (+b || 0), 0) * 15 + (S.pe && PETS[S.pe] ? petLv(S.pe) * 40 : 0) + (S.rb || 0) * 150 + Math.round((window.GUILD_B || 0) * 100)) * (S.job === "war" ? 1.15 : 1));
   const twChance = (P, FP) => Math.max(5, Math.min(95, Math.round(50 + (P - FP) / FP * 200)));
   const twGold = (f) => Math.round(1500 * Math.pow(f, 1.6) * (1 + petB("gold") / 100) * (evOn() && EVT.t === "tower2" ? 2 : 1));
   const twDaily = (f) => Math.round(800 * Math.pow(f, 1.5));
@@ -2354,6 +2672,7 @@ function reset(){
       if (f % 10 === 0) { S.egg = (S.egg || 0) + 1; ex += " · 🥚 알 +1"; }
       window.seasonAdd(2 + Math.floor(f / 5));
       if (!hasGold()) { set(ref(db, "tower/" + wEnc(curUid)), { id: curUid, f, t: srvNow() }).catch(() => {}); if (f % 10 === 0) window.newsPost("tower", f); }
+      { const dn = eqDrop(f % 10 === 0 ? 100 : 22, f % 10 === 0 ? 1 : 0, 1 + f / 20, "탑 전리품"); if (dn) ex += " · 🎁 " + dn; }
       cloudSave();
     }
     fightShow({ title: "🗼 무한의 탑 " + f + "층", names: [curUid, mon[1]], subs: ["전투력 " + num(P), "전투력 " + num(FP)], icons: ["🤺", mon[0]], rounds: duelRounds(S.l || 0, Math.min(15, Math.floor(f / 3)), win), won: win,
@@ -2377,36 +2696,20 @@ function reset(){
       '<div style="display:flex;align-items:center;gap:10px;margin:8px 0"><div style="font-size:46px;line-height:1">' + mon[0] + '</div><div><div style="font-weight:800">' + f + "층 · " + esc(mon[1]) + (f % 10 === 0 ? ' <span style="color:var(--bad)">BOSS</span>' : "") + '</div><div style="color:var(--sub)">적 전투력 ' + num(FP) + ' · 승률 <b style="color:' + (ch >= 60 ? "var(--ok)" : ch >= 30 ? "var(--gold)" : "var(--bad)") + '">' + ch + '%</b></div><div style="color:var(--gold)">보상 ' + num(twGold(f)) + " G" + (f % 5 === 0 ? " · 🛡️ 방지권" : "") + (f % 10 === 0 ? " · 🥚 알" : "") + "</div></div></div>" +
       '<button class="up" style="width:100%" ' + (cd || twBusy ? "disabled" : "") + ' onclick="towerFight()">' + (cd ? "⏳ " + cd + "초 뒤 다시 도전" : "⚔️ " + f + "층 도전!") + "</button></div>";
     h += '<div class="it"><span>🎁 오늘의 탑 보상 <span style="color:var(--sub)">(' + (cur >= 1 ? num(twDaily(cur)) + " G" : "1층을 깨면 열려요") + ')</span></span><button class="sm" ' + (dOk ? "" : "disabled") + ' onclick="towerDaily()">' + (cur >= 1 && !dOk ? "받음" : "받기") + "</button></div>";
-    h += '<div style="font-weight:800;margin:10px 0 2px">🏆 탑 랭킹</div>' + (twTop.length ? twTop.slice(0, 10).map((v, i) => '<div class="it" style="' + (v.id === curUid ? "background:rgba(0,229,255,.1);border-radius:6px" : "") + '"><span>' + (i < 3 ? MEDAL[i] : (i + 1) + "위") + " " + esc(v.id) + gTag(v.id) + "</span><b>" + Math.floor(v.f) + "층</b></div>").join("") : '<div class="it">아직 기록이 없어요. 첫 번째로 올라가 보세요!</div>');
-    h += '<div style="font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.6">전투력 = 지금 검 + 최고 기록 + 스킬 + 데리고 있는 펫 + 환생 + 길드 레벨<br>5층마다 🛡️ 방지권 · 10층마다 🥚 알 · 지면 10초 쉬어요' + (hasGold() ? "<br>골드 무한 계정은 탑 랭킹에 오르지 않아요" : "") + "</div>";
+    h += '<div style="font-weight:800;margin:10px 0 2px">🏆 탑 랭킹</div>' + (twTop.length ? twTop.slice(0, 10).map((v, i) => '<div class="it" style="' + (v.id === curUid ? "background:rgba(0,229,255,.1);border-radius:6px" : "") + '"><span>' + (i < 3 ? MEDAL[i] : (i + 1) + "위") + " " + nmHtml(v.id) + gTag(v.id) + "</span><b>" + Math.floor(v.f) + "층</b></div>").join("") : '<div class="it">아직 기록이 없어요. 첫 번째로 올라가 보세요!</div>');
+    h += '<div style="font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.6">전투력 = 지금 검 + 최고 기록 + 스킬 + 펫 + 환생 + 길드 레벨 + 장비 (전사는 +15%)<br>5층마다 🛡️ 방지권 · 10층마다 🥚 알과 장비 · 가끔 장비가 나와요 · 지면 10초 쉬어요' + (hasGold() ? "<br>골드 무한 계정은 탑 랭킹에 오르지 않아요" : "") + "</div>";
     return h + "</div>";
   };
   setInterval(() => { if (twCd && Date.now() < twCd + 1500) rePage(8); }, 1000);
 
   // ===== 🏅 칭호 =====
-  const TITLES = [
-    ["new", "새내기", "#b9b6cf", () => true, "처음부터 가지고 있어요"],
-    ["sm1", "견습 대장장이", "#4cd137", () => S.b >= 5, "최고 +5강 달성"],
-    ["sm2", "강철의 명장", "#00a8ff", () => S.b >= 10, "최고 +10강 달성"],
-    ["sm3", "전설의 대장장이", "#ffd700", () => S.b >= 15, "최고 +15강 달성"],
-    ["brk", "파괴왕", "#e84118", () => S.d >= 50, "검 50번 파괴"],
-    ["bss", "보스 사냥꾼", "#ff7f50", () => S.bk >= 20, "보스 20번 처치"],
-    ["aim", "명사수", "#fbc531", () => (S.pf || 0) >= 50, "PERFECT 50번"],
-    ["pet", "펫 수집가", "#9c88ff", () => Object.keys(S.pets || {}).length >= 4, "펫 4종 모으기"],
-    ["leg", "전설 조련사", "#ff00ff", () => Object.keys(S.pets || {}).some(k => PETS[k] && PETS[k].r === 3), "전설 펫 획득"],
-    ["tw1", "탑 등반가", "#00d2d3", () => (S.tw || 0) >= 10, "무한의 탑 10층"],
-    ["tw2", "탑의 지배자", "#ff4757", () => (S.tw || 0) >= 30, "무한의 탑 30층"],
-    ["mine", "광산왕", "#e1b12c", () => (S.mnl || 0) >= 10, "광산 Lv.10"],
-    ["gld", "길드장", "#f7971e", () => { const g = gOf(curUid); return !!g && g.leader === curUid; }, "길드를 이끌고 있을 때"],
-    ["chp", "시즌 챔피언", "#ffd700", () => !!S.schamp || !!champ[curUid], "주간 시즌 3위 안에 들기"],
-    ["rb", "환생자", "#8c7ae6", () => S.rb >= 1, "환생 1회"]
-  ];
+  const TITLES = [];
   const TT_MAP = {}; TITLES.forEach(t => { TT_MAP[t[0]] = t; });
   let titleMap = {}, ttSyncT = 0;
   const ttBoot = Date.now();
   onValue(ref(db, "titles"), (snap) => {
-    const m = {}; snap.forEach((ch) => { const v = ch.val(); if (v && typeof v.id === "string" && TT_MAP[v.k]) { m[v.id] = v.k; } });
-    titleMap = m; if (window.__rb) window.__rb(); rePage(8); rePage(9);
+    const m = {}, cm = {}; snap.forEach((ch) => { const v = ch.val(); if (v && typeof v.id === "string") { if (TT_MAP[v.k]) { m[v.id] = v.k; } if (NCOL[v.c] || AURA[v.a]) { cm[v.id] = { c: NCOL[v.c] ? v.c : "", a: AURA[v.a] ? v.a : "" }; } } });
+    titleMap = m; cosMap = cm; if (window.__rb) window.__rb(); rePage(8); rePage(9);
   }, () => {});
   function tTag(id) { const t = TT_MAP[titleMap[id]]; return t ? ' <span style="font-size:10.5px;font-weight:700;color:' + t[2] + '">[' + t[1] + "]</span>" : ""; }
   const ttOwned = (t) => { try { return !!t[3](); } catch (e) { return false; } };
@@ -2416,23 +2719,23 @@ function reset(){
     S.tt = k || ""; ttSyncT = Date.now();
     log(k ? "🏅 칭호 [" + t[1] + "] 를 달았어요!" : "🏅 칭호를 뗐어요", "var(--cy)");
     if (typeof ui === "function") ui(); rePage(9);
-    try { await set(ref(db, "titles/" + wEnc(curUid)), k ? { id: curUid, k } : null); } catch (e) { log("칭호 저장 실패: 파이어베이스 규칙(titles) 확인", "var(--bad)"); }
+    try { await cosPub(); } catch (e) { log("칭호 저장 실패: 파이어베이스 규칙(titles) 확인", "var(--bad)"); }
     cloudSave();
   };
   window.titlePanel = function() {
-    const hd = pgHead("🏅 칭호", "조건을 채우면 칭호를 얻어요. 하나를 골라 이름 옆에 달 수 있어요");
+    const hd = pgHead("🏅 칭호", "");
     if (!curUid || !loaded) return hd + '<div class="it">로그인 후 이용할 수 있어요</div>';
     const own = TITLES.filter(ttOwned).length, cur = TT_MAP[S.tt];
     let h = hd + '<div style="text-align:left;font-size:12.5px"><div style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);border-radius:10px;padding:9px 10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center"><span>지금: ' + (cur ? '<b style="color:' + cur[2] + '">[' + cur[1] + "]</b> " + esc(curUid) : esc(curUid) + ' <span style="color:var(--sub)">(칭호 없음)</span>') + '</span><span style="color:var(--sub)">보유 ' + own + " / " + TITLES.length + "</span></div>";
     h += TITLES.map(t => { const ok = ttOwned(t), on = S.tt === t[0]; return '<div class="it" style="' + (ok ? "" : "opacity:.55") + '"><span><b style="color:' + t[2] + '">[' + t[1] + ']</b> <span style="color:var(--sub)">' + t[4] + '</span></span><button class="sm" ' + (ok ? "" : "disabled") + ' onclick="titleSet(\'' + (on ? "" : t[0]) + '\')">' + (!ok ? "🔒" : on ? "떼기" : "달기") + "</button></div>"; }).join("");
-    return h + '<div style="font-size:11.5px;color:var(--sub);margin-top:6px">칭호는 채팅·랭킹·시즌 순위·탑 랭킹에서 이름 옆에 보여요</div></div>';
+    return h + '<div style="font-size:11.5px;color:var(--sub);margin-top:6px">칭호는 채팅·랭킹·시즌 순위·탑 랭킹·월드에서 이름 옆에 보여요</div>' + cosHtml() + "</div>";
   };
   setInterval(() => {
     if (!curUid || !loaded || !S.tt) return;
     const t = TT_MAP[S.tt];
     if (!t) { S.tt = ""; return; }
     if (!ttOwned(t)) { if (Date.now() - ttBoot > 20000) window.titleSet(""); return; }
-    if (titleMap[curUid] !== S.tt && Date.now() - ttSyncT > 30000) { ttSyncT = Date.now(); set(ref(db, "titles/" + wEnc(curUid)), { id: curUid, k: S.tt }).catch(() => {}); }
+    if (titleMap[curUid] !== S.tt && Date.now() - ttSyncT > 30000) { ttSyncT = Date.now(); cosPub().catch(() => {}); }
   }, 5000);
 
   // ===== ⚔️ 길드전 (주간) =====
@@ -2526,14 +2829,14 @@ function reset(){
   window.admWipe = async function() {
     if (!canBoss()) return;
     const id = admTarget(); if (!id) { admMsg("아래 목록에서 유저를 먼저 누르세요"); return; }
-    if (Date.now() > admWipePend) { admWipePend = Date.now() + 5000; admMsg("⚠️ 한 번 더 누르면 " + id + "님의 탑·시즌 기록을 지워요"); return; }
+    if (Date.now() > admWipePend) { admWipePend = Date.now() + 5000; admMsg("⚠️ 한 번 더 누르면 " + id + "님의 탑·아레나·시즌 기록을 지워요"); return; }
     admWipePend = 0; const k = wEnc(id);
-    try { await Promise.all([set(ref(db, "tower/" + k), null), set(ref(db, "season/" + curWk() + "/" + k), null)]); admMsg("🧽 " + id + "님의 탑·시즌 기록을 지웠어요"); } catch (e) { admMsg("실패: DB 규칙 확인"); }
+    try { await Promise.all([set(ref(db, "tower/" + k), null), set(ref(db, "arena/" + k), null), set(ref(db, "season/" + curWk() + "/" + k), null)]); admMsg("🧽 " + id + "님의 탑·아레나·시즌 기록을 지웠어요"); } catch (e) { admMsg("실패: DB 규칙 확인"); }
   };
   function renderAdmStat() {
     const el = $m("admStat"); if (!el || !canPanel()) return;
     const gc = Object.values(guilds).filter(g => g && typeof g.name === "string").length;
-    const h = "📊 계정 " + (accLoaded ? accList.length : "?") + "개 · 월드 " + Object.keys(others).length + "명 · 길드 " + gc + "개 · 탑 1위 " + (twTop[0] ? esc(twTop[0].id) + " " + Math.floor(twTop[0].f) + "층" : "없음") + " · 보스 " + (raid && raid.hp > 0 ? "진행 중" : "없음");
+    const h = "📊 계정 " + (accLoaded ? accList.length : "?") + "개 · 🌐 " + (SRV + 1) + "서버 (서버별 " + srvSt.map(x => x.n === null ? "-" : x.n).join("/") + "명) · 월드 " + Object.keys(others).length + "명 · 길드 " + gc + "개 · 탑 1위 " + (twTop[0] ? esc(twTop[0].id) + " " + Math.floor(twTop[0].f) + "층" : "없음") + " · 보스 " + (raid && raid.hp > 0 ? "진행 중" : "없음");
     if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
   }
   setInterval(() => { mailSub(); renderAdmStat(); }, 2000);
@@ -2543,12 +2846,538 @@ function reset(){
   setInterval(() => {
     if (wnDone || !curUid || !loaded) return;
     wnDone = true;
-    try { if (localStorage.getItem("sword_news_ver") === "21") return; localStorage.setItem("sword_news_ver", "21"); } catch (e) { return; }
+    try { if (localStorage.getItem("sword_news_ver") === "26") return; localStorage.setItem("sword_news_ver", "26"); } catch (e) { return; }
     const ov = document.createElement("div"); ov.id = "wnOv";
     ov.style.cssText = "position:fixed;inset:0;z-index:150000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:14px";
-    ov.innerHTML = '<div style="width:min(380px,94vw);max-height:86vh;overflow:auto;background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:18px;color:var(--tx);text-align:left"><div style="font-weight:900;color:var(--gold);font-size:19px;text-align:center">🎉 v21 대규모 업데이트!</div><div style="font-size:13.5px;line-height:1.8;margin-top:10px">🗼 <b>무한의 탑</b> — 한 층씩 올라가며 보상을 받아요<br>⚔️ <b>길드전</b> — 매주 길드끼리 점수 대결 (길드 칸)<br>🏅 <b>칭호</b> — 조건을 채워 이름 옆에 달아요<br>⛏️ <b>광산</b> — 게임을 꺼 놔도 골드가 쌓여요<br>🎁 <b>선물</b> — 관리자가 보낸 선물이 바로 도착해요</div><div style="font-size:12px;color:var(--sub);margin-top:8px">위쪽 메뉴에 🗼 탑 · 🏅 칭호 · ⛏️ 광산 칸이 새로 생겼어요</div><button class="up" style="width:100%;margin-top:14px" onclick="document.getElementById(\'wnOv\').remove()">확인</button></div>';
+    ov.innerHTML = '<div style="width:min(380px,94vw);max-height:86vh;overflow:auto;background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:18px;color:var(--tx);text-align:left"><div style="font-weight:900;color:var(--gold);font-size:19px;text-align:center">🎉 v26 서버 3개 업데이트!</div><div style="font-size:13.5px;line-height:1.8;margin-top:10px">🌐 <b>서버 3개</b> — 들어오면 서버가 자동으로 정해져요. 메뉴 아래 버튼으로 언제든 바꿀 수 있어요<br><span style="color:var(--sub);font-size:12px">월드·채팅·3D 대결은 같은 서버 사람끼리 만나요. 골드·장비·랭킹·길드는 어느 서버든 똑같아요</span><br>🎯 <b>3D 대결</b> — 1인칭 3D 실시간 대결! (메뉴의 빨간 버튼)<br>🛡️ <b>장비·직업</b> — 장비 5칸을 모으고 직업을 골라요<br>🏟️ <b>아레나</b> — 다른 유저와 1대1 (하루 5번)<br>🎖️ <b>시즌 패스</b> — 시즌 점수로 단계 보상<br>🎨 <b>꾸미기</b> — 이름 색과 오라 (장비 칸 맨 아래)<br>🌍 <b>새 월드</b> — 건물·필드 몬스터·이모티콘·미니맵</div><div style="font-size:12px;color:var(--sub);margin-top:8px">메뉴를 깔끔하게 정리했어요: 🗼 탑 · 🛡️ 장비 · 🏟️ 아레나 · 🎖️ 패스 · 🎯 3D 대결</div><button class="up" style="width:100%;margin-top:14px" onclick="document.getElementById(\'wnOv\').remove()">확인</button></div>';
     document.body.appendChild(ov);
   }, 1500);
+
+  // ===== 🎨 꾸미기 (이름 색 · 오라) =====
+  const NCOL = { red: ["빨강", "#ff6b6b"], org: ["주황", "#ffa502"], ylw: ["노랑", "#ffd32a"], grn: ["초록", "#2ed573"], sky: ["하늘", "#48b0ff"], pur: ["보라", "#b983ff"], pnk: ["분홍", "#ff8fab"], mint: ["민트", "#00cec9"] };
+  const AURA = { fire: ["불꽃", "#ff4757"], ice: ["얼음", "#70a1ff"], leaf: ["숲", "#2ed573"], gold: ["황금", "#ffd700"], dark: ["어둠", "#a55eea"] };
+  const NC_PRICE = 50000, AU_PRICE = 300000;
+  let cosMap = {};
+  function nmCol(id) { const c = cosMap[id]; return c && NCOL[c.c] ? NCOL[c.c][1] : ""; }
+  function nmHtml(id) { const c = nmCol(id); return c ? '<span style="color:' + c + '">' + esc(id) + "</span>" : esc(id); }
+  function cosPub() { if (!curUid || !loaded) return Promise.resolve(); const k = TT_MAP[S.tt] ? S.tt : "", c = NCOL[S.ncs] ? S.ncs : "", a = AURA[S.aus] ? S.aus : ""; return set(ref(db, "titles/" + wEnc(curUid)), k || c || a ? { id: curUid, k, c, a } : null); }
+  window.cosPick = function(kind, key) {
+    if (!curUid || !loaded || (kind !== "c" && kind !== "a")) return;
+    const tbl = kind === "c" ? NCOL : AURA, price = kind === "c" ? NC_PRICE : AU_PRICE, sel = kind === "c" ? "ncs" : "aus";
+    if (!tbl[key]) return;
+    if (!S.cos || typeof S.cos !== "object") S.cos = {};
+    if (!Array.isArray(S.cos[kind])) S.cos[kind] = [];
+    if (!S.cos[kind].includes(key)) {
+      if (!hasGold()) { if (S.g < price) { log("골드가 부족합니다! (" + num(price) + " G)", "var(--bad)"); return; } S.g -= price; }
+      S.cos[kind].push(key); log("🎨 " + tbl[key][0] + (kind === "c" ? " 이름 색" : " 오라") + "을(를) 샀어요!", "var(--gold)"); S[sel] = key;
+    } else S[sel] = S[sel] === key ? "" : key;
+    if (typeof ui === "function") ui(); rePage(11); cosPub().catch(() => {}); cloudSave();
+  };
+  window.cosHtml = () => (curUid && loaded ? cosHtml() : "");
+  function cosHtml() {
+    const own = (k) => (S.cos && Array.isArray(S.cos[k]) ? S.cos[k] : []);
+    const row = (kind, tbl, price, sel) => Object.keys(tbl).map(k => { const has = own(kind).includes(k), on = S[sel] === k; return '<button class="sm" style="flex:1 0 22%;padding:7px 2px;font-size:11.5px;line-height:1.45;' + (on ? "border-color:var(--gold);background:rgba(255,215,0,.12)" : "") + '" onclick="cosPick(\'' + kind + "','" + k + '\')"><b style="color:' + tbl[k][1] + '">' + (kind === "c" ? "가나다" : "✨") + " " + tbl[k][0] + '</b><br><span style="font-size:10.5px;color:var(--sub)">' + (on ? "쓰는 중" : has ? "고르기" : num(price) + " G") + "</span></button>"; }).join("");
+    return '<div style="font-weight:800;margin:12px 0 3px">🎨 이름 색 <span style="font-weight:400;font-size:11.5px;color:var(--sub)">랭킹·채팅·월드에서 내 이름 색이 바뀌어요</span></div><div class="row" style="gap:5px;flex-wrap:wrap">' + row("c", NCOL, NC_PRICE, "ncs") + "</div>" +
+      '<div style="font-weight:800;margin:12px 0 3px">✨ 오라 <span style="font-weight:400;font-size:11.5px;color:var(--sub)">월드에서 캐릭터가 빛나요</span></div><div class="row" style="gap:5px;flex-wrap:wrap">' + row("a", AURA, AU_PRICE, "aus") + "</div>";
+  }
+
+  // ===== 🏟️ 아레나 =====
+  const AR_MAX = 5;
+  let arTop = [], arCd = 0, arBusy = false, arPubT = 0, arMsg = "", arMsgT = 0;
+  onValue(query(ref(db, "arena"), orderByChild("pt"), limitToLast(60)), (snap) => {
+    const a = []; snap.forEach((ch) => { const v = ch.val(); if (v && typeof v.id === "string" && typeof v.pt === "number" && typeof v.p === "number") { a.push(v); } });
+    arTop = a.filter(v => !isStaffName(v.id) && !isBannedName(v.id) && (!accLoaded || accList.some(u => !u.old && u.id === v.id))).sort((x, y) => y.pt - x.pt || (+x.t || 0) - (+y.t || 0));
+    rePage(12);
+  }, () => {});
+  const arLeft = () => (S.ard === kstDay() ? Math.max(0, AR_MAX - (S.arc || 0)) : AR_MAX);
+  const arChance = (P, O) => Math.max(5, Math.min(95, Math.round(50 + (P - O) / Math.max(1, O) * 100)));
+  function arPub(force) {
+    if (!curUid || !loaded || hasGold()) return;
+    if (!force && Date.now() - arPubT < 20000) return;
+    arPubT = Date.now();
+    set(ref(db, "arena/" + wEnc(curUid)), { id: curUid, p: twMyP(), pt: Math.max(0, Math.floor(+S.arp || 0)), l: S.l || 0, t: srvNow() }).catch(() => {});
+  }
+  function arOpps() {
+    const P = twMyP(), my = +S.arp || 0;
+    const real = arTop.filter(v => v.id !== curUid && v.p > 0).sort((a, b) => Math.abs(a.pt - my) - Math.abs(b.pt - my)).slice(0, 3).map(v => ({ id: v.id, p: Math.round(v.p), pt: Math.floor(v.pt), bot: false }));
+    const bots = [["🪵 허수아비", .75], ["🗿 돌 골렘", 1], ["🔥 불꽃 기사", 1.25]].map(([nm, m]) => ({ id: nm, p: Math.max(80, Math.round(P * m)), pt: 0, bot: true }));
+    return real.concat(bots.slice(0, Math.max(1, 3 - real.length)));
+  }
+  window.arFight = function(i) {
+    if (!curUid || !loaded || arBusy || Date.now() < arCd) return;
+    if (arLeft() <= 0) { arMsg = "오늘 도전 횟수를 다 썼어요. 내일 다시 " + AR_MAX + "번 생겨요!"; arMsgT = Date.now(); rePage(12); return; }
+    const o = arOpps()[i]; if (!o) return;
+    const P = twMyP(), ch = arChance(P, o.p), win = Math.random() * 100 < ch;
+    if (S.ard !== kstDay()) { S.ard = kstDay(); S.arc = 0; }
+    S.arc = (S.arc || 0) + 1; arBusy = true; arCd = Date.now() + 3000;
+    let g = 0, dp, ex = "";
+    if (win) {
+      dp = o.bot ? 8 : Math.max(10, Math.min(30, Math.round(20 * o.p / Math.max(1, P))));
+      g = Math.round((5000 + o.p * 8) * (1 + petB("gold") / 100)); S.g += g; S.arw = (S.arw || 0) + 1; window.seasonAdd(3);
+      const dn = eqDrop(15, 0, 1.5, "아레나 전리품"); if (dn) ex = " · 🎁 " + dn;
+    } else { dp = -(o.bot ? 3 : 8); S.arl = (S.arl || 0) + 1; }
+    S.arp = Math.max(0, Math.floor(+S.arp || 0) + dp);
+    arPub(true); cloudSave();
+    fightShow({ title: "🏟️ 아레나", names: [curUid, o.id], subs: ["전투력 " + num(P), "전투력 " + num(o.p)], icons: ["🤺", o.bot ? o.id.split(" ")[0] : "🤺"], rounds: duelRounds(S.l || 0, Math.min(15, Math.round(o.p / 200)), win), won: win,
+      end: win ? "🏆 승리! +" + dp + "점 · +" + num(g) + " G" + ex : "💥 패배... " + dp + "점",
+      done: () => { arBusy = false; log(win ? "🏟️ 아레나 승리! " + o.id + " · +" + dp + "점 · +" + num(g) + " G" + ex : "🏟️ 아레나 패배... " + o.id + " · " + dp + "점", win ? "var(--gold)" : "var(--bad)"); if (typeof ui === "function") ui(); } });
+    if (typeof ui === "function") ui();
+  };
+  window.arenaPanel = function() {
+    const hd = pgHead("🏟️ 아레나", "다른 유저와 1대1로 겨뤄요. 하루 " + AR_MAX + "번 도전할 수 있어요");
+    if (!curUid || !loaded) return hd + '<div class="it">로그인 후 이용할 수 있어요</div>';
+    const P = twMyP(), left = arLeft(), my = Math.floor(+S.arp || 0), rank = arTop.findIndex(v => v.id === curUid) + 1, cd = Math.max(0, Math.ceil((arCd - Date.now()) / 1000)), off = left <= 0 || cd > 0 || arBusy;
+    let h = hd + '<div style="text-align:left;font-size:12.5px"><div style="background:rgba(255,99,72,.08);border:1px solid rgba(255,99,72,.45);border-radius:10px;padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:14px"><span>🏅 ' + num(my) + "점" + (rank ? " · " + rank + "위" : "") + '</span><span style="color:var(--cy)">내 전투력 ' + num(P) + '</span></div><div style="color:var(--sub);margin-top:3px">오늘 남은 도전 <b style="color:' + (left ? "var(--ok)" : "var(--bad)") + '">' + left + " / " + AR_MAX + "</b> · 전적 " + (S.arw || 0) + "승 " + (S.arl || 0) + "패</div></div>";
+    h += '<div style="font-weight:800;margin:6px 0 2px">⚔️ 상대 고르기</div>' + arOpps().map((o, i) => { const ch = arChance(P, o.p); return '<div class="it"><span>' + (o.bot ? esc(o.id) + ' <span style="color:var(--sub)">연습 상대</span>' : "🤺 " + nmHtml(o.id) + gTag(o.id) + ' <span style="color:var(--sub)">' + num(o.pt) + "점</span>") + '<br><span style="color:var(--sub);font-size:11.5px">전투력 ' + num(o.p) + ' · 승률 <b style="color:' + (ch >= 60 ? "var(--ok)" : ch >= 30 ? "var(--gold)" : "var(--bad)") + '">' + ch + "%</b></span></span><button class=\"sm\" " + (off ? "disabled" : "") + ' onclick="arFight(' + i + ')">' + (cd ? "⏳ " + cd : "도전") + "</button></div>"; }).join("");
+    h += '<div style="font-weight:800;margin:10px 0 2px">🏆 아레나 랭킹</div>' + (arTop.length ? arTop.slice(0, 10).map((v, i) => '<div class="it" style="' + (v.id === curUid ? "background:rgba(0,229,255,.1);border-radius:6px" : "") + '"><span>' + (i < 3 ? MEDAL[i] : (i + 1) + "위") + " " + nmHtml(v.id) + gTag(v.id) + "</span><b>" + num(Math.floor(v.pt)) + "점</b></div>").join("") : '<div class="it">아직 기록이 없어요. 첫 번째 도전자가 되어 보세요!</div>');
+    h += '<div style="font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.6">이기면 점수와 골드를 얻고 가끔 장비가 나와요 · 지면 점수가 조금 내려가요<br>강한 상대를 이기면 점수를 더 많이 받아요 · 상대의 점수는 깎이지 않아요' + (hasGold() ? "<br>골드 무한 계정은 아레나 랭킹에 오르지 않아요" : "") + "</div>";
+    if (arMsg && Date.now() - arMsgT < 4000) h += '<div style="margin-top:6px;color:var(--cy);font-weight:700">' + esc(arMsg) + "</div>";
+    return h + "</div>";
+  };
+
+  // ===== 🎖️ 시즌 패스 =====
+  const SP_STEP = 30, SP_MAX = 20;
+  const spReward = (lv) => lv === SP_MAX ? { g: 500000, it: 2, t: "500,000 G + 🎁 영웅 장비" } : lv % 5 === 0 ? { g: 100000, egg: 1, p: 1, t: "100,000 G + 🥚 알 + 🛡️ 방지권" } : { g: 15000 * lv, es: 2, t: num(15000 * lv) + " G + 💎 강화석 2" };
+  const spPts = () => (S.swk === curWk() ? Math.floor(+S.swp || 0) : 0);
+  const spLv = () => Math.min(SP_MAX, Math.floor(spPts() / SP_STEP));
+  const spGot = () => (S.spw === curWk() ? Math.min(SP_MAX, Math.floor(+S.spc || 0)) : 0);
+  window.passClaim = function() {
+    if (!curUid || !loaded || hasGold()) return;
+    const lv = spLv(); let c = spGot(); if (c >= lv) return;
+    S.spw = curWk(); let g = 0;
+    while (c < lv) { c++; const r = spReward(c); g += r.g; if (r.egg) S.egg = (S.egg || 0) + r.egg; if (r.p) S.p = (S.p || 0) + r.p; if (r.es) S.es = (S.es || 0) + r.es; if (r.it !== undefined) eqGive({ s: Math.floor(Math.random() * 5), r: r.it, lv: 0 }, "시즌 패스 보상"); }
+    S.spc = c; S.g += g;
+    log("🎖️ 시즌 패스 " + c + "단계까지 보상을 받았어요! +" + num(g) + " G", "var(--gold)"); if (typeof ui === "function") ui(); cloudSave();
+  };
+  window.passPanel = function() {
+    const hd = pgHead("🎖️ 시즌 패스", "이번 주 시즌 점수를 모으면 단계가 오르고 보상을 받아요 (전부 무료 · 매주 새로 시작)");
+    if (!curUid || !loaded) return hd + '<div class="it">로그인 후 이용할 수 있어요</div>';
+    if (hasGold()) return hd + '<div class="it">골드 무한 계정은 시즌에 참여하지 않아요</div>';
+    const pts = spPts(), lv = spLv(), got = spGot(), can = lv - got, nextAt = (lv + 1) * SP_STEP, pct = lv >= SP_MAX ? 100 : (pts - lv * SP_STEP) / SP_STEP * 100;
+    let h = hd + '<div style="text-align:left;font-size:12.5px"><div style="background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);border-radius:10px;padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:14px"><span>🎖️ ' + lv + " / " + SP_MAX + '단계</span><span style="color:var(--cy)">시즌 점수 ' + num(pts) + '점</span></div><div style="height:12px;background:var(--bg);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin:7px 0 3px"><i style="display:block;height:100%;width:' + pct.toFixed(1) + '%;background:linear-gradient(90deg,#f7971e,#ffd200)"></i></div><div style="font-size:11.5px;color:var(--sub);margin-bottom:8px">' + (lv >= SP_MAX ? "마지막 단계까지 올랐어요!" : "다음 단계까지 " + num(nextAt - pts) + "점") + '</div><button class="up" style="width:100%" ' + (can > 0 ? "" : "disabled") + ' onclick="passClaim()">' + (can > 0 ? "🎁 보상 " + can + "개 받기" : "받을 보상이 없어요") + "</button></div>";
+    for (let i = 1; i <= SP_MAX; i++) { const st = i <= got ? "✅" : i <= lv ? "🎁" : "🔒"; h += '<div class="it" style="' + (i <= got ? "opacity:.55" : i <= lv ? "background:rgba(255,215,0,.1);border-radius:6px" : "") + '"><span>' + st + " <b>" + i + '단계</b> <span style="color:var(--sub)">' + i * SP_STEP + '점</span></span><span style="color:var(--gold);font-weight:700;text-align:right">' + spReward(i).t + "</span></div>"; }
+    return h + '<div style="font-size:11.5px;color:var(--sub);margin-top:6px">시즌 점수는 강화 성공 · 보스 · 탑 · 아레나 · 사냥 · 대련으로 모여요</div></div>';
+  };
+
+  // ===== 📜 모험 일지 =====
+  const QJ = [
+    ["검을 처음으로 강화하기", () => S.s >= 1, 2000],
+    ["+3강 검 만들기", () => S.b >= 3, 3000],
+    ["검 1자루 팔기", () => S.ns >= 1, 5000],
+    ["⛏️ 광산 열기", () => (S.mnl || 0) >= 1, 5000],
+    ["+5강 검 만들기", () => S.b >= 5, 10000],
+    ["🧙 직업 고르기 (장비 칸)", () => !!JOBS[S.job], 10000],
+    ["🐾 펫 1마리 부화시키기", () => Object.keys(S.pets || {}).length >= 1, 10000],
+    ["🗼 무한의 탑 3층 돌파", () => (S.tw || 0) >= 3, 15000],
+    ["🛡️ 장비 1개 입기", () => eqWorn().some(Boolean), 15000],
+    ["🐲 보스 1번 처치 (상점·보스 칸)", () => S.bk >= 1, 20000, { egg: 1 }],
+    ["🏅 칭호 달기", () => !!TT_MAP[S.tt], 20000],
+    ["🌍 월드에 들어가 보기", () => !!S.wv, 20000],
+    ["🎯 PERFECT 5번", () => (S.pf || 0) >= 5, 25000],
+    ["+7강 검 만들기", () => S.b >= 7, 40000],
+    ["🏟️ 아레나 1승", () => (S.arw || 0) >= 1, 40000],
+    ["🏰 길드에 들어가기", () => !!gOf(curUid), 50000],
+    ["🗼 무한의 탑 10층 돌파", () => (S.tw || 0) >= 10, 60000],
+    ["⛏️ 광산 Lv.5", () => (S.mnl || 0) >= 5, 60000],
+    ["🛡️ 장비 하나를 +3까지 강화", () => eqWorn().some(it => it && eqLv(it) >= 3), 80000],
+    ["👾 월드에서 몬스터 10마리 사냥", () => (S.wk || 0) >= 10, 80000, { p: 1 }],
+    ["+10강 검 만들기", () => S.b >= 10, 150000],
+    ["🐾 펫 3종 모으기", () => Object.keys(S.pets || {}).length >= 3, 100000],
+    ["🏟️ 아레나 5승", () => (S.arw || 0) >= 5, 150000],
+    ["🛡️ 영웅 등급 장비 입기", () => eqWorn().some(it => it && it.r >= 2), 200000],
+    ["🗼 무한의 탑 20층 돌파", () => (S.tw || 0) >= 20, 250000],
+    ["⛏️ 광산 Lv.10", () => (S.mnl || 0) >= 10, 250000],
+    ["🐲 보스 10번 처치", () => S.bk >= 10, 300000],
+    ["+12강 검 만들기", () => S.b >= 12, 500000],
+    ["🗼 무한의 탑 30층 돌파", () => (S.tw || 0) >= 30, 700000],
+    ["+15강 우주 파괴검 만들기", () => S.b >= 15, 2000000, { it: 3 }]
+  ];
+  QJ.length = 0;
+  const qjIdx = () => Math.max(0, Math.min(QJ.length, Math.floor(+S.qj || 0)));
+  const qjDone = (i) => { try { return !!QJ[i][1](); } catch (e) { return false; } };
+  const qjRw = (q) => num(q[2]) + " G" + (q[3] ? (q[3].egg ? " + 🥚 알" : "") + (q[3].p ? " + 🛡️ 방지권" : "") + (q[3].it !== undefined ? " + 🎁 전설 장비" : "") : "");
+  window.questClaim = function() {
+    if (!curUid || !loaded) return;
+    const i = qjIdx(); if (i >= QJ.length || !qjDone(i)) return;
+    const q = QJ[i]; S.qj = i + 1; S.g += q[2];
+    if (q[3]) { if (q[3].egg) S.egg = (S.egg || 0) + q[3].egg; if (q[3].p) S.p = (S.p || 0) + q[3].p; if (q[3].it !== undefined) eqGive({ s: Math.floor(Math.random() * 5), r: q[3].it, lv: 0 }, "모험 일지 보상"); }
+    log("📜 모험 일지 " + (i + 1) + "번 완료! +" + qjRw(q), "var(--gold)"); if (typeof beep === "function") beep("ok"); if (typeof ui === "function") ui(); cloudSave();
+  };
+  window.questPanel = function() {
+    const hd = pgHead("📜 모험 일지", "차례대로 따라 하면 게임을 다 배울 수 있어요. 하나 깰 때마다 보상!");
+    if (!curUid || !loaded) return hd + '<div class="it">로그인 후 이용할 수 있어요</div>';
+    const i = qjIdx();
+    let h = hd + '<div style="text-align:left;font-size:12.5px"><div style="display:flex;justify-content:space-between;font-weight:800;margin-bottom:4px"><span>진행 ' + i + " / " + QJ.length + '</span><span style="color:var(--sub);font-weight:400">' + Math.round(i / QJ.length * 100) + '%</span></div><div style="height:10px;background:var(--bg);border:1px solid var(--line);border-radius:5px;overflow:hidden;margin-bottom:8px"><i style="display:block;height:100%;width:' + (i / QJ.length * 100).toFixed(1) + '%;background:linear-gradient(90deg,#00e5ff,#2ed573)"></i></div>';
+    if (i >= QJ.length) h += '<div style="background:rgba(255,215,0,.1);border:1px solid var(--gold);border-radius:10px;padding:14px;text-align:center;font-weight:800;color:var(--gold)">🎉 모험 일지를 모두 끝냈어요! 진짜 전설의 대장장이!</div>';
+    else {
+      const ok = qjDone(i), q = QJ[i];
+      h += '<div style="background:rgba(0,229,255,.07);border:1px solid ' + (ok ? "var(--gold)" : "rgba(0,229,255,.35)") + ';border-radius:10px;padding:10px;margin-bottom:8px"><div style="font-size:11.5px;color:var(--sub)">지금 할 일 · ' + (i + 1) + '번</div><div style="font-weight:800;font-size:14.5px;margin:3px 0">' + esc(q[0]) + '</div><div style="color:var(--gold);margin-bottom:8px">보상 ' + qjRw(q) + '</div><button class="up" style="width:100%" ' + (ok ? "" : "disabled") + ' onclick="questClaim()">' + (ok ? "🎁 보상 받기" : "아직 못 했어요") + "</button></div>";
+      h += '<div style="font-weight:800;margin:6px 0 2px">다음 할 일</div>' + (QJ.slice(i + 1, i + 5).map((x, j) => '<div class="it" style="opacity:.7"><span>' + (i + j + 2) + ". " + esc(x[0]) + '</span><span style="color:var(--gold);white-space:nowrap">' + num(x[2]) + " G</span></div>").join("") || '<div class="it"><span style="color:var(--sub)">이게 마지막이에요!</span></div>');
+    }
+    return h + "</div>";
+  };
+  setInterval(() => {
+    if (typeof PG !== "undefined" && PG === 12) { arPub(false); if (arCd && Date.now() < arCd + 1500) rePage(12); }
+    if (typeof NB === "undefined" || !NB[14] || !curUid || !loaded) return;
+    const mark = (b, on) => { b.style.boxShadow = on ? "0 0 0 2px var(--gold) inset" : ""; };
+    mark(NB[14], qjIdx() < QJ.length && qjDone(qjIdx())); mark(NB[13], !hasGold() && spLv() > spGot());
+  }, 1000);
+
+  setInterval(() => {
+    if (!curUid || !loaded || !(S.mnl > 0)) return;
+    let back = mineStored(); for (let i = 0; i < S.mnl; i++) { back += mineCost(i); }
+    S.mnl = 0; S.mnt = 0; S.g += back;
+    log("⛏️ 광산이 없어져서, 광산에 쓴 골드와 쌓여 있던 골드 " + num(back) + " G를 돌려받았어요.", "var(--gold)");
+    if (typeof ui === "function") ui(); cloudSave();
+  }, 3000);
+
+  // ===== 🎯 3D 대결장 =====
+  const F3_CDN = "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js";
+  const F3_ROOMS = [["duel1", "⚔️ 1대1 방 A", 2], ["duel2", "⚔️ 1대1 방 B", 2], ["ffa1", "👥 개인전 방 A", 6], ["ffa2", "👥 개인전 방 B", 6]];
+  const F3_GOAL = 10, F3_HALF = 22, F3_EYE = 1.6, F3_R = 0.42, F3_SPEED = 6.2, F3_AMMO = 10, F3_KILL_G = 2000, F3_WIN_G = 30000, F3_KILL_CAP = 30, F3_WIN_CAP = 5;
+  const F3_BOX = [[0, 0, 3.4, 3.4, 3.2], [-9, -9, 7, 1.2, 3], [-12, -6, 1.2, 7, 3], [9, 9, 7, 1.2, 3], [12, 6, 1.2, 7, 3], [-9, 9, 1.2, 7, 3], [9, -9, 1.2, 7, 3], [-4, 14, 2.2, 2.2, 1.35], [4, -14, 2.2, 2.2, 1.35], [15, -3, 2.2, 2.2, 1.35], [-15, 3, 2.2, 2.2, 1.35], [0, 8, 5, 1.1, 1.35], [0, -8, 5, 1.1, 1.35], [-17, -17, 3, 3, 3], [17, 17, 3, 3, 3], [17, -16, 2.2, 2.2, 1.35], [-17, 16, 2.2, 2.2, 1.35]];
+  const F3_SPAWN = [[-19, -12], [19, 12], [-12, 19], [12, -19], [0, 19.5], [0, -19.5], [19.5, -8], [-19.5, 8]];
+  const F3 = { on: false, loading: false, room: "", T: null, stop: null, me: null, others: {}, api: null };
+  let f3Lobby = {}, f3LobbyUnsub = null, f3Msg = "", f3MsgT = 0, BETA = false;
+  const F3_BETA_ROOM = ["beta", "🧪 베타 AI 대결 (AI 3명)", 4];
+  const f3Note = (t) => { f3Msg = t; f3MsgT = Date.now(); rePage(15); };
+  const f3Count = (rid) => Object.values(f3Lobby[rid] || {}).filter(v => v && typeof v.id === "string" && srvNow() - (+v.t || 0) < 150000 && !isBannedName(v.id));
+  const f3Day = () => { const d = kstDay(); if (S.f3d !== d) { S.f3d = d; S.f3k = 0; S.f3w = 0; } };
+  const f3Hue = (id) => { let h = 0; for (let i = 0; i < id.length; i++) { h = (h * 31 + id.charCodeAt(i)) % 360; } return "hsl(" + h + ",70%,55%)"; };
+  setInterval(() => {
+    const want = srvOk && typeof PG !== "undefined" && PG === 15 && !F3.on;
+    if (want && !f3LobbyUnsub) f3LobbyUnsub = onValue(ref(sdb, "fpsLobby"), (sn) => { f3Lobby = sn.val() || {}; rePage(15); }, () => {});
+    else if (!want && f3LobbyUnsub) { try { f3LobbyUnsub(); } catch (e) {} f3LobbyUnsub = null; }
+  }, 1000);
+  window.fpsPanel = function() {
+    const hd = pgHead("🎯 3D 대결장", "1인칭 3D로 직접 움직이고 조준해서 싸우는 실시간 대결이에요 · 지금 " + (SRV + 1) + "서버");
+    if (!curUid || !loaded) return hd + '<div class="it">로그인 후 이용할 수 있어요</div>';
+    f3Day();
+    let h = hd + '<div style="text-align:left;font-size:12.5px"><div style="background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.45);border-radius:10px;padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:14px"><span>내 기록</span><span style="color:var(--cy)">' + num(S.fk || 0) + "킬 · " + num(S.fw || 0) + '승</span></div><div style="color:var(--sub);margin-top:3px">먼저 ' + F3_GOAL + "킬 하면 승리! · 킬 +" + num(F3_KILL_G) + " G (오늘 " + (S.f3k || 0) + "/" + F3_KILL_CAP + ") · 승리 +" + num(F3_WIN_G) + " G (오늘 " + (S.f3w || 0) + "/" + F3_WIN_CAP + ")</div></div>";
+    h += '<div style="font-weight:800;margin:6px 0 2px">방 고르기</div>' + (BETA && canBoss() ? [F3_BETA_ROOM].concat(F3_ROOMS) : F3_ROOMS).map((r) => { const beta = r[0] === "beta", ps = beta ? [] : f3Count(r[0]), full = !beta && ps.filter(v => v.id !== curUid).length >= r[2]; return '<div class="it"' + (beta ? ' style="background:rgba(0,229,255,.1);border-radius:6px"' : "") + "><span><b>" + r[1] + "</b> " + (beta ? '<span style="color:var(--cy)">베타 전용</span>' : '<span style="color:' + (ps.length ? "var(--ok)" : "var(--sub)") + '">' + ps.length + " / " + r[2] + "명</span>") + '<br><span style="color:var(--sub);font-size:11.5px">' + (beta ? "AI와 싸우는 연습방이에요 · 보상 없음 · 혼자 들어가요" : ps.length ? ps.map(v => esc(v.id)).join(", ") : "아직 아무도 없어요") + '</span></span><button class="sm" ' + (full || F3.loading ? "disabled" : "") + ' onclick="f3Join(\'' + r[0] + '\')">' + (full ? "가득 참" : "입장") + "</button></div>"; }).join("");
+    h += '<div style="font-size:11.5px;color:var(--sub);margin-top:8px;line-height:1.7">🖥️ <b>컴퓨터</b>: 화면 클릭 → WASD 이동 · 마우스 조준 · 클릭 발사 · Space 점프 · Shift 대시 · R 재장전 · Esc 마우스 풀기<br>📱 <b>휴대폰</b>: 왼쪽 조이스틱 이동 · 오른쪽을 밀어 조준 · 조준하면 자동 발사 · 버튼으로 점프·대시·재장전 (가로로 돌리면 더 잘 보여요)<br>💡 머리를 맞히면 피해가 훨씬 커요. 낮은 상자 뒤에 숨어 보세요!</div>';
+    if (f3Msg && Date.now() - f3MsgT < 6000) h += '<div style="margin-top:6px;color:var(--cy);font-weight:700">' + esc(f3Msg) + "</div>";
+    return h + "</div>";
+  };
+  window.f3Join = async function(rid) {
+    if (!curUid || !loaded || !srvOk || F3.on || F3.loading) return;
+    const R = rid === "beta" ? (BETA && canBoss() ? F3_BETA_ROOM : null) : F3_ROOMS.find(r => r[0] === rid); if (!R || isBannedName(curUid)) return;
+    if (rid !== "beta" && f3Count(rid).filter(v => v.id !== curUid).length >= R[2]) { f3Note("방이 가득 찼어요. 다른 방에 들어가 보세요"); return; }
+    F3.loading = true; f3Note("3D 엔진을 불러오는 중이에요...");
+    try { if (!F3.T) F3.T = await import(F3_CDN); } catch (e) { F3.loading = false; f3Note("3D 엔진을 불러오지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요"); return; }
+    F3.loading = false;
+    try { f3Start(R); } catch (e) { console.error("f3Start", e); if (F3.stop) { F3.stop(); } else { const o = $m("f3Ov"); if (o) o.remove(); F3.on = false; } f3Note("이 기기에서는 3D를 켤 수 없어요 (" + ((e && e.message) || e) + ")"); }
+  };
+  function f3Start(R) {
+    const T = F3.T, rid = R[0], base = "fps/" + rid, myKey = wEnc(curUid), touch = !!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches);
+    const local = rid === "beta";
+    const joinT = srvNow(), unsubs = [], lis = [], tracers = [], seen = {}, lastHitFrom = {}, feed = [];
+    const on = (tg, ty, fn, op) => { tg.addEventListener(ty, fn, op); lis.push([tg, ty, fn, op]); };
+    const r2 = (v) => Math.round(v * 100) / 100;
+    const ov = document.createElement("div"); ov.id = "f3Ov";
+    ov.style.cssText = "position:fixed;inset:0;z-index:170000;background:#000;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden;font-family:inherit;color:#fff";
+    const bt = (id, lab, css) => '<div data-b="' + id + '" style="position:absolute;display:' + (touch ? "flex" : "none") + ";align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.18);border:2px solid rgba(255,255,255,.55);font-weight:800;font-size:13px;" + css + '">' + lab + "</div>";
+    ov.innerHTML = '<canvas id="f3C" style="width:100%;height:100%;display:block"></canvas>' +
+      '<div id="f3Dmg" style="position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 90px 30px rgba(255,0,0,.85);opacity:0;transition:opacity .25s"></div>' +
+      '<div style="position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;pointer-events:none"><i style="position:absolute;left:10px;top:0;width:2px;height:8px;background:#fff;box-shadow:0 0 2px #000"></i><i style="position:absolute;left:10px;bottom:0;width:2px;height:8px;background:#fff;box-shadow:0 0 2px #000"></i><i style="position:absolute;top:10px;left:0;height:2px;width:8px;background:#fff;box-shadow:0 0 2px #000"></i><i style="position:absolute;top:10px;right:0;height:2px;width:8px;background:#fff;box-shadow:0 0 2px #000"></i></div>' +
+      '<div id="f3Hit" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:30px;font-weight:900;color:#ff4757;opacity:0;pointer-events:none;text-shadow:0 0 4px #000">✕</div>' +
+      '<div id="f3Top" style="position:absolute;left:50%;top:8px;transform:translateX(-50%);background:rgba(0,0,0,.55);border-radius:10px;padding:6px 12px;font-size:12.5px;text-align:center;pointer-events:none;min-width:150px"></div>' +
+      '<div id="f3Feed" style="position:absolute;right:8px;top:8px;font-size:12px;text-align:right;pointer-events:none;text-shadow:0 0 3px #000;line-height:1.6"></div>' +
+      '<div id="f3Mid" style="position:absolute;left:50%;top:32%;transform:translateX(-50%);font-size:20px;font-weight:900;text-align:center;pointer-events:none;text-shadow:0 0 6px #000;white-space:nowrap"></div>' +
+      '<div style="position:absolute;left:12px;bottom:' + (touch ? 12 : 14) + 'px;width:170px;pointer-events:none"><div id="f3HpT" style="font-weight:900;font-size:15px;text-shadow:0 0 3px #000">❤️ 100</div><div style="height:10px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.6);border-radius:5px;overflow:hidden"><i id="f3HpB" style="display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff4757,#2ed573)"></i></div></div>' +
+      '<div id="f3Am" style="position:absolute;right:12px;bottom:' + (touch ? 176 : 14) + 'px;font-weight:900;font-size:17px;text-shadow:0 0 3px #000;pointer-events:none"></div>' +
+      '<div data-b="exit" style="position:absolute;left:8px;top:8px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.6);border-radius:8px;padding:7px 11px;font-size:12.5px;font-weight:800;cursor:pointer">🚪 나가기</div>' +
+      '<div id="f3Help" style="position:absolute;left:50%;bottom:42px;transform:translateX(-50%);background:rgba(0,0,0,.6);border-radius:8px;padding:7px 12px;font-size:12.5px;text-align:center;line-height:1.5;width:max-content;max-width:92vw;pointer-events:none;display:' + (touch ? "none" : "block") + '">🖱️ 화면을 클릭하면 조준이 시작돼요<br>WASD 이동 · Space 점프 · Shift 대시 · R 재장전 · Esc 마우스 풀기</div>' +
+      '<div id="f3Joy" style="position:absolute;left:26px;bottom:44px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.45);display:' + (touch ? "block" : "none") + ';pointer-events:none"><i id="f3Knob" style="position:absolute;left:33px;top:33px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.55)"></i></div>' +
+      bt("fire", "🔥", "right:26px;bottom:74px;width:84px;height:84px;font-size:30px;background:rgba(255,71,87,.35)") + bt("jump", "점프", "right:122px;bottom:36px;width:58px;height:58px") + bt("dash", "대시", "right:118px;bottom:112px;width:58px;height:58px") + bt("rel", "장전", "right:34px;bottom:8px;width:54px;height:54px");
+    document.body.appendChild(ov);
+    const q = (id) => ov.querySelector("#" + id), cv = q("f3C");
+    const rend = new T.WebGLRenderer({ canvas: cv, antialias: !touch, powerPreference: "high-performance" });
+    rend.setPixelRatio(Math.min(touch ? 1.5 : 2, window.devicePixelRatio || 1));
+    const scene = new T.Scene(); scene.background = new T.Color(0x9fd3ff); scene.fog = new T.Fog(0x9fd3ff, 34, 90);
+    const cam = new T.PerspectiveCamera(75, 1, 0.05, 200); cam.rotation.order = "YXZ"; scene.add(cam);
+    scene.add(new T.HemisphereLight(0xffffff, 0x4a5a4a, 1.25));
+    const sun = new T.DirectionalLight(0xffffff, 1.4); sun.position.set(12, 24, 8); scene.add(sun);
+    const mkTex = (c1, c2, n) => { const c = document.createElement("canvas"); c.width = c.height = 128; const g = c.getContext("2d"); g.fillStyle = c1; g.fillRect(0, 0, 128, 128); g.fillStyle = c2; g.fillRect(0, 0, 64, 64); g.fillRect(64, 64, 64, 64); g.strokeStyle = "rgba(0,0,0,.18)"; g.lineWidth = 2; g.strokeRect(1, 1, 126, 126); const t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(n, n); if (T.SRGBColorSpace) t.colorSpace = T.SRGBColorSpace; return t; };
+    const floor = new T.Mesh(new T.PlaneGeometry(F3_HALF * 2, F3_HALF * 2), new T.MeshLambertMaterial({ map: mkTex("#6f8f5f", "#688858", 11) })); floor.rotation.x = -Math.PI / 2; scene.add(floor);
+    const addBox = (x, y, z, w, h, d, mat) => { const m = new T.Mesh(new T.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); scene.add(m); return m; };
+    const wallMat = new T.MeshLambertMaterial({ color: 0x54627a }), tallMat = new T.MeshLambertMaterial({ color: 0x7f8fa6 }), crateMat = new T.MeshLambertMaterial({ map: mkTex("#c98b4a", "#b97c3e", 1) });
+    [[0, -F3_HALF, F3_HALF * 2 + 1, 0.6], [0, F3_HALF, F3_HALF * 2 + 1, 0.6], [-F3_HALF, 0, 0.6, F3_HALF * 2 + 1], [F3_HALF, 0, 0.6, F3_HALF * 2 + 1]].forEach(w => addBox(w[0], 2.5, w[1], w[2], 5, w[3], wallMat));
+    F3_BOX.forEach(b => addBox(b[0], b[4] / 2, b[1], b[2], b[4], b[3], b[4] > 2 ? tallMat : crateMat));
+    // 내 검 (1인칭)
+    const vm = new T.Group(); const blade = new T.Mesh(new T.BoxGeometry(0.045, 0.085, 0.72), new T.MeshBasicMaterial({ color: 0x7ef9ff })); blade.position.z = -0.36; vm.add(blade);
+    const hilt = new T.Mesh(new T.BoxGeometry(0.22, 0.06, 0.06), new T.MeshBasicMaterial({ color: 0xffd700 })); vm.add(hilt);
+    const grip = new T.Mesh(new T.BoxGeometry(0.05, 0.05, 0.2), new T.MeshBasicMaterial({ color: 0x5c3d2e })); grip.position.z = 0.12; vm.add(grip);
+    vm.position.set(0.3, -0.27, -0.5); vm.rotation.set(0.12, 0.1, 0); cam.add(vm);
+    const trGeo = new T.CylinderGeometry(0.03, 0.03, 1, 6), spGeo = new T.SphereGeometry(0.13, 8, 6), up = new T.Vector3(0, 1, 0);
+    const tracer = (a, b, mine) => {
+      const va = new T.Vector3(a[0], a[1], a[2]), vb = new T.Vector3(b[0], b[1], b[2]), d = vb.clone().sub(va), len = d.length(); if (len < 0.05) return;
+      const m = new T.Mesh(trGeo, new T.MeshBasicMaterial({ color: mine ? 0x7ef9ff : 0xff9f43, transparent: true, opacity: 0.9 })); m.position.copy(va).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(up, d.clone().normalize()); m.scale.set(1, len, 1); scene.add(m);
+      const s = new T.Mesh(spGeo, new T.MeshBasicMaterial({ color: 0xffffff })); s.position.copy(vb); scene.add(s);
+      tracers.push({ m, s, until: Date.now() + 110 });
+    };
+    const drawLabel = (o) => { const g = o.lc.getContext("2d"); g.clearRect(0, 0, 256, 64); g.font = "bold 26px sans-serif"; g.textAlign = "center"; g.lineWidth = 5; g.strokeStyle = "rgba(0,0,0,.85)"; g.strokeText(o.id, 128, 28); g.fillStyle = nmCol(o.id) || "#fff"; g.fillText(o.id, 128, 28); g.fillStyle = "rgba(0,0,0,.6)"; g.fillRect(48, 40, 160, 12); g.fillStyle = o.hp > 50 ? "#2ed573" : o.hp > 25 ? "#ffa502" : "#ff4757"; g.fillRect(50, 42, 156 * Math.max(0, Math.min(100, o.hp)) / 100, 8); o.lt.needsUpdate = true; o.labHp = o.hp; };
+    const mkPlayer = (id) => {
+      const g = new T.Group(), mat = new T.MeshLambertMaterial({ color: new T.Color(nmCol(id) || f3Hue(id)) }), dark = new T.MeshLambertMaterial({ color: 0x2f3542 }), skin = new T.MeshLambertMaterial({ color: 0xffd8a8 });
+      const add = (w, h, d, x, y, z, m) => { const b = new T.Mesh(new T.BoxGeometry(w, h, d), m); b.position.set(x, y, z); g.add(b); return b; };
+      add(0.62, 0.72, 0.34, 0, 1.0, 0, mat); add(0.24, 0.64, 0.26, -0.16, 0.32, 0, dark); add(0.24, 0.64, 0.26, 0.16, 0.32, 0, dark); add(0.42, 0.42, 0.42, 0, 1.58, 0, skin); add(0.16, 0.62, 0.2, -0.4, 1.02, 0, mat); add(0.16, 0.62, 0.2, 0.4, 1.02, 0, mat);
+      add(0.3, 0.07, 0.03, 0, 1.63, -0.22, dark); add(0.06, 0.08, 0.95, 0.4, 0.95, -0.5, new T.MeshBasicMaterial({ color: 0xdff9fb }));
+      const lc = document.createElement("canvas"); lc.width = 256; lc.height = 64; const lt = new T.CanvasTexture(lc); if (T.SRGBColorSpace) lt.colorSpace = T.SRGBColorSpace;
+      const sp = new T.Sprite(new T.SpriteMaterial({ map: lt, transparent: true, depthWrite: false })); sp.scale.set(2.4, 0.6, 1); sp.position.set(0, 2.3, 0); g.add(sp);
+      scene.add(g); return { g, lc, lt };
+    };
+    // ---- 충돌 · 광선 ----
+    const blocked = (x, z) => { if (Math.abs(x) > F3_HALF - 0.3 - F3_R || Math.abs(z) > F3_HALF - 0.3 - F3_R) return true; for (const b of F3_BOX) { if (Math.abs(x - b[0]) < b[2] / 2 + F3_R && Math.abs(z - b[1]) < b[3] / 2 + F3_R) return true; } return false; };
+    const rayBox = (o, d, x0, y0, z0, x1, y1, z1) => { let t0 = 0, t1 = 1e9; const lo = [x0, y0, z0], hi = [x1, y1, z1]; for (let i = 0; i < 3; i++) { if (Math.abs(d[i]) < 1e-9) { if (o[i] < lo[i] || o[i] > hi[i]) return Infinity; } else { let a = (lo[i] - o[i]) / d[i], b = (hi[i] - o[i]) / d[i]; if (a > b) { const t = a; a = b; b = t; } if (a > t0) t0 = a; if (b < t1) t1 = b; if (t0 > t1) return Infinity; } } return t0; };
+    const raySph = (o, d, cx, cy, cz, r) => { const ox = o[0] - cx, oy = o[1] - cy, oz = o[2] - cz, b = ox * d[0] + oy * d[1] + oz * d[2], c = ox * ox + oy * oy + oz * oz - r * r, h = b * b - c; if (h < 0) return Infinity; const t = -b - Math.sqrt(h); return t >= 0 ? t : Infinity; };
+    const rayWorld = (o, d) => { let t = 90; if (d[1] < -1e-6) t = Math.min(t, -o[1] / d[1]); const W = F3_HALF - 0.3; if (d[0] > 1e-6) t = Math.min(t, (W - o[0]) / d[0]); else if (d[0] < -1e-6) t = Math.min(t, (-W - o[0]) / d[0]); if (d[2] > 1e-6) t = Math.min(t, (W - o[2]) / d[2]); else if (d[2] < -1e-6) t = Math.min(t, (-W - o[2]) / d[2]); for (const b of F3_BOX) t = Math.min(t, rayBox(o, d, b[0] - b[2] / 2, 0, b[1] - b[3] / 2, b[0] + b[2] / 2, b[4], b[1] + b[3] / 2)); return t; };
+    const dirOf = (yaw, pit) => [-Math.sin(yaw) * Math.cos(pit), Math.sin(pit), -Math.cos(yaw) * Math.cos(pit)];
+    const aimAt = (yaw, pit) => { const m = F3.me, d = dirOf(yaw, pit), o = [m.x, m.y + F3_EYE, m.z]; let bt2 = rayWorld(o, d), best = null; const sN = srvNow(); Object.values(F3.others).forEach((p) => { if (p.dead || p.prot > sN) return; const th = raySph(o, d, p.sx, p.sy + 1.58, p.sz, 0.28), tb = rayBox(o, d, p.sx - 0.36, p.sy, p.sz - 0.36, p.sx + 0.36, p.sy + 1.38, p.sz + 0.36), t = Math.min(th, tb); if (t < bt2) { bt2 = t; best = { p, head: th <= tb }; } }); return { o, d, t: bt2, best }; };
+    // ---- 내 상태 ----
+    const me = F3.me = { x: 0, y: 0, z: 0, vy: 0, yaw: 0, pitch: 0, hp: 100, k: 0, d: 0, dead: false, respawnAt: 0, prot: 0, ammo: F3_AMMO, reloadUntil: 0, nextShot: 0, dashAt: 0, dashUntil: 0, dvx: 0, dvz: 0, kick: 0, shot: null, lastSend: 0, lastSig: "", by: "" };
+    F3.others = {}; F3.room = rid;
+    let roundN = -1, roundEnd = 0, roundWin = "", fire = false, lookOn = false, hudT = 0, hitT = 0, last = performance.now(), sizeW = 0, sizeH = 0, lobbyT = 0;
+    const keys = {}, joy = { id: -1, ox: 0, oy: 0, f: 0, s: 0 }, look = {};
+    const spawn = () => {
+      let best = F3_SPAWN[0], bd = -1; const es = Object.values(F3.others).filter(p => !p.dead);
+      F3_SPAWN.forEach((s) => { const d = es.length ? Math.min.apply(null, es.map(p => Math.hypot(p.x - s[0], p.z - s[1]))) : Math.random() * 10; if (d > bd) { bd = d; best = s; } });
+      me.x = best[0]; me.z = best[1]; me.y = 0; me.vy = 0; me.yaw = Math.atan2(best[0], best[1]); me.pitch = 0; me.hp = 100; me.dead = false; me.ammo = F3_AMMO; me.reloadUntil = 0; me.prot = srvNow() + 2000; me.by = ""; send(true);
+    };
+    const reload = (now) => { if (me.reloadUntil || me.ammo >= F3_AMMO || me.dead) return; me.reloadUntil = now + 1300; };
+    const send = (force) => {
+      if (local) return;
+      const now = Date.now(); if (!force && now - me.lastSend < 125) return;
+      const sig = [r2(me.x), r2(me.y), r2(me.z), r2(me.yaw), r2(me.pitch), me.hp, me.k, me.d, me.dead ? 1 : 0, me.prot, me.shot ? me.shot[0] : 0].join(",");
+      if (!force && sig === me.lastSig && now - me.lastSend < 1000) return;
+      me.lastSend = now; me.lastSig = sig;
+      const v = { id: curUid, p: [r2(me.x), r2(me.y), r2(me.z), r2(me.yaw), r2(me.pitch)], h: me.hp, k: me.k, d: me.d, a: me.dead ? 0 : 1, pr: me.prot, t: srvNow() };
+      if (me.shot) v.s = [me.shot[0], r2(me.shot[1][0]), r2(me.shot[1][1]), r2(me.shot[1][2])];
+      set(ref(sdb, base + "/p/" + myKey), v).catch(() => {});
+    };
+    const shoot = (now) => {
+      if (me.dead || roundEnd || now < me.nextShot || me.reloadUntil) return;
+      if (me.ammo <= 0) { reload(now); return; }
+      me.ammo--; me.nextShot = now + 260; me.kick = 1;
+      const mv = Math.abs(joy.f) + Math.abs(joy.s) > 0.2 || keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD, spr = (mv ? 0.02 : 0.005) + (me.y > 0.02 ? 0.03 : 0);
+      const a = aimAt(me.yaw + (Math.random() - 0.5) * spr, me.pitch + (Math.random() - 0.5) * spr), hp = [a.o[0] + a.d[0] * a.t, a.o[1] + a.d[1] * a.t, a.o[2] + a.d[2] * a.t];
+      const rx = Math.cos(me.yaw), rz = -Math.sin(me.yaw);
+      tracer([a.o[0] + rx * 0.28 + a.d[0] * 0.6, a.o[1] - 0.25 + a.d[1] * 0.6, a.o[2] + rz * 0.28 + a.d[2] * 0.6], hp, true);
+      me.shot = [srvNow(), hp]; if (typeof clang === "function") { try { clang(); } catch (e) {} }
+      if (a.best) { hitT = now + 180; q("f3Hit").style.color = a.best.head ? "#ffd700" : "#ff4757"; if (local) botHurt(a.best.p, a.best.head, null); else push(ref(sdb, base + "/ev"), { a: curUid, b: a.best.p.id, h: a.best.head ? 1 : 0, t: srvNow() }).catch(() => {}); }
+      if (me.ammo <= 0) reload(now);
+      send(true);
+    };
+    const addFeed = (html) => { feed.push({ html, until: Date.now() + 5500 }); if (feed.length > 5) feed.shift(); };
+    const tryWin = () => { runTransaction(ref(sdb, base + "/round"), (cur) => { if (cur && srvNow() - (+cur.t || 0) < 9000) return; return { win: curUid, t: srvNow(), n: ((cur && +cur.n) || 0) + 1 }; }).catch(() => {}); };
+    const localWin = (id) => { if (roundEnd) return; roundEnd = srvNow() + 8000; roundWin = id; };
+    const creditKill = (victim, head) => {
+      const now = Date.now(); me.k++; let g = 0;
+      if (!local) { S.fk = (S.fk || 0) + 1; f3Day(); if (!hasGold() && (S.f3k || 0) < F3_KILL_CAP) { S.f3k = (S.f3k || 0) + 1; g = F3_KILL_G; S.g += g; } window.seasonAdd(1); }
+      q("f3Mid").innerHTML = '<span style="color:#ffd700">' + (head ? "🎯 헤드샷! " : "⚔️ 처치! ") + esc(victim) + (g ? " +" + num(g) + " G" : "") + "</span>"; me.midUntil = now + 1800;
+      if (typeof beep === "function") beep("ok"); send(true);
+      if (me.k >= F3_GOAL) { if (local) localWin(curUid); else tryWin(); }
+    };
+    const hurtMe = (by, head) => {
+      const now = Date.now();
+      if (me.dead || roundEnd || me.prot > srvNow() || (lastHitFrom[by] && now - lastHitFrom[by] < 150)) return false;
+      lastHitFrom[by] = now; me.hp -= head ? 60 : 25; me.by = by; q("f3Dmg").style.opacity = "1"; setTimeout(() => { const e = q("f3Dmg"); if (e) e.style.opacity = "0"; }, 160);
+      let died = false;
+      if (me.hp <= 0) { me.hp = 0; me.dead = true; me.d++; me.respawnAt = now + 3000; died = true; if (!local) push(ref(sdb, base + "/ev"), { k: 1, a: by, b: curUid, h: head ? 1 : 0, t: srvNow() }).catch(() => {}); if (typeof beep === "function") beep("bad"); }
+      send(true); return died;
+    };
+    // ---- 베타: AI 상대 (이 기기 안에서만 움직여요) ----
+    const bots = [];
+    const botSpawn = (b) => { const s = F3_SPAWN[Math.floor(Math.random() * F3_SPAWN.length)]; b.x = b.sx = s[0]; b.z = b.sz = s[1]; b.y = b.sy = 0; b.hp = 100; b.dead = false; b.prot = srvNow() + 2000; b.wp = null; b.wpT = 0; };
+    const botHurt = (b, head, by) => {
+      if (b.dead || roundEnd || b.prot > srvNow()) return;
+      b.hp -= head ? 60 : 25; if (b.hp > 0) return;
+      b.hp = 0; b.dead = true; b.d++; b.respawnAt = Date.now() + 3000;
+      addFeed("<b>" + esc(by ? by.id : curUid) + "</b> " + (head ? "🎯" : "⚔️") + " " + esc(b.id));
+      if (by) { by.k++; if (by.k >= F3_GOAL) localWin(by.id); } else creditKill(b.id, head);
+    };
+    const los = (ax, ay, az, bx, by, bz) => { const dx = bx - ax, dy = by - ay, dz = bz - az, len = Math.hypot(dx, dy, dz) || 1; return rayWorld([ax, ay, az], [dx / len, dy / len, dz / len]) >= len - 0.05; };
+    const botTick = (b, dt, now, sN) => {
+      if (b.dead) { if (now > b.respawnAt && !roundEnd) botSpawn(b); return; }
+      if (roundEnd) return;
+      let tg = null, td = 1e9;
+      bots.forEach((o) => { if (o === b || o.dead) return; const d = Math.hypot(o.x - b.x, o.z - b.z); if (d < td) { td = d; tg = { o, x: o.x, y: 0, z: o.z, me: false }; } });
+      if (!me.dead) { const d = Math.hypot(me.x - b.x, me.z - b.z) * 0.7; if (d < td) { td = d; tg = { o: me, x: me.x, y: me.y, z: me.z, me: true }; } }
+      const dist = tg ? Math.hypot(tg.x - b.x, tg.z - b.z) : 99, see = !!tg && los(b.x, 1.5, b.z, tg.x, tg.y + 1.2, tg.z);
+      let mx = 0, mz = 0;
+      if (tg && see) {
+        const dx = (tg.x - b.x) / (dist || 1), dz = (tg.z - b.z) / (dist || 1), fwd = dist > 13 ? 1 : dist < 7 ? -1 : 0;
+        if (now > b.wpT) { b.wpT = now + 700 + Math.random() * 1300; b.str = Math.random() < 0.5 ? -1 : 1; }
+        mx = dx * fwd - dz * b.str * 0.8; mz = dz * fwd + dx * b.str * 0.8; b.yaw = Math.atan2(-dx, -dz);
+      } else {
+        if (!b.wp || now > b.wpT || Math.hypot(b.wp[0] - b.x, b.wp[1] - b.z) < 1) { b.wpT = now + 2500 + Math.random() * 2500; b.wp = tg && Math.random() < 0.6 ? [tg.x + (Math.random() - 0.5) * 6, tg.z + (Math.random() - 0.5) * 6] : F3_SPAWN[Math.floor(Math.random() * F3_SPAWN.length)]; }
+        const dx = b.wp[0] - b.x, dz = b.wp[1] - b.z, l = Math.hypot(dx, dz) || 1; mx = dx / l; mz = dz / l; b.yaw = Math.atan2(-mx, -mz);
+      }
+      const ml = Math.hypot(mx, mz);
+      if (ml > 0.01) { const sp = 4.3 * dt / ml, nx = b.x + mx * sp, nz = b.z + mz * sp; let moved = false; if (!blocked(nx, b.z)) { b.x = nx; moved = true; } if (!blocked(b.x, nz)) { b.z = nz; moved = true; } if (!moved) { b.wp = null; b.wpT = 0; b.str = -b.str; } }
+      if (tg && see && dist < 30 && now > b.nextShot && !((tg.me ? me.prot : tg.o.prot) > sN)) {
+        b.nextShot = now + 650 + Math.random() * 500;
+        const hit = Math.random() < Math.max(0.07, 0.34 - dist * 0.01), head = hit && Math.random() < 0.08, ty = tg.y + (head ? 1.58 : 1.0);
+        tracer([b.x - Math.sin(b.yaw) * 0.5, 1.35, b.z - Math.cos(b.yaw) * 0.5], hit ? [tg.x, ty, tg.z] : [tg.x + (Math.random() - 0.5) * 2.4, ty + (Math.random() - 0.3) * 1.6, tg.z + (Math.random() - 0.5) * 2.4], false);
+        if (hit) { if (tg.me) { if (hurtMe(b.id, head)) { b.k++; addFeed("<b>" + esc(b.id) + "</b> " + (head ? "🎯" : "⚔️") + " " + esc(curUid)); if (b.k >= F3_GOAL) localWin(b.id); } } else botHurt(tg.o, head, b); }
+      }
+    };
+    if (local) ["🤖 AI 검사", "🤖 AI 궁수", "🤖 AI 기사"].forEach((nm) => { const b = Object.assign({ id: nm, bot: true, x: 0, y: 0, z: 0, sx: 0, sy: 0, sz: 0, yaw: 0, syaw: 0, pitch: 0, k: 0, d: 0, hp: 100, dead: false, prot: 0, labHp: -1, lastShot: 0, nextShot: 0, respawnAt: 0, wp: null, wpT: 0, str: 1 }, mkPlayer(nm)); F3.others[nm] = b; bots.push(b); botSpawn(b); });
+    // ---- 구독 ----
+    if (!local) unsubs.push(onValue(ref(sdb, base + "/p"), (sn) => {
+      if (!F3.on || F3.room !== rid) return;
+      const v = sn.val() || {}, sN = srvNow(), keep = {};
+      Object.keys(v).forEach((k) => {
+        const o = v[k]; if (!o || typeof o.id !== "string" || o.id === curUid || !Array.isArray(o.p) || sN - (+o.t || 0) > 8000 || isBannedName(o.id)) return;
+        keep[o.id] = 1;
+        let p = F3.others[o.id];
+        const x = Math.max(-F3_HALF, Math.min(F3_HALF, +o.p[0] || 0)), y = Math.max(0, Math.min(4, +o.p[1] || 0)), z = Math.max(-F3_HALF, Math.min(F3_HALF, +o.p[2] || 0));
+        if (!p) { p = F3.others[o.id] = Object.assign({ id: o.id, sx: x, sy: y, sz: z, syaw: +o.p[3] || 0, lastShot: 0, labHp: -1 }, mkPlayer(o.id)); }
+        p.x = x; p.y = y; p.z = z; p.yaw = +o.p[3] || 0; p.pitch = +o.p[4] || 0; p.hp = Math.max(0, Math.min(100, +o.h || 0)); p.k = Math.max(0, Math.floor(+o.k || 0)); p.d = Math.max(0, Math.floor(+o.d || 0)); p.dead = !o.a; p.prot = +o.pr || 0; p.t = +o.t || 0;
+        if (Array.isArray(o.s) && o.s[0] !== p.lastShot) { const first = !p.lastShot; p.lastShot = o.s[0]; if (!first && sN - o.s[0] < 1500) tracer([p.sx - Math.sin(p.yaw) * 0.5, p.sy + 1.35, p.sz - Math.cos(p.yaw) * 0.5], [+o.s[1] || 0, +o.s[2] || 0, +o.s[3] || 0], false); }
+      });
+      Object.keys(F3.others).forEach((id) => { if (!keep[id]) { scene.remove(F3.others[id].g); delete F3.others[id]; } });
+    }, () => {}));
+    if (!local) unsubs.push(onValue(query(ref(sdb, base + "/ev"), limitToLast(40)), (sn) => {
+      if (!F3.on || F3.room !== rid) return;
+      const sN = srvNow(), now = Date.now(); let cnt = 0; const old = [];
+      sn.forEach((ch) => {
+        cnt++; const v = ch.val(), k = ch.key; if (!v) return;
+        if (sN - (+v.t || 0) > 25000) old.push(k);
+        if (seen[k]) return; seen[k] = 1;
+        if ((+v.t || 0) < joinT || sN - (+v.t || 0) > 6000 || typeof v.a !== "string" || typeof v.b !== "string") return;
+        if (v.k) { addFeed("<b>" + esc(v.a) + "</b> " + (v.h ? "🎯" : "⚔️") + " " + esc(v.b)); if (v.a === curUid && v.b !== curUid) creditKill(v.b, v.h); }
+        else if (v.b === curUid && v.a !== curUid) hurtMe(v.a, v.h);
+      });
+      if (cnt >= 30 && old.length) old.slice(0, 15).forEach(k => set(ref(sdb, base + "/ev/" + k), null).catch(() => {}));
+    }, () => {}));
+    if (!local) unsubs.push(onValue(ref(sdb, base + "/round"), (sn) => {
+      if (!F3.on || F3.room !== rid) return;
+      const v = sn.val(); if (!v || typeof v.win !== "string") { if (roundN < 0) roundN = 0; return; }
+      const n = +v.n || 0; if (roundN < 0) { roundN = n; if (srvNow() - (+v.t || 0) > 8000) return; } else if (n === roundN) return;
+      roundN = n; roundEnd = (+v.t || 0) + 8000; roundWin = v.win;
+      if (v.win === curUid) { S.fw = (S.fw || 0) + 1; f3Day(); let g = 0; if (!hasGold() && (S.f3w || 0) < F3_WIN_CAP) { S.f3w = (S.f3w || 0) + 1; g = F3_WIN_G; S.g += g; } window.seasonAdd(5); const dn = eqDrop(40, 1, 2, "3D 대결 승리 보상"); log("🎯 3D 대결 승리! " + (g ? "+" + num(g) + " G" : "") + (dn ? " · 🎁 " + dn : ""), "var(--gold)"); cloudSave(); }
+    }, () => {}));
+    // ---- 입력 ----
+    on(cv, "click", () => { if (!touch && document.pointerLockElement !== cv && cv.requestPointerLock) { try { cv.requestPointerLock(); } catch (e) {} } });
+    on(document, "pointerlockchange", () => { lookOn = document.pointerLockElement === cv; q("f3Help").style.display = touch || lookOn ? "none" : "block"; if (!lookOn) fire = false; });
+    on(document, "mousemove", (e) => { if (!lookOn) return; me.yaw -= e.movementX * 0.0023; me.pitch = Math.max(-1.45, Math.min(1.45, me.pitch - e.movementY * 0.0023)); });
+    on(document, "mousedown", (e) => { if (lookOn && e.button === 0) fire = true; });
+    on(document, "mouseup", (e) => { if (e.button === 0) fire = false; });
+    on(window, "keydown", (e) => { if (!F3.on) return; const t = e.target && e.target.tagName; if (t === "INPUT" || t === "TEXTAREA") return; keys[e.code] = true; if (e.code === "KeyR") reload(Date.now()); if (["Space", "Tab", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault(); e.stopImmediatePropagation(); }, true);
+    on(window, "keyup", (e) => { keys[e.code] = false; }, true);
+    on(ov, "contextmenu", (e) => e.preventDefault());
+    const act = (b, down) => { if (b === "exit") { if (down) f3Stop(); } else if (b === "fire") fire = down; else if (b === "jump") keys.Space = down; else if (b === "dash") keys.ShiftLeft = down; else if (b === "rel" && down) reload(Date.now()); };
+    on(ov, "pointerdown", (e) => {
+      const bEl = e.target.closest ? e.target.closest("[data-b]") : null, b = bEl ? bEl.dataset.b : "";
+      if (b === "exit") { f3Stop(); return; }
+      if (e.pointerType === "mouse") return;
+      e.preventDefault();
+      if (b) { act(b, true); look[e.pointerId] = { x: e.clientX, y: e.clientY, b }; return; }
+      if (joy.id < 0 && e.clientX < ov.clientWidth * 0.45 && e.clientY > ov.clientHeight * 0.3) { joy.id = e.pointerId; joy.ox = e.clientX; joy.oy = e.clientY; joy.f = joy.s = 0; return; }
+      look[e.pointerId] = { x: e.clientX, y: e.clientY, b: "" };
+    });
+    on(ov, "pointermove", (e) => {
+      if (e.pointerType === "mouse") return;
+      if (e.pointerId === joy.id) { const dx = Math.max(-50, Math.min(50, e.clientX - joy.ox)), dy = Math.max(-50, Math.min(50, e.clientY - joy.oy)); joy.s = dx / 50; joy.f = -dy / 50; q("f3Knob").style.transform = "translate(" + dx * 0.66 + "px," + dy * 0.66 + "px)"; return; }
+      const l = look[e.pointerId]; if (!l) return;
+      me.yaw -= (e.clientX - l.x) * 0.0062; me.pitch = Math.max(-1.45, Math.min(1.45, me.pitch - (e.clientY - l.y) * 0.0062)); l.x = e.clientX; l.y = e.clientY;
+    });
+    const pUp = (e) => { if (e.pointerId === joy.id) { joy.id = -1; joy.f = joy.s = 0; q("f3Knob").style.transform = ""; } const l = look[e.pointerId]; if (l) { if (l.b) act(l.b, false); delete look[e.pointerId]; } };
+    on(ov, "pointerup", pUp); on(ov, "pointercancel", pUp);
+    if (!local) on(window, "pagehide", () => { set(ref(sdb, base + "/p/" + myKey), null).catch(() => {}); set(ref(sdb, "fpsLobby/" + rid + "/" + myKey), null).catch(() => {}); });
+    // ---- 끝내기 ----
+    const f3Stop = F3.stop = () => {
+      F3.on = false; F3.stop = null; F3.room = "";
+      lis.forEach(l => { try { l[0].removeEventListener(l[1], l[2], l[3]); } catch (e) {} });
+      unsubs.forEach(u => { try { u(); } catch (e) {} });
+      if (!local) { set(ref(sdb, base + "/p/" + myKey), null).catch(() => {}); set(ref(sdb, "fpsLobby/" + rid + "/" + myKey), null).catch(() => {}); }
+      try { if (document.pointerLockElement === cv) document.exitPointerLock(); } catch (e) {}
+      try { scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) { if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); rend.dispose(); } catch (e) {}
+      ov.remove(); F3.others = {}; cloudSave(); if (typeof ui === "function") ui(); rePage(15);
+    };
+    if (!local) try { onDisconnect(ref(sdb, base + "/p/" + myKey)).remove(); onDisconnect(ref(sdb, "fpsLobby/" + rid + "/" + myKey)).remove(); } catch (e) {}
+    F3.on = true; F3.api = { shoot, spawn, aimAt, send, blocked, stop: f3Stop };
+    spawn();
+    // ---- 매 프레임 ----
+    const frame = (ts) => {
+      if (!F3.on) return;
+      requestAnimationFrame(frame);
+      const dt = Math.min(0.05, Math.max(0.001, (ts - last) / 1000)); last = ts;
+      const now = Date.now(), sN = srvNow();
+      if (ov.clientWidth !== sizeW || ov.clientHeight !== sizeH) { sizeW = ov.clientWidth; sizeH = ov.clientHeight; rend.setSize(sizeW, sizeH, false); cam.aspect = sizeW / Math.max(1, sizeH); cam.fov = cam.aspect >= 1 ? 72 : Math.min(100, 72 + (1 - cam.aspect) * 46); cam.updateProjectionMatrix(); vm.scale.setScalar(cam.aspect >= 1 ? 1 : 0.7); }
+      if (!local && now - lobbyT > 60000) { lobbyT = now; set(ref(sdb, "fpsLobby/" + rid + "/" + myKey), { id: curUid, t: sN }).catch(() => {}); }
+      if (roundEnd && sN > roundEnd) { roundEnd = 0; roundWin = ""; me.k = 0; me.d = 0; bots.forEach((b) => { b.k = 0; b.d = 0; botSpawn(b); }); spawn(); }
+      if (me.dead && now > me.respawnAt && !roundEnd) spawn();
+      if (me.reloadUntil && now >= me.reloadUntil) { me.ammo = F3_AMMO; me.reloadUntil = 0; }
+      if (!me.dead) {
+        let f = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0) + joy.f, s = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0) + joy.s;
+        const l = Math.hypot(f, s); if (l > 1) { f /= l; s /= l; }
+        const fx = -Math.sin(me.yaw), fz = -Math.cos(me.yaw), rx = Math.cos(me.yaw), rz = -Math.sin(me.yaw);
+        let vx = (fx * f + rx * s) * F3_SPEED, vz = (fz * f + rz * s) * F3_SPEED;
+        if ((keys.ShiftLeft || keys.ShiftRight || keys.KeyE) && now > me.dashAt) { me.dashAt = now + 5000; me.dashUntil = now + 170; const dl = Math.hypot(vx, vz); if (dl > 0.1) { me.dvx = vx / dl; me.dvz = vz / dl; } else { me.dvx = fx; me.dvz = fz; } }
+        if (now < me.dashUntil) { vx = me.dvx * F3_SPEED * 3.4; vz = me.dvz * F3_SPEED * 3.4; }
+        const nx = me.x + vx * dt, nz = me.z + vz * dt;
+        if (!blocked(nx, me.z)) me.x = nx; if (!blocked(me.x, nz)) me.z = nz;
+        if (keys.Space && me.y <= 0.001) me.vy = 6.4;
+        me.vy -= 18 * dt; me.y += me.vy * dt; if (me.y <= 0) { me.y = 0; me.vy = 0; }
+        if (fire || (touch && aimAt(me.yaw, me.pitch).best)) shoot(now);
+      }
+      if (local) bots.forEach(b => botTick(b, dt, now, sN));
+      cam.position.set(me.x, me.y + (me.dead ? 0.45 : F3_EYE), me.z); cam.rotation.set(me.pitch, me.yaw, me.dead ? 0.7 : 0);
+      me.kick = Math.max(0, me.kick - dt * 7); vm.position.z = -0.5 + me.kick * 0.14; vm.rotation.x = 0.12 + me.kick * 0.5 - (me.reloadUntil ? 0.9 : 0); vm.visible = !me.dead;
+      Object.values(F3.others).forEach((p) => {
+        const a = Math.min(1, dt * 12); p.sx += (p.x - p.sx) * a; p.sy += (p.y - p.sy) * a; p.sz += (p.z - p.sz) * a;
+        let dy = p.yaw - p.syaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); p.syaw += dy * a;
+        p.g.position.set(p.sx, p.sy, p.sz); p.g.rotation.y = p.syaw; p.g.rotation.z = p.dead ? 1.45 : 0; p.g.position.y = p.sy + (p.dead ? 0.3 : 0);
+        p.g.traverse((o) => { if (o.material && o.material.opacity !== undefined && !o.isSprite) { const tr = p.prot > sN && !p.dead; if (o.material.transparent !== tr) { o.material.transparent = tr; o.material.opacity = tr ? 0.45 : 1; o.material.needsUpdate = true; } } });
+        if (p.labHp !== p.hp) drawLabel(p);
+      });
+      for (let i = tracers.length - 1; i >= 0; i--) { if (now > tracers[i].until) { scene.remove(tracers[i].m); scene.remove(tracers[i].s); tracers[i].m.material.dispose(); tracers[i].s.material.dispose(); tracers.splice(i, 1); } }
+      q("f3Hit").style.opacity = now < hitT ? "1" : "0";
+      if (now - hudT > 120) {
+        hudT = now;
+        q("f3HpT").textContent = "❤️ " + Math.max(0, me.hp); q("f3HpB").style.width = Math.max(0, me.hp) + "%";
+        q("f3Am").textContent = me.reloadUntil ? "🔄 장전 중..." : "⚡ " + me.ammo + " / " + F3_AMMO + (now < me.dashAt ? "  💨 " + Math.ceil((me.dashAt - now) / 1000) : "  💨 준비");
+        const all = Object.values(F3.others).map(p => ({ id: p.id, k: p.k, d: p.d })).concat([{ id: curUid, k: me.k, d: me.d }]).sort((a, b) => b.k - a.k || a.d - b.d);
+        q("f3Top").innerHTML = '<div style="font-weight:800;color:#ffd700">' + esc(R[1]) + " · 먼저 " + F3_GOAL + "킬" + (local ? " · 보상 없음" : "") + "</div>" + all.map(p => '<div style="display:flex;justify-content:space-between;gap:14px;' + (p.id === curUid ? "color:#7ef9ff;font-weight:800" : "") + '"><span>' + esc(p.id) + "</span><span>" + p.k + "킬 " + p.d + "데스</span></div>").join("") + (all.length < 2 ? '<div style="color:#ccc">상대를 기다리는 중...</div>' : "");
+        for (let i = feed.length - 1; i >= 0; i--) { if (now > feed[i].until) { feed.splice(i, 1); } }
+        q("f3Feed").innerHTML = feed.map(f => "<div>" + f.html + "</div>").join("");
+        const mid = q("f3Mid");
+        if (roundEnd) mid.innerHTML = '<span style="color:#ffd700">🏆 ' + esc(roundWin) + " 승리!</span><br><span style=\"font-size:14px\">" + Math.max(0, Math.ceil((roundEnd - sN) / 1000)) + "초 뒤 새 판이 시작돼요</span>";
+        else if (me.dead) mid.innerHTML = '<span style="color:#ff6b6b">💀 ' + (me.by ? esc(me.by) + "에게 당했어요" : "쓰러졌어요") + "</span><br><span style=\"font-size:14px\">" + Math.max(0, Math.ceil((me.respawnAt - now) / 1000)) + "초 뒤 부활</span>";
+        else if (me.prot > sN) mid.innerHTML = '<span style="font-size:14px;color:#7ef9ff">🛡️ 부활 보호 중</span>';
+        else if (!(me.midUntil > now)) mid.innerHTML = "";
+      }
+      send(false);
+      rend.render(scene, cam);
+    };
+    requestAnimationFrame(frame);
+    if (location.search.includes("f3dbg")) window.__f3 = F3;
+  }
+
+  // ===== 🧪 베타 테스트 서버 (중간 관리자 이상) =====
+  function betaUI() {
+    const btn = $m("betaBtn"); if (btn) btn.textContent = BETA ? "🧪 베타 테스트 서버 나가기" : "🧪 베타 테스트 서버 들어가기";
+    let bn = $m("betaBn");
+    if (BETA && !bn) {
+      bn = document.createElement("div"); bn.id = "betaBn";
+      bn.style.cssText = "position:fixed;left:6px;top:4px;z-index:9000;background:rgba(0,0,0,.85);color:#7ef9ff;border:1px solid #00e5ff;border-radius:999px;padding:4px 10px;font-size:11.5px;font-weight:800;white-space:nowrap;cursor:pointer";
+      bn.innerHTML = "🧪 베타 테스트 서버 · <u>나가기</u>"; bn.onclick = () => window.betaToggle(); document.body.appendChild(bn);
+    } else if (!BETA && bn) bn.remove();
+    rePage(15);
+  }
+  window.betaToggle = function() {
+    if (!curUid || !loaded || !canBoss()) return;
+    if (F3.on) { admMsg("3D 대결에서 나온 뒤에 바꿔 주세요"); return; }
+    BETA = !BETA; try { sessionStorage.setItem("sword_beta", BETA ? "1" : ""); } catch (e) {}
+    betaUI(); admMsg(BETA ? "🧪 베타 테스트 서버에 들어왔어요. 월드와 3D 대결에 AI가 나와요" : "베타 테스트 서버에서 나왔어요");
+  };
+  let betaInit = false;
+  setInterval(() => {
+    if (!curUid || !loaded) return;
+    if (BETA && !canBoss()) { BETA = false; betaUI(); return; }
+    if (!betaInit && canBoss()) { betaInit = true; try { if (sessionStorage.getItem("sword_beta") === "1") { BETA = true; betaUI(); } } catch (e) {} }
+  }, 2000);
 
   // ===== 💬 길드 채팅 =====
   let gcGid = "", gcUnsub = null, gcMsgs = [], gcHtml = "", gcLast = 0;
@@ -2827,7 +3656,7 @@ function reset(){
         const safeName = r.name.replace(/[<>&"']/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c]));
         const goldTxt = typeof r.gold === "number" ? " · " + r.gold.toLocaleString() + "G" : "";
         return '<div class="fb-row' + (isMe ? ' me' : '') + '">' +
-               '<span><span class="fb-badge">' + badge + '</span> ' + safeName + gTag(r.name) + '</span>' +
+               '<span><span class="fb-badge">' + badge + '</span> ' + (nmCol(r.name) ? '<span style="color:' + nmCol(r.name) + '">' + safeName + "</span>" : safeName) + gTag(r.name) + '</span>' +
                '<span style="color:var(--cy);font-weight:700">+' + r.level + '강<span style="color:var(--sub);font-weight:400;font-size:11px">' + goldTxt + '</span></span>' +
                '</div>';
       }).join("");
