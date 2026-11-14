@@ -2,6 +2,28 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<script>
+// 게임 주소 이사: 예전 주소(netlify.app)로 들어오면 새 주소(GitHub Pages)로 넘겨 주고, 로그인도 같이 가져가요
+(function(){
+  var NEW="https://ykim99281-debug.github.io/-/";
+  try{
+    // (새 주소에 도착했을 때) 예전 주소에서 가져온 로그인 정보를 넣어요
+    var m=location.hash.match(/(?:^#|&)mv=([^&]*)/);
+    if(m){
+      try{if(m[1]){var j=decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));JSON.parse(j);if(!localStorage.getItem("sword_session_v1"))localStorage.setItem("sword_session_v1",j)}}catch(e){}
+      try{sessionStorage.setItem("sword_moved","1")}catch(e){}
+      try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}
+    }
+    // (예전 주소일 때) 새 주소가 열려 있는지 먼저 확인하고 넘어가요. 한 번 확인되면 다음부터는 바로 넘어가요
+    if(/(^|\.)netlify\.app$/.test(location.hostname)){
+      var go=function(){var u=NEW+location.search,s=null;try{s=localStorage.getItem("sword_session_v1")}catch(e){}u+="#mv="+(s?encodeURIComponent(btoa(unescape(encodeURIComponent(s)))):"");location.replace(u)};
+      var ok=null;try{ok=localStorage.getItem("sword_gh_ok")}catch(e){}
+      if(ok==="1")go();
+      else fetch(NEW+"icon-192.png",{cache:"no-store"}).then(function(r){if(r.ok){try{localStorage.setItem("sword_gh_ok","1")}catch(e){}go()}}).catch(function(){});
+    }
+  }catch(e){}
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>전설의 검 강화하기</title>
 <style>
@@ -225,7 +247,7 @@ window.addEventListener("unhandledrejection",function(e){var m=document.getEleme
     <div id="lgMsg"></div>
     <button class="b1" id="lgLogin" onclick="fbLogin()">로그인</button>
     <div style="text-align:left;font-size:11.5px;color:var(--sub);line-height:1.7;margin:2px 0 8px"><label style="display:block;cursor:pointer"><input type="checkbox" id="lgAgree" style="width:auto;padding:0;margin:0 5px 0 0;vertical-align:middle"><a href="terms.html" target="_blank" style="color:var(--cy)">이용 규칙</a>과 <a href="privacy.html" target="_blank" style="color:var(--cy)">개인정보처리방침</a>에 동의해요</label><label style="display:block;cursor:pointer"><input type="checkbox" id="lgAge" style="width:auto;padding:0;margin:0 5px 0 0;vertical-align:middle">만 14세 이상이거나, 보호자의 동의를 받았어요</label>(새 계정을 만들 때만 필요해요 · 아이디에 실명을 쓰지 마세요)</div><button class="b2" id="lgSignup" onclick="fbSignup()">계정 생성</button>
-    <div style="font-size:10.5px;color:var(--sub)">v26.0</div>
+    <div style="font-size:10.5px;color:var(--sub)">v28.0</div>
   </div>
 </div>
 
@@ -377,7 +399,9 @@ function ui(){checkAch();
   const w=W[S.l],r=rates();
   gAnim();$("best").textContent="최고 +"+S.b+"강 · "+ttl();
   {const ic=$("ic");let im=ic.firstChild;if(!im||im.tagName!=="IMG"){ic.innerHTML='<img alt="">';im=ic.firstChild}if(im.dataset.l!==""+S.l){im.dataset.l=""+S.l;im.src=IMG[S.l]}}$("ic").style.filter=w.g;
-  {const a=$("anvil"),hh=S.l?(S.l*22)%360:220;a.style.borderColor="hsl("+hh+",70%,"+(S.l?55:30)+"%)";a.style.boxShadow="inset 0 0 "+(10+S.l*5)+"px hsla("+hh+",90%,55%,.4)"}
+  {const a=$("anvil"),hh=S.l?(S.l*22)%360:220;a.style.borderColor="hsl("+hh+",70%,"+(S.l?55:30)+"%)";a.style.boxShadow="inset 0 0 "+(10+S.l*5)+"px hsla("+hh+",90%,55%,.4)";
+   let kt=$("kiTag");if(!kt){kt=document.createElement("div");kt.id="kiTag";kt.style.cssText="position:absolute;left:10px;top:8px;font-size:11.5px;font-weight:800;text-shadow:0 1px 4px #000,0 0 6px #000;z-index:3;pointer-events:none";a.appendChild(kt)}
+   const kx=S.l>0?"⚔️ 검기 "+S.l+"단계":"";if(kt.textContent!==kx){kt.textContent=kx;kt.style.color="rgb("+auraCol(S.l).join(",")+")"}}
   $("nm").textContent="+"+w.l+" "+w.n;$("sv").textContent="시세 "+n(fair(S.l))+" G (×"+mk+") · 기대비용 "+(r.s>0?n(Math.round(cst()*100/r.s)):"-")+" G";
   $("ps").textContent=r.s+"%";$("pf").textContent=r.f+"%";$("pd").textContent=r.d+"%";
   $("b1").style.width=r.s+"%";$("b2").style.width=r.f+"%";$("b3").style.width=r.d+"%";
@@ -570,6 +594,37 @@ function renderG(){
   $("qs").innerHTML=QD.map((q,i)=>{const p=Math.min(q[2],Math.max(0,q[1]())),d=S.qc[i];return '<div class="it"><span>'+q[0]+' '+p+'/'+q[2]+' (+'+n(q[3])+' G)</span><button class="sm" '+(d||p<q[2]?'disabled':'')+' onclick="claimQ('+i+')">'+(d?'완료':'받기')+'</button></div>'}).join("");
 }
 let PA=[],EM=[],cv=null,cx=null,GV=null,gRaf=0;
+let AU=[],auC=null,auCT=0;
+// 검기 색: 그 단계 검의 빛 색을 그대로 씀 (없으면 옅은 하늘색)
+function auraCol(l){let x="9fdfff";try{const m=/#([0-9a-f]{3,6})/i.exec(W[l].g||"");if(m)x=m[1]}catch(e){}if(x.length===3)x=x.replace(/./g,c=>c+c);return[parseInt(x.slice(0,2),16),parseInt(x.slice(2,4),16),parseInt(x.slice(4,6),16)]}
+function auraFx(w,h){
+  const l=Math.max(0,Math.min(15,S.l|0));if(l<1){AU.length=0;return}
+  const now=performance.now();
+  if(!auC||now-auCT>700){auCT=now;const ic=$("ic");if(ic){const a=cv.getBoundingClientRect(),r=ic.getBoundingClientRect();if(r.height>10)auC=[r.left-a.left+r.width/2,r.top-a.top+r.height/2,r.height]}}
+  if(!auC)return;
+  const X=auC[0],Y=auC[1],H=auC[2],k=l/15,c=auraCol(l),rgb=c[0]+","+c[1]+","+c[2],t=now/1000;
+  // 숨 쉬듯 커졌다 작아지는 빛
+  const R=H*(.34+k*.36)*(1+.06*Math.sin(t*(2+k*3)));
+  const g=cx.createRadialGradient(X,Y,R*.12,X,Y,R);g.addColorStop(0,"rgba("+rgb+","+(.05+k*.2)+")");g.addColorStop(1,"rgba("+rgb+",0)");
+  cx.fillStyle=g;cx.beginPath();cx.arc(X,Y,R,0,7);cx.fill();
+  // 위로 타오르는 검기 줄기
+  const want=Math.round(4+l*3.2),sp=H*(.3+k*.5);
+  while(AU.length<want)AU.push({x:(Math.random()-.5)*sp,y:(Math.random()-.5)*H,v:(.6+Math.random()*1.4)*(1+k*1.6),len:(8+Math.random()*14)*(1+k*1.8),p:Math.random()*9,life:0});
+  if(AU.length>want)AU.length=want;
+  cx.lineCap="round";
+  AU.forEach(p=>{p.y-=p.v;p.life++;
+    if(p.y<-H*.55){p.y=H*(.2+Math.random()*.3);p.x=(Math.random()-.5)*sp;p.life=0;return}
+    const yy=Y+p.y,xx=X+p.x+Math.sin(p.y/14+p.p)*(3+k*5),fade=Math.max(0,Math.min(1,(p.y+H*.55)/(H*.3)))*Math.min(1,p.life/12);
+    const x2=xx+Math.sin(p.y/14+p.p+.6)*3,gr=cx.createLinearGradient(xx,yy,x2,yy+p.len);gr.addColorStop(0,"rgba("+rgb+","+((.2+k*.55)*fade)+")");gr.addColorStop(1,"rgba("+rgb+",0)");
+    cx.strokeStyle=gr;cx.lineWidth=1+k*1.8;cx.beginPath();cx.moveTo(xx,yy);cx.lineTo(x2,yy+p.len);cx.stroke()});
+  // 검 둘레를 도는 초승달 검기 (7강부터 1개, 10강 2개, 13강 3개)
+  const arcs=l>=13?3:l>=10?2:l>=7?1:0;
+  for(let i=0;i<arcs;i++){const a=t*(1.6+k*2.2)*(i%2?-1:1)+i*2.1,rr=H*(.36+i*.07);
+    cx.strokeStyle="rgba("+rgb+","+(.35+k*.4)+")";cx.lineWidth=2+k*3;cx.beginPath();cx.arc(X,Y,rr,a,a+1.1);cx.stroke();
+    cx.strokeStyle="rgba(255,255,255,"+(.25+k*.3)+")";cx.lineWidth=1;cx.beginPath();cx.arc(X,Y,rr,a+.15,a+.95);cx.stroke()}
+  // 바깥으로 퍼지는 고리 (13강부터)
+  if(l>=13){const q=(t*(.6+(l-13)*.25))%1;cx.strokeStyle="rgba("+rgb+","+(.5*(1-q))+")";cx.lineWidth=2+3*(1-q);cx.beginPath();cx.arc(X,Y,H*(.2+q*.75),0,7);cx.stroke()}
+}
 function swordSVG(l,ww,hh,p){
   const h=l?(l*22)%360:0,s=l?75:0,len=30+l*2.6,wd=8+l*.55,top=72-len,id=p+l;
   const c1="hsl("+h+","+s+"%,74%)",c2="hsl("+h+","+s+"%,36%)",gc=l>=10?"#ffd54a":"#c9a227";
@@ -594,6 +649,7 @@ function loop(){
   const w=cv.width,h=cv.height;
   if(w){
     cx.clearRect(0,0,w,h);cx.globalCompositeOperation="lighter";
+    try{auraFx(w,h)}catch(e){}
     EM.forEach(e=>{e.y-=e.v;e.x+=Math.sin((e.y+e.p)/18)*.3;if(e.y<-5||e.x>w){e.y=h+5;e.x=Math.random()*w}cx.fillStyle="hsla("+e.h+",100%,60%,"+(.25+.2*Math.sin(e.y/9))+")";cx.beginPath();cx.arc(e.x,e.y,e.r,0,7);cx.fill()});
     for(let i=PA.length-1;i>=0;i--){const p=PA[i];p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.life--;if(p.life<=0){PA.splice(i,1);continue}const k=p.life/p.max;cx.fillStyle="hsla("+p.h+",100%,"+(55+k*25)+"%,"+k+")";cx.beginPath();cx.arc(p.x,p.y,p.sz*k+.5,0,7);cx.fill()}
   }
@@ -790,7 +846,7 @@ function initX(){
   const xpg=["pgPet","pgGuild","pgAch","pgTower","pgTitle","pgMine","pgEq","pgArena","pgPass","pgQuest","pgFps"].map(id=>{const d=mk2("","");d.id=id;d.style.cssText="background:var(--panel);border-radius:12px;padding:10px;margin-bottom:12px";g.insertBefore(d,k[14]);return d});
   const evb=mk2("","");evb.id="evb";evb.className="adm-hide";evb.style.cssText="background:linear-gradient(135deg,#7b2ff7,#f107a3);color:#fff;font-weight:800;font-size:13px;padding:9px;border-radius:10px;margin-bottom:10px";
   const stf=mk2("","");stf.id="stf";stf.style.cssText="font-size:12.5px;text-align:left;line-height:1.7;background:var(--panel);border-radius:10px;padding:8px 12px;margin-bottom:10px";
-  const adm=mk2('<div style="font-size:13px;font-weight:800;margin-bottom:8px">🛠️ 관리자 패널 (<span id="admRole"></span>) <span style="font-weight:400;color:var(--sub);font-size:11px">v26.0</span></div><div id="admStat" style="font-size:11.5px;color:var(--sub);line-height:1.5;margin-bottom:8px"></div><div id="admE"><div class="row" style="margin-bottom:6px"><select id="admType" style="flex:2;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px"><option value="rate">🎯 성공 확률 +10%p</option><option value="rate2">🎯🎯 성공 확률 +30%p</option><option value="disc">💸 강화비 50% 할인</option><option value="free">🆓 강화비 무료</option><option value="keep">🛡️ 실패·파괴해도 단계 유지</option><option value="sellx">💰 AI 판매 대금 2배</option><option value="work">🔨 알바 보상 5배</option><option value="gift">🎁 골드 10만 지급 (1인 1회)</option><option value="season2">🗓️ 시즌 점수 2배</option><option value="tower2">🗼 탑 보상 2배</option></select></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admEvent(1)">⏱️ 1분 이벤트</button><button class="sm" onclick="admEvent(5)">⏱️ 5분 이벤트</button><button class="sm" onclick="admEventEnd()">⛔ 종료</button></div></div><div id="admB" class="adm-hide"></div><div id="admC" class="adm-hide"><div class="row" style="margin-bottom:6px"><input id="admId" type="text" maxlength="10" placeholder="임명할 아이디" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admAppoint()">관리자 임명</button><button class="sm" onclick="admRemove()">해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointMod()">중간 관리자 임명</button><button class="sm" onclick="admRemoveMod()">중간 해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointNoble()">하급귀족 임명</button><button class="sm" onclick="admRemoveNoble()">하급귀족 해임</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admAppointCommon()">상급평민 임명</button><button class="sm" onclick="admRemoveCommon()">상급평민 해임</button></div><div class="row" style="margin-bottom:6px"><input id="admPw" type="text" maxlength="30" placeholder="새 비밀번호 (4자 이상)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admResetPw()">🔑 재설정</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRoles()">🧹 계정 없는 직책 기록 정리 (<span id="admGhost">0</span>건)</button></div></div><div id="admD"><div class="row" style="margin-bottom:6px"><input id="admT" type="text" maxlength="10" placeholder="대상 아이디 (아래 목록 클릭)" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admBan()">🚫 벤</button><button class="sm" onclick="admUnban()">✅ 벤 해제</button><button class="sm" onclick="admDel()">🗑️ 계정 삭제</button></div><div style="font-size:12px;font-weight:800;margin:8px 0 4px">🎁 선물 보내기 (위 대상 아이디에게)</div><div class="row" style="margin-bottom:6px;gap:5px"><select id="admGiftG" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">골드 없음</option><option value="10000">1만 G</option><option value="100000">10만 G</option><option value="1000000">100만 G</option><option value="10000000">1000만 G</option></select><select id="admGiftE" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">알 없음</option><option value="1">🥚 1개</option><option value="3">🥚 3개</option><option value="5">🥚 5개</option></select><select id="admGiftP" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">방지권 없음</option><option value="1">🛡️ 1개</option><option value="3">🛡️ 3개</option><option value="5">🛡️ 5개</option></select></div><div class="row" style="margin-bottom:10px"><input id="admGiftM" type="text" maxlength="30" placeholder="한마디 (선택)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text"><button class="sm" onclick="admGift()">🎁 보내기</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRank()">🧹 계정 없는 랭킹 기록 정리 (두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanOld()">📦 구버전 계정 정리 (<span id="admOld">0</span>개, 두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admReload()">🔄 접속한 모두 새로고침 (두 번 탭)</button></div></div><div id="admX" class="adm-hide"><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admWipe()">🧽 고른 유저의 탑·아레나·시즌 기록 지우기 (두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" id="betaBtn" onclick="betaToggle()">🧪 베타 테스트 서버 들어가기</button></div></div><div id="admMsg" style="font-size:12px;color:var(--sub);min-height:16px"></div><div style="font-size:12.5px;font-weight:800;margin:8px 0 4px">👥 전체 유저 (<span id="admUCnt">0</span>)</div><div class="row" style="margin-bottom:6px"><input id="admFind" type="text" maxlength="10" placeholder="🔍 이름 검색" oninput="admFilter()" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"></div><div id="admUsers" style="max-height:340px;overflow:auto;font-size:13px;line-height:1.9;border:1px solid var(--line);border-radius:8px"></div><div id="admInfo" style="border-top:1px solid var(--line);margin-top:6px;padding-top:6px;font-size:12px;line-height:1.7;text-align:left;user-select:text">👆 유저를 누르면 정보가 표시됩니다</div><div style="font-size:12.5px;font-weight:800;margin:8px 0 4px">🚩 신고함 (<span id="admRCnt">0</span>)</div><div id="admReports" style="max-height:180px;overflow:auto;font-size:12px;line-height:1.6;text-align:left;user-select:text"></div>',"");
+  const adm=mk2('<div style="font-size:13px;font-weight:800;margin-bottom:6px">🛠️ 관리자 패널 (<span id="admRole"></span>) <span style="font-weight:400;color:var(--sub);font-size:11px">v28.0</span></div><div id="admStat" style="font-size:11.5px;color:var(--sub);line-height:1.5;margin-bottom:8px"></div><div id="admTabs" class="row" style="gap:4px;margin-bottom:4px"><button class="sm" style="padding:8px 2px;font-size:12px" data-t="0" onclick="admGo(0)">👤 유저</button><button class="sm" style="padding:8px 2px;font-size:12px" data-t="1" onclick="admGo(1)">🎉 이벤트</button><button class="sm" style="padding:8px 2px;font-size:12px" data-t="2" onclick="admGo(2)">🌐 서버</button><button class="sm" style="padding:8px 2px;font-size:12px" data-t="3" onclick="admGo(3)">🧹 정리</button></div><div id="admMsg" style="position:sticky;top:0;z-index:2;background:var(--panel);font-size:12px;font-weight:700;color:var(--cy);min-height:18px;padding:3px 0 4px"></div><div class="admPg" data-p="0"><div style="font-size:12.5px;font-weight:800;margin:2px 0 4px">👥 전체 유저 (<span id="admUCnt">0</span>)</div><div class="row" style="margin-bottom:6px"><input id="admFind" type="text" maxlength="12" placeholder="🔍 이름 검색" oninput="admFilter()" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"></div><div id="admUsers" style="max-height:190px;overflow:auto;font-size:13px;line-height:1.9;border:1px solid var(--line);border-radius:8px"></div><div style="font-size:12px;font-weight:800;margin:10px 0 4px">🎯 고른 유저</div><div class="row" style="margin-bottom:6px"><input id="admT" type="text" maxlength="12" placeholder="위 목록에서 유저를 누르세요" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"><input id="admId" type="hidden"></div><div id="admInfo" style="font-size:12px;line-height:1.7;text-align:left;user-select:text;-webkit-user-select:text;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 9px">👆 유저를 누르면 정보가 표시됩니다</div><div id="admX" class="adm-hide"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🧰 고른 유저 다루기 (중간 관리자 이상)</div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admKick()">🚪 게임에서 내보내기 (두 번 탭)</button></div><div style="font-size:11.5px;color:var(--sub);margin:0 0 4px">🔇 채팅 금지</div><div class="row" style="margin-bottom:6px;gap:5px"><button class="sm" onclick="admMute(10)">10분</button><button class="sm" onclick="admMute(60)">1시간</button><button class="sm" onclick="admMute(0)">🔊 해제</button></div><div class="row" style="margin-bottom:6px"><input id="admWarnM" type="text" maxlength="30" placeholder="경고 내용 (30자)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"><button class="sm" onclick="admWarn()">⚠️ 경고</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admWipe()">🧽 탑·아레나·시즌 기록 지우기 (두 번 탭)</button></div></div><div id="admD"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🛡️ 벤 · 선물 (관리자 이상)</div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admBan()">🚫 벤</button><button class="sm" onclick="admUnban()">✅ 벤 해제</button><button class="sm" onclick="admDel()">🗑️ 계정 삭제</button></div><div style="font-size:11.5px;color:var(--sub);margin:0 0 4px">🎁 선물 고르기</div><div class="row" style="margin-bottom:6px;gap:5px"><select id="admGiftG" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">골드 없음</option><option value="10000">1만 G</option><option value="100000">10만 G</option><option value="1000000">100만 G</option><option value="10000000">1000만 G</option></select><select id="admGiftE" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">알 없음</option><option value="1">🥚 1개</option><option value="3">🥚 3개</option><option value="5">🥚 5개</option></select><select id="admGiftP" style="flex:1;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px"><option value="0">방지권 없음</option><option value="1">🛡️ 1개</option><option value="3">🛡️ 3개</option><option value="5">🛡️ 5개</option></select></div><div class="row" style="margin-bottom:6px"><input id="admGiftM" type="text" maxlength="30" placeholder="한마디 (선택)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"></div><div class="row" style="margin-bottom:6px;gap:5px"><button class="sm" onclick="admGift()">🎁 고른 유저에게</button><button class="sm" onclick="admGiftAll()">🎁 모두에게 (두 번 탭)</button></div></div><div id="admC" class="adm-hide"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">👑 직급 (제작자만)</div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">🛡️ 관리자</span><button class="sm" style="padding:7px 4px" onclick="admAppoint()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemove()">해임</button></div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">🧰 중간 관리자</span><button class="sm" style="padding:7px 4px" onclick="admAppointMod()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemoveMod()">해임</button></div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">🎩 하급귀족</span><button class="sm" style="padding:7px 4px" onclick="admAppointNoble()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemoveNoble()">해임</button></div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">⚜️ 기사</span><button class="sm" style="padding:7px 4px" onclick="admAppointKnight()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemoveKnight()">해임</button></div><div class="row" style="gap:5px;align-items:center;margin-bottom:5px"><span style="flex:1.5;font-size:12.5px;text-align:left">🔰 상급평민</span><button class="sm" style="padding:7px 4px" onclick="admAppointCommon()">임명</button><button class="sm" style="padding:7px 4px" onclick="admRemoveCommon()">해임</button></div><div style="font-size:11.5px;color:var(--sub);margin:8px 0 4px">🔑 비밀번호 다시 정해 주기</div><div class="row" style="margin-bottom:6px"><input id="admPw" type="text" maxlength="30" placeholder="새 비밀번호 (4자 이상)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"><button class="sm" onclick="admResetPw()">🔑 재설정</button></div></div><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🚩 신고함 (<span id="admRCnt">0</span>)</div><div id="admReports" style="max-height:180px;overflow:auto;font-size:12px;line-height:1.6;text-align:left;user-select:text;-webkit-user-select:text"></div></div><div class="admPg" data-p="1" style="display:none"><div id="admE"><div style="font-size:12px;font-weight:800;margin:2px 0 6px">🎉 이벤트 열기</div><div class="row" style="margin-bottom:6px"><select id="admType" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:8px"><option value="rate">🎯 성공 확률 +10%p</option><option value="rate2">🎯🎯 성공 확률 +30%p</option><option value="disc">💸 강화비 50% 할인</option><option value="free">🆓 강화비 무료</option><option value="keep">🛡️ 실패·파괴해도 단계 유지</option><option value="sellx">💰 AI 판매 대금 2배</option><option value="work">🔨 알바 보상 5배</option><option value="gift">🎁 골드 10만 지급 (1인 1회)</option><option value="season2">🗓️ 시즌 점수 2배</option><option value="tower2">🗼 탑 보상 2배</option></select></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admEvent(1)">⏱️ 1분</button><button class="sm" onclick="admEvent(5)">⏱️ 5분</button><button class="sm" onclick="admEventEnd()">⛔ 종료</button></div></div><div id="admB" class="adm-hide"></div></div><div class="admPg" data-p="2" style="display:none"><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admSrvList()">🌐 서버 현황 보기 (누가 어느 서버에 있는지)</button></div><div id="admSrv" style="font-size:12px;line-height:1.6;margin-bottom:8px;color:var(--sub);text-align:left"></div><div class="adm-rM adm-hide"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">📣 모두에게 이 서버로 모이라고 알리기 (두 번 탭)</div><div class="row" style="margin-bottom:6px;gap:5px"><button class="sm" onclick="admGather(0)">1서버</button><button class="sm" onclick="admGather(1)">2서버</button><button class="sm" onclick="admGather(2)">3서버</button></div><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🧪 베타 테스트 (AI 와 연습)</div><div class="row" style="margin-bottom:6px"><button class="sm" id="betaBtn" onclick="betaToggle()">🧪 베타 테스트 서버 들어가기</button></div></div><div class="adm-rA adm-hide"><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🛠️ 점검 모드 (켜면 일반 유저는 게임을 못 해요)</div><div class="row" style="margin-bottom:6px"><input id="admMaintM" type="text" maxlength="40" placeholder="점검 안내 글 (선택)" style="flex:2;min-width:0;background:var(--card);color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:9px;user-select:text;-webkit-user-select:text"></div><div class="row" style="margin-bottom:6px;gap:5px"><button class="sm" onclick="admMaint(1)">🛠️ 점검 시작</button><button class="sm" onclick="admMaint(0)">✅ 점검 끝</button></div><div style="font-size:12px;font-weight:800;margin:12px 0 6px;padding-top:9px;border-top:1px dashed var(--line)">🔄 새로고침</div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admReload()">🔄 접속한 모두 새로고침 (두 번 탭)</button></div></div></div><div class="admPg" data-p="3" style="display:none"><div style="font-size:11.5px;color:var(--sub);line-height:1.6;margin:2px 0 8px;text-align:left">쓸모없어진 옛 기록만 지워요. 지금 게임하는 유저에게는 아무 일도 없어요.</div><div class="adm-rA adm-hide"><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRank()">🧹 계정 없는 랭킹 기록 정리 (두 번 탭)</button></div><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanOld()">📦 구버전 계정 정리 (<span id="admOld">0</span>개, 두 번 탭)</button></div></div><div class="adm-rC adm-hide"><div class="row" style="margin-bottom:6px"><button class="sm" onclick="admCleanRoles()">🧹 계정 없는 직책 기록 정리 (<span id="admGhost">0</span>건)</button></div></div></div>',"");
   adm.id="adm";adm.className="adm-hide";adm.style.cssText="";const adIn=adm.innerHTML;adm.innerHTML='<button id="admTab" onclick="admToggle()">🛠️</button><div style="overflow:auto;max-height:70vh;padding:10px">'+adIn+'</div>';document.body.appendChild(adm);
   g.insertBefore(evb,k[5]);g.insertBefore(stf,k[10]);
   PGS=[[k[1],k[2],k[3],k[4],evb,k[5],k[6],k[7],box,k[8],k[9],stf,k[14]],[ex,box2,box3,k[11],k[12]],[k[10],st,k[13],hs,box4,box5,accb,k[15],k[16]],[wb],[cbx],[xpg[0]],[xpg[1]],[xpg[2]],[xpg[3]],[xpg[4]],[xpg[5]],[xpg[6]],[xpg[7]],[xpg[8]],[xpg[9]],[xpg[10]]];
@@ -851,7 +907,7 @@ function reset(){
   // url: 확인된 DB 주소, n: 접속 인원(모르면 null), ok: 지금 쓸 수 있는지
   const srvSt = SRV_LIST.map((x, i) => ({ url: i === 0 ? x.urls[0] : null, n: null, ok: i === 0 }));
   const srvDbs = [db];
-  let SRV = 0, sdb = db, srvOk = false, srvRes = null, srvOnUid = "", srvBeatT = 0, srvBarH = "", srvPend = -1, srvPendT = 0, srvNote = "", srvNoteT = 0, srvPollN = 0;
+  let SRV = 0, sdb = db, srvOk = false, srvRes = null, srvOnUid = "", srvBeatT = 0, srvBarH = "", srvPend = -1, srvPendT = 0, srvNote = "", srvNoteT = 0, srvPollN = 0, srvCall = null, srvWhoOn = false, srvWhoH = "";
   const srvReady = new Promise((r) => { srvRes = r; });
   const srvOn = (mk, cb, err) => { srvReady.then(() => { try { onValue(mk(), cb, err); } catch (e) { console.error("server listen", e); } }); };
   function srvDb(i) {
@@ -903,8 +959,12 @@ function reset(){
       const col = !ok ? "var(--sub)" : st.n !== null && st.n >= SRV_CAP ? "#ffa502" : "var(--ok)";
       return '<button class="sm" style="flex:1;min-width:0;padding:5px 2px;font-size:11.5px;line-height:1.3;white-space:nowrap' + (cur ? ";border-color:var(--cy);font-weight:800" : "") + (ok ? "" : ";opacity:.55") + '" onclick="srvSwitch(' + i + ')">' + (cur ? "✅ " : "") + (i + 1) + '서버 <span style="color:' + col + '">' + cnt + "</span></button>";
     }).join("");
+    let who = false; try { who = srvOk && canSrvView(); } catch (e) {}
+    if (who) h += '<button class="sm" style="flex:none;padding:5px 8px;font-size:12px' + (srvWhoOn ? ";border-color:var(--cy)" : "") + '" onclick="srvWho()">👥</button>';
     h += "</div>";
     if (srvNote && Date.now() < srvNoteT) h += '<div style="margin-top:4px;color:var(--cy);font-weight:700">' + srvNote + "</div>";
+    if (srvCall && srvOk && Date.now() < srvCall.until && srvCall.s !== SRV) h += '<div style="margin-top:5px;background:rgba(255,165,2,.14);border:1px solid #ffa502;border-radius:8px;padding:6px 8px;display:flex;align-items:center;gap:6px"><span style="flex:1">📣 <b>' + srvCall.by + "</b>님이 <b>" + (srvCall.s + 1) + '서버</b>로 모이래요!</span><button class="sm" style="flex:none;padding:6px 10px;font-weight:800" onclick="srvGo(' + srvCall.s + ')">' + (srvCall.s + 1) + "서버로 가기</button></div>";
+    if (who && srvWhoOn) h += '<div style="margin-top:5px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;line-height:1.65;color:var(--tx)">' + srvWhoH + "</div>";
     if (h !== srvBarH) { srvBarH = h; el.innerHTML = h; }
     const cs = document.getElementById("chatSrv"); if (cs) { const t = srvOk ? "· " + (SRV + 1) + "서버" : ""; if (cs.textContent !== t) cs.textContent = t; }
   }
@@ -938,7 +998,8 @@ function reset(){
     }
   }
   setInterval(srvBeat, 3000);
-  setInterval(() => { if (srvNote && Date.now() >= srvNoteT) { srvNote = ""; srvBar(); } else if (!document.getElementById("srvBar")) srvBar(); }, 1000);
+  setInterval(() => { if (srvCall && Date.now() >= srvCall.until) srvCall = null; if (srvNote && Date.now() >= srvNoteT) srvNote = ""; srvBar(); }, 1000);
+  window.srvGo = (i) => { srvPend = i; srvPendT = Date.now() + 5000; window.srvSwitch(i); };
   setInterval(() => { if (document.hidden || !srvOk) return; srvPollN++; srvPoll(srvPollN % 5 === 0); }, 45000);
   // 다른 서버(2·3번)에 남은 내 흔적 지우기 (계정 삭제용)
   async function srvPurge(id) {
@@ -1111,6 +1172,8 @@ function reset(){
   let mods = {};
   let nobles = {};
   let commons = {};
+  let knights = {};
+  let modsLoaded = false;
   let noblesLoaded = false;
   let bans = {};
   let accLoaded = false;
@@ -1125,9 +1188,9 @@ function reset(){
   };
   const inRole = (m, id) => Object.values(m || {}).some(v => roleOk(v) && v.id === id);
   const roleIds = (m) => [...new Set(Object.values(m || {}).filter(roleOk).map(v => v.id))];
-  const ghostCount = () => [admins, mods, nobles, commons].reduce((a, m) => a + Object.values(m || {}).filter(v => !roleOk(v)).length, 0);
+  const ghostCount = () => [admins, mods, nobles, knights, commons].reduce((a, m) => a + Object.values(m || {}).filter(v => !roleOk(v)).length, 0);
   async function clearRole(node, id) {
-    const m = node === "admins" ? admins : node === "mods" ? mods : node === "commons" ? commons : nobles;
+    const m = node === "admins" ? admins : node === "mods" ? mods : node === "commons" ? commons : node === "knights" ? knights : nobles;
     const keys = new Set([encodeURIComponent(id)]);
     Object.keys(m || {}).forEach(k => { const v = m[k]; if (v && v.id === id) keys.add(k); });
     for (const k of keys) await set(ref(db, node + "/" + k), null);
@@ -1141,7 +1204,8 @@ function reset(){
   const canPanel = () => isAdmin() || isMod() || isNoble();
   const canEvent = () => isAdmin() || isMod();
   const isCommon = () => !!curUid && inRole(commons, curUid);
-  const canNotice = () => !!curUid && (isAdmin() || isMod() || isNoble() || isCommon());
+  const isKnight = () => !!curUid && inRole(knights, curUid);
+  const canNotice = () => !!curUid && (isAdmin() || isMod() || isNoble() || isKnight() || isCommon());
   const canBoss = () => isAdmin() || isMod();
   const hasGold = () => isAdmin() || isNoble();
   const EVN = { rate: "🎯 성공 확률 +10%p", rate2: "🎯🎯 성공 확률 +30%p", disc: "💸 강화비 50% 할인", free: "🆓 강화비 무료", keep: "🛡️ 실패·파괴해도 단계 유지", sellx: "💰 AI 판매 대금 2배", work: "🔨 알바 보상 5배", gift: "🎁 골드 10만 지급", season2: "🗓️ 시즌 점수 2배", tower2: "🗼 탑 보상 2배", mine2: "⛏️ 광산 수입 2배" };
@@ -1165,6 +1229,23 @@ function reset(){
   }
   setInterval(() => { if (loaded && hasGold() && S._adm && S.g < 9e14) { S.g = 1e15; if (typeof ui === "function") ui(); } }, 700);
   setInterval(() => { if (hasGold() && window.__rb) window.__rb(); }, 3000);
+  // ⚜️ 기사 봉급: 하루 한 번 (한국 시간 기준)
+  const KNIGHT_PAY = 100000;
+  setInterval(() => {
+    if (!curUid || !loaded || typeof S === "undefined" || !accLoaded || !isKnight() || hasGold()) return;
+    const d = kstDay(); if (S.ksd === d) return;
+    S.ksd = d; S.g += KNIGHT_PAY;
+    if (typeof log === "function") log("⚜️ 기사 봉급 +" + KNIGHT_PAY.toLocaleString() + " G (하루 한 번)", "var(--gold)");
+    if (typeof ui === "function") ui(); cloudSave();
+  }, 3000);
+  let admTabI = 0;
+  const admTabOk = (i) => i === 1 ? (canEvent() || canBoss()) : i === 3 ? isAdmin() : canPanel();
+  window.admGo = (i) => {
+    if (!admTabOk(i)) i = 0;
+    admTabI = i;
+    document.querySelectorAll("#adm .admPg").forEach((e) => { e.style.display = +e.dataset.p === i ? "" : "none"; });
+    document.querySelectorAll("#admTabs button").forEach((b) => { const t = +b.dataset.t; b.style.display = admTabOk(t) ? "" : "none"; b.style.borderColor = t === i ? "var(--cy)" : ""; b.style.fontWeight = t === i ? "800" : "600"; });
+  };
   function applyRole() {
     renderStaff(); renderUsers();
     const ad = $m("adm"); if (!ad) return;
@@ -1174,6 +1255,10 @@ function reset(){
     const c = $m("admC"); if (c) c.classList.toggle("adm-hide", !isCreator());
     const ax = $m("admX"); if (ax) ax.classList.toggle("adm-hide", !canBoss());
     try { renderAdmBoss(); } catch (e) {}
+    document.querySelectorAll("#adm .adm-rM").forEach((e) => e.classList.toggle("adm-hide", !canBoss()));
+    document.querySelectorAll("#adm .adm-rA").forEach((e) => e.classList.toggle("adm-hide", !isAdmin()));
+    document.querySelectorAll("#adm .adm-rC").forEach((e) => e.classList.toggle("adm-hide", !isCreator()));
+    try { window.admGo(admTabI); } catch (e) {}
     const rl = $m("admRole"); if (rl) rl.textContent = isCreator() ? "제작자" : isAdmin() ? "관리자" : isMod() ? "중간 관리자" : "하급귀족";
     if (!canPanel()) ad.classList.remove("open");
     grantCheck();
@@ -1185,8 +1270,9 @@ function reset(){
     const mids = roleIds(mods);
     const nids = roleIds(nobles);
     const cids = roleIds(commons);
+    const kids = roleIds(knights);
     const gc = $m("admGhost"); if (gc) gc.textContent = accLoaded ? ghostCount() : "?";
-    sf.innerHTML = '👑 제작자: <b>' + esc(CREATOR) + '</b><br>🛡️ 관리자: ' + (ids.length ? ids.map(esc).join(", ") : "없음") + '<br>🧰 중간 관리자: ' + (mids.length ? mids.map(esc).join(", ") : "없음") + '<br>🎩 하급귀족: ' + (nids.length ? nids.map(esc).join(", ") : "없음") + '<br>🔰 상급평민: ' + (cids.length ? cids.map(esc).join(", ") : "없음") + (curUid ? '<br>🙋 내 아이디: <b>' + esc(curUid) + '</b>' + (isCreator() ? ' (제작자)' : isAdmin() ? ' (관리자)' : isMod() ? ' (중간 관리자)' : isNoble() ? ' (하급귀족)' : isCommon() ? ' (상급평민)' : '') : '');
+    sf.innerHTML = '👑 제작자: <b>' + esc(CREATOR) + '</b><br>🛡️ 관리자: ' + (ids.length ? ids.map(esc).join(", ") : "없음") + '<br>🧰 중간 관리자: ' + (mids.length ? mids.map(esc).join(", ") : "없음") + '<br>🎩 하급귀족: ' + (nids.length ? nids.map(esc).join(", ") : "없음") + '<br>⚜️ 기사: ' + (kids.length ? kids.map(esc).join(", ") : "없음") + '<br>🔰 상급평민: ' + (cids.length ? cids.map(esc).join(", ") : "없음") + (curUid ? '<br>🙋 내 아이디: <b>' + esc(curUid) + '</b>' + (isCreator() ? ' (제작자)' : isAdmin() ? ' (관리자)' : isMod() ? ' (중간 관리자)' : isNoble() ? ' (하급귀족)' : isKnight() ? ' (기사)' : isCommon() ? ' (상급평민)' : '') : '');
   }
   function tickEv() {
     const b = $m("evb"); if (!b) return;
@@ -1205,7 +1291,8 @@ function reset(){
   onValue(ref(db, ".info/serverTimeOffset"), (s) => { window.SRV_OFF = s.val() || 0; });
   onValue(ref(db, "nobles"), (snap) => { nobles = snap.val() || {}; noblesLoaded = true; renderStaff(); applyRole(); renderUsers(); if (window.__rb) window.__rb(); });
   onValue(ref(db, "commons"), (snap) => { commons = snap.val() || {}; renderStaff(); applyRole(); renderUsers(); }, () => {});
-  onValue(ref(db, "mods"), (snap) => { mods = snap.val() || {}; renderStaff(); applyRole(); renderUsers(); });
+  onValue(ref(db, "knights"), (snap) => { knights = snap.val() || {}; renderStaff(); applyRole(); renderUsers(); if (window.__rb) window.__rb(); }, () => {});
+  onValue(ref(db, "mods"), (snap) => { mods = snap.val() || {}; modsLoaded = true; renderStaff(); applyRole(); renderUsers(); });
   onValue(ref(db, "admins"), (snap) => { admins = snap.val() || {}; adminsLoaded = true; renderStaff(); applyRole(); });
   onValue(ref(db, "event"), (snap) => {
     const v = snap.val() || { t: "", u: 0 };
@@ -1244,7 +1331,7 @@ function reset(){
       const acc = a.val();
       const sv = await get(ref(db, "saves/" + enc));
       const d = sv.exists() ? sv.val() : null;
-      const role = id.normalize("NFC") === CREATOR ? "제작자" : inRole(admins, id) ? "관리자" : inRole(mods, id) ? "중간 관리자" : inRole(nobles, id) ? "하급귀족" : inRole(commons, id) ? "상급평민" : "일반 유저";
+      const role = id.normalize("NFC") === CREATOR ? "제작자" : inRole(admins, id) ? "관리자" : inRole(mods, id) ? "중간 관리자" : inRole(nobles, id) ? "하급귀족" : inRole(knights, id) ? "기사" : inRole(commons, id) ? "상급평민" : "일반 유저";
       const f = (n) => Number(n || 0).toLocaleString();
       let h = '<b>' + esc(id) + '</b> · ' + role + (bans[enc] ? ' · 🚫 벤' : '') +
         '<br>가입: ' + (acc.t ? new Date(acc.t).toLocaleString("ko-KR") : "알 수 없음") +
@@ -1272,7 +1359,7 @@ function reset(){
   };
   window.admAppointNoble = async function() {
     if (!isCreator()) return;
-    const id = $m("admId").value.trim();
+    const id = admTarget();
     if (!id) return;
     if (id === CREATOR) { admMsg("제작자입니다"); return; }
     if (inRole(admins, id)) { admMsg("이미 관리자입니다 (관리자는 골드 무한 포함)"); return; }
@@ -1281,23 +1368,45 @@ function reset(){
       if (!sn.exists()) { admMsg("없는 아이디입니다"); return; }
       await clearRole("mods", id);
       await clearRole("commons", id);
+      await clearRole("knights", id);
       await set(ref(db, "nobles/" + encodeURIComponent(id)), { id, t: Date.now() });
       admMsg(id + " 하급귀족 임명 완료"); $m("admId").value = "";
     } catch (e) { admMsg("실패: DB 규칙 확인"); }
   };
   window.admRemoveNoble = async function() {
     if (!isCreator()) return;
-    const id = $m("admId").value.trim();
+    const id = admTarget();
     if (!id) return;
     try { await clearRole("nobles", id); admMsg(id + " 하급귀족 해임 완료"); $m("admId").value = ""; }
     catch (e) { admMsg("실패: DB 규칙 확인"); }
   };
-  window.admAppointCommon = async function() {
+  window.admAppointKnight = async function() {
     if (!isCreator()) return;
-    const id = $m("admId").value.trim();
+    const id = admTarget();
     if (!id) return;
     if (id === CREATOR) { admMsg("제작자입니다"); return; }
     if (inRole(admins, id) || inRole(mods, id) || inRole(nobles, id)) { admMsg("이미 더 높은 직급입니다 (먼저 해임하세요)"); return; }
+    try {
+      const sn = await get(accRef(id));
+      if (!sn.exists()) { admMsg("없는 아이디입니다"); return; }
+      await clearRole("commons", id);
+      await set(ref(db, "knights/" + encodeURIComponent(id)), { id, t: Date.now() });
+      admMsg(id + " 기사 임명 완료 (공지 · 채팅 지킴이 · 서버 현황 · 하루 봉급 10만 G)"); $m("admId").value = "";
+    } catch (e) { admMsg("실패: 파이어베이스 규칙(knights) 확인"); }
+  };
+  window.admRemoveKnight = async function() {
+    if (!isCreator()) return;
+    const id = admTarget();
+    if (!id) return;
+    try { await clearRole("knights", id); admMsg(id + " 기사 해임 완료"); $m("admId").value = ""; }
+    catch (e) { admMsg("실패: 파이어베이스 규칙(knights) 확인"); }
+  };
+  window.admAppointCommon = async function() {
+    if (!isCreator()) return;
+    const id = admTarget();
+    if (!id) return;
+    if (id === CREATOR) { admMsg("제작자입니다"); return; }
+    if (inRole(admins, id) || inRole(mods, id) || inRole(nobles, id) || inRole(knights, id)) { admMsg("이미 더 높은 직급입니다 (먼저 해임하세요)"); return; }
     try {
       const sn = await get(accRef(id));
       if (!sn.exists()) { admMsg("없는 아이디입니다"); return; }
@@ -1307,14 +1416,14 @@ function reset(){
   };
   window.admRemoveCommon = async function() {
     if (!isCreator()) return;
-    const id = $m("admId").value.trim();
+    const id = admTarget();
     if (!id) return;
     try { await clearRole("commons", id); admMsg(id + " 상급평민 해임 완료"); $m("admId").value = ""; }
     catch (e) { admMsg("실패: 파이어베이스 규칙(commons) 확인"); }
   };
   window.admAppointMod = async function() {
     if (!isCreator()) return;
-    const id = $m("admId").value.trim();
+    const id = admTarget();
     if (!id) return;
     if (id === CREATOR) { admMsg("제작자입니다"); return; }
     if (inRole(admins, id)) { admMsg("이미 관리자입니다 (먼저 해임하세요)"); return; }
@@ -1323,20 +1432,21 @@ function reset(){
       if (!sn.exists()) { admMsg("없는 아이디입니다"); return; }
       await clearRole("nobles", id);
       await clearRole("commons", id);
+      await clearRole("knights", id);
       await set(ref(db, "mods/" + encodeURIComponent(id)), { id, t: Date.now() });
       admMsg(id + " 중간 관리자 임명 완료"); $m("admId").value = "";
     } catch (e) { admMsg("실패: DB 규칙 확인"); }
   };
   window.admRemoveMod = async function() {
     if (!isCreator()) return;
-    const id = $m("admId").value.trim();
+    const id = admTarget();
     if (!id) return;
     try { await clearRole("mods", id); admMsg(id + " 중간 관리자 해임 완료"); $m("admId").value = ""; }
     catch (e) { admMsg("실패: DB 규칙 확인"); }
   };
   window.admAppoint = async function() {
     if (!isCreator()) return;
-    const id = $m("admId").value.trim();
+    const id = admTarget();
     if (!id) return;
     if (id === CREATOR) { admMsg("제작자입니다"); return; }
     try {
@@ -1345,13 +1455,14 @@ function reset(){
       await clearRole("mods", id);
       await clearRole("nobles", id);
       await clearRole("commons", id);
+      await clearRole("knights", id);
       await set(ref(db, "admins/" + encodeURIComponent(id)), { id, t: Date.now() });
       admMsg(id + " 관리자 임명 완료"); $m("admId").value = "";
     } catch (e) { admMsg("실패: DB 규칙 확인"); }
   };
   window.admRemove = async function() {
     if (!isCreator()) return;
-    const id = $m("admId").value.trim();
+    const id = admTarget();
     if (!id) return;
     try { await clearRole("admins", id); admMsg(id + " 해임 완료"); $m("admId").value = ""; }
     catch (e) { admMsg("실패: DB 규칙 확인"); }
@@ -1362,9 +1473,10 @@ function reset(){
     const mdIds = new Set(roleIds(mods));
     const nbIds = new Set(roleIds(nobles));
     const cmIds = new Set(roleIds(commons));
-    const rank = (u) => u.old ? 6 : u.id.normalize("NFC") === CREATOR ? 0 : adIds.has(u.id) ? 1 : mdIds.has(u.id) ? 2 : nbIds.has(u.id) ? 3 : cmIds.has(u.id) ? 4 : 5;
-    const label = ["제작자", "관리자", "중간 관리자", "하급귀족", "상급평민", "", "구버전 · 로그인 불가"];
-    const icon = ["👑", "🛡️", "🧰", "🎩", "🔰", "👤", "📦"];
+    const ktIds = new Set(roleIds(knights));
+    const rank = (u) => u.old ? 7 : u.id.normalize("NFC") === CREATOR ? 0 : adIds.has(u.id) ? 1 : mdIds.has(u.id) ? 2 : nbIds.has(u.id) ? 3 : ktIds.has(u.id) ? 4 : cmIds.has(u.id) ? 5 : 6;
+    const label = ["제작자", "관리자", "중간 관리자", "하급귀족", "기사", "상급평민", "", "구버전 · 로그인 불가"];
+    const icon = ["👑", "🛡️", "🧰", "🎩", "⚜️", "🔰", "👤", "📦"];
     const list = accList.slice().sort((a, b) => (rank(a) - rank(b)) || (a.t - b.t));
     $m("admUCnt").textContent = list.filter(u => !u.old).length + (list.some(u => u.old) ? " + 구버전 " + list.filter(u => u.old).length : "");
     const oc = $m("admOld"); if (oc) oc.textContent = list.filter(u => u.old).length;
@@ -1373,7 +1485,7 @@ function reset(){
       const r = rank(u);
       return '<div data-id="' + esc(u.id) + '" onclick="admPick(this.dataset.id)" style="cursor:pointer;padding:3px 8px;border-bottom:1px solid var(--line)">' +
         (isBannedName(u.id) ? "🚫 " : icon[r] + " ") + esc(u.id) +
-        (r !== 5 ? ' <span style="color:var(--sub);font-size:11px">' + label[r] + '</span>' : '') + '</div>';
+        (r !== 6 ? ' <span style="color:var(--sub);font-size:11px">' + label[r] + '</span>' : '') + '</div>';
     }).join("");
   }
   window.admFilter = () => renderUsers();
@@ -1404,7 +1516,7 @@ function reset(){
     if (!isCreator()) return;
     if (!accLoaded) { admMsg("유저 목록을 불러오는 중입니다"); return; }
     const jobs = [];
-    [["admins", admins], ["mods", mods], ["nobles", nobles], ["commons", commons]].forEach(([node, m]) => {
+    [["admins", admins], ["mods", mods], ["nobles", nobles], ["knights", knights], ["commons", commons]].forEach(([node, m]) => {
       Object.keys(m || {}).forEach(k => { if (!roleOk(m[k])) jobs.push(set(ref(db, node + "/" + k), null)); });
     });
     if (!jobs.length) { admMsg("정리할 기록이 없습니다"); return; }
@@ -1468,6 +1580,7 @@ function reset(){
     try { await clearRole("mods", id); } catch (e) { console.error(e); }
     try { await clearRole("nobles", id); } catch (e) { console.error(e); }
     try { await clearRole("commons", id); } catch (e) { console.error(e); }
+    try { await clearRole("knights", id); } catch (e) { console.error(e); }
     try { await guildDrop(id); } catch (e) { console.error(e); }
     try {
       const rs = await get(rankRef);
@@ -1522,7 +1635,7 @@ function reset(){
   const wClamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const lv = (x) => Math.max(0, Math.min(15, Math.floor(+x || 0)));
   const whash = (i, j) => { let h = Math.imul(i * 374761393 + j * 668265263, 1274126177); h = (h ^ (h >>> 13)) >>> 0; h = Math.imul(h, 1103515245) >>> 0; return (h % 1000) / 1000; };
-  const roleIcon = (id) => (String(id).normalize("NFC") === CREATOR ? "👑 " : inRole(admins, id) ? "🛡️ " : inRole(mods, id) ? "🧰 " : inRole(nobles, id) ? "🎩 " : inRole(commons, id) ? "🔰 " : "");
+  const roleIcon = (id) => (String(id).normalize("NFC") === CREATOR ? "👑 " : inRole(admins, id) ? "🛡️ " : inRole(mods, id) ? "🧰 " : inRole(nobles, id) ? "🎩 " : inRole(knights, id) ? "⚜️ " : inRole(commons, id) ? "🔰 " : "");
   const dpop = document.createElement("div");
   dpop.id = "duelPop"; dpop.className = "adm-hide";
   dpop.style.cssText = "position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:9500;background:var(--card);border:2px solid var(--gold);border-radius:12px;padding:12px 14px;width:min(320px,90vw);text-align:center;box-shadow:0 6px 24px rgba(0,0,0,.6)";
@@ -1891,8 +2004,8 @@ function reset(){
   const BAD_RE = new RegExp(BADW.slice().sort((a, b) => b.length - a.length).map(w => [...w].map(c => c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(CHAT_SEP)).join("|"), "gi");
   const PHONE_RE = /01[016789][\s.\-]*\d{3,4}[\s.\-]*\d{4}/g;
   const chatClean = (t) => String(t || "").replace(/\s+/g, " ").trim().slice(0, CHAT_MAX).replace(PHONE_RE, "📵").replace(BAD_RE, "♡♡");
-  const chatRank = (id) => !id ? 9 : String(id).normalize("NFC") === CREATOR ? 0 : inRole(admins, id) ? 1 : inRole(mods, id) ? 2 : 3;
-  const chatCanMod = () => !!curUid && (isAdmin() || isMod());
+  const chatRank = (id) => !id ? 9 : String(id).normalize("NFC") === CREATOR ? 0 : inRole(admins, id) ? 1 : inRole(mods, id) ? 2 : inRole(knights, id) ? 3 : 4;
+  const chatCanMod = () => !!curUid && (isAdmin() || isMod() || isKnight());
   const chatCanAct = (id) => chatCanMod() && chatRank(curUid) < chatRank(id);
   const muteOf = (id) => { const m = id && chatMutes[wEnc(id)]; return m && +m.u > srvNow() ? +m.u : 0; };
   const chatNote = (t) => { const e = $m("chatNote"); if (e) e.textContent = t; };
@@ -1914,7 +2027,7 @@ function reset(){
         let a = "";
         if (!mine) a += '<button class="sm" onclick="event.stopPropagation();chatReport()">🚩 신고</button><button class="sm" onclick="event.stopPropagation();chatBlock()">🚫 차단</button>';
         if (mine || chatCanAct(m.id)) a += '<button class="sm" onclick="event.stopPropagation();chatDel()">🗑️ 삭제</button>';
-        if (chatCanAct(m.id)) a += '<button class="sm" onclick="event.stopPropagation();chatMute(10)">🔇 10분</button><button class="sm" onclick="event.stopPropagation();chatMute(60)">🔇 1시간</button><button class="sm" onclick="event.stopPropagation();chatMute(0)">🔊 해제</button>';
+        if (chatCanAct(m.id)) a += (isAdmin() || isMod() ? '<button class="sm" onclick="event.stopPropagation();chatMute(10)">🔇 10분</button><button class="sm" onclick="event.stopPropagation();chatMute(60)">🔇 1시간</button>' : '<button class="sm" onclick="event.stopPropagation();chatMute(5)">🔇 5분</button>') + '<button class="sm" onclick="event.stopPropagation();chatMute(0)">🔊 해제</button>';
         if (a) row += '<div class="row" style="margin-top:4px;gap:4px">' + a + '</div>';
       }
       return row + '</div>';
@@ -1970,6 +2083,7 @@ function reset(){
   };
   window.chatMute = async function(min) {
     const m = chatMsgs.find(x => x.k === chatSel); if (!m || !chatCanAct(m.id)) return;
+    if (min > 5 && !(isAdmin() || isMod())) return;
     try {
       await set(ref(db, "chatMutes/" + wEnc(m.id)), min ? { id: m.id, u: srvNow() + min * 60000, by: curUid } : null);
       chatSel = "";
@@ -2051,7 +2165,7 @@ function reset(){
     for (const k of keys) { await set(ref(db, "accounts/" + k), null); try { await set(ref(db, "saves/" + k), null); } catch (e) {} }
     for (const nd of ["world", "duels", "duelResults", "chatMutes", "titles", "tower", "mail", "arena", "online"]) { try { await set(ref(db, nd + "/" + enc), null); } catch (e) {} }
     try { await srvPurge(id); } catch (e) {}
-    for (const nd of ["admins", "mods", "nobles", "commons"]) { try { await clearRole(nd, id); } catch (e) {} }
+    for (const nd of ["admins", "mods", "nobles", "knights", "commons"]) { try { await clearRole(nd, id); } catch (e) {} }
     try { await guildDrop(id); } catch (e) {}
     for (const [node, field] of [["rankings", "name"], ["chat", "id"]]) {
       try {
@@ -2797,6 +2911,7 @@ function reset(){
       let got = null;
       const r = await runTransaction(ref(db, "mail/" + wEnc(u) + "/" + key), (cur) => { if (!cur) return cur; got = cur; return null; });
       if (r && r.committed && got && curUid === u && loaded) {
+        if (got.w) { warnShow(String(got.from || "관리자").slice(0, 12), chatClean(got.m || "").slice(0, 30)); return; }
         const g = Math.max(0, Math.min(1e8, Math.floor(+got.g) || 0)), e = Math.max(0, Math.min(10, Math.floor(+got.e) || 0)), p = Math.max(0, Math.min(10, Math.floor(+got.p) || 0));
         S.g += g; S.egg = (S.egg || 0) + e; S.p = (S.p || 0) + p;
         const parts = []; if (g) parts.push(num(g) + " G"); if (e) parts.push("🥚 알 " + e + "개"); if (p) parts.push("🛡️ 방지권 " + p + "개");
@@ -2836,7 +2951,7 @@ function reset(){
   function renderAdmStat() {
     const el = $m("admStat"); if (!el || !canPanel()) return;
     const gc = Object.values(guilds).filter(g => g && typeof g.name === "string").length;
-    const h = "📊 계정 " + (accLoaded ? accList.length : "?") + "개 · 🌐 " + (SRV + 1) + "서버 (서버별 " + srvSt.map(x => x.n === null ? "-" : x.n).join("/") + "명) · 월드 " + Object.keys(others).length + "명 · 길드 " + gc + "개 · 탑 1위 " + (twTop[0] ? esc(twTop[0].id) + " " + Math.floor(twTop[0].f) + "층" : "없음") + " · 보스 " + (raid && raid.hp > 0 ? "진행 중" : "없음");
+    const h = "📊 계정 " + (accLoaded ? accList.length : "?") + "개 · 🌐 " + (SRV + 1) + "서버 (서버별 " + srvSt.map(x => x.n === null ? "-" : x.n).join("/") + "명) · 월드 " + Object.keys(others).length + "명 · 길드 " + gc + "개 · 탑 1위 " + (twTop[0] ? esc(twTop[0].id) + " " + Math.floor(twTop[0].f) + "층" : "없음") + " · 보스 " + (raid && raid.hp > 0 ? "진행 중" : "없음") + (maintOn() ? " · 🛠️ 점검 중" : "");
     if (el.dataset.h !== h) { el.dataset.h = h; el.innerHTML = h; }
   }
   setInterval(() => { mailSub(); renderAdmStat(); }, 2000);
@@ -2846,10 +2961,10 @@ function reset(){
   setInterval(() => {
     if (wnDone || !curUid || !loaded) return;
     wnDone = true;
-    try { if (localStorage.getItem("sword_news_ver") === "26") return; localStorage.setItem("sword_news_ver", "26"); } catch (e) { return; }
+    try { if (localStorage.getItem("sword_news_ver") === "28") return; localStorage.setItem("sword_news_ver", "28"); } catch (e) { return; }
     const ov = document.createElement("div"); ov.id = "wnOv";
     ov.style.cssText = "position:fixed;inset:0;z-index:150000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:14px";
-    ov.innerHTML = '<div style="width:min(380px,94vw);max-height:86vh;overflow:auto;background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:18px;color:var(--tx);text-align:left"><div style="font-weight:900;color:var(--gold);font-size:19px;text-align:center">🎉 v26 서버 3개 업데이트!</div><div style="font-size:13.5px;line-height:1.8;margin-top:10px">🌐 <b>서버 3개</b> — 들어오면 서버가 자동으로 정해져요. 메뉴 아래 버튼으로 언제든 바꿀 수 있어요<br><span style="color:var(--sub);font-size:12px">월드·채팅·3D 대결은 같은 서버 사람끼리 만나요. 골드·장비·랭킹·길드는 어느 서버든 똑같아요</span><br>🎯 <b>3D 대결</b> — 1인칭 3D 실시간 대결! (메뉴의 빨간 버튼)<br>🛡️ <b>장비·직업</b> — 장비 5칸을 모으고 직업을 골라요<br>🏟️ <b>아레나</b> — 다른 유저와 1대1 (하루 5번)<br>🎖️ <b>시즌 패스</b> — 시즌 점수로 단계 보상<br>🎨 <b>꾸미기</b> — 이름 색과 오라 (장비 칸 맨 아래)<br>🌍 <b>새 월드</b> — 건물·필드 몬스터·이모티콘·미니맵</div><div style="font-size:12px;color:var(--sub);margin-top:8px">메뉴를 깔끔하게 정리했어요: 🗼 탑 · 🛡️ 장비 · 🏟️ 아레나 · 🎖️ 패스 · 🎯 3D 대결</div><button class="up" style="width:100%;margin-top:14px" onclick="document.getElementById(\'wnOv\').remove()">확인</button></div>';
+    ov.innerHTML = '<div style="width:min(380px,94vw);max-height:86vh;overflow:auto;background:var(--card);border:2px solid var(--gold);border-radius:16px;padding:18px;color:var(--tx);text-align:left"><div style="font-weight:900;color:var(--gold);font-size:19px;text-align:center">🎉 v28 대규모 업데이트!</div><div style="font-size:13.5px;line-height:1.8;margin-top:10px">🌐 <b>서버 3개</b> — 들어오면 서버가 자동으로 정해져요. 메뉴 아래 버튼으로 언제든 바꿀 수 있어요<br><span style="color:var(--sub);font-size:12px">월드·채팅·3D 대결은 같은 서버 사람끼리 만나요. 골드·장비·랭킹·길드는 어느 서버든 똑같아요</span><br>⚔️ <b>검기</b> — 검이 셀수록 검기가 커지고, 3D 대결에서 피해도 세져요<br>⚜️ <b>기사</b> — 새 직급! 전체 공지 · 채팅 지킴이 · 서버 현황 보기 · 하루 봉급 10만 G<br>🎯 <b>3D 대결</b> — 1인칭 3D 실시간 대결! (메뉴의 빨간 버튼)<br>🛡️ <b>장비·직업</b> — 장비 5칸을 모으고 직업을 골라요<br>🏟️ <b>아레나</b> — 다른 유저와 1대1 (하루 5번)<br>🎖️ <b>시즌 패스</b> — 시즌 점수로 단계 보상<br>🎨 <b>꾸미기</b> — 이름 색과 오라 (장비 칸 맨 아래)<br>🌍 <b>새 월드</b> — 건물·필드 몬스터·이모티콘·미니맵</div><div style="font-size:12px;color:var(--sub);margin-top:8px">메뉴를 깔끔하게 정리했어요: 🗼 탑 · 🛡️ 장비 · 🏟️ 아레나 · 🎖️ 패스 · 🎯 3D 대결</div><button class="up" style="width:100%;margin-top:14px" onclick="document.getElementById(\'wnOv\').remove()">확인</button></div>';
     document.body.appendChild(ov);
   }, 1500);
 
@@ -3040,6 +3155,11 @@ function reset(){
   const F3 = { on: false, loading: false, room: "", T: null, stop: null, me: null, others: {}, api: null };
   let f3Lobby = {}, f3LobbyUnsub = null, f3Msg = "", f3MsgT = 0, BETA = false;
   const F3_BETA_ROOM = ["beta", "🧪 베타 AI 대결 (AI 3명)", 4];
+  // ⚔️ 검기: 들고 있는 검의 강화 단계(0~15)만큼 크고 세짐. 5강이 예전과 같은 피해(몸 25 · 머리 60)
+  const f3L = () => Math.max(0, Math.min(15, Math.floor(+S.l || 0)));
+  const f3Lv = (x) => { const n = Math.floor(+x); return n >= 0 && n <= 15 ? n : 5; };
+  const f3Dmg = (l, head) => head ? 50 + l * 2 : 20 + l;
+  const f3Col = (l) => { let x = "9fdfff"; try { const m = /#([0-9a-f]{3,6})/i.exec(W[l].g || ""); if (m) x = m[1]; } catch (e) {} if (x.length === 3) x = x.replace(/./g, c => c + c); return "#" + x; };
   const f3Note = (t) => { f3Msg = t; f3MsgT = Date.now(); rePage(15); };
   const f3Count = (rid) => Object.values(f3Lobby[rid] || {}).filter(v => v && typeof v.id === "string" && srvNow() - (+v.t || 0) < 150000 && !isBannedName(v.id));
   const f3Day = () => { const d = kstDay(); if (S.f3d !== d) { S.f3d = d; S.f3k = 0; S.f3w = 0; } };
@@ -3054,6 +3174,7 @@ function reset(){
     if (!curUid || !loaded) return hd + '<div class="it">로그인 후 이용할 수 있어요</div>';
     f3Day();
     let h = hd + '<div style="text-align:left;font-size:12.5px"><div style="background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.45);border-radius:10px;padding:10px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-weight:800;font-size:14px"><span>내 기록</span><span style="color:var(--cy)">' + num(S.fk || 0) + "킬 · " + num(S.fw || 0) + '승</span></div><div style="color:var(--sub);margin-top:3px">먼저 ' + F3_GOAL + "킬 하면 승리! · 킬 +" + num(F3_KILL_G) + " G (오늘 " + (S.f3k || 0) + "/" + F3_KILL_CAP + ") · 승리 +" + num(F3_WIN_G) + " G (오늘 " + (S.f3w || 0) + "/" + F3_WIN_CAP + ")</div></div>";
+    { const kl = f3L(); h += '<div style="background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.4);border-radius:10px;padding:8px 10px;margin-bottom:8px"><b>⚔️ 내 검기</b> <span style="background:#1e1e28;color:' + f3Col(kl) + ';border-radius:6px;padding:1px 7px;font-weight:800">+' + kl + "강</span> · 몸 " + f3Dmg(kl, 0) + " · 머리 " + f3Dmg(kl, 1) + ' 피해<div style="color:var(--sub);font-size:11.5px;margin-top:3px">대장간에서 검을 강화할수록 검기가 커지고 피해가 세져요 (몸 피해: +0강 20 → +15강 35)</div></div>'; }
     h += '<div style="font-weight:800;margin:6px 0 2px">방 고르기</div>' + (BETA && canBoss() ? [F3_BETA_ROOM].concat(F3_ROOMS) : F3_ROOMS).map((r) => { const beta = r[0] === "beta", ps = beta ? [] : f3Count(r[0]), full = !beta && ps.filter(v => v.id !== curUid).length >= r[2]; return '<div class="it"' + (beta ? ' style="background:rgba(0,229,255,.1);border-radius:6px"' : "") + "><span><b>" + r[1] + "</b> " + (beta ? '<span style="color:var(--cy)">베타 전용</span>' : '<span style="color:' + (ps.length ? "var(--ok)" : "var(--sub)") + '">' + ps.length + " / " + r[2] + "명</span>") + '<br><span style="color:var(--sub);font-size:11.5px">' + (beta ? "AI와 싸우는 연습방이에요 · 보상 없음 · 혼자 들어가요" : ps.length ? ps.map(v => esc(v.id)).join(", ") : "아직 아무도 없어요") + '</span></span><button class="sm" ' + (full || F3.loading ? "disabled" : "") + ' onclick="f3Join(\'' + r[0] + '\')">' + (full ? "가득 참" : "입장") + "</button></div>"; }).join("");
     h += '<div style="font-size:11.5px;color:var(--sub);margin-top:8px;line-height:1.7">🖥️ <b>컴퓨터</b>: 화면 클릭 → WASD 이동 · 마우스 조준 · 클릭 발사 · Space 점프 · Shift 대시 · R 재장전 · Esc 마우스 풀기<br>📱 <b>휴대폰</b>: 왼쪽 조이스틱 이동 · 오른쪽을 밀어 조준 · 조준하면 자동 발사 · 버튼으로 점프·대시·재장전 (가로로 돌리면 더 잘 보여요)<br>💡 머리를 맞히면 피해가 훨씬 커요. 낮은 상자 뒤에 숨어 보세요!</div>';
     if (f3Msg && Date.now() - f3MsgT < 6000) h += '<div style="margin-top:6px;color:var(--cy);font-weight:700">' + esc(f3Msg) + "</div>";
@@ -3085,7 +3206,7 @@ function reset(){
       '<div id="f3Feed" style="position:absolute;right:8px;top:8px;font-size:12px;text-align:right;pointer-events:none;text-shadow:0 0 3px #000;line-height:1.6"></div>' +
       '<div id="f3Mid" style="position:absolute;left:50%;top:32%;transform:translateX(-50%);font-size:20px;font-weight:900;text-align:center;pointer-events:none;text-shadow:0 0 6px #000;white-space:nowrap"></div>' +
       '<div style="position:absolute;left:12px;bottom:' + (touch ? 12 : 14) + 'px;width:170px;pointer-events:none"><div id="f3HpT" style="font-weight:900;font-size:15px;text-shadow:0 0 3px #000">❤️ 100</div><div style="height:10px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.6);border-radius:5px;overflow:hidden"><i id="f3HpB" style="display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff4757,#2ed573)"></i></div></div>' +
-      '<div id="f3Am" style="position:absolute;right:12px;bottom:' + (touch ? 176 : 14) + 'px;font-weight:900;font-size:17px;text-shadow:0 0 3px #000;pointer-events:none"></div>' +
+      '<div id="f3Am" style="text-align:right;position:absolute;right:12px;bottom:' + (touch ? 176 : 14) + 'px;font-weight:900;font-size:17px;text-shadow:0 0 3px #000;pointer-events:none"></div>' +
       '<div data-b="exit" style="position:absolute;left:8px;top:8px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.6);border-radius:8px;padding:7px 11px;font-size:12.5px;font-weight:800;cursor:pointer">🚪 나가기</div>' +
       '<div id="f3Help" style="position:absolute;left:50%;bottom:42px;transform:translateX(-50%);background:rgba(0,0,0,.6);border-radius:8px;padding:7px 12px;font-size:12.5px;text-align:center;line-height:1.5;width:max-content;max-width:92vw;pointer-events:none;display:' + (touch ? "none" : "block") + '">🖱️ 화면을 클릭하면 조준이 시작돼요<br>WASD 이동 · Space 점프 · Shift 대시 · R 재장전 · Esc 마우스 풀기</div>' +
       '<div id="f3Joy" style="position:absolute;left:26px;bottom:44px;width:110px;height:110px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.45);display:' + (touch ? "block" : "none") + ';pointer-events:none"><i id="f3Knob" style="position:absolute;left:33px;top:33px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.55)"></i></div>' +
@@ -3109,23 +3230,39 @@ function reset(){
     const hilt = new T.Mesh(new T.BoxGeometry(0.22, 0.06, 0.06), new T.MeshBasicMaterial({ color: 0xffd700 })); vm.add(hilt);
     const grip = new T.Mesh(new T.BoxGeometry(0.05, 0.05, 0.2), new T.MeshBasicMaterial({ color: 0x5c3d2e })); grip.position.z = 0.12; vm.add(grip);
     vm.position.set(0.3, -0.27, -0.5); vm.rotation.set(0.12, 0.1, 0); cam.add(vm);
-    const trGeo = new T.CylinderGeometry(0.03, 0.03, 1, 6), spGeo = new T.SphereGeometry(0.13, 8, 6), up = new T.Vector3(0, 1, 0);
-    const tracer = (a, b, mine) => {
+    const mkGlow = (w, h, d) => new T.Mesh(new T.BoxGeometry(w, h, d), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false }));
+    const vmA = mkGlow(0.08, 0.13, 0.75), vmB = mkGlow(0.13, 0.2, 0.79); vmA.position.z = vmB.position.z = -0.37; vm.add(vmA); vm.add(vmB);
+    let myL = -1;
+    const vmStyle = () => { const l = f3L(); if (l === myL) return; myL = l; const c = new T.Color(f3Col(l)); blade.material.color.copy(c).lerp(new T.Color(0xffffff), 0.35); vmA.material.color.copy(c); vmB.material.color.copy(c); blade.scale.set(1 + l * 0.02, 1 + l * 0.03, 1 + l * 0.012); };
+    vmStyle();
+    const trGeo = new T.CylinderGeometry(1, 1, 1, 8), spGeo = new T.SphereGeometry(1, 10, 8), trGeoT = new T.CylinderGeometry(1, 0.18, 1, 8), crGeo = new T.TorusGeometry(1, 0.11, 6, 20, Math.PI), up = new T.Vector3(0, 1, 0);
+    // 검기: 강화 단계 lv 가 높을수록 굵고 크고 오래 남아요. 초승달 모양 검기가 과녁까지 날아가요
+    const tracer = (a, b, mine, lv) => {
       const va = new T.Vector3(a[0], a[1], a[2]), vb = new T.Vector3(b[0], b[1], b[2]), d = vb.clone().sub(va), len = d.length(); if (len < 0.05) return;
-      const m = new T.Mesh(trGeo, new T.MeshBasicMaterial({ color: mine ? 0x7ef9ff : 0xff9f43, transparent: true, opacity: 0.9 })); m.position.copy(va).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(up, d.clone().normalize()); m.scale.set(1, len, 1); scene.add(m);
-      const s = new T.Mesh(spGeo, new T.MeshBasicMaterial({ color: 0xffffff })); s.position.copy(vb); scene.add(s);
-      tracers.push({ m, s, until: Date.now() + 110 });
+      const l = f3Lv(lv), col = new T.Color(f3Col(l)), white = new T.Color(0xffffff), dn = d.clone().normalize(), objs = [];
+      const mk = (geo, c, op, add) => { const o = new T.Mesh(geo, new T.MeshBasicMaterial({ color: c, transparent: true, opacity: op, depthWrite: false, blending: add ? T.AdditiveBlending : T.NormalBlending })); o.userData.op = op; scene.add(o); objs.push(o); return o; };
+      const r = 0.02 + l * 0.0035;
+      const tg = mine ? trGeoT : trGeo;
+      const m = mk(tg, col.clone().lerp(white, 0.55), 0.95, false); m.position.copy(va).addScaledVector(d, 0.5); m.quaternion.setFromUnitVectors(up, dn); m.scale.set(r, len, r);
+      if (l >= 3) { const g = mk(tg, col, (0.2 + l * 0.02) * (mine ? 0.7 : 1), true); g.position.copy(m.position); g.quaternion.copy(m.quaternion); g.scale.set(r * 3, len, r * 3); }
+      const s = mk(spGeo, white, 1, false); s.position.copy(vb); s.scale.setScalar(0.1 + l * 0.012);
+      if (l >= 6) { const s2 = mk(spGeo, col, 0.45, true); s2.position.copy(vb); s2.scale.setScalar(0.22 + l * 0.03); }
+      let c = null;
+      if (l >= 1) { const R = 0.14 + l * 0.034; c = mk(crGeo, col.clone().lerp(white, 0.3), 0.95, true); c.quaternion.setFromUnitVectors(up, dn); c.rotateY((Math.random() < 0.5 ? -1 : 1) * (0.35 + Math.random() * 0.8)); c.rotateX(-0.9); c.scale.set(R, R * 0.6, R); c.position.copy(va); }
+      tracers.push({ objs, c, va, d, t0: Date.now(), dur: 130 + l * 9 });
     };
     const drawLabel = (o) => { const g = o.lc.getContext("2d"); g.clearRect(0, 0, 256, 64); g.font = "bold 26px sans-serif"; g.textAlign = "center"; g.lineWidth = 5; g.strokeStyle = "rgba(0,0,0,.85)"; g.strokeText(o.id, 128, 28); g.fillStyle = nmCol(o.id) || "#fff"; g.fillText(o.id, 128, 28); g.fillStyle = "rgba(0,0,0,.6)"; g.fillRect(48, 40, 160, 12); g.fillStyle = o.hp > 50 ? "#2ed573" : o.hp > 25 ? "#ffa502" : "#ff4757"; g.fillRect(50, 42, 156 * Math.max(0, Math.min(100, o.hp)) / 100, 8); o.lt.needsUpdate = true; o.labHp = o.hp; };
     const mkPlayer = (id) => {
       const g = new T.Group(), mat = new T.MeshLambertMaterial({ color: new T.Color(nmCol(id) || f3Hue(id)) }), dark = new T.MeshLambertMaterial({ color: 0x2f3542 }), skin = new T.MeshLambertMaterial({ color: 0xffd8a8 });
       const add = (w, h, d, x, y, z, m) => { const b = new T.Mesh(new T.BoxGeometry(w, h, d), m); b.position.set(x, y, z); g.add(b); return b; };
       add(0.62, 0.72, 0.34, 0, 1.0, 0, mat); add(0.24, 0.64, 0.26, -0.16, 0.32, 0, dark); add(0.24, 0.64, 0.26, 0.16, 0.32, 0, dark); add(0.42, 0.42, 0.42, 0, 1.58, 0, skin); add(0.16, 0.62, 0.2, -0.4, 1.02, 0, mat); add(0.16, 0.62, 0.2, 0.4, 1.02, 0, mat);
-      add(0.3, 0.07, 0.03, 0, 1.63, -0.22, dark); add(0.06, 0.08, 0.95, 0.4, 0.95, -0.5, new T.MeshBasicMaterial({ color: 0xdff9fb }));
+      add(0.3, 0.07, 0.03, 0, 1.63, -0.22, dark); const sw = add(0.06, 0.08, 0.95, 0.4, 0.95, -0.5, new T.MeshBasicMaterial({ color: 0xdff9fb }));
+      const swg = new T.Mesh(new T.BoxGeometry(0.22, 0.26, 1.03), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, blending: T.AdditiveBlending, depthWrite: false })); swg.position.copy(sw.position); swg.userData.glow = 1; g.add(swg);
       const lc = document.createElement("canvas"); lc.width = 256; lc.height = 64; const lt = new T.CanvasTexture(lc); if (T.SRGBColorSpace) lt.colorSpace = T.SRGBColorSpace;
       const sp = new T.Sprite(new T.SpriteMaterial({ map: lt, transparent: true, depthWrite: false })); sp.scale.set(2.4, 0.6, 1); sp.position.set(0, 2.3, 0); g.add(sp);
-      scene.add(g); return { g, lc, lt };
+      scene.add(g); return { g, lc, lt, sw, swg, swL: -1 };
     };
+    const swStyle = (p, l) => { if (!p.sw || p.swL === l) return; p.swL = l; const c = new T.Color(f3Col(l)); p.sw.material.color.copy(c).lerp(new T.Color(0xffffff), 0.4); p.sw.scale.set(1 + l * 0.03, 1 + l * 0.03, 1); p.swg.material.color.copy(c); p.swg.material.opacity = l >= 3 ? 0.06 + l * 0.03 : 0; };
     // ---- 충돌 · 광선 ----
     const blocked = (x, z) => { if (Math.abs(x) > F3_HALF - 0.3 - F3_R || Math.abs(z) > F3_HALF - 0.3 - F3_R) return true; for (const b of F3_BOX) { if (Math.abs(x - b[0]) < b[2] / 2 + F3_R && Math.abs(z - b[1]) < b[3] / 2 + F3_R) return true; } return false; };
     const rayBox = (o, d, x0, y0, z0, x1, y1, z1) => { let t0 = 0, t1 = 1e9; const lo = [x0, y0, z0], hi = [x1, y1, z1]; for (let i = 0; i < 3; i++) { if (Math.abs(d[i]) < 1e-9) { if (o[i] < lo[i] || o[i] > hi[i]) return Infinity; } else { let a = (lo[i] - o[i]) / d[i], b = (hi[i] - o[i]) / d[i]; if (a > b) { const t = a; a = b; b = t; } if (a > t0) t0 = a; if (b < t1) t1 = b; if (t0 > t1) return Infinity; } } return t0; };
@@ -3147,10 +3284,10 @@ function reset(){
     const send = (force) => {
       if (local) return;
       const now = Date.now(); if (!force && now - me.lastSend < 125) return;
-      const sig = [r2(me.x), r2(me.y), r2(me.z), r2(me.yaw), r2(me.pitch), me.hp, me.k, me.d, me.dead ? 1 : 0, me.prot, me.shot ? me.shot[0] : 0].join(",");
+      const sig = [r2(me.x), r2(me.y), r2(me.z), r2(me.yaw), r2(me.pitch), me.hp, me.k, me.d, me.dead ? 1 : 0, me.prot, me.shot ? me.shot[0] : 0, f3L()].join(",");
       if (!force && sig === me.lastSig && now - me.lastSend < 1000) return;
       me.lastSend = now; me.lastSig = sig;
-      const v = { id: curUid, p: [r2(me.x), r2(me.y), r2(me.z), r2(me.yaw), r2(me.pitch)], h: me.hp, k: me.k, d: me.d, a: me.dead ? 0 : 1, pr: me.prot, t: srvNow() };
+      const v = { id: curUid, p: [r2(me.x), r2(me.y), r2(me.z), r2(me.yaw), r2(me.pitch)], h: me.hp, k: me.k, d: me.d, a: me.dead ? 0 : 1, pr: me.prot, t: srvNow(), l: f3L() };
       if (me.shot) v.s = [me.shot[0], r2(me.shot[1][0]), r2(me.shot[1][1]), r2(me.shot[1][2])];
       set(ref(sdb, base + "/p/" + myKey), v).catch(() => {});
     };
@@ -3161,9 +3298,9 @@ function reset(){
       const mv = Math.abs(joy.f) + Math.abs(joy.s) > 0.2 || keys.KeyW || keys.KeyA || keys.KeyS || keys.KeyD, spr = (mv ? 0.02 : 0.005) + (me.y > 0.02 ? 0.03 : 0);
       const a = aimAt(me.yaw + (Math.random() - 0.5) * spr, me.pitch + (Math.random() - 0.5) * spr), hp = [a.o[0] + a.d[0] * a.t, a.o[1] + a.d[1] * a.t, a.o[2] + a.d[2] * a.t];
       const rx = Math.cos(me.yaw), rz = -Math.sin(me.yaw);
-      tracer([a.o[0] + rx * 0.28 + a.d[0] * 0.6, a.o[1] - 0.25 + a.d[1] * 0.6, a.o[2] + rz * 0.28 + a.d[2] * 0.6], hp, true);
+      tracer([a.o[0] + rx * 0.28 + a.d[0] * 0.6, a.o[1] - 0.25 + a.d[1] * 0.6, a.o[2] + rz * 0.28 + a.d[2] * 0.6], hp, true, f3L());
       me.shot = [srvNow(), hp]; if (typeof clang === "function") { try { clang(); } catch (e) {} }
-      if (a.best) { hitT = now + 180; q("f3Hit").style.color = a.best.head ? "#ffd700" : "#ff4757"; if (local) botHurt(a.best.p, a.best.head, null); else push(ref(sdb, base + "/ev"), { a: curUid, b: a.best.p.id, h: a.best.head ? 1 : 0, t: srvNow() }).catch(() => {}); }
+      if (a.best) { hitT = now + 180; q("f3Hit").style.color = a.best.head ? "#ffd700" : "#ff4757"; if (local) botHurt(a.best.p, a.best.head, null); else push(ref(sdb, base + "/ev"), { a: curUid, b: a.best.p.id, h: a.best.head ? 1 : 0, t: srvNow(), l: f3L() }).catch(() => {}); }
       if (me.ammo <= 0) reload(now);
       send(true);
     };
@@ -3177,10 +3314,10 @@ function reset(){
       if (typeof beep === "function") beep("ok"); send(true);
       if (me.k >= F3_GOAL) { if (local) localWin(curUid); else tryWin(); }
     };
-    const hurtMe = (by, head) => {
+    const hurtMe = (by, head, lv) => {
       const now = Date.now();
       if (me.dead || roundEnd || me.prot > srvNow() || (lastHitFrom[by] && now - lastHitFrom[by] < 150)) return false;
-      lastHitFrom[by] = now; me.hp -= head ? 60 : 25; me.by = by; q("f3Dmg").style.opacity = "1"; setTimeout(() => { const e = q("f3Dmg"); if (e) e.style.opacity = "0"; }, 160);
+      lastHitFrom[by] = now; me.hp -= f3Dmg(f3Lv(lv), head); me.by = by; q("f3Dmg").style.opacity = "1"; setTimeout(() => { const e = q("f3Dmg"); if (e) e.style.opacity = "0"; }, 160);
       let died = false;
       if (me.hp <= 0) { me.hp = 0; me.dead = true; me.d++; me.respawnAt = now + 3000; died = true; if (!local) push(ref(sdb, base + "/ev"), { k: 1, a: by, b: curUid, h: head ? 1 : 0, t: srvNow() }).catch(() => {}); if (typeof beep === "function") beep("bad"); }
       send(true); return died;
@@ -3190,7 +3327,7 @@ function reset(){
     const botSpawn = (b) => { const s = F3_SPAWN[Math.floor(Math.random() * F3_SPAWN.length)]; b.x = b.sx = s[0]; b.z = b.sz = s[1]; b.y = b.sy = 0; b.hp = 100; b.dead = false; b.prot = srvNow() + 2000; b.wp = null; b.wpT = 0; };
     const botHurt = (b, head, by) => {
       if (b.dead || roundEnd || b.prot > srvNow()) return;
-      b.hp -= head ? 60 : 25; if (b.hp > 0) return;
+      b.hp -= f3Dmg(by ? f3Lv(by.l) : f3L(), head); if (b.hp > 0) return;
       b.hp = 0; b.dead = true; b.d++; b.respawnAt = Date.now() + 3000;
       addFeed("<b>" + esc(by ? by.id : curUid) + "</b> " + (head ? "🎯" : "⚔️") + " " + esc(b.id));
       if (by) { by.k++; if (by.k >= F3_GOAL) localWin(by.id); } else creditKill(b.id, head);
@@ -3217,11 +3354,11 @@ function reset(){
       if (tg && see && dist < 30 && now > b.nextShot && !((tg.me ? me.prot : tg.o.prot) > sN)) {
         b.nextShot = now + 650 + Math.random() * 500;
         const hit = Math.random() < Math.max(0.07, 0.34 - dist * 0.01), head = hit && Math.random() < 0.08, ty = tg.y + (head ? 1.58 : 1.0);
-        tracer([b.x - Math.sin(b.yaw) * 0.5, 1.35, b.z - Math.cos(b.yaw) * 0.5], hit ? [tg.x, ty, tg.z] : [tg.x + (Math.random() - 0.5) * 2.4, ty + (Math.random() - 0.3) * 1.6, tg.z + (Math.random() - 0.5) * 2.4], false);
-        if (hit) { if (tg.me) { if (hurtMe(b.id, head)) { b.k++; addFeed("<b>" + esc(b.id) + "</b> " + (head ? "🎯" : "⚔️") + " " + esc(curUid)); if (b.k >= F3_GOAL) localWin(b.id); } } else botHurt(tg.o, head, b); }
+        tracer([b.x - Math.sin(b.yaw) * 0.5, 1.35, b.z - Math.cos(b.yaw) * 0.5], hit ? [tg.x, ty, tg.z] : [tg.x + (Math.random() - 0.5) * 2.4, ty + (Math.random() - 0.3) * 1.6, tg.z + (Math.random() - 0.5) * 2.4], false, b.l);
+        if (hit) { if (tg.me) { if (hurtMe(b.id, head, b.l)) { b.k++; addFeed("<b>" + esc(b.id) + "</b> " + (head ? "🎯" : "⚔️") + " " + esc(curUid)); if (b.k >= F3_GOAL) localWin(b.id); } } else botHurt(tg.o, head, b); }
       }
     };
-    if (local) ["🤖 AI 검사", "🤖 AI 궁수", "🤖 AI 기사"].forEach((nm) => { const b = Object.assign({ id: nm, bot: true, x: 0, y: 0, z: 0, sx: 0, sy: 0, sz: 0, yaw: 0, syaw: 0, pitch: 0, k: 0, d: 0, hp: 100, dead: false, prot: 0, labHp: -1, lastShot: 0, nextShot: 0, respawnAt: 0, wp: null, wpT: 0, str: 1 }, mkPlayer(nm)); F3.others[nm] = b; bots.push(b); botSpawn(b); });
+    if (local) ["🤖 AI 검사", "🤖 AI 궁수", "🤖 AI 기사"].forEach((nm, bi) => { const b = Object.assign({ id: nm, bot: true, l: [10, 5, 8][bi], x: 0, y: 0, z: 0, sx: 0, sy: 0, sz: 0, yaw: 0, syaw: 0, pitch: 0, k: 0, d: 0, hp: 100, dead: false, prot: 0, labHp: -1, lastShot: 0, nextShot: 0, respawnAt: 0, wp: null, wpT: 0, str: 1 }, mkPlayer(nm)); F3.others[nm] = b; bots.push(b); botSpawn(b); swStyle(b, b.l); });
     // ---- 구독 ----
     if (!local) unsubs.push(onValue(ref(sdb, base + "/p"), (sn) => {
       if (!F3.on || F3.room !== rid) return;
@@ -3232,8 +3369,8 @@ function reset(){
         let p = F3.others[o.id];
         const x = Math.max(-F3_HALF, Math.min(F3_HALF, +o.p[0] || 0)), y = Math.max(0, Math.min(4, +o.p[1] || 0)), z = Math.max(-F3_HALF, Math.min(F3_HALF, +o.p[2] || 0));
         if (!p) { p = F3.others[o.id] = Object.assign({ id: o.id, sx: x, sy: y, sz: z, syaw: +o.p[3] || 0, lastShot: 0, labHp: -1 }, mkPlayer(o.id)); }
-        p.x = x; p.y = y; p.z = z; p.yaw = +o.p[3] || 0; p.pitch = +o.p[4] || 0; p.hp = Math.max(0, Math.min(100, +o.h || 0)); p.k = Math.max(0, Math.floor(+o.k || 0)); p.d = Math.max(0, Math.floor(+o.d || 0)); p.dead = !o.a; p.prot = +o.pr || 0; p.t = +o.t || 0;
-        if (Array.isArray(o.s) && o.s[0] !== p.lastShot) { const first = !p.lastShot; p.lastShot = o.s[0]; if (!first && sN - o.s[0] < 1500) tracer([p.sx - Math.sin(p.yaw) * 0.5, p.sy + 1.35, p.sz - Math.cos(p.yaw) * 0.5], [+o.s[1] || 0, +o.s[2] || 0, +o.s[3] || 0], false); }
+        p.x = x; p.y = y; p.z = z; p.yaw = +o.p[3] || 0; p.pitch = +o.p[4] || 0; p.hp = Math.max(0, Math.min(100, +o.h || 0)); p.k = Math.max(0, Math.floor(+o.k || 0)); p.d = Math.max(0, Math.floor(+o.d || 0)); p.dead = !o.a; p.prot = +o.pr || 0; p.t = +o.t || 0; p.l = f3Lv(o.l); swStyle(p, p.l);
+        if (Array.isArray(o.s) && o.s[0] !== p.lastShot) { const first = !p.lastShot; p.lastShot = o.s[0]; if (!first && sN - o.s[0] < 1500) tracer([p.sx - Math.sin(p.yaw) * 0.5, p.sy + 1.35, p.sz - Math.cos(p.yaw) * 0.5], [+o.s[1] || 0, +o.s[2] || 0, +o.s[3] || 0], false, p.l); }
       });
       Object.keys(F3.others).forEach((id) => { if (!keep[id]) { scene.remove(F3.others[id].g); delete F3.others[id]; } });
     }, () => {}));
@@ -3246,7 +3383,7 @@ function reset(){
         if (seen[k]) return; seen[k] = 1;
         if ((+v.t || 0) < joinT || sN - (+v.t || 0) > 6000 || typeof v.a !== "string" || typeof v.b !== "string") return;
         if (v.k) { addFeed("<b>" + esc(v.a) + "</b> " + (v.h ? "🎯" : "⚔️") + " " + esc(v.b)); if (v.a === curUid && v.b !== curUid) creditKill(v.b, v.h); }
-        else if (v.b === curUid && v.a !== curUid) hurtMe(v.a, v.h);
+        else if (v.b === curUid && v.a !== curUid) hurtMe(v.a, v.h, v.l);
       });
       if (cnt >= 30 && old.length) old.slice(0, 15).forEach(k => set(ref(sdb, base + "/ev/" + k), null).catch(() => {}));
     }, () => {}));
@@ -3296,7 +3433,7 @@ function reset(){
       ov.remove(); F3.others = {}; cloudSave(); if (typeof ui === "function") ui(); rePage(15);
     };
     if (!local) try { onDisconnect(ref(sdb, base + "/p/" + myKey)).remove(); onDisconnect(ref(sdb, "fpsLobby/" + rid + "/" + myKey)).remove(); } catch (e) {}
-    F3.on = true; F3.api = { shoot, spawn, aimAt, send, blocked, stop: f3Stop };
+    F3.on = true; F3.api = { shoot, spawn, aimAt, send, blocked, stop: f3Stop, tr: tracers, hurt: hurtMe };
     spawn();
     // ---- 매 프레임 ----
     const frame = (ts) => {
@@ -3324,20 +3461,20 @@ function reset(){
       }
       if (local) bots.forEach(b => botTick(b, dt, now, sN));
       cam.position.set(me.x, me.y + (me.dead ? 0.45 : F3_EYE), me.z); cam.rotation.set(me.pitch, me.yaw, me.dead ? 0.7 : 0);
-      me.kick = Math.max(0, me.kick - dt * 7); vm.position.z = -0.5 + me.kick * 0.14; vm.rotation.x = 0.12 + me.kick * 0.5 - (me.reloadUntil ? 0.9 : 0); vm.visible = !me.dead;
+      me.kick = Math.max(0, me.kick - dt * 7); vm.position.z = -0.5 + me.kick * 0.14; vm.rotation.x = 0.12 + me.kick * 0.5 - (me.reloadUntil ? 0.9 : 0); vm.visible = !me.dead; vmA.material.opacity = (0.05 + myL * 0.022) * (0.75 + 0.25 * Math.sin(now / 130)); vmB.material.opacity = myL >= 8 ? (myL - 7) * 0.016 * (0.7 + 0.3 * Math.sin(now / 90 + 1)) : 0;
       Object.values(F3.others).forEach((p) => {
         const a = Math.min(1, dt * 12); p.sx += (p.x - p.sx) * a; p.sy += (p.y - p.sy) * a; p.sz += (p.z - p.sz) * a;
         let dy = p.yaw - p.syaw; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); p.syaw += dy * a;
         p.g.position.set(p.sx, p.sy, p.sz); p.g.rotation.y = p.syaw; p.g.rotation.z = p.dead ? 1.45 : 0; p.g.position.y = p.sy + (p.dead ? 0.3 : 0);
-        p.g.traverse((o) => { if (o.material && o.material.opacity !== undefined && !o.isSprite) { const tr = p.prot > sN && !p.dead; if (o.material.transparent !== tr) { o.material.transparent = tr; o.material.opacity = tr ? 0.45 : 1; o.material.needsUpdate = true; } } });
+        p.g.traverse((o) => { if (o.material && o.material.opacity !== undefined && !o.isSprite && !o.userData.glow) { const tr = p.prot > sN && !p.dead; if (o.material.transparent !== tr) { o.material.transparent = tr; o.material.opacity = tr ? 0.45 : 1; o.material.needsUpdate = true; } } });
         if (p.labHp !== p.hp) drawLabel(p);
       });
-      for (let i = tracers.length - 1; i >= 0; i--) { if (now > tracers[i].until) { scene.remove(tracers[i].m); scene.remove(tracers[i].s); tracers[i].m.material.dispose(); tracers[i].s.material.dispose(); tracers.splice(i, 1); } }
+      for (let i = tracers.length - 1; i >= 0; i--) { const tr = tracers[i], k = (now - tr.t0) / tr.dur; if (k >= 1) { tr.objs.forEach((o) => { scene.remove(o); o.material.dispose(); }); tracers.splice(i, 1); continue; } tr.objs.forEach((o) => { o.material.opacity = o.userData.op * (1 - k * k); }); if (tr.c) tr.c.position.copy(tr.va).addScaledVector(tr.d, Math.min(1, k * 1.25)); }
       q("f3Hit").style.opacity = now < hitT ? "1" : "0";
       if (now - hudT > 120) {
         hudT = now;
         q("f3HpT").textContent = "❤️ " + Math.max(0, me.hp); q("f3HpB").style.width = Math.max(0, me.hp) + "%";
-        q("f3Am").textContent = me.reloadUntil ? "🔄 장전 중..." : "⚡ " + me.ammo + " / " + F3_AMMO + (now < me.dashAt ? "  💨 " + Math.ceil((me.dashAt - now) / 1000) : "  💨 준비");
+        vmStyle(); q("f3Am").innerHTML = '<div style="font-size:12.5px">⚔️ 검기 <span style="color:' + f3Col(myL) + '">+' + myL + "강</span> · 피해 " + f3Dmg(myL, 0) + "</div>" + (me.reloadUntil ? "🔄 장전 중..." : "⚡ " + me.ammo + " / " + F3_AMMO + (now < me.dashAt ? "  💨 " + Math.ceil((me.dashAt - now) / 1000) : "  💨 준비"));
         const all = Object.values(F3.others).map(p => ({ id: p.id, k: p.k, d: p.d })).concat([{ id: curUid, k: me.k, d: me.d }]).sort((a, b) => b.k - a.k || a.d - b.d);
         q("f3Top").innerHTML = '<div style="font-weight:800;color:#ffd700">' + esc(R[1]) + " · 먼저 " + F3_GOAL + "킬" + (local ? " · 보상 없음" : "") + "</div>" + all.map(p => '<div style="display:flex;justify-content:space-between;gap:14px;' + (p.id === curUid ? "color:#7ef9ff;font-weight:800" : "") + '"><span>' + esc(p.id) + "</span><span>" + p.k + "킬 " + p.d + "데스</span></div>").join("") + (all.length < 2 ? '<div style="color:#ccc">상대를 기다리는 중...</div>' : "");
         for (let i = feed.length - 1; i >= 0; i--) { if (now > feed[i].until) { feed.splice(i, 1); } }
@@ -3354,6 +3491,154 @@ function reset(){
     requestAnimationFrame(frame);
     if (location.search.includes("f3dbg")) window.__f3 = F3;
   }
+
+  // ===== 🧰 관리자 도구 2: 서버 현황 · 집합 · 내보내기 · 채팅 금지 · 경고 · 모두에게 선물 · 점검 =====
+  const rankOf = (id) => !id ? 9 : String(id).normalize("NFC") === CREATOR ? 0 : inRole(admins, id) ? 1 : inRole(mods, id) ? 2 : inRole(nobles, id) ? 3 : inRole(knights, id) ? 4 : inRole(commons, id) ? 5 : 6;
+  // 나보다 직급이 낮은 사람에게만 쓸 수 있음
+  function canAct(id) {
+    if (!id) { admMsg("아래 목록에서 유저를 먼저 누르세요"); return false; }
+    if (id === curUid) { admMsg("본인에게는 쓸 수 없어요"); return false; }
+    if (rankOf(curUid) >= rankOf(id)) { admMsg("나와 직급이 같거나 높은 사람에게는 쓸 수 없어요"); return false; }
+    return true;
+  }
+  // --- 🌐 서버 현황 (기사 이상이 볼 수 있음) ---
+  const canSrvView = () => isAdmin() || isMod() || isNoble() || isKnight();
+  async function srvNames() {
+    const out = [];
+    for (let i = 0; i < SRV_LIST.length; i++) {
+      const u = srvSt[i].url; let names = null;
+      if (u) {
+        const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 3000);
+        try { const r = await fetch(u + "/online.json", { cache: "no-store", signal: ac.signal }); if (r.ok) { const v = await r.json(), now = srvNow(); names = v && typeof v === "object" ? Object.values(v).filter(o => o && typeof o.id === "string" && Math.abs(now - (+o.t || 0)) < 300000).map(o => o.id) : []; } } catch (e) {} finally { clearTimeout(tm); }
+      }
+      out.push("<b>" + (i === SRV ? "✅ " : "") + (i + 1) + "서버</b> " + (names ? names.length + "명" + (names.length ? ": " + names.map(esc).join(", ") : "") : "· 준비 중 (규칙을 확인해 주세요)"));
+    }
+    return out.join("<br>");
+  }
+  window.admSrvList = async function() {
+    if (!canSrvView()) return;
+    const box = $m("admSrv"); if (!box) return; box.textContent = "불러오는 중...";
+    box.innerHTML = await srvNames();
+  };
+  // 메뉴 아래 서버 막대의 👥 버튼
+  window.srvWho = async function() {
+    if (!canSrvView()) return;
+    if (srvWhoOn) { srvWhoOn = false; srvBar(); return; }
+    srvWhoOn = true; srvWhoH = "불러오는 중..."; srvBar();
+    const h = await srvNames(); srvWhoH = h + '<div style="color:var(--sub);font-size:11px;margin-top:2px">👥 를 다시 누르면 닫혀요</div>'; srvBar();
+  };
+  // --- 📣 서버 집합 알림 ---
+  let admGatherPend = -1, admGatherT = 0;
+  window.admGather = async function(i) {
+    if (!canBoss() || !SRV_LIST[i]) return;
+    if (i > 0 && !(srvSt[i].ok && srvSt[i].url)) { admMsg((i + 1) + "서버는 아직 준비 중이에요"); return; }
+    if (admGatherPend !== i || Date.now() > admGatherT) { admGatherPend = i; admGatherT = Date.now() + 5000; admMsg("⚠️ 한 번 더 누르면 모두에게 " + (i + 1) + "서버로 모이라고 알려요"); return; }
+    admGatherPend = -1;
+    try { await set(ref(db, "ctl/gather"), { s: i, t: srvNow(), by: curUid }); admMsg("📣 모두에게 " + (i + 1) + "서버로 모이라고 알렸어요 (90초 동안 보여요)"); }
+    catch (e) { admMsg("실패: 파이어베이스 규칙(ctl) 확인"); }
+  };
+  onValue(ref(db, "ctl/gather"), (sn) => {
+    const v = sn.val(); if (!v) return;
+    const age = srvNow() - (+v.t || 0), sv = Math.floor(+v.s);
+    if (!(age > -10000 && age < 90000) || !SRV_LIST[sv]) return;
+    srvCall = { s: sv, until: Date.now() + 90000 - Math.max(0, age), by: esc(String(v.by || "관리자").slice(0, 12)) }; srvBar();
+  }, () => {});
+  // --- 🚪 내보내기 (다시 로그인은 할 수 있음) ---
+  let kickUid = "", kickUnsub = null, admKickPend = "", admKickT = 0;
+  function kickSub() {
+    const u = curUid && loaded ? curUid : "";
+    if (u === kickUid) return;
+    if (kickUnsub) { try { kickUnsub(); } catch (e) {} kickUnsub = null; }
+    kickUid = u; if (!u) return;
+    kickUnsub = onValue(ref(db, "ctl/kick/" + wEnc(u)), (sn) => {
+      const v = sn.val(); if (!v) return;
+      set(ref(db, "ctl/kick/" + wEnc(u)), null).catch(() => {});
+      if (curUid !== u || !loaded || srvNow() - (+v.t || 0) > 60000) return;
+      const by = String(v.by || "관리자").slice(0, 12);
+      if (F3.on && F3.stop) { try { F3.stop(); } catch (e) {} }
+      doLogout(true).then(() => { lgMsg.textContent = "🚪 " + by + "님이 내보냈어요. 다시 로그인할 수 있어요"; });
+    }, () => {});
+  }
+  setInterval(kickSub, 2000);
+  window.admKick = async function() {
+    if (!canBoss()) return;
+    const id = admTarget(); if (!canAct(id)) return;
+    if (admKickPend !== id || Date.now() > admKickT) { admKickPend = id; admKickT = Date.now() + 5000; admMsg("⚠️ 한 번 더 누르면 " + id + "님을 내보내요"); return; }
+    admKickPend = "";
+    try { await set(ref(db, "ctl/kick/" + wEnc(id)), { t: srvNow(), by: curUid }); admMsg("🚪 " + id + "님을 내보냈어요 (다시 로그인은 할 수 있어요)"); }
+    catch (e) { admMsg("실패: 파이어베이스 규칙(ctl) 확인"); }
+  };
+  // --- 🔇 채팅 금지 (패널에서 바로) ---
+  window.admMute = async function(min) {
+    if (!canBoss()) return;
+    const id = admTarget();
+    if (min) { if (!canAct(id)) return; } else if (!id) { admMsg("아래 목록에서 유저를 먼저 누르세요"); return; }
+    try { await set(ref(db, "chatMutes/" + wEnc(id)), min ? { id, u: srvNow() + min * 60000, by: curUid } : null); admMsg(min ? "🔇 " + id + "님 " + (min >= 60 ? (min / 60) + "시간" : min + "분") + " 채팅 금지" : "🔊 " + id + "님 채팅 금지 해제"); }
+    catch (e) { admMsg("실패: 파이어베이스 규칙(chatMutes) 확인"); }
+  };
+  // --- ⚠️ 경고 (상대 화면에 크게 뜸. 접속 중이 아니면 다음에 들어올 때 뜸) ---
+  window.admWarn = async function() {
+    if (!canBoss()) return;
+    const id = admTarget(); if (!canAct(id)) return;
+    if (accLoaded && !accList.some(u => u.id === id)) { admMsg("없는 계정이에요: " + id); return; }
+    const m = chatClean($m("admWarnM").value || "").slice(0, 30); if (!m) { admMsg("경고 내용을 적어 주세요"); return; }
+    try { await push(ref(db, "mail/" + wEnc(id)), { w: 1, m, from: curUid, t: srvNow() }); admMsg("⚠️ " + id + "님에게 경고를 보냈어요"); $m("admWarnM").value = ""; }
+    catch (e) { admMsg("실패: 파이어베이스 규칙(mail) 확인"); }
+  };
+  function warnShow(from, msg) {
+    if (typeof log === "function") log("⚠️ " + from + "님의 경고: " + msg, "var(--bad)");
+    const old = $m("warnOv"); if (old) old.remove();
+    const ov = document.createElement("div"); ov.id = "warnOv";
+    ov.style.cssText = "position:fixed;inset:0;z-index:165000;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:16px";
+    ov.innerHTML = '<div style="width:min(340px,92vw);background:var(--card);border:2px solid #ff4757;border-radius:16px;padding:18px;text-align:center;color:var(--tx)"><div style="font-size:44px">⚠️</div><div style="font-weight:900;font-size:18px;color:#ff4757;margin:4px 0 8px">관리자 경고</div><div style="font-size:15px;font-weight:700;word-break:break-all">' + esc(msg) + '</div><div style="font-size:12px;color:var(--sub);margin-top:8px">보낸 사람: ' + esc(from) + '</div><button class="up" style="width:100%;margin-top:14px" onclick="document.getElementById(\'warnOv\').remove()">알겠어요</button></div>';
+    document.body.appendChild(ov);
+  }
+  // --- 🎁 모두에게 선물 ---
+  let admGiftAllT = 0;
+  window.admGiftAll = async function() {
+    if (!isAdmin()) return;
+    if (!accLoaded) { admMsg("유저 목록을 불러오는 중이에요"); return; }
+    const g = +$m("admGiftG").value || 0, e = +$m("admGiftE").value || 0, p = +$m("admGiftP").value || 0, m = chatClean($m("admGiftM").value || "").slice(0, 30);
+    if (!g && !e && !p) { admMsg("보낼 선물을 위에서 먼저 고르세요"); return; }
+    const ids = [...new Set(accList.filter(u => !u.old).map(u => u.id))];
+    if (Date.now() > admGiftAllT) { admGiftAllT = Date.now() + 5000; admMsg("⚠️ 한 번 더 누르면 " + ids.length + "명 모두에게 선물을 보내요"); return; }
+    admGiftAllT = 0; admMsg("보내는 중...");
+    let ok = 0;
+    for (let i = 0; i < ids.length; i += 20) await Promise.all(ids.slice(i, i + 20).map(id => push(ref(db, "mail/" + wEnc(id)), { g, e, p, m, from: curUid, t: srvNow() }).then(() => { ok++; }, () => {})));
+    admMsg("🎁 " + ok + "명에게 선물을 보냈어요" + (ok < ids.length ? " (" + (ids.length - ok) + "명 실패)" : "")); $m("admGiftM").value = "";
+  };
+  // --- 🛠️ 점검 모드: 켜면 관리자 · 중간 관리자 · 하급귀족만 게임을 할 수 있음 ---
+  let maint = null, admMaintT = 0, maintWas = false;
+  const maintOn = () => !!(maint && maint.on);
+  const maintStaff = () => isAdmin() || isMod() || isNoble();
+  const maintBlock = () => maintOn() && !!curUid && loaded && adminsLoaded && noblesLoaded && modsLoaded && !maintStaff();
+  function maintUI() {
+    const on = maintOn(), blk = maintBlock(), msg = on ? chatClean(maint.m || "").slice(0, 40) : "";
+    let bn = $m("maintBn"), ov = $m("maintOv");
+    const bt = !on || blk ? "" : curUid && loaded ? "🛠️ 점검 모드 켜짐 · 일반 유저는 못 들어와요" : "🛠️ 지금은 점검 중이에요. 관리자만 들어올 수 있어요" + (msg ? " — " + msg : "");
+    if (bt) {
+      if (!bn) { bn = document.createElement("div"); bn.id = "maintBn"; bn.style.cssText = "position:fixed;left:50%;top:4px;transform:translateX(-50%);z-index:160001;background:rgba(0,0,0,.88);color:#ffd32a;border:1px solid #ffd32a;border-radius:999px;padding:4px 12px;font-size:11.5px;font-weight:800;max-width:94vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none"; document.body.appendChild(bn); }
+      if (bn.textContent !== bt) bn.textContent = bt;
+    } else if (bn) bn.remove();
+    if (blk) {
+      if (!maintWas) { maintWas = true; if (typeof stopAuto === "function") { try { stopAuto(); } catch (e) {} } if (F3.on && F3.stop) { try { F3.stop(); } catch (e) {} } cloudSave(); }
+      const h = '<div style="width:min(340px,92vw);background:var(--card);border:2px solid #ffd32a;border-radius:16px;padding:20px;text-align:center;color:var(--tx)"><div style="font-size:46px">🛠️</div><div style="font-weight:900;font-size:19px;color:#ffd32a;margin:4px 0 8px">점검 중이에요</div>' + (msg ? '<div style="font-size:14.5px;font-weight:700;word-break:break-all">' + esc(msg) + "</div>" : "") + '<div style="font-size:12.5px;color:var(--sub);margin-top:8px;line-height:1.6">점검이 끝나면 이 화면이 저절로 사라져요.<br>골드와 검은 그대로 저장돼 있어요.</div><button class="sm" style="width:100%;margin-top:14px" onclick="maintOut()">로그아웃</button></div>';
+      if (!ov) { ov = document.createElement("div"); ov.id = "maintOv"; ov.style.cssText = "position:fixed;inset:0;z-index:160000;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:16px"; document.body.appendChild(ov); }
+      if (ov.dataset.h !== h) { ov.dataset.h = h; ov.innerHTML = h; }
+    } else { maintWas = false; if (ov) ov.remove(); }
+  }
+  window.maintOut = () => { doLogout(true); };
+  onValue(ref(db, "ctl/maint"), (sn) => { maint = sn.val(); maintUI(); try { renderAdmStat(); } catch (e) {} }, () => {});
+  setInterval(maintUI, 1500);
+  window.admMaint = async function(on) {
+    if (!isAdmin()) return;
+    if (on && !maintOn()) {
+      if (Date.now() > admMaintT) { admMaintT = Date.now() + 5000; admMsg("⚠️ 한 번 더 누르면 점검을 시작해요. 일반 유저는 게임을 못 하게 돼요"); return; }
+      admMaintT = 0;
+    }
+    try { await set(ref(db, "ctl/maint"), on ? { on: 1, m: chatClean($m("admMaintM").value || "").slice(0, 40), t: srvNow(), by: curUid } : null); admMsg(on ? "🛠️ 점검을 시작했어요 (관리자 · 중간 관리자 · 하급귀족만 들어올 수 있어요)" : "✅ 점검을 끝냈어요. 모두 다시 들어올 수 있어요"); }
+    catch (e) { admMsg("실패: 파이어베이스 규칙(ctl) 확인"); }
+  };
 
   // ===== 🧪 베타 테스트 서버 (중간 관리자 이상) =====
   function betaUI() {
@@ -3512,7 +3797,10 @@ function reset(){
   })();
   setInterval(cloudSave, 5000);
 
-  // ===== 자동 업데이트 — Netlify에 새 파일을 올리면 켜 둔 게임이 저장 후 새 버전으로 바뀜 =====
+  // 주소 이사 안내 (예전 주소에서 넘어온 경우에 한 번)
+  { const mvT = setInterval(() => { try { if (sessionStorage.getItem("sword_moved") !== "1") { clearInterval(mvT); return; } if (!curUid || !loaded) return; sessionStorage.removeItem("sword_moved"); clearInterval(mvT); if (typeof log === "function") log("🏠 게임 주소가 새로 바뀌었어요! 지금 이 화면을 즐겨찾기(홈 화면)에 다시 넣어 주세요.", "var(--gold)"); } catch (e) { clearInterval(mvT); } }, 2000); }
+
+  // ===== 자동 업데이트 — 새 파일을 올리면 켜 둔 게임이 저장 후 새 버전으로 바뀜 =====
   let updBase = null, updGoing = false;
   async function updCheck() {
     if (updGoing || !/^https?:$/.test(location.protocol)) return;

@@ -114,7 +114,7 @@ $("go").onclick = async () => {
     await set(ref(db, "saves/" + enc), null);
     for (const nd of ["world", "duels", "duelResults", "chatMutes", "titles", "tower", "mail", "arena", "online"]) { try { await set(ref(db, nd + "/" + enc), null); } catch (e) {} }
     try { await wipeOther(id, enc); } catch (e) {}
-    for (const nd of ["admins", "mods", "nobles", "commons"]) { try { await wipeWhere(nd, "id", id); } catch (e) {} }
+    for (const nd of ["admins", "mods", "nobles", "knights", "commons"]) { try { await wipeWhere(nd, "id", id); } catch (e) {} }
     try { await wipeWhere("rankings", "name", id); } catch (e) {}
     try { await wipeWhere("chat", "id", id); } catch (e) {}
     $("pw").value = "";
