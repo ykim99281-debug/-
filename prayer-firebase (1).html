@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>아론과 훌 중보기도</title>
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--tx:#25272b;--mu:#80848c;--pr:#3b5b8c;--pr2:#5a7fb8;--ok:#3f9b5b;--bd:#e6e2d6;--chat:#b2c7da;--me:#fee500;--other:#fff}
+@media(prefers-color-scheme:dark){:root{--bg:#17191d;--card:#23262c;--tx:#eceef1;--mu:#9a9fa8;--pr:#7ea3dd;--pr2:#4d6fa3;--ok:#5cc07c;--bd:#34383f;--chat:#2b3a4a;--me:#e8cf00;--other:#3a3f47}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;background:var(--bg);color:var(--tx)}
+.w{max-width:720px;margin:0 auto;padding:0 14px 90px}
+.hd{background:linear-gradient(135deg,#34507c,#5a7fb8);color:#fff;padding:calc(14px + env(safe-area-inset-top,0px)) 16px 16px;margin:0 -14px 12px;border-radius:0 0 22px 22px;display:flex;justify-content:space-between;align-items:center}
+.hd h1{font-size:19px;margin:0}.hd .s{font-size:12px;opacity:.85;margin-top:2px}.hd button{background:rgba(255,255,255,.2);color:#fff;padding:7px 12px;font-size:13px}
+h1{font-size:20px;margin:6px 0}h2{font-size:16px;margin:0 0 8px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.mu{color:var(--mu);font-size:13px}
+input,textarea{width:100%;padding:12px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;margin:4px 0}
+button{font:inherit;border:0;border-radius:10px;padding:10px 14px;background:var(--pr);color:#fff;cursor:pointer}
+button.g{background:transparent;color:var(--pr);border:1px solid var(--bd)}
+button.big{width:100%;padding:16px;font-size:17px;border-radius:14px}button.done{background:var(--ok)}
+.seg{display:flex;gap:6px}.seg button{flex:1}
+.pill{display:flex;gap:4px;background:var(--bd);border-radius:12px;padding:4px;margin:10px 0}.pill button{flex:1;background:transparent;color:var(--mu);padding:8px}.pill button.on{background:var(--card);color:var(--tx);font-weight:700}
+.nb{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:9}
+.nb button{flex:1;background:transparent;color:var(--mu);font-size:12px;padding:6px 2px;border-radius:8px}.nb button b{display:block;font-size:20px;font-weight:400}.nb button.on{color:var(--pr);font-weight:700}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid var(--bd)}
+.row:last-child{border:0}.me{font-weight:700}
+.ck{color:var(--ok);font-weight:700}.no{color:var(--mu)}
+.sc{overflow-x:auto}table{border-collapse:collapse;font-size:13px;width:100%}
+th,td{padding:7px 5px;text-align:center;border-bottom:1px solid var(--bd);white-space:nowrap}
+td:first-child,th:first-child{text-align:left;position:sticky;left:0;background:var(--card)}
+td.mine{cursor:pointer;background:rgba(80,130,200,.14)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.err{color:#d34;font-size:14px;min-height:20px}
+.bar{height:9px;background:var(--bd);border-radius:5px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#5cc07c,#3f9b5b)}
+.stat{display:flex;gap:10px}.stat>div{flex:1;text-align:center;background:var(--bg);border-radius:12px;padding:10px}.stat b{font-size:20px;display:block}
+.rl{display:flex;gap:12px;align-items:center;padding:12px 4px;border-bottom:1px solid var(--bd);cursor:pointer}.rl:last-child{border:0}
+.av{width:40px;height:40px;border-radius:15px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;font-size:16px}
+.av.sp{background:transparent}.av.rm{border-radius:16px;width:48px;height:48px;font-size:22px}
+.rl .t{flex:1;min-width:0}.rl .t div:last-child{color:var(--mu);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.room{display:flex;flex-direction:column;height:calc(100dvh - 215px);min-height:360px;border-radius:16px;overflow:hidden;border:1px solid var(--bd)}
+.rh{background:var(--card);padding:10px 12px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd)}.rh button{padding:6px 10px}
+.ml{flex:1;overflow-y:auto;background:var(--chat);padding:10px}
+.dv{text-align:center;margin:12px 0;font-size:12px;color:#fff;background:rgba(0,0,0,.25);border-radius:12px;padding:4px 12px;width:fit-content;margin-left:auto;margin-right:auto}
+.mr{display:flex;gap:8px;margin:2px 0;align-items:flex-start}.mr.me{justify-content:flex-end;align-items:flex-end;font-weight:400}
+.mc{max-width:78%}.nm{font-size:12px;margin:6px 0 3px;color:#222}
+@media(prefers-color-scheme:dark){.nm{color:#ddd}}
+.line{display:flex;align-items:flex-end;gap:5px}
+.bb{padding:8px 11px;border-radius:14px;background:var(--other);color:var(--tx);white-space:pre-wrap;word-break:break-word;max-width:100%;line-height:1.4;font-size:15px}
+.mr.me .bb{background:var(--me);color:#222;border-top-right-radius:4px;max-width:78%}
+.mr:not(.me) .bb{border-top-left-radius:4px}
+.tm{font-size:11px;color:#444;white-space:nowrap;flex:none}@media(prefers-color-scheme:dark){.tm{color:#bbb}}
+.ib{display:flex;gap:8px;padding:8px;background:var(--card);border-top:1px solid var(--bd);align-items:flex-end}
+.ib textarea{margin:0;resize:none;max-height:90px;border-radius:18px;padding:10px 14px}.ib button{background:var(--me);color:#222;border-radius:18px;font-weight:700;flex:none}
+.opt{display:block;width:100%;text-align:left;margin:7px 0;padding:14px;background:var(--bg);color:var(--tx);border:1px solid var(--bd)}
+.opt.ok{background:#3f9b5b;color:#fff}.opt.bad{background:#d34;color:#fff}
+</style></head><body>
+<div class="w" id="app"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {initializeAuth,browserLocalPersistence,browserSessionPersistence,inMemoryPersistence,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,onAuthStateChanged,deleteUser} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {getDatabase,ref,onValue,set,remove,get,push,query,limitToLast} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+const app=initializeApp({
+  apiKey:"AIzaSyDFFs0EqhlomgiHw4CZTzRHx2clSXQZXs8",
+  authDomain:"vwiwvwkwj.firebaseapp.com",
+  databaseURL:"https://vwiwvwkwj-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"vwiwvwkwj",storageBucket:"vwiwvwkwj.firebasestorage.app",
+  messagingSenderId:"870276348788",appId:"1:870276348788:web:78c0de7924c8218d734a21"});
+const auth=initializeAuth(app,{persistence:[browserLocalPersistence,browserSessionPersistence,inMemoryPersistence]});
+const db=getDatabase(app);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hex=s=>[...new TextEncoder().encode(s)].map(b=>b.toString(16).padStart(2,'0')).join('');
+const mail=(r,n)=>(r==='admin'?'a':'u')+hex(n)+'@prayer.local';
+const fmt=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const DOW=['일','월','화','수','목','금','토'];
+const addD=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const today=()=>fmt(new Date());
+const ROOMS={all:{n:'중보기도 전체방',e:'🙏'},game:{n:'교회 미니게임방',e:'🎮'}};
+const S={user:null,me:null,admin:false,members:{},checks:{},chat:{all:[],game:[]},scores:{},tab:'pray',sub:'day',date:new Date(),room:null,gtab:'chat',qz:null,mode:'login',role:'user',err:'',unsubs:[]};
+
+const Q=[
+['다윗이 골리앗을 쓰러뜨릴 때 사용한 것은?',['칼','물맷돌','활','창'],1],
+['예수님의 열두 제자가 아닌 사람은?',['베드로','요한','바울','안드레'],2],
+['모세의 손을 들어 올려 준 두 사람은?',['아론과 훌','여호수아와 갈렙','베드로와 요한','바나바와 실라'],0],
+['요나가 큰 물고기 뱃속에 있었던 기간은?',['하루','사흘','이레','사십 일'],1],
+['성경의 첫 번째 책은?',['출애굽기','창세기','시편','마태복음'],1],
+['다니엘이 던져진 곳은?',['불타는 풀무','사자 굴','깊은 우물','감옥'],1],
+['오병이어로 먹은 장정의 수는?',['천 명','삼천 명','오천 명','만 명'],2],
+['예수님이 태어나신 곳은?',['나사렛','예루살렘','베들레헴','가버나움'],2],
+['모세가 십계명을 받은 산은?',['시내산','갈멜산','감람산','모리아산'],0],
+['삭개오가 올라간 나무는?',['감람나무','뽕나무','종려나무','무화과나무'],1],
+['아브라함의 약속의 아들은?',['이스마엘','이삭','야곱','에서'],1],
+['요셉을 상인들에게 판 사람들은?',['아버지','형들','보디발','바로'],1]];
+const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+const ERR={'auth/email-already-in-use':'이미 가입된 이름입니다. 로그인해 주세요.','auth/invalid-credential':'이름 또는 비밀번호가 맞지 않습니다.','auth/weak-password':'비밀번호는 6자 이상이어야 합니다.','auth/too-many-requests':'잠시 후 다시 시도해 주세요.','auth/operation-not-allowed':'Firebase에서 이메일/비밀번호 로그인을 활성화해 주세요.','auth/configuration-not-found':'Firebase Authentication을 시작해 주세요.'};
+const eMsg=e=>ERR[e.code]||('오류: '+(e.code||e.message));
+
+function updChat(force){
+  const el=$('#ml');if(!el||!S.room)return;
+  const near=el.scrollHeight-el.scrollTop-el.clientHeight<160;
+  el.innerHTML=msgsHTML(S.room);
+  if(near||force)el.scrollTop=el.scrollHeight;
+}
+function sub(){
+  const u=auth.currentUser.uid;
+  const cs=room=>onValue(query(ref(db,'chat/'+room),limitToLast(120)),s=>{
+    const v=s.val()||{};S.chat[room]=Object.entries(v).map(([id,m])=>({id,...m})).sort((a,b)=>a.t-b.t);
+    if(S.tab==='chat'&&S.room===room&&$('#ml'))updChat();else if(S.tab==='chat'&&!S.room)render();
+  });
+  S.unsubs=[
+    onValue(ref(db,'members'),s=>{S.members=s.val()||{};render()}),
+    onValue(ref(db,'checks'),s=>{S.checks=s.val()||{};render()}),
+    onValue(ref(db,'users/'+u),s=>{S.me=s.val();render()}),
+    onValue(ref(db,'admins/'+u),s=>{S.admin=!!s.val();render()}),
+    onValue(ref(db,'games/quiz'),s=>{S.scores=s.val()||{};if(S.tab==='chat'&&S.room==='game'&&S.gtab==='rank')render()}),
+    cs('all'),cs('game')
+  ];
+}
+onAuthStateChanged(auth,u=>{
+  S.unsubs.forEach(f=>f());S.unsubs=[];S.user=u;
+  if(u)sub();else{S.me=null;S.admin=false;S.members={};S.checks={};S.room=null}
+  render();
+});
+
+async function doAuth(){
+  const n=$('#nm').value.trim(),p=$('#pw').value;S.err='';
+  if(!n||/[.$#\[\]\/]/.test(n)){S.err='이름을 올바르게 입력해 주세요.';return render()}
+  const el=$('.err');if(el)el.textContent='처리 중...';
+  const t=setTimeout(()=>{const x=$('.err');if(x)x.textContent='응답 없음: 인터넷/Firebase 설정을 확인하세요.'},12000);
+  try{
+    if(S.mode==='login'){
+      await signInWithEmailAndPassword(auth,mail(S.role,n),p);
+      if(S.role==='admin'){
+        const a=await get(ref(db,'admins/'+auth.currentUser.uid));
+        if(!a.val()){await signOut(auth);S.err='운영자 계정이 아닙니다.'}
+      }
+    }else{
+      const c=await createUserWithEmailAndPassword(auth,mail(S.role,n),p);
+      try{
+        if(S.role==='admin')await set(ref(db,'admins/'+c.user.uid),true);
+        else{await set(ref(db,'claims/'+n),c.user.uid);await set(ref(db,'users/'+c.user.uid),n)}
+      }catch(e){
+        await deleteUser(c.user);
+        S.err=S.role==='admin'?'이미 운영자가 등록되어 있습니다.':'명단에 없는 이름이거나 이미 등록되었습니다. 운영자에게 문의하세요.';
+      }
+    }
+  }catch(e){S.err=eMsg(e)}
+  clearTimeout(t);render();
+}
+
+const isOn=(d,n)=>!!(S.checks[d]&&S.checks[d][n]);
+const names=()=>Object.keys(S.members).sort((a,b)=>a.localeCompare(b,'ko'));
+const cn=()=>S.me||(S.admin?'운영자':null);
+async function toggle(d,n){
+  const r=ref(db,`checks/${d}/${n}`);
+  try{isOn(d,n)?await remove(r):await set(r,true)}catch(e){alert('본인만 체크할 수 있습니다.')}
+}
+function streak(n){let c=0,d=new Date();if(!isOn(fmt(d),n))d=addD(d,-1);while(isOn(fmt(d),n)){c++;d=addD(d,-1)}return c}
+
+const hue=n=>{let h=0;for(const c of n)h=(h*31+c.charCodeAt(0))%360;return h};
+const av=n=>`<div class="av" style="background:hsl(${hue(n)} 50% 58%)">${esc(n[0]||'?')}</div>`;
+const hm=t=>{const d=new Date(t),h=d.getHours();return (h<12?'오전 ':'오후 ')+(h%12||12)+':'+String(d.getMinutes()).padStart(2,'0')};
+const dl=t=>{const d=new Date(t);return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일 '+DOW[d.getDay()]+'요일'};
+function msgsHTML(room){
+  const L=S.chat[room]||[];let out='',ld='',prev=null;
+  if(!L.length)return '<div class="dv">첫 메시지를 남겨 보세요 💬</div>';
+  L.forEach((m,i)=>{
+    const dk=fmt(new Date(m.t));
+    if(dk!==ld){out+=`<div class="dv">${dl(m.t)}</div>`;ld=dk;prev=null}
+    const nx=L[i+1],mine=m.n===cn(),first=!prev||prev.n!==m.n||Math.floor(prev.t/60000)!==Math.floor(m.t/60000)&&false;
+    const showT=!nx||nx.n!==m.n||Math.floor(nx.t/60000)!==Math.floor(m.t/60000);
+    const first2=!prev||prev.n!==m.n;
+    const can=(mine||S.admin)?`data-cd="${esc(m.id)}"`:'';
+    const tm=showT?`<span class="tm">${hm(m.t)}</span>`:'';
+    if(mine)out+=`<div class="mr me">${tm}<div class="bb" ${can}>${esc(m.x)}</div></div>`;
+    else out+=`<div class="mr">${first2?av(m.n):'<div class="av sp"></div>'}<div class="mc">${first2?`<div class="nm">${esc(m.n)}</div>`:''}<div class="line"><div class="bb" ${can}>${esc(m.x)}</div>${tm}</div></div></div>`;
+    prev=m;
+  });
+  return out;
+}
+
+function loginView(){
+  return `<div class="hd"><div><h1>🙏 아론과 훌</h1><div class="s">하길 중보기도팀</div></div></div>
+  <div class="c"><div class="pill"><button class="${S.role==='user'?'on':''}" data-role="user">참여자</button><button class="${S.role==='admin'?'on':''}" data-role="admin">운영자</button></div>
+  <div class="seg"><button class="${S.mode==='login'?'':'g'}" data-mode="login">로그인</button><button class="${S.mode==='signup'?'':'g'}" data-mode="signup">처음 등록</button></div>
+  <input id="nm" placeholder="이름 (계정)" autocomplete="username"><input id="pw" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password">
+  <div class="err">${esc(S.err)}</div><button class="big" id="go">${S.mode==='login'?'로그인':'등록하기'}</button>
+  <p class="mu">${S.mode==='signup'?(S.role==='admin'?'운영자 등록은 최초 1회만 가능합니다.':'운영자가 등록한 명단의 이름으로만 가입할 수 있습니다.'):'처음이면 "처음 등록"에서 비밀번호를 설정하세요.'}</p></div>`;
+}
+
+function dayView(){
+  const d=fmt(S.date),ns=names(),cnt=ns.filter(n=>isOn(d,n)).length,m=S.me,pct=ns.length?Math.round(cnt/ns.length*100):0;
+  return `<div class="c nav"><button class="g" data-d="-1">◀</button><div style="text-align:center"><b>${d} (${DOW[S.date.getDay()]})</b><div class="mu">${cnt} / ${ns.length}명 필사</div></div><button class="g" data-d="1">▶</button></div>
+  <div class="c"><div class="bar"><i style="width:${pct}%"></i></div><div class="mu" style="margin-top:6px">오늘 함께한 비율 ${pct}%</div></div>
+  ${m&&S.members[m]&&d<=today()?`<button class="big ${isOn(d,m)?'done':''}" data-t="${d}|${esc(m)}">${isOn(d,m)?'✓ 필사 완료 (누르면 취소)':'✍️ 필사했어요'}</button><div class="stat" style="margin-top:10px"><div><b>🔥 ${streak(m)}일</b><span class="mu">연속 필사</span></div></div>`:''}
+  ${d!==today()?'<div style="text-align:center;margin:10px"><button class="g" data-today="1">오늘로</button></div>':''}
+  <div class="c">${ns.map(n=>`<div class="row ${n===m?'me':''}"><span style="display:flex;gap:10px;align-items:center">${av(n)}${esc(n)}</span><span class="${isOn(d,n)?'ck':'no'}">${isOn(d,n)?'✓ 필사함':'—'}</span></div>`).join('')||'<div class="mu">명단이 비어 있습니다.</div>'}</div>`;
+}
+function grid(days,label){
+  const ns=names();
+  return `<div class="c sc"><table><tr><th>이름</th>${days.map(x=>`<th>${label(x)}</th>`).join('')}<th>계</th></tr>
+  ${ns.map(n=>`<tr class="${n===S.me?'me':''}"><td>${esc(n)}</td>${days.map(x=>{const k=fmt(x),on=isOn(k,n),mm=n===S.me&&k<=today();return `<td class="${mm?'mine':''}" ${mm?`data-t="${k}|${esc(n)}"`:''}>${on?'<span class="ck">✓</span>':'<span class="no">·</span>'}</td>`}).join('')}<td><b>${days.filter(x=>isOn(fmt(x),n)).length}</b></td></tr>`).join('')}</table>
+  ${S.me?'<div class="mu" style="margin-top:6px">내 줄의 칸을 눌러 체크할 수 있어요.</div>':''}</div>`;
+}
+function weekView(){
+  const s=addD(S.date,-S.date.getDay()),days=[...Array(7)].map((_,i)=>addD(s,i));
+  return `<div class="c nav"><button class="g" data-d="-7">◀</button><b>${fmt(days[0])} ~ ${fmt(days[6])}</b><button class="g" data-d="7">▶</button></div>`+grid(days,x=>`${x.getDate()}<br>${DOW[x.getDay()]}`);
+}
+function monthView(){
+  const y=S.date.getFullYear(),m=S.date.getMonth(),n=new Date(y,m+1,0).getDate(),days=[...Array(n)].map((_,i)=>new Date(y,m,i+1));
+  return `<div class="c nav"><button class="g" data-m="-1">◀</button><b>${y}년 ${m+1}월</b><button class="g" data-m="1">▶</button></div>`+grid(days,x=>x.getDate());
+}
+function prayView(){
+  const P=[['day','일'],['week','주'],['month','월']];
+  return `<div class="pill">${P.map(p=>`<button class="${S.sub===p[0]?'on':''}" data-sub="${p[0]}">${p[1]}</button>`).join('')}</div>`+({day:dayView,week:weekView,month:monthView}[S.sub])();
+}
+
+function chatListView(){
+  return `<div class="c">${Object.entries(ROOMS).map(([k,r])=>{const L=S.chat[k],l=L[L.length-1];
+    return `<div class="rl" data-room="${k}"><div class="av rm" style="background:${k==='all'?'#5a7fb8':'#e8a33d'}">${r.e}</div><div class="t"><div><b>${r.n}</b></div><div>${l?esc(l.n)+': '+esc(l.x):'대화를 시작해 보세요'}</div></div><div class="mu">${l?hm(l.t):''}</div></div>`}).join('')}</div>`;
+}
+function quizView(){
+  const q=S.qz;
+  if(!q)return `<div class="c" style="text-align:center"><h2>🎯 성경 퀴즈</h2><p class="mu">5문제 · 정답당 20점<br>최고점이 랭킹에 기록돼요</p><button class="big" data-qs="1">시작하기</button></div>`;
+  if(q.done)return `<div class="c" style="text-align:center"><h2>${q.sc}점!</h2><p class="mu">${q.sc===100?'만점이에요 🎉':'수고했어요 👏'}${S.me?'':' (운영자는 랭킹에 기록되지 않아요)'}</p><button class="big" data-qs="1">다시 하기</button></div>`;
+  const x=q.qs[q.i];
+  return `<div class="c"><div class="mu">${q.i+1} / 5 · ${q.sc}점</div><h2 style="margin-top:6px">${esc(x[0])}</h2>${x[1].map((o,k)=>`<button class="opt ${q.pick!=null?(k===x[2]?'ok':k===q.pick?'bad':''):''}" data-qa="${k}" ${q.pick!=null?'disabled':''}>${esc(o)}</button>`).join('')}${q.pick!=null?`<button class="big" data-qn="1" style="margin-top:6px">${q.i===4?'결과 보기':'다음'}</button>`:''}</div>`;
+}
+function rankView(){
+  const R=Object.entries(S.scores).map(([n,v])=>({n,...v})).sort((a,b)=>b.s-a.s||a.t-b.t),M=['🥇','🥈','🥉'];
+  return `<div class="c"><h2>🏆 성경 퀴즈 랭킹</h2>${R.map((r,i)=>`<div class="row ${r.n===S.me?'me':''}"><span>${M[i]||(i+1)+'위'} &nbsp;${esc(r.n)}</span><b>${r.s}점</b></div>`).join('')||'<div class="mu">아직 기록이 없어요.</div>'}</div>`;
+}
+function roomView(){
+  const r=ROOMS[S.room],g=S.room==='game';
+  const T=[['chat','💬 대화'],['quiz','🎯 퀴즈'],['rank','🏆 랭킹']];
+  const head=`<div class="rh"><button class="g" data-room="">←</button><b>${r.n}</b><span class="mu">${Object.keys(S.members).length}명</span></div>`;
+  if(g&&S.gtab!=='chat')return `<div class="c" style="padding:0;overflow:hidden">${head}</div><div class="pill">${T.map(t=>`<button class="${S.gtab===t[0]?'on':''}" data-gt="${t[0]}">${t[1]}</button>`).join('')}</div>`+(S.gtab==='quiz'?quizView():rankView());
+  return `<div class="room">${head}${g?`<div class="pill" style="margin:6px 8px">${T.map(t=>`<button class="${S.gtab===t[0]?'on':''}" data-gt="${t[0]}">${t[1]}</button>`).join('')}</div>`:''}<div class="ml" id="ml">${msgsHTML(S.room)}</div>
+  <div class="ib"><textarea id="cm" rows="1" maxlength="300" placeholder="메시지 입력"></textarea><button id="send">전송</button></div></div>`;
+}
+function chatView(){return S.room?roomView():chatListView()}
+
+function shareView(){
+  return `<div class="c"><h2>공유 주소</h2><input id="url" readonly value="${esc(location.href.split('#')[0])}"><div class="seg"><button id="cp">주소 복사</button><button class="g" id="dl">QR 저장</button></div>
+  <div id="qr" style="display:flex;justify-content:center;padding:16px;background:#fff;border-radius:12px;margin-top:12px"></div></div>`;
+}
+function adminView(){
+  const ns=names(),now=new Date(),y=now.getFullYear(),m=now.getMonth(),el=now.getDate();
+  const rows=ns.map(n=>{let c=0;for(let i=1;i<=el;i++)if(isOn(fmt(new Date(y,m,i)),n))c++;
+    const all=Object.keys(S.checks).filter(k=>S.checks[k][n]).sort().pop()||'-';
+    return {n,c,p:Math.round(c/el*100),all}});
+  const tot=rows.reduce((a,r)=>a+r.c,0),avg=ns.length?Math.round(tot/(ns.length*el)*100):0;
+  return `<div class="c"><h2>전체 현황 (${m+1}월, ${el}일 기준)</h2><div class="mu">팀 평균 참여율 ${avg}% · 오늘 ${ns.filter(n=>isOn(today(),n)).length}/${ns.length}명</div><div class="bar" style="margin:8px 0"><i style="width:${avg}%"></i></div>
+  ${rows.map(r=>`<div class="row"><span style="flex:1">${esc(r.n)}</span><span class="mu" style="flex:1;text-align:center">최근 ${r.all}</span><span style="width:90px;text-align:right"><b>${r.c}일</b> (${r.p}%)</span></div>`).join('')}</div>
+  <div class="c"><h2>명단 관리</h2><textarea id="add" rows="3" placeholder="이름 추가 (쉼표 또는 줄바꿈으로 여러 명)"></textarea><button id="addb">명단 추가</button>
+  <div style="margin-top:10px">${ns.map(n=>`<div class="row"><span>${esc(n)}</span><button class="g" data-del="${esc(n)}">삭제</button></div>`).join('')}</div>
+  <p class="mu">비밀번호를 잊은 사람은 Firebase 콘솔 Authentication에서 계정을 삭제한 뒤, Realtime Database의 claims에서 그 이름을 지우면 다시 등록할 수 있어요.</p></div>`;
+}
+function mainView(){
+  const T=[['pray','✍️','필사'],['chat','💬','채팅'],['share','🔗','공유']];
+  if(S.admin)T.push(['admin','⚙️','운영']);
+  const V={pray:prayView,chat:chatView,share:shareView,admin:adminView};
+  return `<div class="hd"><div><h1>🙏 아론과 훌</h1><div class="s">${esc(cn()||'')}${S.admin?' · 운영자':''}</div></div><button id="out">로그아웃</button></div>`+
+  (V[S.tab]||prayView)()+
+  `<div class="nb">${T.map(t=>`<button class="${S.tab===t[0]?'on':''}" data-tab="${t[0]}"><b>${t[1]}</b>${t[2]}</button>`).join('')}</div>`;
+}
+
+function render(){
+  const a=$('#app'),ae=document.activeElement;
+  if(S.user&&ae&&(ae.id==='add'||ae.id==='cm'))return;
+  const nv=$('#nm')&&$('#nm').value,pv=$('#pw')&&$('#pw').value,fid=!S.user&&ae&&ae.id;
+  a.innerHTML=S.user?mainView():loginView();
+  if(!S.user){if(nv)$('#nm').value=nv;if(pv)$('#pw').value=pv;if(fid&&$('#'+fid))$('#'+fid).focus();return}
+  if(S.tab==='share'&&window.QRCode)new QRCode($('#qr'),{text:location.href.split('#')[0],width:220,height:220});
+  if($('#ml'))$('#ml').scrollTop=$('#ml').scrollHeight;
+}
+
+async function send(){
+  const i=$('#cm'),x=i.value.trim(),n=cn();
+  if(!x||!n)return;i.value='';i.style.height='';
+  try{await push(ref(db,'chat/'+S.room),{n,t:Date.now(),x});updChat(true)}catch(e){alert('전송 오류: '+(e.code||e.message))}
+}
+async function finishQuiz(){
+  const q=S.qz;q.done=true;
+  const m=S.me;if(m&&q.sc>((S.scores[m]&&S.scores[m].s)||0))try{await set(ref(db,'games/quiz/'+m),{s:q.sc,t:Date.now()})}catch(e){}
+  render();
+}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('button,td,.rl,.bb');if(!b)return;const D=b.dataset;
+  if(D.role){S.role=D.role;S.err='';render()}
+  else if(D.mode){S.mode=D.mode;S.err='';render()}
+  else if(b.id==='go')doAuth();
+  else if(b.id==='out')signOut(auth);
+  else if(D.tab){S.tab=D.tab;S.room=null;render()}
+  else if(D.sub){S.sub=D.sub;render()}
+  else if(D.d){S.date=addD(S.date,+D.d);render()}
+  else if(D.m){S.date=new Date(S.date.getFullYear(),S.date.getMonth()+ +D.m,1);render()}
+  else if(D.today){S.date=new Date();render()}
+  else if(D.t){const [d,n]=D.t.split('|');toggle(d,n)}
+  else if(D.room!==undefined){S.room=D.room||null;S.gtab='chat';render()}
+  else if(D.gt){S.gtab=D.gt;render()}
+  else if(b.id==='send')send();
+  else if(D.cd){if(confirm('이 메시지를 삭제할까요?'))remove(ref(db,'chat/'+S.room+'/'+D.cd))}
+  else if(D.qs){S.qz={i:0,sc:0,pick:null,qs:shuffle(Q).slice(0,5),done:false};render()}
+  else if(D.qa!==undefined){const q=S.qz;q.pick=+D.qa;if(q.pick===q.qs[q.i][2])q.sc+=20;render()}
+  else if(D.qn){const q=S.qz;if(q.i===4)finishQuiz();else{q.i++;q.pick=null;render()}}
+  else if(b.id==='cp'){$('#url').select();navigator.clipboard&&navigator.clipboard.writeText($('#url').value);b.textContent='복사됨 ✓'}
+  else if(b.id==='dl'){const c=$('#qr canvas');if(c){const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='prayer-qr.png';a.click()}}
+  else if(b.id==='addb'){
+    const v=$('#add').value.split(/[,\n]/).map(s=>s.trim()).filter(s=>s&&!/[.$#\[\]\/]/.test(s));
+    for(const n of v)await set(ref(db,'members/'+n),true);
+    $('#add').value='';render();
+  }
+  else if(D.del){if(confirm(D.del+' 님을 명단에서 삭제할까요? (기록은 남아요)'))remove(ref(db,'members/'+D.del))}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    if(e.target.id==='cm'&&!e.shiftKey){e.preventDefault();send()}
+    else if(e.target.id==='pw'||e.target.id==='nm')doAuth();
+  }
+});
+document.addEventListener('input',e=>{if(e.target.id==='cm'){e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,90)+'px'}});
+render();
+</script></body></html>
