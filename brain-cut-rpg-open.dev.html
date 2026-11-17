@@ -21,7 +21,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0a0614;color:#fff;fon
 #quest .q{margin-bottom:5px}#quest .q:last-child{margin:0}
 #quest b{color:var(--yel)}
 #hud{position:absolute;left:50%;top:max(10px,env(safe-area-inset-top));transform:translateX(-50%);width:min(340px,calc(100vw - 380px));min-width:230px;padding:8px 12px}
-@media(max-width:760px){#hud{left:auto;right:136px;transform:none;width:calc(100vw - 370px);min-width:150px}}
+@media(max-width:760px){#hud,#hudmini{position:static!important;transform:none!important;left:auto!important;top:auto!important;width:auto!important;min-width:0!important}#qbtn,#who{padding:0 8px!important;font-size:11px!important}#who{max-width:60px!important}}
 .hrow{display:flex;align-items:center;gap:8px}
 #lv{font-family:"Black Han Sans","Jua",sans-serif;color:var(--yel);font-size:17px;white-space:nowrap}
 .bar{flex:1;height:13px;border-radius:7px;background:rgba(0,0,0,.45);overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.12)}
@@ -34,6 +34,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0a0614;color:#fff;fon
 .pips{display:flex;gap:4px}
 .pip{width:18px;height:8px;border-radius:5px;background:rgba(255,255,255,.14);transition:.2s}
 .pip.on{background:linear-gradient(90deg,#ff7be5,#9d6bff);box-shadow:0 0 12px #c58bff,0 0 4px #fff}
+#hudx{position:absolute;right:5px;top:3px;padding:0 7px;height:18px;font-size:11px;border-radius:8px;pointer-events:auto;line-height:1}
+#hudmini{position:absolute;left:50%;top:max(10px,env(safe-area-inset-top));transform:translateX(-50%);padding:6px 14px;font-size:13px;cursor:pointer;pointer-events:auto;display:none;white-space:nowrap}
+#viewm{position:absolute;right:12px;top:calc(max(10px,env(safe-area-inset-top)) + 42px);padding:8px;display:none;flex-direction:column;gap:6px;z-index:9;pointer-events:auto;min-width:170px}
+#viewm button{font-size:13px;padding:7px 10px;text-align:left;border-radius:10px}
+#viewm .t{font-size:12px;color:var(--yel);padding:0 4px}
 #tr{position:absolute;right:12px;top:max(10px,env(safe-area-inset-top));display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 #mm{pointer-events:auto;cursor:pointer;width:112px;height:112px;border-radius:50%;border:2px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.4)}
 #mm.xl{width:260px;height:260px}
@@ -105,13 +110,15 @@ button:hover:not(:disabled){filter:brightness(1.25)}button:active:not(:disabled)
 <div id="ebars"></div>
 <div id="wui" style="display:none">
   <div id="tl"><div class="glass pill" id="stage">-</div><div class="glass" id="quest"></div></div>
-  <div class="glass" id="hud">
+  <div class="glass" id="hudmini">Lv.1</div>
+  <div class="glass" id="hud"><button id="hudx" title="닫기">✕</button>
     <div class="hrow"><div id="lv">Lv.1</div><div class="bar"><i class="hp" id="ph" style="width:100%"></i><span id="phn"></span></div><div id="gold">💰0</div></div>
     <div class="bar thin"><i class="xp" id="xpb" style="width:0%"></i></div>
     <div class="gauge"><span>뇌절</span><div class="pips" id="pips"></div></div>
   </div>
-  <div id="tr"><div style="display:flex;gap:6px"><div class="glass" id="qbtn" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">화질</div><div class="glass" id="who" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px;white-space:nowrap;max-width:110px;overflow:hidden">🚪</div><div class="glass" id="mute" style="pointer-events:auto">🔊</div></div><canvas id="mm" class="glass" width="112" height="112"></canvas><div class="glass pill" id="clock" style="font-size:12px"></div></div>
+  <div id="tr"><div style="display:flex;gap:6px"><div class="glass" id="viewb" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">👁 보기</div><div class="glass" id="qbtn" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">화질</div><div class="glass" id="who" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px;white-space:nowrap;max-width:110px;overflow:hidden">🚪</div><div class="glass" id="mute" style="pointer-events:auto">🔊</div></div><canvas id="mm" class="glass" width="112" height="112"></canvas><div class="glass pill" id="clock" style="font-size:12px"></div></div>
   <div class="glass" id="boss"><div class="nm"><b id="bn">-</b><i id="bt" style="font-style:normal;color:var(--yel);font-size:12px"></i></div><div class="bar"><i class="he" id="bh" style="width:100%"></i></div></div>
+  <div class="glass" id="viewm"></div>
   <button id="act"></button>
   <div class="glass" id="tut" style="display:none"><div id="tutS"></div><div id="tutT"></div><button id="tutSkip">건너뛰기</button></div>
   <div id="acts">
@@ -645,7 +652,7 @@ const isNight=()=>nightF>.5;
 function fxFloat(text,pos,color){const p=toScreen(pos);if(p.z>1)return;const d=document.createElement('div');d.className='fl';d.textContent=text;d.style.left=p.x+'px';d.style.top=p.y+'px';d.style.color=color;$('#fx').appendChild(d);setTimeout(()=>d.remove(),1100)}
 function bigText(txt,n=1,spread=true){for(let i=0;i<n;i++){setTimeout(()=>{const d=document.createElement('div');d.className='big';d.textContent=txt;d.style.setProperty('--r',rand(-14,14)+'deg');d.style.left=(spread?rand(18,82):50)+'vw';d.style.top=(spread?rand(18,70):38)+'vh';d.style.fontSize=(spread?rand(34,84):96)+'px';$('#fx').appendChild(d);setTimeout(()=>d.remove(),1350)},i*(spread?70:0))}}
 function screenFlash(o=.8,ms=500){const f=$('#flash');f.style.transition='none';f.style.opacity=o;requestAnimationFrame(()=>{f.style.transition=`opacity ${ms}ms`;f.style.opacity=0})}
-function hud(){
+function hud(){$('#hudmini').textContent=`Lv.${G.lv} ${JOBNAME[G.job]} · ♥ ${Math.max(0,Math.ceil(G.hp))}/${G.max}`;
  $('#lv').textContent='Lv.'+G.lv+' '+JOBNAME[G.job];$('#ph').style.width=clamp(G.hp/G.max*100,0,100)+'%';$('#phn').textContent=`${Math.max(0,Math.ceil(G.hp))} / ${G.max}`;
  $('#xpb').style.width=clamp(G.xp/need(G.lv)*100,0,100)+'%';$('#gold').textContent='💰'+G.gold;$('#npot').textContent=G.pots;
  const pips=$('#pips');if(pips.children.length!==G.thr){pips.innerHTML='';for(let i=0;i<G.thr;i++){const d=document.createElement('div');d.className='pip';pips.appendChild(d)}}
@@ -1101,6 +1108,19 @@ function title(){
  $('#start').onclick=go;$('#nick').addEventListener('keydown',e=>{if(e.key==='Enter')$('#pin').focus()});$('#pin').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
  s.querySelectorAll('.pf').forEach(b=>b.onclick=()=>{$('#nick').value=b.dataset.n;const d=loadProfile(b.dataset.n);if(d&&!d.pin)go();else $('#pin').focus()});
  try{const l=profs[0];if(l)$('#nick').value=l}catch(e){}}
+
+
+/* ================= VIEW SETTINGS ================= */
+const V=(()=>{const d={hud:'full',quest:1,mm:1,clock:1,hint:1,btns:1};try{return Object.assign(d,JSON.parse(localStorage.getItem('brainView')||'{}'))}catch(e){return d}})();
+const VROWS=[['hud','상태창(레벨/HP)',['full','mini','off'],{full:'펼침',mini:'작게',off:'숨김'}],['quest','퀘스트 창',[1,0],{1:'보임',0:'숨김'}],['mm','미니맵',[1,0],{1:'보임',0:'숨김'}],['clock','시계',[1,0],{1:'보임',0:'숨김'}],['hint','조작 도움말',[1,0],{1:'보임',0:'숨김'}],['btns','전투 버튼',[1,0],{1:'보임',0:'숨김'}]];
+function applyView(){$('#hud').style.display=V.hud==='full'?'':'none';$('#hudmini').style.display=V.hud==='mini'?'block':'none';$('#quest').style.display=V.quest?'':'none';$('#mm').style.display=V.mm?'':'none';$('#clock').style.display=V.clock?'':'none';$('#hint').style.visibility=V.hint?'':'hidden';$('#acts').style.visibility=V.btns?'':'hidden';
+ try{localStorage.setItem('brainView',JSON.stringify(V))}catch(e){}renderViewMenu()}
+function renderViewMenu(){const m=$('#viewm');m.innerHTML='<div class="t">화면에 보일 것</div>'+VROWS.map(r=>`<button data-k="${r[0]}">${r[1]}: <b>${r[3][V[r[0]]]}</b></button>`).join('')+'<button data-k="__all">🙈 전부 숨기기 / 🙉 전부 보기</button>';
+ m.querySelectorAll('button').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='__all'){const anyOn=V.hud!=='off'||V.quest||V.mm||V.clock||V.hint||V.btns;Object.assign(V,anyOn?{hud:'off',quest:0,mm:0,clock:0,hint:0,btns:0}:{hud:'full',quest:1,mm:1,clock:1,hint:1,btns:1})}else{const r=VROWS.find(x=>x[0]===k),o=r[2];V[k]=o[(o.indexOf(V[k])+1)%o.length]}applyView()})}
+$('#viewb').onclick=()=>{const m=$('#viewm');m.style.display=m.style.display==='flex'?'none':'flex'};
+$('#hudx').onclick=()=>{V.hud='mini';applyView()};$('#hudmini').onclick=()=>{V.hud='full';applyView()};
+const mq=matchMedia('(max-width:760px)');function placeHud(){const h=$('#hud'),mi=$('#hudmini');if(mq.matches){$('#tl').insertBefore(h,$('#quest'));$('#tl').insertBefore(mi,$('#quest'))}else{$('#wui').appendChild(h);$('#wui').appendChild(mi)}}
+(mq.addEventListener?mq.addEventListener('change',placeHud):mq.addListener(placeHud));placeHud();applyView();
 
 /* ================= INPUT ================= */
 document.querySelectorAll('.sk').forEach(b=>{const f=e=>{e.preventDefault();doAction(b.dataset.a)};b.addEventListener('pointerdown',f)});
