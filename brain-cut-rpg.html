@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>뇌절 RPG</title>
+<style>
+:root{--bg:#14101f;--panel:#201936;--line:#3b2f63;--txt:#f1ecff;--dim:#9a90c4;--red:#ff5470;--grn:#4ee08a;--yel:#ffd34d;--pur:#a678ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Noto Sans KR","Malgun Gothic",sans-serif}
+#app{max-width:520px;margin:0 auto;min-height:100%;padding:12px 14px 20px;display:flex;flex-direction:column;gap:10px}
+h1{margin:0;font-size:28px;text-align:center;letter-spacing:1px}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:12px}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--dim)}
+.gauge b{color:var(--pur);letter-spacing:2px}
+.arena{position:relative;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.side{display:flex;align-items:center;gap:12px}
+.sprite{position:relative;font-size:64px;line-height:1;width:84px;text-align:center;user-select:none}
+.info{flex:1;min-width:0}
+.name{font-weight:700;font-size:15px;margin-bottom:4px;display:flex;justify-content:space-between}
+.bar{height:14px;background:#0e0a1a;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;transition:width .35s}
+.hp-e{background:linear-gradient(90deg,#ff5470,#ff8a5c)}
+.hp-p{background:linear-gradient(90deg,#27c46a,#4ee08a)}
+.num{font-size:12px;color:var(--dim);margin-top:2px}
+.tag{font-size:12px;color:var(--yel)}
+#log{height:150px;overflow-y:auto;font-size:14px;line-height:1.5;display:flex;flex-direction:column;gap:2px}
+#log div{animation:in .2s}
+#log .e{color:#ff9fb0}#log .p{color:#9fd3ff}#log .s{color:var(--yel);font-weight:700}#log .b{color:var(--pur);font-weight:800;font-size:16px}
+@keyframes in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.cmds{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button{font:inherit;color:var(--txt);background:#2c2250;border:2px solid var(--line);border-radius:12px;padding:12px 8px;font-size:16px;font-weight:700;cursor:pointer;transition:transform .08s,background .15s}
+button:active:not(:disabled){transform:scale(.96)}
+button:hover:not(:disabled){background:#3a2d68}
+button:disabled{opacity:.4;cursor:default}
+button small{display:block;font-weight:400;font-size:11px;color:var(--dim);margin-top:2px}
+.again{grid-column:1/3;border-color:var(--pur);background:#3b2a73}
+.big{background:var(--pur);color:#150f2a;border:0;font-size:18px;padding:14px}
+.center{text-align:center}
+.center p{margin:6px 0;color:var(--dim);font-size:14px;line-height:1.5}
+.opts{display:flex;flex-direction:column;gap:8px}
+.float{position:absolute;left:50%;top:0;font-weight:900;font-size:26px;pointer-events:none;animation:fl 1s forwards;text-shadow:0 2px 0 #000}
+@keyframes fl{to{transform:translate(-50%,-60px);opacity:0}}
+.shake{animation:sh .3s}
+@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.flash{animation:fo .8s}
+@keyframes fo{0%{background:#fff}100%{background:var(--panel)}}
+.pulse{animation:pu .5s infinite alternate}
+@keyframes pu{to{transform:scale(1.12)}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const $=s=>document.querySelector(s), sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+let AC;
+function beep(f=300,d=.08,t='square',v=.05){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(AC.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.stop(AC.currentTime+d)}catch(e){}}
+
+const ENEMIES=[
+ {n:'초보 슬라임',e:'🟢',hp:45,atk:8,lines:['끈적!','끈적끈적!']},
+ {n:'짤방 고블린',e:'👺',hp:70,atk:10,lines:['이거 사실 짤이에요','이거 사실 짤이에요 (2)']},
+ {n:'야근 오크',e:'👹',hp:100,atk:12,lines:['퇴근 5분 전 회의 소집!','퇴근 5분 전 회의 소집!!']},
+ {n:'아재개그 드래곤',e:'🐉',hp:140,atk:14,lines:['이불이 방긋? 이불이 방긋!','왕이 넘어지면? 킹콩!']},
+ {n:'알림 악마',e:'😈',hp:180,atk:16,lines:['띠링!','띠링! 띠링! 띠링!']},
+ {n:'뇌절왕',e:'👑',hp:300,atk:18,lines:['아직 안 끝났다','아직 안 끝났다 아직 안 끝났다','내가 이걸 몇 번째 말하고 있지?'],boss:true}
+];
+const CMD={
+ atk:{n:'칼질',d:'기본 공격',say:'칼질!'},
+ joke:{n:'드립',d:'약함, 썰렁 확률',say:'드립!'},
+ guard:{n:'방어',d:'피해 감소 + 회복',say:'방어!'}
+};
+const UPS=[
+ {t:'🗡️ 공격력 +4',f:p=>p.atk+=4},
+ {t:'❤️ 최대 HP +25 (회복)',f:p=>{p.max+=25;p.hp+=25}},
+ {t:'🌀 뇌절 폭발 필요 횟수 -1 (최소 3)',f:p=>p.thr=Math.max(3,p.thr-1),ok:p=>p.thr>3},
+ {t:'😂 드립 썰렁 확률 +15%',f:p=>p.joke+=.15},
+ {t:'🛡️ 방어 효율 +10%',f:p=>p.guardPow=Math.min(.8,p.guardPow+.1)},
+ {t:'🍖 즉시 HP 50% 회복',f:p=>p.hp=Math.min(p.max,p.hp+Math.round(p.max*.5))},
+ {t:'💥 뇌절 폭발 피해 +50%',f:p=>p.boom+=.5}
+];
+let P,E,stage,busy,turn,over;
+
+function newGame(){
+ P={max:100,hp:100,atk:12,thr:5,joke:.3,guardPow:.5,boom:0,stun:0,last:null,count:0};
+ stage=0;startBattle();
+}
+function startBattle(){
+ const b=ENEMIES[stage];E={...b,max:b.hp,skip:false,li:0};
+ P.last=null;P.count=0;P.stun=0;turn=1;busy=false;over=false;
+ renderBattle();
+ say(`${E.e} ${E.n}이(가) 나타났다!`,'s');
+ if(E.boss)say('뇌절왕: 이 게임의 모든 개그를 끝까지 우려먹어주마.','b');
+}
+function renderBattle(){
+ $('#app').innerHTML=`
+ <div class="top"><span>STAGE ${stage+1} / ${ENEMIES.length}</span><span class="gauge">뇌절 <b id="gz"></b></span></div>
+ <div class="card arena" id="arena">
+  <div class="side"><div class="sprite" id="es">${E.e}</div><div class="info">
+   <div class="name"><span>${E.n}</span><span class="tag" id="et"></span></div>
+   <div class="bar"><i class="hp-e" id="eh"></i></div><div class="num" id="en"></div></div></div>
+  <div class="side"><div class="sprite" id="ps">🦸</div><div class="info">
+   <div class="name"><span>용사</span><span class="tag" id="pt"></span></div>
+   <div class="bar"><i class="hp-p" id="ph"></i></div><div class="num" id="pn"></div></div></div>
+ </div>
+ <div class="card" id="log"></div>
+ <div class="cmds" id="cmds">
+  <button data-c="atk">1. 칼질<small>${CMD.atk.d}</small></button>
+  <button data-c="joke">2. 드립<small>${CMD.joke.d}</small></button>
+  <button data-c="guard">3. 방어<small>${CMD.guard.d}</small></button>
+  <button data-c="again" id="again">4. 한번 더!<small>직전 행동 반복 (+50%)</small></button>
+ </div>`;
+ document.querySelectorAll('#cmds button').forEach(b=>b.onclick=()=>act(b.dataset.c));
+ update();
+}
+function update(){
+ $('#eh').style.width=Math.max(0,E.hp/E.max*100)+'%';
+ $('#ph').style.width=Math.max(0,P.hp/P.max*100)+'%';
+ $('#en').textContent=`HP ${Math.max(0,E.hp)}/${E.max}  ·  공격 ${hits()}연타 예정`;
+ $('#pn').textContent=`HP ${Math.max(0,P.hp)}/${P.max}  ·  ATK ${P.atk}`;
+ $('#gz').textContent='■'.repeat(P.count)+'□'.repeat(Math.max(0,P.thr-P.count));
+ $('#pt').textContent=P.stun>0?'😳 민망':'';
+ $('#et').textContent=E.skip?'🥶 썰렁':'';
+ const a=$('#again');if(a)a.disabled=!P.last;
+ document.querySelectorAll('#cmds button').forEach(b=>{if(b.id!=='again')b.disabled=busy;else b.disabled=busy||!P.last});
+}
+function say(t,c=''){const l=$('#log');if(!l)return;const d=document.createElement('div');d.className=c;d.textContent=t;l.appendChild(d);l.scrollTop=l.scrollHeight}
+function hits(){return Math.min(1+Math.floor((turn-1)/2),6)}
+function floatText(id,t,color){const el=$('#'+id);if(!el)return;const s=document.createElement('span');s.className='float';s.style.color=color;s.textContent=t;el.appendChild(s);setTimeout(()=>s.remove(),1000)}
+function shake(id){const el=$('#'+id);if(!el)return;el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake')}
+
+async function act(c){
+ if(busy||over)return;busy=true;update();
+ let again=false;
+ if(P.stun>0){
+  P.stun--;say('😳 아까 일이 너무 민망해서 아무것도 못 한다...','p');
+  P.last=null;P.count=0;
+ }else{
+  if(c==='again'){if(!P.last){busy=false;return}c=P.last;again=true}
+  P.count=(P.last===c)?P.count+1:1;P.last=c;
+  const mult=(1+.5*(P.count-1))*(again?1.5:1);
+  const boom=P.count>=P.thr;
+  if(again)say('한번 더!!','p');
+  if(boom){await explode(c)}
+  else{
+   say(`${CMD[c].say} `.repeat(P.count).trim()+(P.count>1?` (${P.count}연속 x${mult.toFixed(1)})`:''),'p');
+   if(c==='atk'){const d=Math.round(P.atk*mult);hurt(d);beep(220)}
+   else if(c==='joke'){
+    const d=Math.round(P.atk*.7*mult);hurt(d);beep(520,.1,'triangle');
+    if(Math.random()<P.joke+.08*(P.count-1)){E.skip=true;say(`${E.n}: ...(썰렁)`,'e')}
+   }else if(c==='guard'){
+    P.guard=Math.min(.9,P.guardPow+.1*(P.count-1));
+    const h=Math.round(3*P.count*(again?1.5:1));P.hp=Math.min(P.max,P.hp+h);floatText('ps','+'+h,'#4ee08a');beep(150,.15,'sine');
+   }
+  }
+ }
+ update();await sleep(600);
+ if(E.hp<=0){return win()}
+ await enemyTurn();
+}
+function hurt(d){E.hp-=d;floatText('es','-'+d,'#fff');shake('es');update()}
+async function explode(c){
+ const a=$('#arena');a.classList.remove('flash');void a.offsetWidth;a.classList.add('flash');
+ say('🌀🌀 뇌절 폭발!!! 🌀🌀','b');
+ for(let i=0;i<5;i++){say(CMD[c].say.repeat(i+3),'s');beep(200+i*90,.1,'sawtooth');await sleep(150)}
+ if(c==='guard'){
+  const h=Math.round(P.max*.5);P.hp=Math.min(P.max,P.hp+h);P.guard=.9;
+  floatText('ps','+'+h,'#4ee08a');say('방어를 너무 많이 해서 오히려 안 아프다.','p');
+ }else{
+  const d=Math.round(P.atk*(c==='joke'?7:6)*(1+P.boom));
+  hurt(d);say(`${d} 피해! 그리고 모두가 조용해졌다.`,'p');
+ }
+ P.stun=1;P.count=0;P.last=null;
+}
+async function enemyTurn(){
+ if(E.skip){E.skip=false;say(`${E.n}은(는) 썰렁함에 얼어붙어 행동하지 못했다.`,'e');update();await sleep(500);P.guard=0;turn++;return next()}
+ const h=hits();
+ say(`${E.e} ${E.n}: "${E.lines[E.li++%E.lines.length]}" (${h}연타!)`,'e');
+ for(let i=0;i<h;i++){
+  await sleep(350);
+  let d=Math.round(E.atk*.5*(.8+Math.random()*.4));
+  if(P.guard)d=Math.round(d*(1-P.guard));
+  P.hp-=d;shake('ps');floatText('ps','-'+d,'#ff5470');beep(110,.08,'square');
+  say(`  ${i+1}타! ${d} 피해`,'e');update();
+  if(P.hp<=0)break;
+ }
+ P.guard=0;turn++;
+ await sleep(300);next();
+}
+function next(){
+ if(P.hp<=0)return lose();
+ busy=false;update();
+}
+function lose(){
+ over=true;
+ $('#app').innerHTML=`<h1>💀 GAME OVER</h1><div class="card center"><p style="font-size:60px;margin:0">😵</p>
+ <p>STAGE ${stage+1} · ${E.n}에게 패배...</p><p>"사실 너도 뇌절하고 있었어."</p></div>
+ <button class="big" onclick="newGame()">다시 도전</button>`;
+}
+function win(){
+ over=true;say(`${E.n}을(를) 쓰러뜨렸다!`,'s');beep(660,.2,'triangle');
+ setTimeout(()=>{
+  stage++;
+  if(stage>=ENEMIES.length)return victory();
+  P.hp=Math.min(P.max,P.hp+Math.round(P.max*.3));
+  const pool=UPS.filter(u=>!u.ok||u.ok(P));
+  const picks=pool.sort(()=>Math.random()-.5).slice(0,3);
+  $('#app').innerHTML=`<h1>🎁 보상</h1><div class="card center"><p>HP 30% 회복! 강화 하나를 고르세요.</p></div>
+  <div class="opts">${picks.map((u,i)=>`<button data-i="${i}">${u.t}</button>`).join('')}</div>`;
+  document.querySelectorAll('.opts button').forEach(b=>b.onclick=()=>{picks[b.dataset.i].f(P);startBattle()});
+ },900);
+}
+function victory(){
+ $('#app').innerHTML=`<h1>🏆 CLEAR!</h1><div class="card center"><p style="font-size:60px;margin:0">👑➡️🪦</p>
+ <p>뇌절왕을 쓰러뜨렸다!</p><p>세계는 평화를 되찾았다.</p><p>...정말? 한 번 더 해볼까?</p></div>
+ <button class="big pulse" onclick="newGame()">한번 더!</button>`;
+}
+function title(){
+ $('#app').innerHTML=`<h1>🌀 뇌절 RPG 🌀</h1>
+ <div class="card center"><p style="font-size:64px;margin:0">🦸‍♂️⚔️👑</p>
+ <p><b>같은 행동을 연속으로 하면</b> 점점 강해지고,<br>게이지가 차면 <b style="color:var(--pur)">뇌절 폭발!</b></p>
+ <p>단, 폭발 후엔 민망해서 한 턴 쉽니다.<br>적도 턴이 갈수록 <b style="color:var(--red)">연타 횟수</b>가 늘어납니다.</p>
+ <p>키보드 1~4로도 조작 가능</p></div>
+ <button class="big" onclick="newGame()">모험 시작</button>`;
+}
+document.addEventListener('keydown',e=>{const m={1:'atk',2:'joke',3:'guard',4:'again'};if(m[e.key]&&$('#cmds'))act(m[e.key])});
+title();
+</script>
+</body>
+</html>
