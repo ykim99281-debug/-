@@ -919,7 +919,7 @@ canvas.addEventListener('pointermove',e=>{if(!cd||e.pointerId!==cd.id)return;cam
 const cend=e=>{if(!cd||e.pointerId!==cd.id)return;const moved=Math.hypot(e.clientX-cd.sx,e.clientY-cd.sy);if(moved<6&&performance.now()-cd.t<350&&e.pointerType==='mouse'&&e.button===0&&mode==='world')doAction('atk');cd=null;canvas.style.cursor='grab'};
 canvas.addEventListener('pointerup',cend);canvas.addEventListener('pointercancel',cend);
 canvas.addEventListener('wheel',e=>{camDistT=clamp(camDistT+e.deltaY*.01,6,20);e.preventDefault()},{passive:false});
-const kn=e=>e.key.length===1?e.key.toLowerCase():e.key;
+const kn=e=>{const c=e.code||'';if(c.startsWith('Key'))return c.slice(3).toLowerCase();if(c==='Space')return ' ';if(c.startsWith('Shift'))return 'shift';if(c==='Enter'||c==='NumpadEnter')return 'Enter';if(c.startsWith('Arrow'))return c;return e.key.length===1?e.key.toLowerCase():e.key};
 addEventListener('keydown',e=>{const k=kn(e);if(e.repeat&&k!=='j')return keys[k]=true;keys[k]=true;
  if(mode==='dialog'&&dlgNext&&(k==='e'||k===' '||k==='Enter')){dlgNext();e.preventDefault();return}
  if(mode==='world'){if(k==='e'||k==='Enter'){interact();e.preventDefault();return}
