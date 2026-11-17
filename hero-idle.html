@@ -352,7 +352,7 @@ const CLS={
 };
 
 /* ================= 상태 ================= */
-const def=()=>({gold:0,gems:30,stage:1,kill:0,lv:{atk:1,hp:1,spd:1,crit:1},items:{w:{},h:{},a:{},b:{}},eq:{w:-1,h:-1,a:-1,b:-1},gl:{w:0,h:0,a:0,b:0},sk:{cls:1,fire:1,heal:1,rage:1,gold:1},pets:{},cls:null,soul:0,best:1,totalKills:0,gps:0,auto:true,last:Date.now()});
+const def=()=>({gold:0,gems:30,stage:1,kill:0,lv:{atk:1,hp:1,spd:1,crit:1},items:{w:{},h:{},a:{},b:{}},eq:{w:-1,h:-1,a:-1,b:-1},gl:{w:0,h:0,a:0,b:0},sk:{cls:1,fire:1,heal:1,rage:1,gold:1},pets:{},cls:null,soul:0,rb:0,best:1,totalKills:0,gps:0,auto:true,last:Date.now()});
 let S=load();
 let C=null,dirty=true;
 let hp=1,isBoss=false;
@@ -1009,7 +1009,7 @@ function refreshUI(){
   // 환생
   $("soul").textContent=S.soul;$("bestS").textContent=S.best;$("kills").textContent=fmt(S.totalKills);
   const gain=soulGain();
-  $("rebInfo").textContent=gain>0?`지금 환생하면 👻 영혼 +${gain}`:"스테이지 15 이상부터 환생할 수 있어요";
+  $("rebInfo").textContent=gain>0?`${(S.rb||0)+1}번째 환생 가능! 지금 환생하면 👻 영혼 +${gain}`:`${(S.rb||0)+1}번째 환생은 스테이지 ${rebReq()}부터 (현재 ${S.stage})`;
   $("rebBtn").classList.toggle("off",gain<=0);
   $("autoBtn").innerHTML="자동<br>"+(S.auto?"ON":"OFF");$("autoBtn").classList.toggle("on",S.auto);
 }
@@ -1070,7 +1070,8 @@ function refreshEquip(){
     it.style.borderColor=RAR[TIER_RAR[i]].c;
   }
 }
-const soulGain=()=>S.stage>=15?Math.floor(S.stage/5)-2:0;
+const rebReq=()=>15*((S.rb||0)+1);   // 1번째 환생 15, 2번째 30, 3번째 45 …
+const soulGain=()=>S.stage>=rebReq()?Math.max(1,Math.floor(S.stage/5)-2):0;
 
 /* ================= 행동 ================= */
 function buyUp(k){
@@ -1146,7 +1147,7 @@ function rebirth(){
   const g=soulGain();if(g<=0)return;
   modal("🔥 환생할까요?",`스테이지·골드·강화가 처음으로 돌아가요.<br>👻 영혼 <b>+${g}</b> 을 받아요!<br><small>(취소하려면 화면 밖을 누르세요)</small>`,()=>{
     const d=def();
-    S.soul+=g;
+    S.soul+=g;S.rb=(S.rb||0)+1;
     Object.assign(S,{gold:0,stage:1,kill:0,lv:d.lv,gps:0});
     dirty=true;hp=gc().maxHp;spawn();refreshUI();save();toast("👻 환생 완료!");
     chooseClass();
