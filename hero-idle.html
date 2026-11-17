@@ -75,6 +75,9 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 .sk.ready{border-color:#fdcb6e;box-shadow:0 0 10px #fdcb6e99;background:#fdcb6e22}
 .sk.lock{filter:grayscale(1);opacity:.55}
 .hide{display:none!important}
+#heroMv{position:relative}
+.dome{position:absolute;left:-16px;right:-16px;top:-8px;bottom:-4px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.06),rgba(116,185,255,.32));border:3px solid rgba(255,255,255,.85);box-shadow:0 0 18px currentColor,inset 0 0 22px currentColor;animation:domep .9s ease-in-out infinite alternate;pointer-events:none;z-index:2}
+@keyframes domep{from{opacity:.65;transform:scale(.97)}to{opacity:1;transform:scale(1.03)}}
 #skBtns{display:flex;gap:5px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
 #skBtns::-webkit-scrollbar{display:none}
 .sk.more{border-style:dashed;background:#6c5ce733}
@@ -274,7 +277,7 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
     <!-- 스킬 -->
     <div class="pg" id="pg1">
       <div id="skList"></div>
-      <div class="note">✨ 스킬은 💰 코인으로 살 수 있어요. 강한 스킬일수록 비싸요! 산 스킬은 코인으로 강화하면 더 세져요. 자동이 켜져 있으면 쿨타임마다 알아서 써요.</div>
+      <div class="note">✨ 스킬은 직업마다 달라요! 💰 코인으로 살 수 있고, 강한 스킬일수록 비싸요. 산 스킬은 코인으로 강화하면 더 세져요. 자동이 켜져 있으면 쿨타임마다 알아서 써요.</div>
     </div>
     <!-- 장비 -->
     <div class="pg" id="pg2">
@@ -453,17 +456,52 @@ const SLOTS={
      vals:[0.03,0.06,0.09,0.12,0.16,0.20,0.25,0.30,0.40,0.50],
      items:[["🩴","슬리퍼"],["👟","운동화"],["🥾","등산화"],["👢","가죽 부츠"],["🛼","롤러 부츠"],["⛸️","아이스 부츠"],["🕊️","날개 신발"],["⚡","번개 신발"],["🚀","로켓 부츠"],["🌠","유성 신발"]]},
 };
-const PR_FIRE=500,PR_HEAL=3000,PR_ICE=15000,PR_RAGE=60000,PR_GOLD=200000,PR_METEOR=600000,PR_JUDGE=3000000;   // 스킬 가격
-const SKILLS=[
-  {id:"cls",price:0,star:1},
-  {id:"fire",ic:"🔥",n:"불꽃 폭발",cd:12,price:PR_FIRE,color:"#ff7f50",star:2},
-  {id:"heal",ic:"💚",n:"치유의 빛",cd:20,price:PR_HEAL,color:"#55efc4",star:2},
-  {id:"ice",ic:"❄️",n:"블리자드",cd:22,price:PR_ICE,color:"#7fd6ff",star:3},
-  {id:"rage",ic:"😡",n:"광폭화",cd:30,price:PR_RAGE,color:"#ff4757",star:3},
-  {id:"gold",ic:"💰",n:"황금 손",cd:40,price:PR_GOLD,color:"#fdcb6e",star:4},
-  {id:"meteor",ic:"☄️",n:"메테오",cd:28,price:PR_METEOR,color:"#ff6b35",star:5},
-  {id:"judge",ic:"🌟",n:"신의 심판",cd:45,price:PR_JUDGE,color:"#ffe27a",star:6},
-];
+const PR=[500,3000,8000,15000,60000,200000,600000,3000000];   // 스킬 가격 (강한 스킬일수록 비싸요)
+const STAR=[2,2,3,3,4,4,5,6];
+const mk=(pre,list)=>list.map((x,i)=>Object.assign({id:pre+(i+1),cd:x.cd,price:PR[i],star:STAR[i]},x,{id:pre+(i+1)}));
+const CSK={
+  war:mk("w",[
+    {ic:"🔨",n:"방패 강타",cd:10,color:"#ffa94d",kind:"snipe",mul:14,fx:"strike"},
+    {ic:"💪",n:"불굴의 의지",cd:20,color:"#ffd36a",kind:"heal",fx:"heal"},
+    {ic:"🛡️",n:"철벽 방어",cd:26,color:"#74b9ff",kind:"shield",dur:5,fx:"shield"},
+    {ic:"🌪️",n:"회오리 베기",cd:20,color:"#ff7675",kind:"aoe",mul:18,fx:"spin"},
+    {ic:"😡",n:"전투 광란",cd:30,color:"#ff4757",kind:"rage",dur:8,fx:"rage"},
+    {ic:"💰",n:"약탈",cd:40,color:"#fdcb6e",kind:"gold",dur:10,fx:"gold"},
+    {ic:"⛰️",n:"대지 가르기",cd:28,color:"#e17055",kind:"freeze",mul:50,fx:"quake"},
+    {ic:"⚔️",n:"성검 해방",cd:45,color:"#ffe27a",kind:"aoe",mul:150,fx:"holysword"}]),
+  mage:mk("m",[
+    {ic:"🔥",n:"불꽃 폭발",cd:12,color:"#ff7f50",kind:"aoe",mul:12,fx:"fire"},
+    {ic:"💜",n:"마나 샘",cd:20,color:"#a29bfe",kind:"heal",fx:"heal"},
+    {ic:"🔰",n:"마법 방벽",cd:26,color:"#a29bfe",kind:"shield",dur:5,fx:"shield"},
+    {ic:"❄️",n:"블리자드",cd:22,color:"#7fd6ff",kind:"freeze",mul:18,fx:"ice"},
+    {ic:"🌀",n:"마력 폭주",cd:30,color:"#a29bfe",kind:"rage",dur:8,fx:"rage"},
+    {ic:"⚗️",n:"연금술",cd:40,color:"#fdcb6e",kind:"gold",dur:10,fx:"gold"},
+    {ic:"☄️",n:"메테오",cd:28,color:"#ff6b35",kind:"aoe",mul:50,fx:"meteor"},
+    {ic:"🌟",n:"신의 심판",cd:45,color:"#ffe27a",kind:"aoe",mul:150,fx:"judge"}]),
+  arc:mk("a",[
+    {ic:"🎯",n:"정밀 사격",cd:10,color:"#55efc4",kind:"snipe",mul:14,fx:"snipe"},
+    {ic:"🌿",n:"숲의 축복",cd:20,color:"#55efc4",kind:"heal",fx:"heal"},
+    {ic:"🍃",n:"바람 장막",cd:26,color:"#55efc4",kind:"shield",dur:5,fx:"shield"},
+    {ic:"💥",n:"폭발 화살",cd:20,color:"#ffa94d",kind:"aoe",mul:18,fx:"arrowboom"},
+    {ic:"💨",n:"질풍 사격",cd:30,color:"#55efc4",kind:"rage",dur:8,fx:"rage"},
+    {ic:"🗝️",n:"보물 사냥꾼",cd:40,color:"#fdcb6e",kind:"gold",dur:10,fx:"gold"},
+    {ic:"🔥",n:"불화살 폭풍",cd:28,color:"#ff7f50",kind:"aoe",mul:50,fx:"firerain"},
+    {ic:"🌠",n:"별빛 화살",cd:45,color:"#ffe27a",kind:"aoe",mul:150,fx:"starbeam"}]),
+  asn:mk("s",[
+    {ic:"🩸",n:"급소 찌르기",cd:10,color:"#ff4757",kind:"snipe",mul:14,fx:"stab"},
+    {ic:"🧪",n:"비약",cd:20,color:"#c56cf0",kind:"heal",fx:"heal"},
+    {ic:"🌫️",n:"연막탄",cd:26,color:"#b2bec3",kind:"shield",dur:5,fx:"shield",smoke:true},
+    {ic:"☠️",n:"독 안개",cd:20,color:"#7bed9f",kind:"aoe",mul:18,fx:"poison"},
+    {ic:"👤",n:"그림자 질주",cd:30,color:"#a55eea",kind:"rage",dur:8,fx:"rage"},
+    {ic:"🪙",n:"도둑질",cd:40,color:"#fdcb6e",kind:"gold",dur:10,fx:"gold"},
+    {ic:"💀",n:"처형 무도",cd:28,color:"#c56cf0",kind:"aoe",mul:50,fx:"flurry"},
+    {ic:"🌑",n:"암살 영역",cd:45,color:"#ffffff",kind:"aoe",mul:150,fx:"domain"}]),
+};
+const DEF={};Object.values(CSK).forEach(l=>l.forEach(d=>DEF[d.id]=d));
+let SKILLS=[];
+const clsPre=()=>({war:"w",mage:"m",arc:"a",asn:"s"}[S.cls||"war"]);
+const sid=r=>clsPre()+r;                       // 현재 직업의 r번째 스킬 id
+function setSkills(){SKILLS=[{id:"cls",price:0,star:1,kind:"core"},...CSK[S.cls||"war"]]}
 const PETS=[
   {n:"강아지",e:"🐶",cost:30,  t:"atk", v:0.25},
   {n:"고양이",e:"🐱",cost:60,  t:"gold",v:0.25},
@@ -480,7 +518,7 @@ const CLS={
 };
 
 /* ================= 상태 ================= */
-const def=()=>({gold:0,gems:30,stage:1,kill:0,lv:{atk:1,hp:1,spd:1,crit:1},items:{w:{},h:{},a:{},b:{}},eq:{w:-1,h:-1,a:-1,b:-1},gl:{w:0,h:0,a:0,b:0},sk:{cls:1,fire:1,heal:1,ice:1,rage:1,gold:1,meteor:1,judge:1},own:{cls:true},earned:0,pets:{},cls:null,soul:0,rb:0,best:1,totalKills:0,gps:0,auto:true,last:Date.now()});
+const def=()=>({gold:0,gems:30,stage:1,kill:0,lv:{atk:1,hp:1,spd:1,crit:1},items:{w:{},h:{},a:{},b:{}},eq:{w:-1,h:-1,a:-1,b:-1},gl:{w:0,h:0,a:0,b:0},sk:{},own:{cls:true},earned:0,pets:{},cls:null,soul:0,rb:0,best:1,totalKills:0,gps:0,auto:true,last:Date.now()});
 let S=load();
 let C=null,dirty=true;
 let hp=1,isBoss=false;
@@ -494,6 +532,8 @@ function load(){
     const d=def();
     const o=Object.assign(d,j,{lv:Object.assign(d.lv,j.lv),items:Object.assign(d.items,j.items),eq:Object.assign(d.eq,j.eq),gl:Object.assign(d.gl,j.gl),sk:Object.assign(d.sk,j.sk),own:Object.assign(d.own,j.own)});
     if(!j.own){const old={fire:5,heal:10,rage:15,gold:20};for(const k in old)if((o.best||1)>=old[k])o.own[k]=true}
+    {const pre={war:"w",mage:"m",arc:"a",asn:"s"}[o.cls||"war"],mp={fire:1,heal:2,ice:4,rage:5,gold:6,meteor:7,judge:8};   // 예전 공용 스킬 → 지금 직업의 스킬로 옮겨요
+     for(const k in mp){if(o.own[k]){o.own[pre+mp[k]]=true;delete o.own[k]}if(o.sk[k]>1)o.sk[pre+mp[k]]=Math.max(o.sk[pre+mp[k]]||1,o.sk[k]);delete o.sk[k]}}
     if(j.weapons){ // 예전 저장 데이터: 무기만 있던 시절
       Object.assign(o.items.w,j.weapons);
       let best=-1;for(const i in j.weapons)if(j.weapons[i]>0&&+i>best)best=+i;
@@ -516,7 +556,7 @@ function fmt(n){
 }
 function calc(){
   const E={};SLOT_KEYS.forEach(k=>E[k]=slotEff(k));
-  const rg=rageT>0,gd=goldT>0,rv=skVals("rage"),gv=skVals("gold");
+  const rg=rageT>0,gd=goldT>0,rv=skVals(sid(5)),gv=skVals(sid(6));
   let pa=0,pg=0;PETS.forEach((p,i)=>{if(S.pets[i]){if(p.t==="atk")pa+=p.v;else pg+=p.v}});
   const soul=1+S.soul*0.1;
   return{
@@ -536,14 +576,11 @@ function slotEff(k){
 const skLv=id=>S.sk[id]||1;
 const owned=id=>id==="cls"||!!(S.own&&S.own[id]);
 function skVals(id){
-  const lv=skLv(id),m=1+0.15*(lv-1);
-  const base={fire:12,ice:18,meteor:50,judge:150}[id];
-  return{m,lv,
-    dmg:id==="cls"?({war:5,mage:8,arc:1,asn:2}[S.cls||"war"])*m:(base||0)*m,
-    heal:Math.min(0.95,0.5+0.03*(lv-1)),
-    dur:id==="rage"?Math.min(20,8+0.5*(lv-1)):Math.min(30,10+0.5*(lv-1)),
-    atk:2+0.1*(lv-1),gold:3+0.2*(lv-1),
-    frz:Math.min(8,3+0.2*(lv-1))};
+  const d=DEF[id]||{},lv=skLv(id),m=1+0.15*(lv-1);
+  const base=id==="cls"?({war:5,mage:8,arc:1,asn:2}[S.cls||"war"]):(d.mul||0);
+  return{m,lv,dmg:base*m,heal:Math.min(0.95,0.5+0.03*(lv-1)),
+    dur:Math.min(d.kind==="rage"?20:d.kind==="shield"?12:30,(d.dur||0)+0.5*(lv-1)),
+    atk:2+0.1*(lv-1),gold:3+0.2*(lv-1),frz:Math.min(8,3+0.2*(lv-1))};
 }
 const n1=n=>(+n.toFixed(1))+"";
 function skInfo(id){
@@ -551,14 +588,14 @@ function skInfo(id){
   if(id==="cls"){const k=CLS[S.cls||"war"],p=k.skill.split(" ");
     return{ic:p[0],n:p.slice(1).join(" "),cd:k.cd,color:k.color,price:0,
       desc:S.cls==="war"?`몬스터 전체 강타 (가장 가까운 적 ${n1(v.dmg)}배, 나머지 60%) + 체력 20% 회복`:S.cls==="mage"?`몬스터 전체에 ${n1(v.dmg)}배 번개 폭풍`:S.cls==="asn"?`8연속 베기 (각 ${n1(v.dmg)}배, 랜덤 대상)`:`화살 8발 (각 ${n1(v.dmg)}배, 랜덤 대상)`}}
-  const d=SKILLS.find(x=>x.id===id);
-  const desc={fire:`몬스터 전체에 ${n1(v.dmg)}배 불꽃 폭발`,heal:`체력 ${Math.round(v.heal*100)}% 즉시 회복`,
-    ice:`전체 ${n1(v.dmg)}배 + ${n1(v.frz)}초 동안 얼려서 공격을 막아요`,
-    rage:`${n1(v.dur)}초 동안 공격력 ${n1(v.atk)}배 · 공격속도 1.5배`,gold:`${n1(v.dur)}초 동안 골드 ${n1(v.gold)}배`,
-    meteor:`하늘에서 유성이 떨어져 전체에 ${n1(v.dmg)}배!`,judge:`신의 빛으로 전체에 ${n1(v.dmg)}배 대심판!`}[id];
+  const d=DEF[id];
+  const desc={snipe:`가장 가까운 적 하나에 ${n1(v.dmg)}배 강타`,heal:`체력 ${Math.round(v.heal*100)}% 즉시 회복`,
+    shield:`${n1(v.dur)}초 동안 몬스터 공격을 모두 막아요`,aoe:`몬스터 전체에 ${n1(v.dmg)}배 공격`,
+    freeze:`전체 ${n1(v.dmg)}배 + ${n1(v.frz)}초 동안 꼼짝 못 하게 해요`,
+    rage:`${n1(v.dur)}초 동안 공격력 ${n1(v.atk)}배 · 공격속도 1.5배`,gold:`${n1(v.dur)}초 동안 골드 ${n1(v.gold)}배`}[d.kind];
   return{ic:d.ic,n:d.n,cd:d.cd,color:d.color,price:d.price,desc};
 }
-const skCost=id=>{const d=SKILLS.find(x=>x.id===id);return Math.floor(Math.max(100,d.price*0.3)*Math.pow(1.3,skLv(id)-1))};   // 강화 비용
+const skCost=id=>{const d=id==="cls"?{price:0}:DEF[id];return Math.floor(Math.max(100,d.price*0.3)*Math.pow(1.3,skLv(id)-1))};   // 강화 비용
 const gc=()=>{if(dirty){C=calc();dirty=false}return C};
 const glCost=k=>Math.floor(100*Math.pow(1.25,S.gl[k]));
 const upCost=(k,lv)=>Math.floor(UP[k].base*Math.pow(UP[k].g,lv-1));
@@ -787,7 +824,7 @@ function setHeroArt(){$("hero").innerHTML=HEROES[S.cls||"war"]();if($("gear"))ap
 /* ================= 전투 ================= */
 const $=id=>document.getElementById(id);
 let quiet0=true;
-let foes=[],foeUid=0,sim=false,hurtVisT=0,auraT=0;
+let foes=[],foeUid=0,sim=false,hurtVisT=0,auraT=0,shieldT=0;
 const aliveF=()=>foes.filter(f=>!f.dead);
 const tgt=()=>foes.find(f=>!f.dead)||null;           // 용사와 가장 가까운 몬스터(배열 순서)
 const gmulOf=(n,boss,bs)=>bs?(boss?1.2:0.3):(1+0.15*(n-1))/n;   // 여러 마리가 와도 너무 아프지 않게
@@ -904,9 +941,9 @@ function heroDie(){
   S.stage=Math.max(1,S.stage-1);S.kill=0;hp=c.maxHp;spawn();
 }
 function useSkill(id,quiet){
-  const d0=SKILLS.find(x=>x.id===id);
+  const d0=id==="cls"?{kind:"core",id:"cls"}:DEF[id];
   if(!S.cls||!d0||!owned(id)||(skCd[id]||0)>0)return;
-  if(id==="heal"&&hp>=gc().maxHp*0.999)return;
+  if(d0.kind==="heal"&&hp>=gc().maxHp*0.999)return;
   const c=gc(),inf=skInfo(id),v=skVals(id);
   skCd[id]=inf.cd;
   const wid=monId;
@@ -914,25 +951,26 @@ function useSkill(id,quiet){
   const run=(fn,ms)=>{if(quiet||ms<=0)fn();else setTimeout(()=>{if(monId===wid&&!paused)fn()},ms)};
   const all=(mul,full)=>run(()=>aliveF().forEach((f,i)=>dealDamage(f,c.atk*mul*(i===0||full?1:0.6),true,quiet)),delay);
   const hits=(n,mul,gap)=>{for(let i=0;i<n;i++)run(()=>{const al=aliveF();if(al.length)dealDamage(al[Math.floor(Math.random()*al.length)],c.atk*mul,true,quiet)},delay+i*gap)};
-  if(id==="cls"){
-    if(S.cls==="war"){
-      const h=c.maxHp*0.2;hp=Math.min(c.maxHp,hp+h);
-      if(!quiet)float("+"+fmt(h),"heal","heroBox");
-      all(v.dmg,false);
-    }else if(S.cls==="mage")all(v.dmg,true);
-    else if(S.cls==="asn")hits(8,v.dmg,90);
-    else hits(8,v.dmg,70);
-  }else if(id==="fire"||id==="meteor"||id==="judge")all(v.dmg,true);
-  else if(id==="ice"){
-    all(v.dmg,true);
-    aliveF().forEach(f=>{f.frz=v.frz;if(f.sprite)f.sprite.classList.add("frz")});
-  }else if(id==="heal"){
-    const h=c.maxHp*v.heal;hp=Math.min(c.maxHp,hp+h);
-    if(!quiet)float("+"+fmt(h),"heal","heroBox");
-  }else if(id==="rage"){
-    rageT=v.dur;dirty=true;
-  }else if(id==="gold"){
-    goldT=v.dur;dirty=true;
+  switch(d0.kind){
+    case "core":
+      if(S.cls==="war"){
+        const h=c.maxHp*0.2;hp=Math.min(c.maxHp,hp+h);
+        if(!quiet)float("+"+fmt(h),"heal","heroBox");
+        all(v.dmg,false);
+      }else if(S.cls==="mage")all(v.dmg,true);
+      else if(S.cls==="asn")hits(8,v.dmg,90);
+      else hits(8,v.dmg,70);
+      break;
+    case "snipe":run(()=>{const f=tgt();if(f)dealDamage(f,c.atk*v.dmg,true,quiet)},delay);break;
+    case "aoe":all(v.dmg,true);break;
+    case "freeze":
+      all(v.dmg,true);
+      aliveF().forEach(f=>{f.frz=v.frz;if(f.sprite)f.sprite.classList.add("frz")});
+      break;
+    case "heal":{const h=c.maxHp*v.heal;hp=Math.min(c.maxHp,hp+h);if(!quiet)float("+"+fmt(h),"heal","heroBox");break}
+    case "shield":shieldT=v.dur;break;
+    case "rage":rageT=v.dur;dirty=true;break;
+    case "gold":goldT=v.dur;dirty=true;break;
   }
 }
 function step(dt,quiet){
@@ -945,7 +983,9 @@ function step(dt,quiet){
     if(f.frz>0){f.frz-=dt;if(f.frz<=0&&f.sprite)f.sprite.classList.remove("frz");continue}
     f.t+=dt;
     while(f.t>=1.2&&monId===wid){
-      f.t-=1.2;hp-=f.dmg;
+      f.t-=1.2;
+      if(shieldT>0){if(!quiet)monAttackFx(f,true);continue}
+      hp-=f.dmg;
       if(!quiet)monAttackFx(f);
       if(hp<=0){heroDie();break}
     }
@@ -955,9 +995,10 @@ function step(dt,quiet){
   if(!quiet){auraT+=dt;if(auraT>0.22){auraT=0;if(rageT>0)emberFx();if(goldT>0)sparkFx()}}
   if(rageT>0){rageT=Math.max(0,rageT-dt);if(rageT===0)dirty=true}
   if(goldT>0){goldT=Math.max(0,goldT-dt);if(goldT===0)dirty=true}
+  if(shieldT>0){shieldT=Math.max(0,shieldT-dt);if(shieldT===0)document.querySelectorAll(".dome").forEach(e=>e.remove())}
   if(S.auto)for(const sk of SKILLS)if(owned(sk.id)&&!(skCd[sk.id]>0)){
-    if(sk.id==="heal"&&hp>gc().maxHp*0.5)continue;
-    if((sk.id==="rage"&&rageT>0)||(sk.id==="gold"&&goldT>0))continue;
+    if(sk.kind==="heal"&&hp>gc().maxHp*0.5)continue;
+    if((sk.kind==="rage"&&rageT>0)||(sk.kind==="gold"&&goldT>0)||(sk.kind==="shield"&&shieldT>0))continue;
     useSkill(sk.id,quiet);
   }
   gpsT+=dt;
@@ -1017,12 +1058,13 @@ function monHurt(f,crit){
   const sz=Math.min(m.w,70)*(crit?1:.7);
   fx(FX.spark,m.cx+(Math.random()*16-8),m.cy+(Math.random()*16-8),sz,sz,[{transform:"scale(.3) rotate(0)",opacity:1},{transform:"scale(1.1) rotate(25deg)",opacity:0}],{duration:240,easing:"ease-out"});
 }
-function monAttackFx(f){
+function monAttackFx(f,blocked){
   if(!f.el)return;
   const h=rel($("hero")),m=rel(f.sprite);
   const dd=Math.max(12,Math.min(85,(m.x-(h.x+h.w))*0.55))+"px";
   f.mv.animate([{transform:"none"},{transform:`translateX(-${dd}) scale(1.08)`,offset:.4},{transform:`translateX(-${dd}) scale(1.08)`,offset:.55},{transform:"none"}],{duration:380,easing:"ease-out"});
   setTimeout(()=>{
+    if(blocked){const hh=rel($("hero"));float("막았다!","heal","heroBox");ring(hh.cx,hh.cy,"#74b9ff",110,300);return}
     const now=performance.now();if(now-hurtVisT<200)return;hurtVisT=now;
     $("heroMv").animate([{transform:"none"},{transform:"translateX(-14px) rotate(-6deg)",offset:.3},{transform:"translateX(3px)",offset:.6},{transform:"none"}],{duration:240});
     $("hero").animate([{filter:"brightness(2) sepia(1) saturate(6) hue-rotate(-30deg)"},{filter:"brightness(1)"}],{duration:260});
@@ -1167,13 +1209,13 @@ const SKFX={
     },540);
     return 560;
   },
-  heal(ps,h){
-    banner("💚 치유의 빛!","#55efc4");
+  heal(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);
     const fy=h.y+h.h*.93;
     fx(HEALRUNE,h.cx,fy,170,58,[{transform:"scaleY(1) rotate(0deg) scale(.3)",opacity:0},{transform:"rotate(90deg) scale(1)",opacity:1,offset:.3},{transform:"rotate(180deg) scale(1.05)",opacity:0}],{duration:1100,easing:"ease-out"});
-    fx(`<div style="width:100%;height:100%;background:linear-gradient(to top,rgba(85,239,196,.9),rgba(255,255,255,.55),transparent);border-radius:40px 40px 0 0"></div>`,h.cx,fy-60,70,150,[{transform:"scaleY(.1) scaleX(.5)",opacity:0,transformOrigin:"50% 100%"},{transform:"scaleY(1) scaleX(1)",opacity:1,offset:.3,transformOrigin:"50% 100%"},{transform:"scaleY(1) scaleX(.6)",opacity:0,transformOrigin:"50% 100%"}],{duration:1000});
-    $("hero").animate([{filter:"brightness(2) drop-shadow(0 0 16px #55efc4)"},{filter:"brightness(1)"}],{duration:900});
-    for(let i=0;i<14;i++)burst(h.cx+rnd(-34,34),fy-rnd(0,20),{n:1,colors:["#55efc4","#fff","#b8ffe6"],dist:10,size:rnd(9,15),grav:-rnd(60,110),dur:rnd(700,1100),shape:i%2?"s":"c",delay:i*55});
+    fx(`<div style="width:100%;height:100%;background:linear-gradient(to top,${d.color},rgba(255,255,255,.55),transparent);border-radius:40px 40px 0 0;opacity:.85"></div>`,h.cx,fy-60,70,150,[{transform:"scaleY(.1) scaleX(.5)",opacity:0,transformOrigin:"50% 100%"},{transform:"scaleY(1) scaleX(1)",opacity:1,offset:.3,transformOrigin:"50% 100%"},{transform:"scaleY(1) scaleX(.6)",opacity:0,transformOrigin:"50% 100%"}],{duration:1000});
+    $("hero").animate([{filter:`brightness(2) drop-shadow(0 0 16px ${d.color})`},{filter:"brightness(1)"}],{duration:900});
+    for(let i=0;i<14;i++)burst(h.cx+rnd(-34,34),fy-rnd(0,20),{n:1,colors:[d.color,"#fff"],dist:10,size:rnd(9,15),grav:-rnd(60,110),dur:rnd(700,1100),shape:i%2?"s":"c",delay:i*55});
     return 0;
   },
   ice(ps,h){
@@ -1190,19 +1232,19 @@ const SKFX={
     setTimeout(()=>shakeB(7,320),520);
     return 560;
   },
-  rage(ps,h){
-    banner("😡 광폭화!","#ff6b6b");heroCast("#ff4757",true);flashScr("#ff4757",420,.55);
+  rage(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast(d.color,true);flashScr(d.color,420,.5);
     const fy=h.y+h.h*.93;
-    ring(h.cx,fy,"#ff4757",300,700,true);ring(h.cx,fy,"#ffb142",220,600,true,120);
-    for(let i=0;i<22;i++)burst(h.cx+rnd(-30,30),fy-rnd(0,50),{n:1,colors:["#ff4757","#ff9a3c","#ffd36a"],dist:12,size:rnd(8,16),grav:-rnd(70,140),dur:rnd(600,1000),delay:i*28});
+    ring(h.cx,fy,d.color,300,700,true);ring(h.cx,fy,"#ffb142",220,600,true,120);
+    for(let i=0;i<22;i++)burst(h.cx+rnd(-30,30),fy-rnd(0,50),{n:1,colors:[d.color,"#ff9a3c","#ffd36a"],dist:12,size:rnd(8,16),grav:-rnd(70,140),dur:rnd(600,1000),delay:i*28});
     fx("💢",h.cx+16,h.y+8,56,56,[{transform:"scale(.2) rotate(-20deg)",opacity:1},{transform:"scale(1.5) rotate(10deg)",opacity:0}],{duration:700});
     $("hero").classList.add("rage");
     heroMv([{transform:"none"},{transform:"scale(1.2)",offset:.25},{transform:"scale(1.06)",offset:.5},{transform:"none"}],700);
     shakeB(6,400);
     return 0;
   },
-  gold(ps,h){
-    banner("💰 황금 손!","#ffd36a");heroCast("#fdcb6e",true);flashScr("#ffe27a",360,.5);
+  gold(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast("#fdcb6e",true);flashScr("#ffe27a",360,.5);
     const b=$("battle"),W=b.clientWidth,H=b.clientHeight;
     for(let i=0;i<24;i++)fx("🪙",rnd(10,W-10),-14,rnd(22,32),rnd(22,32),[{transform:"translateY(0) rotate(0)",opacity:1},{transform:`translateY(${H-34}px) rotate(${rnd(200,540)}deg)`,opacity:.9}],{duration:rnd(800,1100),delay:i*45,easing:"ease-in",fill:"backwards"});
     for(let i=0;i<10;i++)burst(rnd(20,W-20),rnd(40,H-60),{n:1,colors:["#ffe27a","#fff"],dist:6,size:rnd(12,20),grav:0,dur:700,shape:"s",delay:i*80});
@@ -1246,10 +1288,172 @@ const SKFX={
     },900);
     return 920;
   },
+  shield(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast(d.color);
+    document.querySelectorAll(".dome").forEach(e=>e.remove());
+    const dm=document.createElement("div");dm.className="dome";dm.style.color=d.color;$("heroMv").appendChild(dm);
+    dm.animate([{transform:"scale(.2)",opacity:0},{transform:"scale(1.15)",opacity:1,offset:.5},{transform:"scale(1)"}],{duration:420,easing:"ease-out"});
+    ring(h.cx,h.cy,d.color,200,500);
+    if(d.smoke)for(let i=0;i<14;i++)burst(h.cx+rnd(-28,28),h.cy+rnd(-10,40),{n:1,colors:["#b2bec3","#dfe6e9","#636e72"],dist:30,size:rnd(26,44),grav:-14,dur:rnd(900,1400),delay:i*40});
+    return 0;
+  },
+  strike(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast(d.color);
+    const t=ps[0]||centroid(ps,h),dd=dashDist();
+    heroMv([{transform:"none"},{transform:`translateX(${dd}px) scale(1.18)`,offset:.28},{transform:`translateX(${dd}px) scale(1.18)`,offset:.55},{transform:"none"}],700);
+    wpAnim([{transform:"rotate(0)"},{transform:"rotate(-60deg)",offset:.15},{transform:"rotate(70deg)",offset:.3},{transform:"rotate(70deg)",offset:.55},{transform:"rotate(0)"}],700);
+    setTimeout(()=>{glow(t.cx,t.cy,170,d.color,420);ring(t.cx,t.y+t.h*.95,d.color,190,500,true);ring(t.cx,t.cy,"#fff",120,350);
+      burst(t.cx,t.cy,{n:14,colors:["#ffd36a",d.color,"#fff"],dist:64,size:9,shape:"s"});slashLine(t.cx,t.cy,170,-25,"#fff",0,300);
+      const f=tgt();if(f&&f.mv)f.mv.animate([{transform:"none"},{transform:"translateX(46px) rotate(14deg)"},{transform:"none"}],{duration:420,easing:"ease-out"});
+      shakeB(8,300);flashScr("#fff",160,.5)},210);
+    return 230;
+  },
+  spin(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast(d.color);
+    const dd=dashDist()*0.75,fy=h.y+h.h*.93;
+    heroMv([{transform:"none"},{transform:`translateX(${dd}px) rotate(720deg) scale(1.1)`,offset:.7},{transform:`translateX(${dd}px) rotate(720deg)`,offset:.8},{transform:"none"}],950,"ease-in-out");
+    wpAnim([{transform:"rotate(80deg)"},{transform:"rotate(80deg)",offset:.8},{transform:"rotate(0)"}],950);
+    for(let k=0;k<5;k++)setTimeout(()=>{const px=h.cx+dd*(k/5);ring(px,fy,d.color,150,400,true);
+      for(let j=0;j<4;j++)slashLine(px,h.cy,110,j*45+k*20,j%2?d.color:"#fff",j*25,260)},k*90);
+    fx("🌪️",h.cx+dd*.5,h.cy,120,120,[{transform:"scale(.3) rotate(0)",opacity:.9},{transform:"scale(1.4) rotate(540deg)",opacity:0}],{duration:800});
+    setTimeout(()=>{ps.slice(0,8).forEach((q,i)=>{const sz=Math.min(150,q.w*1.6);fx(FX.slash,q.cx,q.cy,sz,sz,[{transform:"scale(.4) rotate(-40deg)",opacity:1},{transform:"scale(1.2) rotate(40deg)",opacity:0}],{duration:380,delay:i*40,fill:"backwards"});burst(q.cx,q.cy,{n:6,colors:[d.color,"#fff"],dist:48,size:8,delay:i*40})});shakeB(8,320)},560);
+    return 580;
+  },
+  quake(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast(d.color,true);dimScr(.35,1000);
+    const c=centroid(ps,h),dd=dashDist()*0.5,fy=h.y+h.h*.93;
+    heroMv([{transform:"none"},{transform:"translateY(5px) scale(1.06,.9)",offset:.12},{transform:`translate(${dd*.5}px,-80px) rotate(-10deg)`,offset:.38},{transform:`translate(${dd}px,0) scale(1.1,.9)`,offset:.52},{transform:`translate(${dd}px,0)`,offset:.75},{transform:"none"}],900);
+    wpAnim([{transform:"rotate(-100deg)"},{transform:"rotate(-100deg)",offset:.38},{transform:"rotate(110deg)",offset:.52},{transform:"rotate(110deg)",offset:.75},{transform:"rotate(0)"}],900);
+    const sx=h.cx+dd,len=Math.max(120,c.cx+70-sx);
+    let pts="M0 20",x=0;while(x<len){x+=rnd(12,24);pts+=` L${x.toFixed(0)} ${(20+rnd(-14,14)).toFixed(0)}`}
+    setTimeout(()=>{
+      fx(`<svg viewBox="0 0 ${len} 40" preserveAspectRatio="none"><path d="${pts}" fill="none" stroke="#2b1d3a" stroke-width="9" stroke-linejoin="round"/><path d="${pts}" fill="none" stroke="#ffb142" stroke-width="3.5" stroke-linejoin="round"/></svg>`,sx+len/2,fy+4,len,42,[{transform:"scaleX(.05)",opacity:1,transformOrigin:"0 50%"},{transform:"scaleX(1)",opacity:1,offset:.35,transformOrigin:"0 50%"},{transform:"scaleX(1)",opacity:0,transformOrigin:"0 50%"}],{duration:900,easing:"ease-out"});
+      ring(sx,fy,d.color,260,600,true);
+      ps.slice(0,8).forEach((q,i)=>{const t=i*60;
+        ring(q.cx,q.y+q.h*.95,d.color,Math.max(120,q.w*1.8),520,true,t);
+        burst(q.cx,q.y+q.h,{n:10,colors:["#8d6e63","#b08968","#e17055","#ffb142"],dist:50,size:12,grav:70,dur:700,delay:t});
+        const f=aliveF()[i];if(f&&f.mv)f.mv.animate([{transform:"none"},{transform:"translateY(-42px) rotate(-8deg)",offset:.4},{transform:"none"}],{duration:520,delay:t,easing:"ease-out"})});
+      shakeB(14,520);flashScr("#ffb142",260,.4)},470);
+    return 500;
+  },
+  holysword(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast("#ffe27a",true);dimScr(.72,1700);flashScr("#ffe27a",500,.4);
+    const c=centroid(ps,h);
+    wpAnim([{transform:"rotate(0)"},{transform:"rotate(-80deg)",offset:.4},{transform:"rotate(-80deg)",offset:.85},{transform:"rotate(0)"}],1300);
+    heroMv([{transform:"none"},{transform:"translateY(-22px)",offset:.4},{transform:"translateY(-22px)",offset:.85},{transform:"none"}],1300);
+    fx(`<svg viewBox="0 0 40 170"><defs><linearGradient id="gSw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffe27a"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#ffe27a"/></linearGradient></defs><path d="M20 170 L32 54 L8 54z" fill="url(#gSw)" stroke="#b7791f" stroke-width="2.5" stroke-linejoin="round"/><rect x="0" y="46" width="40" height="9" rx="4" fill="#ffd36a" stroke="#b7791f" stroke-width="2.5"/><rect x="15" y="12" width="10" height="36" rx="3" fill="#b7791f"/><circle cx="20" cy="8" r="7" fill="#ffd36a" stroke="#b7791f" stroke-width="2.5"/></svg>`,c.cx,-110,80,260,[{transform:"translateY(0) scale(1.2)",opacity:0},{transform:"translateY(0) scale(1.2)",opacity:1,offset:.1},{transform:`translateY(${c.cy+30}px) scale(1)`,opacity:1}],{duration:520,delay:420,easing:"ease-in",fill:"backwards"});
+    fx(`<div style="width:100%;height:100%;background:linear-gradient(to bottom,transparent,rgba(255,226,122,.85));border-radius:20px"></div>`,c.cx,$("battle").clientHeight/2,90,$("battle").clientHeight,[{transform:"scaleX(0)",opacity:0},{transform:"scaleX(1)",opacity:.9,offset:.3},{transform:"scaleX(.4)",opacity:0}],{duration:700,delay:420,fill:"backwards"});
+    setTimeout(()=>{
+      flashScr("#fff",600,.95);[0,110,220].forEach((t,k)=>ring(c.cx,c.cy,k?"#fff":"#ffe27a",380+k*90,800,false,t));
+      for(let i=0;i<10;i++)slashLine(c.cx,c.cy,rnd(200,330),i*36,i%2?"#ffe27a":"#fff",0,500);
+      ps.slice(0,8).forEach((q,i)=>{glow(q.cx,q.cy,Math.max(140,q.w*2),"#ffe27a",600,i*30,1.7);burst(q.cx,q.cy,{n:10,colors:["#fff","#ffe27a","#ffb142"],dist:74,size:12,shape:"s",delay:i*30})});
+      shakeB(14,520)},940);
+    return 960;
+  },
+  snipe(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast(d.color);
+    const t=ps[0]||centroid(ps,h),ox=h.x+h.w*.82,oy=h.y+h.h*.58;
+    wpAnim([{transform:"translateX(0)"},{transform:"translateX(-10px)",offset:.55},{transform:"translateX(4px)",offset:.7},{transform:"translateX(0)"}],700);
+    for(let k=0;k<3;k++)fx(`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="${d.color}" stroke-width="5"/><path d="M50 0V30 M50 70V100 M0 50H30 M70 50H100" stroke="#fff" stroke-width="4"/><circle cx="50" cy="50" r="5" fill="#ff4757"/></svg>`,t.cx,t.cy,90,90,[{transform:`scale(${2.4+k*.4}) rotate(${60+k*30}deg)`,opacity:0},{transform:"scale(1) rotate(0)",opacity:1,offset:.7},{transform:"scale(.8)",opacity:0}],{duration:520,delay:k*60,easing:"ease-in",fill:"backwards"});
+    setTimeout(()=>{
+      slashLine((ox+t.cx)/2,(oy+t.cy)/2,Math.hypot(t.cx-ox,t.cy-oy),Math.atan2(t.cy-oy,t.cx-ox)*180/Math.PI,d.color,0,260);
+      fly(ARROWG,60,16,ox,oy,t.cx,t.cy,110,0,null,"linear");
+    },380);
+    setTimeout(()=>{glow(t.cx,t.cy,180,"#fff",420);ring(t.cx,t.cy,d.color,170,500);burst(t.cx,t.cy,{n:14,colors:[d.color,"#fff","#ffd36a"],dist:70,size:9,shape:"s"});shakeB(7,260);flashScr("#fff",120,.5)},500);
+    return 510;
+  },
+  arrowboom(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast(d.color);
+    const ox=h.x+h.w*.8,oy=h.y+h.h*.6,list=ps.length?ps:[centroid(ps,h)];
+    wpAnim([{transform:"translateX(0)"},{transform:"translateX(-9px)",offset:.3},{transform:"translateX(3px)",offset:.5},{transform:"translateX(0)"}],500);
+    for(let i=0;i<5;i++){
+      const q=list[Math.floor(Math.random()*list.length)],t=i*70;
+      fly(`<div style="width:100%;height:100%;filter:drop-shadow(0 0 6px ${d.color})">${FX.arrow}</div>`,50,14,ox,oy,q.cx,q.cy,300,t,()=>{
+        glow(q.cx,q.cy,Math.max(110,q.w*1.4),d.color,420);ring(q.cx,q.y+q.h*.9,d.color,Math.max(100,q.w*1.5),450,true);
+        burst(q.cx,q.cy,{n:9,colors:["#ff7a1c","#ffd36a","#fff"],dist:58,size:9});shakeB(4,160)},"ease-in");
+    }
+    return 340+4*70;
+  },
+  firerain(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast(d.color,true);dimScr(.4,1100);flashScr("#ff7f50",300,.35);
+    const ox=h.x+h.w*.8,oy=h.y+h.h*.6,list=ps.length?ps:[centroid(ps,h)];
+    const AF=`<div style="width:100%;height:100%;filter:drop-shadow(0 0 7px #ff7a1c) drop-shadow(0 0 3px #ffd36a)">${FX.arrow}</div>`;
+    wpAnim([{transform:"translateX(0)"},{transform:"translateX(-9px)",offset:.3},{transform:"translateX(3px)",offset:.5},{transform:"translateX(0)"}],500);
+    for(let i=0;i<10;i++)fly(AF,50,14,ox+6,oy-6,ox+40+i*24,-50,260,i*22,null,"ease-out");
+    for(let i=0;i<16;i++){
+      const q=list[i%list.length],x=q.cx+rnd(-26,26),t=330+i*45;
+      fly(AF,56,15,x-90,-60,x,q.cy,230,t,()=>{glow(x,q.cy,Math.max(70,q.w),"#ff7a1c",380);burst(x,q.cy,{n:5,colors:["#ff4d00","#ffd36a","#fff"],dist:40,size:8});if(i%4===0)shakeB(4,160)},"ease-in");
+    }
+    return 330+8*45;
+  },
+  starbeam(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast("#ffe27a",true);dimScr(.72,1700);flashScr("#ffe27a",400,.35);
+    const c=centroid(ps,h),ox=h.x+h.w*.8,oy=h.y+h.h*.55,H=$("battle").clientHeight;
+    wpAnim([{transform:"rotate(0)"},{transform:"rotate(-40deg)",offset:.4},{transform:"rotate(-40deg)",offset:.85},{transform:"rotate(0)"}],1300);
+    glow(ox,oy,40,"#ffe27a",900,0,3.2);burst(ox,oy,{n:14,colors:["#ffe27a","#fff"],dist:34,size:9,shape:"s",grav:-30,dur:900});
+    fx(`<svg viewBox="0 0 20 20"><path d="M10 0 L12.5 7.5 L20 10 L12.5 12.5 L10 20 L7.5 12.5 L0 10 L7.5 7.5z" fill="#fff" stroke="#ffe27a" stroke-width="1"/></svg>`,c.cx,26,70,70,[{transform:"scale(.1) rotate(0)",opacity:0},{transform:"scale(1.2) rotate(180deg)",opacity:1,offset:.6},{transform:"scale(1.4) rotate(270deg)",opacity:1}],{duration:700,delay:300,fill:"backwards"});
+    fx(`<div style="width:100%;height:100%;background:linear-gradient(to bottom,#fff,rgba(255,226,122,.9) 40%,rgba(255,226,122,.15));border-radius:12px"></div>`,c.cx,H/2,Math.max(90,Math.min(180,(ps.length||1)*30)),H,[{transform:"scaleX(0)",opacity:0},{transform:"scaleX(1)",opacity:1,offset:.25},{transform:"scaleX(1.2)",opacity:1,offset:.6},{transform:"scaleX(.1)",opacity:0}],{duration:850,delay:880,fill:"backwards"});
+    fly(`<div style="width:100%;height:100%;filter:drop-shadow(0 0 10px #ffe27a)">${FX.arrow}</div>`,150,34,c.cx-8,-60,c.cx,c.cy,300,740,null,"ease-in");
+    setTimeout(()=>{flashScr("#fff",650,.95);[0,110,220].forEach((t,k)=>ring(c.cx,c.cy,k?"#fff":"#ffe27a",360+k*90,800,false,t));
+      burst(c.cx,c.cy,{n:28,colors:["#fff","#ffe27a","#ffb142"],dist:130,size:14,shape:"s",dur:900});
+      ps.slice(0,8).forEach((q,i)=>glow(q.cx,q.cy,Math.max(130,q.w*1.8),"#ffe27a",560,i*30,1.6));shakeB(13,520)},1040);
+    return 1060;
+  },
+  stab(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast("#a55eea");flashScr("#000",450,.35);
+    const t=ps[0]||centroid(ps,h),dd=dashDist();
+    burst(h.cx,h.cy,{n:12,colors:["#2b1d3a","#6c5ce7","#000"],dist:50,size:13,grav:-8,dur:500});
+    heroMv([{transform:"none",opacity:1},{transform:"none",opacity:0,offset:.15},{transform:`translateX(${dd}px)`,opacity:0,offset:.34},{transform:`translateX(${dd}px) scale(1.12)`,opacity:1,offset:.38},{transform:`translateX(${dd}px) scale(1.12)`,opacity:1,offset:.62},{transform:"none",opacity:1}],800,"linear");
+    wpAnim([{transform:"rotate(-70deg)"},{transform:"rotate(-70deg)",offset:.37},{transform:"rotate(90deg)",offset:.5},{transform:"rotate(90deg)",offset:.7},{transform:"rotate(0)"}],800);
+    setTimeout(()=>{slashLine(t.cx,t.cy,190,38,"#ff4757",0,320);slashLine(t.cx,t.cy,190,-38,"#fff",40,320);
+      glow(t.cx,t.cy,150,"#ff4757",380);burst(t.cx,t.cy,{n:16,colors:["#ff4757","#fff","#c56cf0"],dist:70,size:9,shape:"s"});
+      fx("💥",t.cx,t.cy-20,70,70,[{transform:"scale(.2)",opacity:1},{transform:"scale(1.5)",opacity:0}],{duration:420});
+      shakeB(9,300);flashScr("#fff",130,.55)},290);
+    return 310;
+  },
+  poison(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast("#7bed9f");dimScr(.3,1100);
+    const c=centroid(ps,h),ox=h.x+h.w*.8,oy=h.y+h.h*.5;
+    fly("🧪",34,34,ox,oy,c.cx,c.cy,330,120,null,"ease-out");
+    setTimeout(()=>{
+      burst(c.cx,c.cy,{n:12,colors:["#7bed9f","#2ed573","#a4ffbf"],dist:70,size:18,grav:-10,dur:700});
+      ps.slice(0,8).forEach((q,i)=>{
+        for(let k=0;k<3;k++)fx(`<div style="width:100%;height:100%;border-radius:50%;background:radial-gradient(circle,rgba(123,237,159,.85),rgba(46,213,115,.35) 55%,transparent 72%)"></div>`,q.cx+rnd(-20,20),q.cy+rnd(-10,20),Math.max(90,q.w*1.4),Math.max(90,q.w*1.4),[{transform:"scale(.3)",opacity:0},{transform:"scale(1.1)",opacity:.95,offset:.3},{transform:"scale(1.4)",opacity:0}],{duration:1000,delay:i*40+k*70,fill:"backwards"});
+        fx("☠️",q.cx,q.cy-10,28,28,[{transform:"translateY(0) scale(.6)",opacity:1},{transform:"translateY(-60px) scale(1.2)",opacity:0}],{duration:900,delay:i*50+200,fill:"backwards"});
+        burst(q.cx,q.cy,{n:6,colors:["#7bed9f","#fff"],dist:20,size:9,grav:-50,dur:900,delay:i*40})});
+    },450);
+    return 520;
+  },
+  flurry(ps,h,d){
+    banner(d.ic+" "+d.n+"!",d.color);heroCast("#c56cf0");flashScr("#000",700,.4);dimScr(.5,1000);
+    const dd=dashDist(),list=ps.length?ps:[centroid(ps,h)];
+    heroMv([{transform:"none",opacity:1},{transform:"none",opacity:0,offset:.12},{transform:`translateX(${dd}px)`,opacity:0,offset:.86},{transform:`translateX(${dd}px)`,opacity:1,offset:.9},{transform:"none",opacity:1}],1150,"linear");
+    for(let i=0;i<16;i++){
+      const q=list[i%list.length],t=200+i*55;
+      slashLine(q.cx+rnd(-10,10),q.cy+rnd(-12,12),Math.max(130,q.w*2),(i%2?-1:1)*rnd(15,60),i%2?"#c56cf0":"#fff",t,260);
+      setTimeout(()=>{burst(q.cx,q.cy,{n:4,colors:["#c56cf0","#fff"],dist:40,size:7,shape:"s"});
+        if(i%3===0){const g=$("hero").cloneNode(true);g.removeAttribute("id");g.style.cssText=`position:absolute;left:${q.x-q.w*.5}px;top:${q.y-q.h*.2}px;width:${h.w}px;height:${h.h}px;animation:none;opacity:.7;filter:hue-rotate(60deg) brightness(.6);pointer-events:none;z-index:6`;$("battle").appendChild(g);g.animate([{opacity:.75,transform:"scale(1)"},{opacity:0,transform:"scale(1.15)"}],{duration:340}).onfinish=()=>g.remove()}
+        if(i%4===3)shakeB(5,160)},t+50);
+    }
+    return 360;
+  },
+  domain(ps,h,d){
+    banner(d.ic+" "+d.n+"!","#ffffff");heroCast("#c56cf0",true);dimScr(.93,1900);
+    const b=$("battle"),W=b.clientWidth,H=b.clientHeight,c=centroid(ps,h);
+    heroMv([{transform:"none"},{transform:"translateY(-8px)",offset:.3},{transform:"translateY(-8px)",offset:.8},{transform:"none"}],1300);
+    for(let i=0;i<40;i++)slashLine(rnd(10,W-10),rnd(10,H-10),rnd(150,260),rnd(-80,80),i%3?"#fff":"#c56cf0",300+i*26,240);
+    for(let i=0;i<6;i++)setTimeout(()=>flashScr("#fff",90,.4),400+i*150);
+    setTimeout(()=>{
+      slashLine(c.cx,c.cy,Math.max(420,W),38,"#ffffff",0,520);slashLine(c.cx,c.cy,Math.max(420,W),-38,"#c56cf0",40,520);
+      flashScr("#fff",650,.95);[0,120].forEach((t,k)=>ring(c.cx,c.cy,k?"#c56cf0":"#fff",360+k*100,800,false,t));
+      ps.slice(0,8).forEach((q,i)=>{glow(q.cx,q.cy,Math.max(130,q.w*1.8),"#c56cf0",560,i*30,1.6);burst(q.cx,q.cy,{n:10,colors:["#fff","#c56cf0","#2b1d3a"],dist:70,size:11,shape:"s",delay:i*30})});
+      shakeB(14,560)},1150);
+    return 1170;
+  },
 };
 function playSkillFx(id){
-  const ps=foePos(),h=rel($("hero")),key=id==="cls"?S.cls:id;
-  try{return (SKFX[key]||(()=>0))(ps,h)||0}catch(e){return 0}
+  const ps=foePos(),h=rel($("hero")),d=id==="cls"?{id:"cls"}:DEF[id],key=id==="cls"?S.cls:d.fx;
+  try{return (SKFX[key]||(()=>0))(ps,h,d)||0}catch(e){console.error(e);return 0}
 }
 
 /* ================= UI 구성 ================= */
@@ -1320,18 +1524,19 @@ function refreshUI(){
 function refreshSkills(){
   SKILLS.forEach(s=>{
     const i=skInfo(s.id),own=owned(s.id),cd=skCd[s.id]||0,b=$("sk_"+s.id);
+    if(!b)return;
     b.classList.toggle("hide",!own);
+    const kind=s.kind||"core";
     if(own){
       setT(b.querySelector(".ic"),i.ic);
       let st=cd>0?Math.ceil(cd)+"초":"준비!";
-      if(s.id==="rage"&&rageT>0)st="🔥"+Math.ceil(rageT)+"초";
-      if(s.id==="gold"&&goldT>0)st="✨"+Math.ceil(goldT)+"초";
+      if(kind==="rage"&&rageT>0)st="🔥"+Math.ceil(rageT)+"초";
+      if(kind==="gold"&&goldT>0)st="✨"+Math.ceil(goldT)+"초";
+      if(kind==="shield"&&shieldT>0)st="🛡️"+Math.ceil(shieldT)+"초";
       setT(b.querySelector("small"),st);
       b.classList.toggle("ready",cd<=0);
       b.querySelector(".cdo").style.height=(cd>0?cd/i.cd*100:0)+"%";
     }
-    if(s.id==="rage"&&!(rageT>0))$("hero").classList.remove("rage");
-    if(s.id==="gold"&&!(goldT>0))$("hero").classList.remove("goldfx");
     setT($("ski_"+s.id),i.ic);
     setT($("skn_"+s.id),`${i.n} ${"★".repeat(s.star)}${own?" · Lv."+skLv(s.id):""}`);
     setT($("skd_"+s.id),`${i.desc} · 쿨타임 ${i.cd}초`);
@@ -1339,6 +1544,8 @@ function refreshSkills(){
     if(own){const t="강화 💰 "+fmt(skCost(s.id));setT(bt,t);bt.classList.toggle("off",S.gold<skCost(s.id))}
     else{const t="구매 💰 "+fmt(s.price);setT(bt,t);bt.classList.toggle("off",S.gold<s.price)}
   });
+  if(!(rageT>0))$("hero").classList.remove("rage");
+  if(!(goldT>0))$("hero").classList.remove("goldfx");
   $("skMore").classList.toggle("hide",SKILLS.every(k=>owned(k.id)));
 }
 let gearKey="";
@@ -1425,7 +1632,7 @@ function enhanceSlot(){
   S.gold-=c;S.gl[k]++;dirty=true;refreshUI();
 }
 function upSkill(id){
-  const d=SKILLS.find(x=>x.id===id);
+  const d=DEF[id];if(!d)return;
   if(!owned(id)){
     if(S.gold<d.price){toast("💰 코인이 부족해요");return}
     S.gold-=d.price;S.own[id]=true;toast(`${d.ic} ${d.n} 구매 완료!`);refreshUI();return;
@@ -1451,7 +1658,7 @@ function chooseClass(cb){
     const b=e.target.closest("[data-c]");if(!b)return;
     S.cls=b.dataset.c;dirty=true;
     $("clsModal").classList.remove("show");paused=false;
-    hp=gc().maxHp;setHeroArt();$("clsIc").innerHTML=HEROES[S.cls]();skCd={};refreshUI();save();
+    hp=gc().maxHp;setHeroArt();$("clsIc").innerHTML=HEROES[S.cls]();skCd={};setSkills();buildSkills();refreshUI();save();
     toast(`${CLS[S.cls].n} 선택!`);cb&&cb();
   };
 }
@@ -1524,7 +1731,7 @@ function offline(){
 
 /* ================= 시작 ================= */
 if(window.__user){
-buildUp();buildSkills();buildEquip();buildPets();
+setSkills();buildUp();buildSkills();buildEquip();buildPets();
 hp=gc().maxHp;setHeroArt();spawn();quiet0=false;
 offline();refreshUI();
 if(S.cls)$("clsIc").innerHTML=HEROES[S.cls]();
