@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>뇌절 RPG - 오픈월드</title>
+<title>뇌절 RPG - 타락공주</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&display=swap" rel="stylesheet">
 <style>
@@ -262,11 +262,11 @@ const shieldMesh=new THREE.Mesh(new THREE.SphereGeometry(1.5,48,32),shieldMat);s
 const dizzy=grp(hero,0,2.6,0);dizzy.visible=false;for(let i=0;i<4;i++){const s=sprite(textTex('★',{font:'bold 90px sans-serif',color:'#ffe066',w:128,h:128}),.38,{blending:THREE.AdditiveBlending});dizzy.add(s)}
 /* ----- enemies ----- */
 const builders=[
- function slime(g){const body=mk(new THREE.SphereGeometry(1,40,28),P(0x38f09a,{transparent:true,opacity:.82,roughness:.08,clearcoat:1,clearcoatRoughness:.05,emissive:0x0a8a4a,emissiveIntensity:.25,envMapIntensity:1.1}),0,.95,0,g);body.scale.set(1.2,.95,1.2);
-  mk(new THREE.SphereGeometry(.34,16,12),M(0x0b6a3a,{emissive:0x0b6a3a,emissiveIntensity:.8}),.1,.8,-.1,g);
+ function slime(g){const body=mk(new THREE.SphereGeometry(1,40,28),P(0x6ab8ff,{transparent:true,opacity:.82,roughness:.08,clearcoat:1,clearcoatRoughness:.05,emissive:0x1a5aaa,emissiveIntensity:.35,envMapIntensity:1.1}),0,.95,0,g);body.scale.set(1.2,.95,1.2);
+  mk(new THREE.SphereGeometry(.34,16,12),M(0x0b3a6a,{emissive:0x0b3a6a,emissiveIntensity:.8}),.1,.8,-.1,g);
   for(let i=0;i<6;i++)mk(new THREE.SphereGeometry(rand(.06,.14),8,6),ADD(0xbfffe0,{opacity:.6}),rand(-.7,.7),rand(.4,1.4),rand(-.7,.7),g,false);
   for(const s of[-1,1]){mk(new THREE.SphereGeometry(.22,16,12),M(0xffffff),s*.38,1.2,.88,g);mk(new THREE.SphereGeometry(.1,10,8),M(0x111),s*.38+s*.03*-1,1.2,1.08,g)}
-  const stick=sprite(textTex('초보',{color:'#222',bg:'#ffd84d',font:'bold 72px "Black Han Sans",Jua',w:200,h:110}),1.1,{});stick.position.set(0,2.35,0);g.add(stick);
+  const stick=sprite(textTex('ㅠㅠ',{color:'#123',bg:'#bfe6ff',font:'bold 72px "Black Han Sans",Jua',w:200,h:110}),1.1,{});stick.position.set(0,2.35,0);g.add(stick);
   return{tick:(t)=>{const k=Math.sin(t*3);body.scale.set(1.2-k*.07,.95+k*.1,1.2-k*.07)},hy:2.9}},
  function goblin(g){const sk=P(0x7bd24b,{roughness:.55}),cl=M(0x6a4326),dk=M(0x222);
   for(const s of[-1,1]){mk(new THREE.CapsuleGeometry(.14,.4,6,10),sk,s*.22,.55,0,g)}
@@ -279,7 +279,7 @@ const builders=[
   for(const s of[-1,1])mk(new THREE.ConeGeometry(.035,.12,4),M(0xffffee),s*.1,-.22,.48,hd).rotation.x=Math.PI;
   const arm=grp(g,.7,1.7,.1);mk(new THREE.CapsuleGeometry(.1,.45,6,10),sk,0,-.2,0,arm);
   const fr=grp(arm,.3,.45,.3);mk(new THREE.BoxGeometry(1.2,1.2,.1),P(0xd4a33a,{metalness:.9,roughness:.3}),0,0,0,fr);
-  const pic=mk(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:canvasTex(256,256,(c)=>{const gr=c.createLinearGradient(0,0,256,256);gr.addColorStop(0,'#ffec99');gr.addColorStop(1,'#ff6ba6');c.fillStyle=gr;c.fillRect(0,0,256,256);c.font='120px sans-serif';c.textAlign='center';c.fillText('🐶',128,140);c.font='bold 48px Jua,sans-serif';c.fillStyle='#fff';c.strokeStyle='#000';c.lineWidth=6;c.strokeText('ㄹㅇㅋㅋ',128,225);c.fillText('ㄹㅇㅋㅋ',128,225)})}),0,0,.06,fr,false);
+  const pic=mk(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:canvasTex(256,256,(c)=>{const gr=c.createLinearGradient(0,0,256,256);gr.addColorStop(0,'#ffec99');gr.addColorStop(1,'#ff6ba6');c.fillStyle=gr;c.fillRect(0,0,256,256);c.font='120px sans-serif';c.textAlign='center';c.fillText('🐶',128,140);c.font='bold 48px Jua,sans-serif';c.fillStyle='#fff';c.strokeStyle='#000';c.lineWidth=6;c.strokeText('읽씹',128,225);c.fillText('읽씹',128,225)})}),0,0,.06,fr,false);
   return{tick:(t)=>{hd.rotation.z=Math.sin(t*2.4)*.1;arm.rotation.z=Math.sin(t*3)*.08;fr.rotation.z=Math.sin(t*2)*.12},hy:3.1}},
  function orc(g){const sk=P(0x4a8a52,{roughness:.6}),sh=M(0xf5f5f5),tie=M(0xd62828),dk=M(0x15251a);
   for(const s of[-1,1])mk(new THREE.CapsuleGeometry(.22,.5,6,10),M(0x252a44),s*.4,.65,0,g);
@@ -291,8 +291,8 @@ const builders=[
    const tu=mk(new THREE.ConeGeometry(.07,.38,8),M(0xfff8d6),s*.22,-.32,.4,hd);tu.rotation.x=.25}
   mk(new THREE.BoxGeometry(.35,.04,.04),dk,0,.28,.45,hd);
   const arm=grp(g,-1.0,2.0,.1);mk(new THREE.CapsuleGeometry(.2,.7,6,10),sk,0,-.45,0,arm);mk(new THREE.BoxGeometry(.9,.6,.28),M(0x5a3a1a,{roughness:.5}),0,-1.1,.1,arm);mk(new THREE.BoxGeometry(.2,.08,.3),P(0xbbbbbb,{metalness:1}),0,-.78,.1,arm);
-  const clk=sprite(textTex('17:55',{color:'#ff6b6b',bg:'#14101f',stroke:null,font:'bold 76px "Black Han Sans",Jua',w:260,h:120}),1.8);clk.position.set(0,4.2,0);g.add(clk);
-  const mt=sprite(textTex('회의 소집',{color:'#fff',bg:'#c92a2a',font:'bold 56px "Black Han Sans",Jua',w:260,h:100}),1.5);mt.position.set(0,3.7,0);g.add(mt);
+  const clk=sprite(textTex('ZZZ',{color:'#ff6b6b',bg:'#14101f',stroke:null,font:'bold 76px "Black Han Sans",Jua',w:260,h:120}),1.8);clk.position.set(0,4.2,0);g.add(clk);
+  const mt=sprite(textTex('잠수 중',{color:'#fff',bg:'#c92a2a',font:'bold 56px "Black Han Sans",Jua',w:260,h:100}),1.5);mt.position.set(0,3.7,0);g.add(mt);
   return{tick:(t)=>{bd.scale.y=1+Math.sin(t*2)*.025;arm.rotation.z=Math.sin(t*2.2)*.1;clk.position.y=4.2+Math.sin(t*3)*.08;mt.material.rotation=Math.sin(t*4)*.05},hy:4.6}},
  function dragon(g){const sk=P(0xc84d3a,{roughness:.45,clearcoat:.4}),bel=M(0xf2c27a,{roughness:.6}),wing=M(0x7a1f2e,{side:THREE.DoubleSide,roughness:.6,emissive:0x3a0a14,emissiveIntensity:.4});
   const body=mk(new THREE.SphereGeometry(1,32,24),sk,0,1.3,0,g);body.scale.set(.95,.9,1.4);const belly=mk(new THREE.SphereGeometry(.9,24,16),bel,0,1.1,.15,g);belly.scale.set(.85,.8,1.3);
@@ -317,33 +317,37 @@ const builders=[
    const wm2=mk(new THREE.ShapeGeometry(w),wm,s*.8,.3,-.3,root);wm2.scale.x=s;wm2.userData.s=s;root.userData['w'+s]=wm2}
   const mouth=mk(new THREE.TorusGeometry(.4,.05,8,28,Math.PI),E(0xff4bd6,3),0,.1,.9,root,false);mouth.rotation.z=Math.PI;
   for(let i=-3;i<=3;i++)mk(new THREE.ConeGeometry(.045,.16,4),M(0xffffff),i*.11,.0-Math.abs(i)*.0,.92,root,false).rotation.x=Math.PI;
-  const badges=[];for(let i=0;i<6;i++){const s=sprite(textTex(i%2?'99+':'N',{color:'#fff',bg:'#ff2d55',font:'bold 70px "Black Han Sans",Jua',w:140,h:100}),.9);root.add(s);badges.push(s)}
+  const badges=[];for(let i=0;i<6;i++){const s=sprite(textTex(i%2?'1':'99+',{color:'#fff',bg:'#ff2d55',font:'bold 70px "Black Han Sans",Jua',w:140,h:100}),.9);root.add(s);badges.push(s)}
   const tail=mk(new THREE.TorusGeometry(.5,.07,8,24,Math.PI*1.4),sk,0,-.5,-.7,root);
   return{tick:(t)=>{root.position.y=1.5+Math.sin(t*1.7)*.2;badges.forEach((b,i)=>{const a=t*1.3+i/6*6.28;b.position.set(Math.cos(a)*2.1,.5+Math.sin(t*2+i)*.3,Math.sin(a)*2.1)});[-1,1].forEach(s=>{root.userData['w'+s].rotation.y=s*(.15+Math.sin(t*3)*.2)})},hy:3.9}},
- function king(g){const robe=P(0x15091f,{roughness:.35,metalness:.4,clearcoat:.5}),gold=P(0xffd04d,{metalness:1,roughness:.2,emissive:0xff9a1a,emissiveIntensity:.5});
-  const root=grp(g,0,0,0);const cone=mk(new THREE.ConeGeometry(1.35,3.2,6,1,true),new THREE.MeshStandardMaterial({color:0x1a0b2a,roughness:.4,metalness:.4,side:THREE.DoubleSide,emissive:0x4a1090,emissiveIntensity:.25}),0,1.6,0,root);
-  mk(new THREE.TorusGeometry(1.2,.07,8,40),gold,0,.12,0,root).rotation.x=Math.PI/2;
-  const sh=mk(new THREE.SphereGeometry(.95,28,18,0,Math.PI*2,0,Math.PI*.55),robe,0,3.0,0,root);sh.scale.set(1.35,.8,.9);
-  mk(new THREE.TorusGeometry(.95,.06,8,32),gold,0,3.0,0,root).rotation.x=Math.PI/2;
-  const hd=grp(root,0,3.7,.05);mk(new THREE.SphereGeometry(.52,28,20),M(0xe8e0f5,{roughness:.4}),0,0,0,hd);
-  for(const s of[-1,1]){mk(new THREE.SphereGeometry(.12,10,8),E(0xff3be0,4),s*.2,.04,.44,hd,false).scale.set(1.4,.8,.6);mk(new THREE.BoxGeometry(.28,.04,.05),M(0x120818),s*.2,.24,.46,hd).rotation.z=s*-.3}
-  mk(new THREE.TorusGeometry(.2,.03,8,20,Math.PI),M(0x120818),0,-.2,.46,hd).rotation.z=Math.PI;
-  const crown=grp(root,0,4.65,0);mk(new THREE.CylinderGeometry(.5,.42,.28,24,1,true),gold,0,0,0,crown).material.side=THREE.DoubleSide;
-  for(let i=0;i<7;i++){const a=i/7*6.28;const c=mk(new THREE.ConeGeometry(.12,.45,6),gold,Math.cos(a)*.48,.3,Math.sin(a)*.48,crown);mk(new THREE.SphereGeometry(.07,8,6),E(0xff3b6e,3),Math.cos(a)*.48,.56,Math.sin(a)*.48,crown,false)}
-  const hands=[-1,1].map(s=>{const h=mk(new THREE.SphereGeometry(.28,16,12),M(0xe8e0f5),s*1.9,2.2,.6,root);return h});
-  const rings=[0,1,2].map(i=>{const r=mk(new THREE.TorusGeometry(2.2+i*.55,.035,8,80),E(i%2?0xff4be0:0x8a5bff,2.5),0,2.4,0,root,false);return r});
-  const echo=[1,2].map(i=>{const c=mk(new THREE.ConeGeometry(1.35,3.2,6,1,true),ADD(0xc07bff,{opacity:.14}),0,1.6,-i*.8,root,false);return c});
-  const orbit=[];for(let i=0;i<4;i++){const s=sprite(textTex('뇌절',{color:'#fff',stroke:'#7b2dff',font:'bold 90px "Black Han Sans",Jua'}),1.3,{blending:THREE.AdditiveBlending});root.add(s);orbit.push(s)}
-  const kl=new THREE.PointLight(0xc060ff,12,14,1.6);kl.position.set(0,3.5,1);root.add(kl);
-  return{tick:(t)=>{root.position.y=Math.sin(t*1.3)*.15;crown.position.y=4.65+Math.sin(t*2.2)*.12;crown.rotation.y=t*.8;rings.forEach((r,i)=>{r.rotation.x=Math.PI/2+Math.sin(t*.7+i)*.5;r.rotation.y=t*(.4+i*.2)*(i%2?-1:1)});hands[0].position.y=2.2+Math.sin(t*2)*.18;hands[1].position.y=2.2+Math.cos(t*2)*.18;echo.forEach((e,i)=>{e.position.x=Math.sin(t*1.5+i)*.5*(i+1)});orbit.forEach((o,i)=>{const a=t*.9+i*1.57;o.position.set(Math.cos(a)*2.9,2.7+Math.sin(t*2+i)*.3,Math.sin(a)*2.9)})},hy:5.5}}
+ function princess(g){
+  const gown=new THREE.MeshStandardMaterial({color:0x2a0a2e,side:THREE.DoubleSide,roughness:.4,metalness:.3,emissive:0x6a0a3a,emissiveIntensity:.35}),skin=M(0xffe3d6,{roughness:.5}),hairM=M(0x14081a,{roughness:.35,metalness:.2}),pink=P(0xff4a86,{metalness:1,roughness:.25,emissive:0xff2a6a,emissiveIntensity:.7}),steel=P(0x9a9aa8,{metalness:1,roughness:.3});
+  const root=grp(g,0,0,0);
+  mk(new THREE.ConeGeometry(1.5,2.7,28,1,true),gown,0,1.35,0,root);
+  for(const y of[.25,.7])mk(new THREE.TorusGeometry(1.45-y*.45,.07,8,40),E(0xff4a86,1.2),0,y,0,root,false).rotation.x=Math.PI/2;
+  mk(new THREE.CapsuleGeometry(.5,.55,8,16),gown,0,2.95,0,root);mk(new THREE.TorusGeometry(.52,.06,8,24),pink,0,2.65,0,root).rotation.x=Math.PI/2;
+  for(const s of[-1,1])mk(new THREE.SphereGeometry(.34,14,10),gown,s*.62,3.25,0,root);
+  const hd=grp(root,0,3.9,0);mk(new THREE.SphereGeometry(.5,28,20),skin,0,0,0,hd);
+  mk(new THREE.SphereGeometry(.56,24,18,0,Math.PI*2,0,Math.PI*.62),hairM,0,.06,-.06,hd);
+  for(const s of[-1,1]){mk(new THREE.CapsuleGeometry(.14,1.5,6,10),hairM,s*.52,-.7,-.12,hd);
+   mk(new THREE.SphereGeometry(.1,10,8),E(0xff2a4a,4),s*.2,.04,.43,hd,false).scale.set(1.3,.8,.6);mk(new THREE.BoxGeometry(.3,.05,.05),M(0x120818),s*.2,.2,.45,hd).rotation.z=s*.45}
+  mk(new THREE.TorusGeometry(.1,.025,8,16,Math.PI),E(0xff2a4a,2),0,-.2,.46,hd,false).rotation.z=Math.PI;
+  const crown=grp(root,0,4.55,0);for(let i=0;i<7;i++){const a=i/7*6.28;mk(new THREE.ConeGeometry(.1,.5,5),M(0x120818,{metalness:.9,roughness:.25}),Math.cos(a)*.42,.2,Math.sin(a)*.42,crown);mk(new THREE.SphereGeometry(.07,8,6),E(0xff2a6a,3),Math.cos(a)*.42,.5,Math.sin(a)*.42,crown,false)}
+  const arm=grp(root,1.0,3.2,.1);mk(new THREE.CapsuleGeometry(.14,.8,6,10),gown,.1,-.4,.2,arm).rotation.x=-.5;
+  const pan=grp(arm,.2,-.7,.9);mk(new THREE.CylinderGeometry(.95,.95,.12,28),steel,0,0,.9,pan).rotation.x=Math.PI/2;mk(new THREE.TorusGeometry(.95,.05,8,32),E(0xff3b3b,2),0,0,.9,pan,false);
+  mk(new THREE.BoxGeometry(.16,.16,1.3),M(0x2a1a10),0,0,-.1,pan);
+  const hearts=[];for(let i=0;i<6;i++){const s=sprite(textTex('♥',{font:'bold 110px sans-serif',color:'#ff3b6e',stroke:'#3a0a1a',w:140,h:140}),.9,{});root.add(s);hearts.push(s)}
+  const rings=[0,1].map(i=>mk(new THREE.TorusGeometry(2.2+i*.6,.035,8,80),E(i?0xff4be0:0xff2a4a,2.5),0,2.4,0,root,false));
+  const kl=new THREE.PointLight(0xff3b6e,12,14,1.6);kl.position.set(0,3.5,1);root.add(kl);
+  return{tick:(t)=>{root.position.y=Math.sin(t*1.4)*.15;crown.rotation.y=t*.8;arm.rotation.x=Math.sin(t*2)*.12;pan.rotation.x=Math.sin(t*3)*.1;hearts.forEach((h,i)=>{const a=t*.9+i/6*6.28;h.position.set(Math.cos(a)*2.9,2.6+Math.sin(t*2+i)*.35,Math.sin(a)*2.9)});rings.forEach((r,i)=>{r.rotation.x=Math.PI/2+Math.sin(t*.7+i)*.5;r.rotation.y=t*(.4+i*.2)*(i?-1:1)})},hy:5.4}}
 ];
 const ENEMIES=[
- {n:'초보 슬라임',hp:45,atk:8,sc:1,lines:['끈적!','끈적끈적!','끈적끈적끈적!!']},
- {n:'짤방 고블린',hp:70,atk:10,sc:1,lines:['이거 사실 짤이에요','이거 사실 짤이에요 (2)','이거 사실 짤이에요 (3)']},
- {n:'야근 오크',hp:100,atk:12,sc:.85,lines:['퇴근 5분 전 회의 소집!','회의 끝나고 회의 합시다','다음 회의는 회의 준비 회의']},
- {n:'아재개그 드래곤',hp:140,atk:14,sc:.68,lines:['이불이 방긋? 이불이 방긋!','왕이 넘어지면? 킹콩!','반성문 쓰면? 반성하는 문!']},
- {n:'알림 악마',hp:180,atk:16,sc:.85,lines:['띠링!','띠링! 띠링! 띠링!','읽지 않은 알림 99+']},
- {n:'뇌절왕',hp:300,atk:18,sc:.68,boss:1,lines:['아직 안 끝났다','아직 안 끝났다 아직 안 끝났다','내가 이걸 몇 번째 말하고 있지?']}
+ {n:'눈물 슬라임',sc:1,lines:['흑흑... 끈적...','흑흑흑 끈적끈적...','왜 답장이 없어... 끈적...']},
+ {n:'읽씹 고블린',sc:1,lines:['1이 안 사라져요...','1이 안 사라져요... 1이...','읽었으면 답장을 해줘요!']},
+ {n:'잠수 오크',sc:.85,lines:['마왕님은 지금 잠수 중이십니다...','잠수 중... 잠수 중... 잠수 중...','월급도 같이 잠수 탔어요...']},
+ {n:'이별 드래곤',sc:.68,lines:['이별이 별로야? 이별이 별로야!','우리가 헤어진 게 아니라 이 별에 혼자 남은 거야','마음에 얼음 한 조각... 얼음땡!'],after:['으윽... 공주님은 사실 매일 밤 울고 계셨어...','그 원흉은 동쪽 호수 건너편에 숨어 있다. 잠수 마왕... 그놈을 찾아가라...']},
+ {n:'잠수 마왕',sc:.85,lines:['미안... 폰 꺼놨었어...','나 바빴어... 진짜 바빴어... 바빴어...','고백은 내가 했는데... 왜 내가 도망치지...'],after:['으으... 읽씹한 건... 사랑이 너무 커서 무서웠기 때문이야...','공주에게 전해줘. 미안하다고... 그리고 나 호수 밑으로 다시 잠수할게. (진짜 잠수)']},
+ {n:'타락공주',sc:.68,lines:['남자는 다 똑같아...','남자는 다 똑같아 남자는 다 똑같아','답장 하나가 그렇게 어려웠니?','프라이팬 맛 좀 볼래?']}
 ];
 function flashMats(obj,color=0xffffff,intensity=2.5,dur=.25){const mats=obj.mats;mats.forEach(m=>{m.emissive.set(color);m.emissiveIntensity=intensity});tween(dur,t=>{mats.forEach(m=>{m.emissive.copy(m.userData.e0).lerp(new THREE.Color(color),1-t);m.emissiveIntensity=lerp(intensity,m.userData.i0,t)})},easeOut)}
 const heroMats=[];hero.traverse(o=>{if(o.isMesh&&o.material.emissive){if(!heroMats.includes(o.material)){o.material.userData.e0=o.material.emissive.clone();o.material.userData.i0=o.material.emissiveIntensity;heroMats.push(o.material)}}});
@@ -421,12 +425,12 @@ house(-6,13,Math.PI,{wall:0xe3d0f0,roof:0x7a3fa8});
 // lamp posts
 for(const [x,z] of[[-2,7],[4,-5],[-9,-2],[10,0],[2,9],[-3,-12]]){const g=grp(worldG,x,hgt(x,z),z);mk(new THREE.CylinderGeometry(.06,.08,2.8,8),M(0x2a2036,{metalness:.6}),0,1.4,0,g);mk(new THREE.SphereGeometry(.22,12,10),GM(0xffd890,1.6),0,2.9,0,g,false);colliders.push({x,z,r:.2})}
 // signpost
-{const g=grp(worldG,0,hgt(0,-21),-21);mk(new THREE.CylinderGeometry(.1,.1,2.4,6),M(0x5a3a22),0,1.2,0,g);const s=sprite(textTex('뇌절성 ↑ 위험!',{font:'bold 54px "Black Han Sans",Jua',color:'#fff',bg:'#7a1f2e',w:420,h:110}),1);s.scale.set(3.2,.84,1);s.position.set(0,2.6,0);g.add(s)}
+{const g=grp(worldG,0,hgt(0,-21),-21);mk(new THREE.CylinderGeometry(.1,.1,2.4,6),M(0x5a3a22),0,1.2,0,g);const s=sprite(textTex('타락성 ↑ 위험!',{font:'bold 54px "Black Han Sans",Jua',color:'#fff',bg:'#7a1f2e',w:420,h:110}),1);s.scale.set(3.2,.84,1);s.position.set(0,2.6,0);g.add(s)}
 // windmill
 const windmill=(()=>{const g=grp(worldG,17,hgt(17,-14),-14);mk(new THREE.CylinderGeometry(1,1.6,5,14),M(0xf1e6d2),0,2.5,0,g);mk(new THREE.ConeGeometry(1.5,1.6,14),M(0xc2492f),0,5.8,0,g);const b=grp(g,0,5,1.3);for(let i=0;i<4;i++){const bl=mk(new THREE.BoxGeometry(.45,3.2,.06),M(0xf1e6d2),0,1.7,0,b);const p=grp(b);p.rotation.z=i*Math.PI/2;p.add(bl)}b.children.filter(c=>c.isMesh).forEach(m=>b.remove(m));colliders.push({x:17,z:-14,r:1.8});return b})();
 // trees / rocks / flowers (instanced)
 const treeGrid=new Map();const tk=(x,z)=>Math.floor(x/4)+','+Math.floor(z/4);
-const TERR=[{i:0,c:[-24,-14],r:8,n:4,s:.8},{i:1,c:[28,-26],r:9,n:4,s:.62},{i:2,c:[-32,-46],r:9,n:3,s:.55},{i:3,c:[34,-60],r:10,n:2,s:.36},{i:4,c:[-26,-70],r:10,n:2,s:.5},{i:5,c:[0,-83],r:0,n:1,s:.55,boss:1}];
+const TERR=[{i:0,c:[-24,-14],r:8,n:4,s:.8},{i:1,c:[28,-26],r:9,n:4,s:.62},{i:2,c:[-32,-46],r:9,n:2,s:.55},{i:2,c:[-26,-72],r:9,n:2,s:.55},{i:3,c:[34,-60],r:2,n:1,s:.5,boss:1},{i:4,c:[48,8],r:2,n:1,s:.8,boss:1},{i:5,c:[0,-83],r:0,n:1,s:.55,boss:1}];
 function freeSpot(x,z,pad=0){const d=Math.hypot(x,z);if(d<19||d>100)return false;if(Math.hypot(x-26,z-20)<14)return false;for(const t of TERR){if(Math.hypot(x-t.c[0],z-t.c[1])<t.r+3+pad)return false}if(Math.abs(x)<7&&z<-18&&z>-90)return false;return true}
 {const N=420,f1=new THREE.InstancedMesh(new THREE.ConeGeometry(1.5,3,7),M(0xffffff,{roughness:.8}),N),f2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.1,2.4,7),M(0xffffff,{roughness:.8}),N),tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.2,.3,2,6),M(0x5a3a22),N);
  const m4=new THREE.Matrix4(),col=new THREE.Color();let n=0;
@@ -449,7 +453,7 @@ const pollen=(()=>{const N=500,g=new THREE.BufferGeometry(),a=new Float32Array(N
  const arch=mk(new THREE.TorusGeometry(6.5,.5,10,40,Math.PI),E(0xb04bff,2.2),0,13,0,g,false);
  const beam=mk(new THREE.CylinderGeometry(1.6,1.6,90,24,1,true),ADD(0xff6bd6,{opacity:.16}),0,45,0,g,false);
  const pl=new THREE.PointLight(0xff5be0,30,40,1.4);pl.position.set(0,5,3);g.add(pl);
- const s=sprite(textTex('뇌절성',{font:'bold 90px "Black Han Sans",Jua',color:'#fff',stroke:'#7b2dff',w:320,h:140}),1);s.scale.set(7,3,1);s.position.set(0,17,0);g.add(s)}
+ const s=sprite(textTex('타락성',{font:'bold 90px "Black Han Sans",Jua',color:'#fff',stroke:'#7b2dff',w:320,h:140}),1);s.scale.set(7,3,1);s.position.set(0,17,0);g.add(s)}
 // ---- NPCs
 const markerTex={q:textTex('!',{font:'bold 150px "Black Han Sans",Jua',color:'#ffd84d',stroke:'#7a4a00',w:128,h:160}),r:textTex('?',{font:'bold 150px "Black Han Sans",Jua',color:'#7cf0ff',stroke:'#0a4a7a',w:128,h:160})};
 function mkNPC(x,z,o){const g=grp(worldG,x,hgt(x,z),z);const s=o.s||1,skin=M(0xf0c9a0,{roughness:.6}),rb=M(o.robe,{roughness:.7});
@@ -475,9 +479,9 @@ const ES=[
  {lv:1,hp:40,atk:7,spd:2.7,aggro:11,type:'melee',range:2.1,cd:1.5,xp:14,gold:[3,8],r:.85},
  {lv:3,hp:70,atk:9,spd:3.2,aggro:14,type:'proj',range:10,cd:2,xp:28,gold:[8,16],r:.7},
  {lv:5,hp:140,atk:15,spd:2.5,aggro:12,type:'slam',range:3.4,cd:2.2,xp:55,gold:[15,30],r:1,armor:1},
- {lv:8,hp:230,atk:20,spd:2.4,aggro:15,type:'cone',range:7,cd:2.4,xp:120,gold:[40,70],r:1.3,armor:1},
- {lv:10,hp:270,atk:21,spd:3,aggro:16,type:'proj3',range:11,cd:2.2,xp:170,gold:[60,100],r:.9,armor:1},
- {lv:14,hp:800,atk:26,spd:2.4,aggro:24,type:'king',range:9,cd:1.4,xp:700,gold:[300,300],r:1.4,armor:1,boss:1}
+ {lv:8,hp:420,atk:20,spd:2.6,aggro:16,type:'cone',range:7,cd:2,xp:220,gold:[60,90],r:1.3,armor:1,boss:1},
+ {lv:10,hp:560,atk:23,spd:2.8,aggro:18,type:'king',range:9,cd:1.5,xp:380,gold:[100,140],r:1.2,armor:1,boss:1},
+ {lv:14,hp:1100,atk:28,spd:2.5,aggro:24,type:'king',range:9,cd:1.3,xp:900,gold:[300,300],r:1.4,armor:1,boss:1,final:1}
 ];
 // ---- world monsters
 function wmonPos(t){const a=rand(0,6.283),r=Math.sqrt(Math.random())*t.r;return[t.c[0]+Math.cos(a)*r,t.c[1]+Math.sin(a)*r]}
@@ -489,7 +493,7 @@ for(const t of TERR)for(let i=0;i<t.n;i++)spawnWM(t);
 function collide(p){for(const c of colliders){const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz),m=c.r+.45;if(d<m&&d>1e-4){p.x=c.x+dx/d*m;p.z=c.z+dz/d*m}}
  const cx=Math.floor(p.x/4),cz=Math.floor(p.z/4);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const l=treeGrid.get((cx+i)+','+(cz+j));if(l)for(const c of l){const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz),m=c.r+.4;if(d<m&&d>1e-4){p.x=c.x+dx/d*m;p.z=c.z+dz/d*m}}}}
 const angDiff=(a,b)=>{let d=b-a;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return d};
-const stageLabel=()=>{const d=Math.hypot(hero.position.x,hero.position.z);return d<17?'🏡 뇌절마을':d>78?'🏰 뇌절성 앞':'🌲 들판 · '+Math.round(d)+'m'};
+const stageLabel=()=>{const d=Math.hypot(hero.position.x,hero.position.z);return d<17?'🏡 뇌절마을':d>78?'🏰 타락성 앞':'🌲 들판 · '+Math.round(d)+'m'};
 const mmc=$('#mm').getContext('2d');
 function drawMM(){const c=mmc,W=112,h=W/2,S=.7;c.clearRect(0,0,W,W);c.save();c.beginPath();c.arc(h,h,h-1,0,7);c.clip();c.fillStyle='rgba(18,10,36,.82)';c.fillRect(0,0,W,W);
  const px=x=>h+(x-hero.position.x)*S,pz=z=>h+(z-hero.position.z)*S;
@@ -563,7 +567,7 @@ colliders.push({x:26,z:20,r:7});
 {const w=new THREE.Mesh(new THREE.CircleGeometry(11.5,48),new THREE.MeshPhysicalMaterial({color:0x2a7fe0,transparent:true,opacity:.78,roughness:.05,metalness:.2,clearcoat:1,envMapIntensity:2}));w.rotation.x=-Math.PI/2;w.position.set(26,-.55,20);worldG.add(w);window.__water=w}
 
 function stepMove(dx,dz,sp,dt){const p=hero.position;p.x+=dx*sp*dt;p.z+=dz*sp*dt;collide(p);const d=Math.hypot(p.x,p.z);if(d>96){p.x*=96/d;p.z*=96/d}
- if(!bossOpen()&&p.z<-76&&Math.abs(p.x)<12){p.z=-76;if(hintCool<=0){toast('뇌절성의 문이 굳게 닫혀 있다... 이장님의 퀘스트를 먼저 완료하자');hintCool=4}}}
+ if(!bossOpen()&&p.z<-76&&Math.abs(p.x)<12){p.z=-76;if(hintCool<=0){toast('타락성의 문이 굳게 닫혀 있다... 이장님의 퀘스트를 먼저 완료하자');hintCool=4}}}
 function updateWorld(dt){
  const p=hero.position;let moving=false;hintCool-=dt;
  const free=mode==='world'&&PA.stun<=0&&G.hp>0&&PA.rollT<=0;
@@ -705,7 +709,8 @@ function respawnHero(){hero.rotation.set(0,0,0);hero.position.set(-4,0,2);ground
 
 /* ================= ENEMIES ================= */
 const projs=[];
-const frameTex=canvasTex(128,128,(c)=>{const gr=c.createLinearGradient(0,0,128,128);gr.addColorStop(0,'#ffec99');gr.addColorStop(1,'#ff6ba6');c.fillStyle='#d4a33a';c.fillRect(0,0,128,128);c.fillStyle=gr;c.fillRect(8,8,112,112);c.font='bold 40px Jua,sans-serif';c.fillStyle='#fff';c.strokeStyle='#000';c.lineWidth=5;c.textAlign='center';c.strokeText('ㅋㅋ',64,80);c.fillText('ㅋㅋ',64,80)});
+const frameTex=canvasTex(128,128,(c)=>{const gr=c.createLinearGradient(0,0,128,128);gr.addColorStop(0,'#ffec99');gr.addColorStop(1,'#ff6ba6');c.fillStyle='#d4a33a';c.fillRect(0,0,128,128);c.fillStyle=gr;c.fillRect(8,8,112,112);c.font='bold 40px Jua,sans-serif';c.fillStyle='#fff';c.strokeStyle='#000';c.lineWidth=5;c.textAlign='center';c.strokeText('1',64,84);c.fillText('1',64,84)});
+const heartTex=textTex('♥',{font:'bold 110px sans-serif',color:'#ff3b6e',stroke:'#3a0a1a',w:140,h:140});const replyTex=textTex('답장!',{color:'#fff',bg:'#7a1f4a',font:'bold 64px "Black Han Sans",Jua',w:200,h:100});
 const badgeTex=textTex('99+',{color:'#fff',bg:'#ff2d55',font:'bold 70px "Black Han Sans",Jua',w:140,h:100});
 const orbTex=glowTex;
 function shoot(m,yaw,{tex,spd=9,dmg,life=2.8,r=.75,size=1.5,color=0xffffff,add=false}){
@@ -742,13 +747,13 @@ function fireAttack(m){
   const dx=hp.x-gp.x,dz=hp.z-gp.z;if(Math.hypot(dx,dz)<7.6&&Math.abs(angDiff(yaw,Math.atan2(dx,dz)))<.6)hurtHero(dmg,gp.x,gp.z)}
  else if(type==='proj'){shoot(m,yaw,{tex:frameTex,dmg,spd:10,size:1.5});SFX.slash()}
  else if(type==='proj3'){for(const o of[-.32,0,.32])shoot(m,yaw+o,{tex:badgeTex,dmg:dmg*.8,spd:8,size:1.2});SFX.joke()}
- else if(type==='ring'){for(let i=0;i<10;i++)shoot(m,yaw+i/10*Math.PI*2,{tex:orbTex,dmg:dmg*.7,spd:7,size:1.4,add:true,color:0xff49d8});for(const o of[-.15,0,.15])shoot(m,yaw+o,{tex:badgeTex,dmg:dmg*.8,spd:10,size:1.3});ring(gp,{color:0xff49d8,max:8,life:.6,y:.15});SFX.boom()}
+ else if(type==='ring'){const pr=m.t.i===5;for(let i=0;i<10;i++)shoot(m,yaw+i/10*Math.PI*2,{tex:pr?heartTex:orbTex,dmg:dmg*.7,spd:7,size:1.4,add:!pr,color:0xff49d8});for(const o of[-.15,0,.15])shoot(m,yaw+o,{tex:pr?replyTex:badgeTex,dmg:dmg*.8,spd:10,size:1.3});ring(gp,{color:0xff49d8,max:8,life:.6,y:.15});SFX.boom()}
  m.state='recover';m.tt=.35}
 const BARK_REP=['!','!!','!!!'];
 function bark(m,reps){const lines=ENEMIES[m.t.i].lines;const l=lines[(m.li=(m.li||0)+1)%lines.length]+(reps>1?` (${reps}연타!)`:'');
  if(m.t.boss){fxFloat(l,enemyHead(m),'#ffb0f0');return}
  if(!m.bar)showBar(m);const sp=m.bar.querySelector('.sp');sp.textContent=l;sp.style.display='block';m.sayT=2}
-function startAttack(m){const reps=1+Math.min(4,Math.floor(m.fightT/7))+(m.S.boss?1:0);m.repLeft=reps-1;bark(m,reps);beginWindup(m,m.S.boss?.65:.75)}
+function startAttack(m){const reps=1+Math.min(4,Math.floor(m.fightT/7))+(m.S.boss?1:0)+(m.rage?1:0);m.repLeft=reps-1;bark(m,reps);beginWindup(m,m.rage?.5:m.S.boss?.65:.75)}
 function updateEnemies(dt){
  const hp=hero.position;
  for(const m of wmons){
@@ -762,7 +767,7 @@ function updateEnemies(dt){
   if(mode==='dialog'){}
   else if(mode==='dead'||mode==='title'){m.state='idle';wonder(m,dt)}
   else{
-   const safe=Math.hypot(hp.x,hp.z)<16,open=!m.t.boss||bossOpen();
+   const safe=Math.hypot(hp.x,hp.z)<16,open=!S.final||bossOpen();
    const alert=!safe&&G.hp>0&&open&&d<S.aggro*(isNight()?1.25:1);
    m.cd-=dt;
    switch(m.state){
@@ -791,13 +796,14 @@ function updateBars(){let boss=null;
   if(!show){m.bar.style.display='none';continue}
   const v=enemyHead(m).project(camera);if(v.z>1||Math.abs(v.x)>1.2){m.bar.style.display='none';continue}
   m.bar.style.display='block';m.bar.style.left=((v.x*.5+.5)*innerWidth)+'px';m.bar.style.top=((-v.y*.5+.5)*innerHeight)+'px';m.bar.querySelector('i').style.width=clamp(m.hp/m.max*100,0,100)+'%'}
- const b=$('#boss');if(boss&&mode==='world'){b.style.display='block';$('#bn').textContent='👑 뇌절왕';$('#bh').style.width=clamp(boss.hp/boss.max*100,0,100)+'%';$('#bt').textContent=boss.frozen>0?'🥶 썰렁':''}else b.style.display='none'}
+ const b=$('#boss');if(boss&&mode==='world'){b.style.display='block';$('#bn').textContent=(boss.S.final?'💔 ':'⚔️ ')+ENEMIES[boss.t.i].n;$('#bh').style.width=clamp(boss.hp/boss.max*100,0,100)+'%';$('#bt').textContent=boss.frozen>0?'🥶 썰렁':''}else b.style.display='none'}
 function hurtEnemy(m,d,{crit=false,kb=2}={}){
  if(!m.alive)return;m.hp-=d;m.combatT=6;if(m.state==='idle'){m.state='chase';m.fightT=0}showBar(m);
  fxFloat(crit?d+'!':''+d,enemyHead(m),crit?'#ffd84d':'#fff');burst(enemyHead(m).add(new THREE.Vector3(0,-.5,0)),{color:crit?0xffd84d:0xffffff,n:crit?50:22,speed:crit?8:5,life:.6});
  SFX.hit();flashMats(m,0xffffff,crit?4:2.4,.25);addShake(crit?.7:.28);hitstop(crit?110:55,.1);fxPass.uniforms.amt.value=crit?1.4:.7;bloomKick=crit?.4:.1;
  const dx=m.g.position.x-hero.position.x,dz=m.g.position.z-hero.position.z,l=Math.hypot(dx,dz)||1,k=(m.S.armor?.45:1)*(m.t.boss?.25:1)*kb*2.2;m.kv.set(dx/l*k,0,dz/l*k);m.kbT=.2;
  if(!m.S.armor&&m.state!=='recover'){m.state='stagger';m.tt=.3}
+ if(m.S.final&&!m.rage&&m.hp>0&&m.hp<m.max*.5){m.rage=true;m.cd=0;bigText('분노!!',1,false);toast('타락공주: 마왕 때릴 때보다 약하네...?');flashMats(m,0xff0000,4,1);addShake(.8)}
  if(m.hp<=0)killEnemy(m)}
 function killEnemy(m){
  m.alive=false;m.state='dead';SFX.die();m.dead=30;if(m.frozen>0)thaw(m);if(m.bar){m.bar.remove();m.bar=null}
@@ -805,8 +811,8 @@ function killEnemy(m){
  const sc=m.t.s,g=m.g;tween(.8,t=>{g.scale.setScalar(sc*(1-t));g.rotation.y+=t*.4;g.position.y+=.02},easeIn).then(()=>{g.visible=false});
  const S=m.S,n=m.t.boss?25:rand(3,6)|0;for(let i=0;i<n;i++)dropItem('gold',m.g.position,Math.max(1,Math.round(rand(S.gold[0],S.gold[1])/n)));
  if(m.t.i===0&&Math.random()<.75)dropItem('jelly',m.g.position,1);if(Math.random()<.14)dropItem('pot',m.g.position,1);
- gainXP(S.xp);onKill(m.t.i);if(m.t.boss)setTimeout(victory,1800)}
-function respawnWM(m){const[x,z]=wmonPos(m.t);m.g.position.set(x,hgt(x,z),z);m.tx=x;m.tz=z;m.g.visible=true;m.g.scale.setScalar(m.t.s);m.alive=true;m.hp=m.max;m.state='idle';m.frozen=0;m.fightT=0;m.combatT=0;if(m.ice)m.ice.visible=false;m.mats.forEach(x=>{x.emissive.copy(x.userData.e0);x.emissiveIntensity=x.userData.i0})}
+ gainXP(S.xp);onKill(m.t.i);if(m.S.final)setTimeout(victory,1800);else if(m.S.boss){const af=ENEMIES[m.t.i].after;if(af)setTimeout(()=>{if(mode==='world')dialogue(ENEMIES[m.t.i].n,af)},1700)}}
+function respawnWM(m){const[x,z]=wmonPos(m.t);m.g.position.set(x,hgt(x,z),z);m.tx=x;m.tz=z;m.g.visible=true;m.g.scale.setScalar(m.t.s);m.alive=true;m.rage=false;m.hp=m.max;m.state='idle';m.frozen=0;m.fightT=0;m.combatT=0;if(m.ice)m.ice.visible=false;m.mats.forEach(x=>{x.emissive.copy(x.userData.e0);x.emissiveIntensity=x.userData.i0})}
 
 /* ================= LOOT / XP ================= */
 const drops=[];const coinGeo=new THREE.CylinderGeometry(.2,.2,.06,14),coinMat=P(0xffd04d,{metalness:1,roughness:.2,emissive:0xff9a1a,emissiveIntensity:.6}),jellyGeo=new THREE.SphereGeometry(.22,12,10),jellyMat=P(0x38f09a,{transparent:true,opacity:.85,emissive:0x0a8a4a,emissiveIntensity:.5}),potGeo=new THREE.CapsuleGeometry(.14,.2,4,8),potMat=P(0xff4d6d,{emissive:0xff2244,emissiveIntensity:.6});
@@ -820,19 +826,19 @@ function updateDrops(dt){for(let i=drops.length-1;i>=0;i--){const o=drops[i],m=o
   if(o.age>.8&&d<1.3){pickup(o);scene.remove(m);drops.splice(i,1)}}}
 function pickup(o){SFX.ui();const p=heroHead();
  if(o.kind==='gold'){G.gold+=o.val;fxFloat('+'+o.val+'G',p,'#ffd84d');tone(900+Math.random()*300,.08,'triangle',.05)}
- else if(o.kind==='jelly'){G.jelly++;fxFloat('슬라임 젤리',p,'#7cffb0');updateQuestUI()}
+ else if(o.kind==='jelly'){G.jelly++;fxFloat('눈물 젤리',p,'#7cffb0');updateQuestUI()}
  else{G.pots++;fxFloat('🧪 물약 +1',p,'#ff8aa0')}hud()}
 function gainXP(n){G.xp+=n;fxFloat('+'+n+' XP',heroHead().add(new THREE.Vector3(0,.6,0)),'#b78cff');while(G.xp>=need(G.lv)){G.xp-=need(G.lv);levelUp()}hud()}
 function levelUp(){G.lv++;G.max+=12;G.atk+=2;G.hp=G.max;SFX.win();bigText('LEVEL UP!',1,false);ring(hero.position,{color:0xffd84d,max:10,life:1,y:.1});ring(hero.position,{color:0xffffff,max:6,life:.8,y:.2});burst(heroHead(),{color:0xffd84d,n:100,speed:6,life:1.4,up:3});lightPulse(0xffd84d,30,.7,heroHead());toast(`레벨 ${G.lv}! 공격력 +2, 최대 HP +12, HP 전부 회복`)}
 
 /* ================= QUESTS / SHOP ================= */
 const QUESTS=[
- {t:'슬라임 퇴치',en:0,need:2,xp:40,gold:30,ask:['오! 용사님이 오셨구먼! 반갑네, 반갑네!','난 이 마을 이장인데 말이야... 이장인데 말이야... 이장인데 말이야...','아, 미안하네. 내가 같은 말을 자꾸 하지. 이게 다 뇌절왕 때문이야.','요즘 마을 밖에 몬스터가 득실거려. 먼저 서쪽 들판의 초보 슬라임 2마리만 잡아 주겠나? 잡아 주겠나? 잡아 주겠나?','(조작: 칼질=J/클릭, 구르기=Space, 같은 행동을 연속으로 하면 "뇌절 게이지"가 찹니다!)'],hint:'슬라임은 서쪽 들판에 있네. 서쪽... 서쪽... 서쪽! (지도의 빨간 점을 보게)',done:['오오! 해냈구먼! 해냈구먼! 해냈구먼!','약속한 보상일세. 보상... 보상... 보상! 마음껏 골라 보게나.']},
- {t:'짤방 고블린 소탕',en:1,need:2,xp:80,gold:60,ask:['다음은 북동쪽 숲의 짤방 고블린일세.','그놈들이 우리 마을 사진을 몰래 찍어서 짤로 만든다네. 짤로... 짤로... 짤로!','2마리만 혼내 주게. 그놈들이 던지는 짤은 구르기로 피하게나!'],hint:'북동쪽이야, 북동쪽. 아까 말했는데... 아까 말했는데...',done:['짤방 고블린을 잡다니, 자네 진짜 대단하구먼!','이 은혜는 평생... 평생... 평생 잊지 않겠네.']},
- {t:'야근 오크 구출',en:2,need:1,xp:150,gold:100,ask:['북서쪽 멀리 야근 오크가 있네. 그놈은 아직도 퇴근을 못 했어.','우리 마을 청년들이 끌려가서 회의만 하고 있다네. 회의 끝나고 회의, 그 회의 끝나고 또 회의...','바닥에 붉은 원이 보이면 곧 내려친다는 뜻이야. 피하게!'],hint:'오크는 북서쪽 깊은 곳이야. 퇴근 시간 전에 가야 하네!',done:['청년들이 드디어 퇴근했네! 퇴근!! 퇴근!!! 퇴근!!!!','자네는 우리 마을의 영웅일세. 영웅... 영웅... 영웅!']},
- {t:'아재개그 드래곤',en:3,need:1,xp:300,gold:200,ask:['북동쪽 끝에 드래곤이 산다네. 그놈이 계속 아재개그를 한다네.','"이불이 방긋" 이딴 걸 하루 종일 듣다 보면 마음이 얼어붙는다네. 제발 그 입 좀 닫게 해 주게나.','부채꼴 불길이 나올 거야. 옆으로 구르게!'],hint:'드래곤은 북동쪽 끝이네. 개그에 웃어주면 안 돼, 절대로!',done:['드래곤이 조용해졌네! 마을이 한결 따뜻해졌어.','근데 자네도 방금 드립 쳤지? 쳤지? 쳤지?']},
- {t:'알림 악마 퇴치',en:4,need:1,xp:450,gold:300,ask:['북서쪽 끝 알림 악마가 99+ 알림을 계속 보내고 있네.','"띠링!" "띠링!" "띠링!" 밤새 잠을 못 잔다네. 제발 방해금지 모드로 만들어 주게.'],hint:'악마는 북서쪽 끝이야. 띠링 소리가 들리면 가까운 걸세.',done:['드디어 조용하구먼. 푹... 푹... 푹 자겠네.','이제 길이 열렸네. 마지막 부탁이 있네...']},
- {t:'뇌절왕 토벌',en:5,need:1,xp:1000,gold:800,ask:['이제 북쪽 뇌절성의 문이 열릴 걸세. 거기에 뇌절왕이 있네.','모든 개그를 우려먹고, 모든 이야기를 반복시키는 놈이지. 오래 끌면 연타 횟수가 계속 늘어난다네!','자네는 지금까지 나를 보며 충분히 배웠을 걸세. 반복이 얼마나 위험한지... 위험한지... 위험한지!','부디 무사히 돌아오게. 달렸네... 달렸네... 아니 이제 진짜 끝!'],hint:'뇌절성은 마을에서 쭉 북쪽이네. 큰 보라색 빛기둥이 보일 걸세. 물약은 넉넉히!',done:['해냈구먼...! 정말 해냈구먼!','이제 이 마을도 같은 얘기를 덜 하게 될 걸세. 아마도... 아마도... 아마도.']}
+ {t:'공주의 눈물',en:0,need:2,xp:40,gold:30,ask:['오! 용사님이 오셨구먼! 반갑네, 반갑네!','난 이 마을 이장인데 말이야... 이장인데 말이야... 이장인데 말이야... 아, 본론부터 하지.','옛날에 마왕이 공주님을 좋아했다네. 큰맘 먹고 고백을 했지. 고백... 고백... 고백!','공주님은 받아 주셨고 둘은 사귀었어. 100일 때는 마왕이 직접 케이크도 구웠다네.','그런데 마왕놈이 어느 날부터 메시지를 읽씹하더니... 잠수를 탔네. 잠수이별! 잠수이별!!','공주님은 사흘을 기다리다가 마왕성에 쳐들어가서 프라이팬으로 마왕을 때려잡으셨지. 그리고 그 뒤로... 타락하셨네.','"남자는 다 똑같아"라며 온 세상을 때려부수고 계시다네. 자네가 공주님을 막아 주게.','먼저 서쪽 들판에 공주님의 눈물로 태어난 눈물 슬라임이 있네. 2마리만 처치해 주겠나? 처치해 주겠나? 처치해 주겠나?','(조작: 칼질=J/클릭, 구르기=Space, 같은 행동을 연속하면 뇌절 게이지가 찹니다!)'],hint:'눈물 슬라임은 서쪽 들판에 있네. 서쪽... 서쪽... 서쪽! (지도의 빨간 점을 보게)',done:['오오! 해냈구먼! 해냈구먼! 해냈구먼!','공주님의 눈물이 조금은 마른 것 같네. 약속한 보상일세. 마음껏 골라 보게나.']},
+ {t:'읽씹 고블린 소탕',en:1,need:2,xp:80,gold:60,ask:['마왕의 메시지를 배달하던 고블린들이 있었네.','공주님이 답장을 안 읽은 게 아니라 마왕이 읽씹한 건데... 어쨌든 "1"이 안 사라져서 폭주 중이라네. 1이... 1이... 1이!','북동쪽 숲의 읽씹 고블린 2마리를 혼내 주게. 걔들이 던지는 "1"은 구르기로 피하게나!'],hint:'북동쪽이야, 북동쪽. 아까 말했는데... 아까 말했는데...',done:['읽씹 고블린을 잡다니, 자네 진짜 대단하구먼!','이제 마을에 "1"이 날아다니지 않겠군.']},
+ {t:'잠수 오크 구출',en:2,need:1,xp:150,gold:100,ask:['북서쪽 깊은 곳의 오크는 마왕의 부하라네.','마왕이 잠수를 탄 뒤로 월급도 잠수를 탔다고, 석 달째 야근 중이래. 야근... 야근... 야근!','바닥에 붉은 원이 보이면 곧 내려친다는 뜻이야. 피하게!'],hint:'오크는 북서쪽 깊은 곳이야. 퇴근 시간 전에 가야 하네!',done:['오크들이 드디어 퇴근했네! 퇴근!! 퇴근!!! 퇴근!!!!','자네는 우리 마을의 영웅일세. 영웅... 영웅... 영웅!']},
+ {t:'이별 드래곤 (중간보스)',en:3,need:1,xp:300,gold:200,ask:['북동쪽 끝의 드래곤은 공주님이 아끼던 애마였다네.','이별 후 충격으로 이상해져서 "이별이 별로야?" 같은 개그만 한다네. 중간보스일세!','부채꼴 불길이 나오니 옆으로 구르게! 방어와 물약도 챙기고!'],hint:'드래곤은 북동쪽 끝이네. 개그에 웃어주면 안 돼, 절대로!',done:['드래곤이 조용해졌네! 마을이 한결 따뜻해졌어.','이제 원흉을 찾아야 하네. 마왕이 동쪽 호수 건너편에 숨어 있다는군.']},
+ {t:'잠수 마왕 (중간보스)',en:4,need:1,xp:450,gold:300,ask:['자, 이제 진짜 원흉이 남았네. 프라이팬에 두들겨 맞은 마왕은 도망쳐서... 정말로 "잠수"를 탔다네.','동쪽 호수 건너편에 숨어 있다는 소문일세. 반성은커녕 아직도 폰을 꺼놨다고 하네.','놈이 던지는 "1" 탄막과 내려치기를 조심하게나. 중간보스일세!'],hint:'마왕은 동쪽 호수 건너편이야. 호수에 빠지지 않게 조심하게.',done:['마왕이 그런 말을 했다고...? 사랑이 너무 커서 무서웠다니...','이제 길이 열렸네. 마지막 부탁이 있네...']},
+ {t:'타락공주',en:5,need:1,xp:1000,gold:800,ask:['이제 북쪽 타락성의 문이 열릴 걸세. 거기에 공주님이 계시네.','"남자는 다 똑같아"를 외치며 프라이팬을 휘두르지. 오래 끌면 연타 횟수가 계속 늘어난다네!','체력이 반쯤 깎이면 분노하실 거야. 조심하게나. 하지만 공주님도 사실은... 그냥 답장이 받고 싶었던 거라네.','부디 정신 차리게 해 주게. 달렸네... 달렸네... 아니 이제 진짜 끝!'],hint:'타락성은 마을에서 쭉 북쪽이네. 큰 붉은 빛기둥이 보일 걸세. 물약은 넉넉히!',done:['공주님이 정신을 차리셨다고...! 정말 해냈구먼!','이제 이 마을도 같은 얘기를 덜 하게 될 걸세. 아마도... 아마도... 아마도.']}
 ];
 let qi=0,qstate='none',qprog=0;const SQ={kid:'none',granny:'none'};
 function onKill(i){if(qstate==='active'&&QUESTS[qi].en===i){qprog++;if(qprog>=QUESTS[qi].need){qstate='ready';setTimeout(()=>toast('퀘스트 목표 달성! 이장님에게 보고하세요'),900);SFX.win()}updateQuestUI()}}
@@ -844,7 +850,7 @@ function updateQuestUI(){const el=$('#quest');let h='';
   else{h+=`<div class="q">📜 <b>${q.t}</b><br>이장님에게 보고하자 (<span style="color:#7cf0ff">?</span>)</div>`;chief.marker.material.map=markerTex.r;chief.marker.visible=true}
   chief.marker.material.needsUpdate=true}
  if(qi>=QUESTS.length)chief.marker.visible=false;
- if(SQ.kid==='active')h+=`<div class="q">🟢 철수의 부탁<br>슬라임 젤리 <b>${Math.min(3,G.jelly)}/3</b></div>`;
+ if(SQ.kid==='active')h+=`<div class="q">🟢 철수의 부탁<br>눈물 젤리 <b>${Math.min(3,G.jelly)}/3</b></div>`;
  if(SQ.granny==='active')h+=`<div class="q">🌿 할머니의 부탁<br>약초 <b>${Math.min(4,G.herb)}/4</b></div>`;
  el.innerHTML=h;
  kid.marker.visible=SQ.kid==='none'||(SQ.kid==='active'&&G.jelly>=3);granny.marker.visible=SQ.granny==='none'||(SQ.granny==='active'&&G.herb>=4);
@@ -876,24 +882,24 @@ async function talk(n){
   else{await dialogue('이장님',q.done);qi++;qstate='none';qprog=0;G.gold+=q.gold;fxFloat('+'+q.gold+'G',heroHead(),'#ffd84d');gainXP(q.xp);await rewardPick();updateQuestUI();if(qi<QUESTS.length)toast('새 퀘스트가 있습니다! 이장님에게 말을 걸어보세요')}
  }else if(n===innkeeper){await dialogue('여관 주인',['어서 오세요! 푹 쉬고 가세요.','푹... 푹... 푹 쉬세요! 물건도 팔아요.']);await openShop()}
  else if(n===kid){
-  if(SQ.kid==='none'){await dialogue('철수',['아저씨 아저씨 아저씨 아저씨!','슬라임 젤리가 먹고 싶어요! 먹고 싶어요! 먹고 싶어요!','젤리 3개만 가져다 주세요. 슬라임이 가끔 떨어뜨려요!']);SQ.kid='active';toast('퀘스트 수락: 철수의 부탁');updateQuestUI()}
+  if(SQ.kid==='none'){await dialogue('철수',['아저씨 아저씨 아저씨 아저씨!','눈물 젤리가 먹고 싶어요! 먹고 싶어요! 먹고 싶어요!','젤리 3개만 가져다 주세요. 눈물 슬라임이 가끔 떨어뜨려요!']);SQ.kid='active';toast('퀘스트 수락: 철수의 부탁');updateQuestUI()}
   else if(SQ.kid==='active'){if(G.jelly>=3){await dialogue('철수',['와아아아! 젤리다!','맛있다... 맛있다... 맛있다! 고마워요!']);G.jelly-=3;SQ.kid='done';G.pots+=2;G.gold+=80;gainXP(40);toast('보상: 💰80 + 🧪물약 2개');updateQuestUI();hud()}else await dialogue('철수',[`젤리 ${G.jelly}/3개... 더 주세요 더 주세요!`])}
-  else await dialogue('철수',pick([['제 점심은 김치찌개예요. 어제도 김치찌개...','근데 저는 안 질려요! 안 질려요! 안 질려요!'],['슬라임은 건드리면 끈적해요. 끈적... 끈적... 끈적...']]))}
+  else await dialogue('철수',pick([['제 점심은 김치찌개예요. 어제도 김치찌개...','근데 저는 안 질려요! 안 질려요! 안 질려요!'],['마왕 아저씨가 읽씹했대요! 읽씹! 읽씹!','나쁜 어른이에요. 답장은 바로바로 해야 해요.']]))}
  else if(n===granny){
-  if(SQ.granny==='none'){await dialogue('순자 할머니',['예전엔 뇌절왕도 착한 애였지... 착한 애였지... 착한 애였지...','내 무릎엔 약초가 최고야. 마을 근처 들판에 빛나는 약초 4개만 캐다 주겠나?','같은 행동을 연속으로 하면 점점 세진다네. 5번째엔 폭발한다더군.']);SQ.granny='active';toast('퀘스트 수락: 할머니의 부탁');updateQuestUI()}
+  if(SQ.granny==='none'){await dialogue('순자 할머니',['공주님은 원래 마음이 따뜻한 분이었지... 마왕이 고백하기 전까지는 말이야.','내 무릎엔 약초가 최고야. 마을 근처 들판에 빛나는 약초 4개만 캐다 주겠나?','같은 행동을 연속으로 하면 점점 세진다네. 5번째엔 폭발한다더군.']);SQ.granny='active';toast('퀘스트 수락: 할머니의 부탁');updateQuestUI()}
   else if(SQ.granny==='active'){if(G.herb>=4){await dialogue('순자 할머니',['아이고 고마워라. 고마워라. 고마워라.','이건 답례야. 받아 두렴.']);G.herb-=4;SQ.granny='done';G.pots+=3;gainXP(60);toast('보상: 🧪물약 3개 + 경험치');updateQuestUI();hud()}else await dialogue('순자 할머니',[`약초가 ${G.herb}/4개구나. 파랗게 빛나는 풀이야.`])}
-  else await dialogue('순자 할머니',['폭발하고 나면 민망해서 한 턴 쉰다던데... 쉰다던데... 쉰다던데...'])}}
+  else await dialogue('순자 할머니',['폭발하고 나면 민망해서 잠깐 쉰다던데... 쉰다던데... 쉰다던데...'])}}
 function interact(){if(mode!=='world'||!nearTarget)return;ac();SFX.ui();
  if(nearTarget.type==='npc')talk(nearTarget.n);
  else{const pr=nearTarget.pr;if(pr.kind==='herb'){pr.alive=false;pr.g.visible=false;pr.t=60;G.herb++;fxFloat('🌿 약초',heroHead(),'#7cf0ff');SFX.heal();updateQuestUI()}
   else if(pr.kind==='chest'){pr.alive=false;const g=Math.round(rand(80,200));G.gold+=g;if(Math.random()<.6)G.pots++;SFX.win();burst(new THREE.Vector3(pr.x,pr.g.position.y+1,pr.z),{color:0xffd04d,n:80,speed:5,life:1.2,up:3});ring(pr.g.position,{color:0xffd04d,max:5,life:.8,y:.1});toast(`상자에서 💰${g} 획득!`);pr.g.traverse(o=>{if(o.isSprite)o.visible=false})}
   hud()}}
 function victory(){if(cleared)return;cleared=true;SFX.win();bigText('CLEAR!!',6);mode='dialog';const s=$('#scr');
- s.innerHTML=`<h2 class="ttl">🏆 CLEAR!</h2><div class="desc">뇌절왕을 쓰러뜨렸다!<br>세계는 평화를 되찾았다.<br><b>...정말? 이장님께 보고하러 가자.</b></div><button class="go" id="vback">계속 탐험하기</button>`;s.className='on';
+ s.innerHTML=`<h2 class="ttl">CLEAR!</h2><div class="desc">타락공주를 쓰러뜨렸다!<br>정신을 차린 공주는 눈물을 닦으며 말했다.<br><b>"나... 그냥 답장이 받고 싶었어."</b><br>세계는 평화를 되찾았다.<br>(잠수 마왕은 아직 호수 밑에서 나오지 않았다고 한다.)</div><button class="go" id="vback">계속 탐험하기</button>`;s.className='on';
  $('#vback').onclick=()=>{SFX.ui();s.className='';mode='world';updateQuestUI()}}
 function title(){
  mode='title';showUI('title');
- const s=$('#scr');s.innerHTML=`<h1 class="ttl">뇌절<br>RPG</h1><div class="desc"><b>오픈월드</b>를 자유롭게 탐험하며 <b>실시간 액션</b>으로 싸우세요.<br>이장님의 <b>퀘스트</b>, 레벨업, 전리품, 상점, 낮과 밤이 있습니다.<br><b>같은 행동을 연속으로</b> 하면 점점 강해지고 게이지가 차면 <b style="color:#ff9bf0">뇌절 폭발!</b><br>(폭발 후엔 민망해서 잠시 움직일 수 없어요)</div><button class="go" id="start">모험 시작</button><div class="desc" style="font-size:13px;opacity:.75">PC: WASD 이동 · 마우스 드래그 시점 · J/클릭 공격 · L 드립 · K 방어 · Space 구르기 · R 한번 더 · Q 물약 · E 대화<br>모바일: 왼쪽 드래그 이동, 오른쪽 화면 드래그 시점, 오른쪽 아래 버튼으로 전투</div>`;s.className='on';
+ const s=$('#scr');s.innerHTML=`<h1 class="ttl">뇌절<br>RPG</h1><div class="desc">마왕이 공주에게 고백했다. 사귀었다. 그리고 <b>잠수이별</b>했다.<br>분노한 공주는 마왕을 프라이팬으로 때려잡고 <b style="color:#ff7a93">타락</b>했다...<br>이제 용사가 <b>타락공주를 잡으러</b> 간다!<br><b>오픈월드 실시간 액션</b> · 중간보스 2명 + 최종보스<br>이장님의 <b>퀘스트</b>, 레벨업, 전리품, 상점, 낮과 밤이 있습니다.<br><b>같은 행동을 연속으로</b> 하면 점점 강해지고 게이지가 차면 <b style="color:#ff9bf0">뇌절 폭발!</b><br>(폭발 후엔 민망해서 잠시 움직일 수 없어요)</div><button class="go" id="start">모험 시작</button><div class="desc" style="font-size:13px;opacity:.75">PC: WASD 이동 · 마우스 드래그 시점 · J/클릭 공격 · L 드립 · K 방어 · Space 구르기 · R 한번 더 · Q 물약 · E 대화<br>모바일: 왼쪽 드래그 이동, 오른쪽 화면 드래그 시점, 오른쪽 아래 버튼으로 전투</div>`;s.className='on';
  $('#start').onclick=async()=>{ac();startMusic();SFX.ui();s.className='';mode='world';camDistT=11;camPitch=.55;camYaw=0;showUI('world');updateQuestUI();hud();await sleep(500);talk(chief)}}
 
 /* ================= INPUT ================= */
