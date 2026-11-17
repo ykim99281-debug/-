@@ -217,9 +217,9 @@ const iceMat=new THREE.MeshPhysicalMaterial({color:0x9ee9ff,transparent:true,opa
 /* ================= WORLD ================= */
 // sky dome with nebula shader
 const sky=new THREE.Mesh(new THREE.SphereGeometry(90,48,24),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,
- uniforms:{t:{value:0},boost:{value:0},day:{value:1},dusk:{value:0},sun:{value:new THREE.Vector3(0,1,0)}},
+ uniforms:{t:{value:0},boost:{value:0},day:{value:1},dusk:{value:0},sun:{value:new THREE.Vector3(0,1,0)},tint:{value:new THREE.Vector3()},ta:{value:0}},
  vertexShader:`varying vec3 v;void main(){v=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
- fragmentShader:`varying vec3 v;uniform float t,boost,day,dusk;uniform vec3 sun;
+ fragmentShader:`varying vec3 v;uniform float t,boost,day,dusk,ta;uniform vec3 sun,tint;
  float h(vec3 p){p=fract(p*.3183+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
  float n(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);}
  float fbm(vec3 p){float a=.5,s=0.;for(int i=0;i<5;i++){s+=a*n(p);p*=2.03;a*=.5;}return s;}
@@ -230,7 +230,7 @@ const sky=new THREE.Mesh(new THREE.SphereGeometry(90,48,24),new THREE.ShaderMate
   c+=vec3(.1,.35,.8)*pow(g,3.)*.55;
   c+=vec3(1.,.3,.8)*boost*pow(f,2.)*.5;
   float st=step(.9965,h(floor(d*260.)));c+=st*vec3(.9,.85,1.)*(.6+.4*sin(t*3.+d.x*90.));
-  vec3 dc=mix(vec3(1.,.78,.86),vec3(.28,.48,1.),pow(clamp(y*1.5-.35,0.,1.),.7));dc+=vec3(1.,.92,.96)*pow(fbm(d*vec3(4.,9.,4.)+t*.01),3.)*1.4*smoothstep(.5,.62,y);dc+=vec3(1.,.8,.5)*pow(max(dot(d,sun),0.),48.)*2.;dc=mix(dc,vec3(1.,.52,.3)*(1.1-y*.7)+dc*.25,dusk*.8*(1.-y*.8));c+=vec3(.75,.8,1.)*smoothstep(.9988,.9994,dot(d,-sun))*(1.-day);gl_FragColor=vec4(mix(c,dc,day),1.);}`}));sky.renderOrder=-10;
+  vec3 dc=mix(vec3(1.,.78,.86),vec3(.28,.48,1.),pow(clamp(y*1.5-.35,0.,1.),.7));dc+=vec3(1.,.92,.96)*pow(fbm(d*vec3(4.,9.,4.)+t*.01),3.)*1.4*smoothstep(.5,.62,y);dc+=vec3(1.,.8,.5)*pow(max(dot(d,sun),0.),48.)*2.;dc=mix(dc,vec3(1.,.52,.3)*(1.1-y*.7)+dc*.25,dusk*.8*(1.-y*.8));c+=vec3(.75,.8,1.)*smoothstep(.9988,.9994,dot(d,-sun))*(1.-day);gl_FragColor=vec4(mix(mix(c,dc,day),tint*(.35+.65*day),ta*.5),1.);}`}));sky.renderOrder=-10;
 scene.add(sky);
 // lights
 const hemi=new THREE.HemisphereLight(0x8a7cff,0x1a0a2e,.55);scene.add(hemi);
@@ -358,16 +358,19 @@ const ENEMIES=[
  {n:'눈물 슬라임',sc:1,lines:['흑흑... 끈적...','흑흑흑 끈적끈적...','왜 답장이 없어... 끈적...']},
  {n:'읽씹 고블린',sc:1,lines:['1이 안 사라져요...','1이 안 사라져요... 1이...','읽었으면 답장을 해줘요!']},
  {n:'잠수 오크',sc:.85,lines:['마왕님은 지금 잠수 중이십니다...','잠수 중... 잠수 중... 잠수 중...','월급도 같이 잠수 탔어요...']},
- {n:'이별 드래곤',sc:.68,lines:['이별이 별로야? 이별이 별로야!','우리가 헤어진 게 아니라 이 별에 혼자 남은 거야','마음에 얼음 한 조각... 얼음땡!'],after:['으윽... 공주님은 사실 매일 밤 울고 계셨어...','그 원흉은 동쪽 호수 건너편에 숨어 있다. 잠수 마왕... 그놈을 찾아가라...']},
+ {n:'이별 드래곤',sc:.68,lines:['이별이 별로야? 이별이 별로야!','우리가 헤어진 게 아니라 이 별에 혼자 남은 거야','마음에 얼음 한 조각... 얼음땡!'],after:['으윽... 공주님은 사실 매일 밤 울고 계셨어...','마왕은 남쪽 불의 땅 용암 속에 숨어 있다... 잠수 마왕... 그놈을 찾아가라...']},
  {n:'잠수 마왕',sc:.85,lines:['미안... 폰 꺼놨었어...','나 바빴어... 진짜 바빴어... 바빴어...','고백은 내가 했는데... 왜 내가 도망치지...'],after:['으으... 읽씹한 건... 사랑이 너무 커서 무서웠기 때문이야...','공주에게 전해줘. 미안하다고... 그리고 나 호수 밑으로 다시 잠수할게. (진짜 잠수)']},
  {n:'타락공주',sc:.68,lines:['남자는 다 똑같아...','남자는 다 똑같아 남자는 다 똑같아','답장 하나가 그렇게 어려웠니?','프라이팬 맛 좀 볼래?']}
 ,{n:'허수아비',sc:1,lines:['...']}
+,{n:'읽씹 킹',sc:.85,lines:['1이... 1이 안 사라져...','읽씹! 읽씹! 읽씹!','답장은... 답장은 어디에...'],after:['1이... 드디어... 사라졌다...','마왕은 남쪽 불의 땅에 숨었고, 공주님은 네 지형의 수문장이 모두 쓰러져야 모습을 드러내신다...']}
+,{n:'잠수 오크 선장',sc:.85,lines:['잠수! 전원 잠수! 잠수 중!','월급은 심해에 가라앉았다...','마왕님은 아직 수면 위로 안 올라왔다!'],after:['선장... 이제 퇴근... 하겠습니다...','마왕님은... 불의 땅에서 용암 속으로 진짜 잠수하셨소...']}
 ];
 builders.push(function dummy(g){const wood=M(0x8a5a2a,{roughness:.8}),straw=M(0xe0c060,{roughness:.9});
  mk(new THREE.CylinderGeometry(.12,.14,2.2,8),wood,0,1.1,0,g);const arm=mk(new THREE.BoxGeometry(1.6,.14,.14),wood,0,1.75,0,g);
  const body=mk(new THREE.CylinderGeometry(.5,.62,1.1,10),straw,0,1.35,0,g);mk(new THREE.SphereGeometry(.34,12,10),straw,0,2.4,0,g);mk(new THREE.ConeGeometry(.4,.4,10),M(0x6a4a2a),0,2.78,0,g);
  for(const sx of[-1,1])mk(new THREE.SphereGeometry(.05,6,6),M(0x111),sx*.12,2.45,.31,g,false);mk(new THREE.TorusGeometry(.32,.05,8,20),E(0xff3b3b,1),0,1.4,.55,g,false);mk(new THREE.TorusGeometry(.17,.05,8,20),E(0xffffff,1),0,1.4,.56,g,false);
  return{tick:(t)=>{const w=g.userData.wob||0;g.rotation.z=Math.sin(t*22)*w*.25;g.userData.wob=w*.95},hy:3.3}});
+builders.push(builders[1],builders[2]);
 function flashMats(obj,color=0xffffff,intensity=2.5,dur=.25){const mats=obj.mats;mats.forEach(m=>{m.emissive.set(color);m.emissiveIntensity=intensity});tween(dur,t=>{mats.forEach(m=>{m.emissive.copy(m.userData.e0).lerp(new THREE.Color(color),1-t);m.emissiveIntensity=lerp(intensity,m.userData.i0,t)})},easeOut)}
 const heroMats=[];hero.traverse(o=>{if(o.isMesh&&o.material.emissive){if(!heroMats.includes(o.material)){o.material.userData.e0=o.material.emissive.clone();o.material.userData.i0=o.material.emissiveIntensity;heroMats.push(o.material)}}});
 const heroObj={g:hero,mats:heroMats};
@@ -408,9 +411,14 @@ const worldG=new THREE.Group();scene.add(worldG);
 let mode='title',curE=0,curMon=null,savedPos=new THREE.Vector3(-4,0,2),savedRot=0,envTarget=1;
 const keys={},joy={x:0,y:0},colliders=[],npcs=[],wmons=[];
 const smooth=(x,a,b)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
-function hgt(x,z){const d=Math.hypot(x,z);return smooth(d,16,40)*(Math.sin(x*.07+1)*Math.cos(z*.06)*2.6+Math.sin(x*.21+z*.15)*.7)-2.6*smooth(11-Math.hypot(x-26,z-20),0,6)}
+const SEAISL=[[94,-18,13],[127,6,12],[112,36,11]];
+function hgt(x,z){const d=Math.hypot(x,z),sea=smooth(x,66,92),w0=smooth(-x,66,92),s0=smooth(z,66,92),mtn=smooth(d,28,60)*(1-Math.max(sea,w0,s0));
+ let h=smooth(d,16,40)*(Math.sin(x*.07+1)*Math.cos(z*.06)*(2.6+3.6*mtn)+Math.sin(x*.21+z*.15)*(.7+1*mtn))-2.6*smooth(11-Math.hypot(x-26,z-20),0,6);
+ h+=s0*Math.sin(x*.13+z*.09)*1.6;
+ if(sea>.001){let boost=1.9*smooth(5.5-roadDist(x,z),0,3);for(const i of SEAISL)boost=Math.max(boost,2.1*smooth(i[2]-Math.hypot(x-i[0],z-i[1]),0,4));h=h*(1-sea)+(-1.3+boost)*sea}
+ return h}
 
-function biome(x,z){return{n:smooth(-z,50,80),e:smooth(x,75,100),w:smooth(-x,75,100),s:smooth(z,70,95)}}
+function biome(x,z){return{n:smooth(-z,55,90)*(1-smooth(Math.abs(x),30,60)),e:smooth(x,66,92),w:smooth(-x,66,92),s:smooth(z,66,92)}}
 // ---- roads / walkable area
 const ROADS=[
  [[0,-3],[0,-30],[0,-60],[0,-90]],
@@ -433,10 +441,10 @@ function walkable(x,z,pad=0){if(x*x+z*z<(19+pad)*(19+pad))return true;if(roadDis
  for(const t of TERR){if(Math.hypot(x-t.c[0],z-t.c[1])<Math.max(t.r,6)+4+pad)return true}return false}
 // ---- terrain
 {const geo=new THREE.PlaneGeometry(420,420,190,190);geo.rotateX(-Math.PI/2);const pa=geo.attributes.position,col=new Float32Array(pa.count*3);
- const g1=new THREE.Color(),g2=new THREE.Color(),pu=new THREE.Color(),sand=new THREE.Color(),path=new THREE.Color(),sandB=new THREE.Color(),snowB=new THREE.Color(),lush=new THREE.Color(),c=new THREE.Color();
+ const g1=new THREE.Color(),g2=new THREE.Color(),pu=new THREE.Color(),sand=new THREE.Color(),path=new THREE.Color(),sandB=new THREE.Color(),snowB=new THREE.Color(),rock=new THREE.Color(),seabed=new THREE.Color(),basalt=new THREE.Color(),lavaC=new THREE.Color(),c=new THREE.Color();
  for(let i=0;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i);pa.setY(i,hgt(x,z));const d=Math.hypot(x,z);const n=Math.sin(x*.5)*Math.cos(z*.43)*.5+.5;
   g1.setHSL(.29,.55,.3+n*.08);g2.setHSL(.2,.42,.27+n*.06);pu.setHSL(.76,.42,.17+n*.06);sand.setHSL(.1,.33,.56-n*.05);
-  c.copy(g1).lerp(g2,smooth(d,25,50));{const b=biome(x,z);c.lerp(pu,b.n);c.lerp(sandB.setHSL(.12,.5,.55-n*.06),b.e);c.lerp(snowB.setHSL(.58,.15,.9-n*.05),b.w);c.lerp(lush.setHSL(.33,.6,.36+n*.06),b.s)}if(d<9.5)c.lerp(sand,smooth(9.5-d,0,2.5));{const ld=Math.hypot(x-26,z-20);if(ld<13)c.lerp(sand,smooth(13-ld,0,3)*.8)}{const rd=roadDist(x,z);if(rd<3.4){path.setHSL(.09,.38,.4+n*.05);c.lerp(path,smooth(3.4-rd,0,1.6))}const td=trailDist(x,z);if(td<1.6)c.lerp(path.setHSL(.09,.3,.36),smooth(1.6-td,0,.8)*.4)}
+  c.copy(g1).lerp(g2,smooth(d,25,50));{const b=biome(x,z);const mt=(1-Math.max(b.e,b.w,b.s))*smooth(d,20,50);c.lerp(rock.setHSL(.08,.1,.4+n*.12),mt*.75);c.lerp(pu,b.n*.7);c.lerp(snowB.setHSL(.58,.15,.9-n*.05),b.w);if(b.e>.01){const hy=pa.getY(i);c.lerp(hy>-.45?sandB.setHSL(.12,.5,.6-n*.05):seabed.setHSL(.52,.45,.28+n*.05),b.e)}if(b.s>.01){c.lerp(basalt.setHSL(.02,.25,.1+n*.06),b.s);const vein=Math.abs(Math.sin(x*.19+Math.sin(z*.15)*2.2));if(vein<.07)c.lerp(lavaC.setHSL(.06,1,.5),b.s*(1-vein/.07))}}if(d<9.5)c.lerp(sand,smooth(9.5-d,0,2.5));{const ld=Math.hypot(x-26,z-20);if(ld<13)c.lerp(sand,smooth(13-ld,0,3)*.8)}{const rd=roadDist(x,z);if(rd<3.4){path.setHSL(.09,.38,.4+n*.05);c.lerp(path,smooth(3.4-rd,0,1.6))}const td=trailDist(x,z);if(td<1.6)c.lerp(path.setHSL(.09,.3,.36),smooth(1.6-td,0,.8)*.4)}
   col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
  geo.setAttribute('color',new THREE.BufferAttribute(col,3));geo.computeVertexNormals();
  const ter=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,metalness:0,envMapIntensity:.4}));ter.receiveShadow=true;worldG.add(ter)}
@@ -471,25 +479,28 @@ for(const [x,z] of[[-2,7],[4,-5],[-9,-2],[10,0],[2,9],[-3,-12]]){const g=grp(wor
 const windmill=(()=>{const g=grp(worldG,17,hgt(17,-14),-14);mk(new THREE.CylinderGeometry(1,1.6,5,14),M(0xf1e6d2),0,2.5,0,g);mk(new THREE.ConeGeometry(1.5,1.6,14),M(0xc2492f),0,5.8,0,g);const b=grp(g,0,5,1.3);for(let i=0;i<4;i++){const bl=mk(new THREE.BoxGeometry(.45,3.2,.06),M(0xf1e6d2),0,1.7,0,b);const p=grp(b);p.rotation.z=i*Math.PI/2;p.add(bl)}b.children.filter(c=>c.isMesh).forEach(m=>b.remove(m));colliders.push({x:17,z:-14,r:1.8});return b})();
 // trees / rocks / flowers (instanced)
 const treeGrid=new Map();const tk=(x,z)=>Math.floor(x/4)+','+Math.floor(z/4);
-const TERR=[{i:0,c:[-24,-14],r:8,n:4,s:.8},{i:1,c:[28,-26],r:9,n:4,s:.62},{i:2,c:[-32,-46],r:9,n:2,s:.55},{i:2,c:[-26,-72],r:9,n:2,s:.55},{i:3,c:[34,-60],r:2,n:1,s:.5,boss:1},{i:4,c:[48,8],r:2,n:1,s:.8,boss:1},{i:5,c:[0,-83],r:0,n:1,s:.55,boss:1},{i:6,c:[-6,-1],r:0,n:1,s:1},
- {i:1,c:[94,-18],r:10,n:4,s:.62,k:1.8},{i:2,c:[127,6],r:9,n:3,s:.55,k:1.7},{i:1,c:[112,36],r:8,n:3,s:.62,k:2},
- {i:0,c:[-72,-14],r:9,n:5,s:.8,k:2},{i:2,c:[-100,22],r:9,n:3,s:.55,k:1.9},{i:1,c:[-130,8],r:7,n:3,s:.62,k:2.2},
- {i:0,c:[8,86],r:9,n:5,s:.8,k:2.2},{i:1,c:[32,120],r:9,n:4,s:.62,k:2.1},{i:2,c:[22,152],r:9,n:3,s:.55,k:2}];
+const TERR=[
+ {i:0,c:[-24,-14],r:8,n:4,s:.8},{i:1,c:[28,-26],r:9,n:4,s:.62},{i:2,c:[-32,-46],r:9,n:2,s:.55},{i:2,c:[-26,-72],r:9,n:2,s:.55},{i:7,c:[34,-60],r:2,n:1,s:.62,boss:1},
+ {i:5,c:[0,-83],r:0,n:1,s:.55,boss:1},{i:6,c:[-6,-1],r:0,n:1,s:1},
+ {i:1,c:[94,-18],r:10,n:4,s:.62,k:1.8,tint:0x40c8c0,pre:'해적 '},{i:2,c:[112,36],r:8,n:3,s:.55,k:1.8,tint:0x40c8c0,pre:'해적 '},{i:8,c:[127,6],r:2,n:1,s:.7,boss:1,tint:0x4a90c0},
+ {i:0,c:[-72,-14],r:9,n:5,s:.8,k:2,tint:0xaaddff,pre:'얼음 '},{i:2,c:[-100,22],r:9,n:3,s:.55,k:1.9,tint:0xaaddff,pre:'얼음 '},{i:3,c:[-130,8],r:2,n:1,s:.5,boss:1,tint:0xbfe6ff},
+ {i:0,c:[8,86],r:9,n:5,s:.8,k:2.2,tint:0xff6a3a,pre:'불꽃 '},{i:1,c:[32,120],r:9,n:4,s:.62,k:2.1,tint:0xff6a3a,pre:'불꽃 '},{i:2,c:[34,138],r:7,n:3,s:.55,k:2,tint:0xff6a3a,pre:'불꽃 '},{i:4,c:[22,153],r:2,n:1,s:.85,boss:1}
+];
 function freeSpot(x,z,pad=0){const d=Math.hypot(x,z);if(d<19||d>170)return false;if(Math.hypot(x-26,z-20)<14)return false;for(const t of TERR){if(Math.hypot(x-t.c[0],z-t.c[1])<t.r+3+pad)return false}if(Math.abs(x)<7&&z<-18&&z>-90)return false;return true}
 {const N=3400,f1=new THREE.InstancedMesh(new THREE.ConeGeometry(1.5,3,7),M(0xffffff,{roughness:.8}),N),f2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.1,2.4,7),M(0xffffff,{roughness:.8}),N),tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.2,.3,2,6),M(0x5a3a22),N);
- const m4=new THREE.Matrix4(),col=new THREE.Color();let n=0;
- for(let tries=0;tries<40000&&n<N;tries++){const a=rand(0,6.283),r=Math.sqrt(rand(361,28900));const x=Math.cos(a)*r,z=Math.sin(a)*r;if(walkable(x,z,1.3)||Math.hypot(x-26,z-20)<14)continue;
+ const m4=new THREE.Matrix4(),col=new THREE.Color(),darkC=new THREE.Color(0x1a1210),whiteC=new THREE.Color(1,1,1);let n=0;
+ for(let tries=0;tries<40000&&n<N;tries++){const a=rand(0,6.283),r=Math.sqrt(rand(361,28900));const x=Math.cos(a)*r,z=Math.sin(a)*r;if(walkable(x,z,1.3)||Math.hypot(x-26,z-20)<14||biome(x,z).e>.25)continue;
   const y=hgt(x,z),s=rand(.7,1.25);m4.makeTranslation(x,y+1*s,z).scale(new THREE.Vector3(s,s,s));tr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+s,z));
-  f1.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+2.6*s,z));f2.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+4*s,z));
-  const d=Math.hypot(x,z);{const b=biome(x,z);let h=lerp(.3,.78,b.n),sa=lerp(.5,.45,b.n),l=lerp(.26,.2,b.n);h=lerp(h,.12,b.e);sa=lerp(sa,.6,b.e);l=lerp(l,.4,b.e);h=lerp(h,.55,b.w);sa=lerp(sa,.1,b.w);l=lerp(l,.85,b.w);h=lerp(h,.34,b.s);l=lerp(l,.3,b.s);col.setHSL(h,sa,l+rand(0,.06))}f1.setColorAt(n,col);col.offsetHSL(0,0,.04);f2.setColorAt(n,col);
+  const fsc=biome(x,z).s>.5?.001:s;f1.setMatrixAt(n,new THREE.Matrix4().makeScale(fsc,fsc,fsc).setPosition(x,y+2.6*s,z));f2.setMatrixAt(n,new THREE.Matrix4().makeScale(fsc,fsc,fsc).setPosition(x,y+4*s,z));tr.setColorAt(n,fsc<.01?darkC:whiteC);
+  const d=Math.hypot(x,z);{const b=biome(x,z);let h=lerp(.33,.78,b.n*.6),sa=lerp(.4,.45,b.n),l=lerp(.24,.2,b.n);h=lerp(h,.55,b.w);sa=lerp(sa,.1,b.w);l=lerp(l,.85,b.w);col.setHSL(h,sa,l+rand(0,.06))}f1.setColorAt(n,col);col.offsetHSL(0,0,.04);f2.setColorAt(n,col);
   const k=tk(x,z);if(!treeGrid.has(k))treeGrid.set(k,[]);treeGrid.get(k).push({x,z,r:.75*s});n++}
  [f1,f2,tr].forEach(m=>{m.count=n;m.castShadow=false;m.receiveShadow=false;m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;worldG.add(m)})}
 {const N=220,rk=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),M(0x8a8499,{roughness:.9,flatShading:true}),N);let n=0;
- for(let t=0;t<2000&&n<N;t++){const a=rand(0,6.283),r=rand(16,165),x=Math.cos(a)*r,z=Math.sin(a)*r;if(!freeSpot(x,z))continue;const s=rand(.4,1.6);rk.setMatrixAt(n++,new THREE.Matrix4().compose(new THREE.Vector3(x,hgt(x,z)+s*.3,z),new THREE.Quaternion().setFromEuler(new THREE.Euler(rand(0,3),rand(0,3),0)),new THREE.Vector3(s,s*.7,s)))}
+ for(let t=0;t<2000&&n<N;t++){const a=rand(0,6.283),r=rand(16,165),x=Math.cos(a)*r,z=Math.sin(a)*r;if(!freeSpot(x,z)||biome(x,z).e>.25)continue;const s=rand(.4,1.6);rk.setMatrixAt(n++,new THREE.Matrix4().compose(new THREE.Vector3(x,hgt(x,z)+s*.3,z),new THREE.Quaternion().setFromEuler(new THREE.Euler(rand(0,3),rand(0,3),0)),new THREE.Vector3(s,s*.7,s)))}
  rk.count=n;rk.castShadow=false;worldG.add(rk)}
 {const N=700,fl=new THREE.InstancedMesh(new THREE.SphereGeometry(.13,8,6),new THREE.MeshStandardMaterial({roughness:.5,emissive:0x444444}),N),gr=new THREE.InstancedMesh(new THREE.ConeGeometry(.1,.55,4),M(0x4aa04a,{roughness:.9}),1200);const c=new THREE.Color();let n=0;
- for(let t=0;t<N;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*150,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<10||roadDist(x,z)<2.6)continue;c.setHSL(pick([.0,.12,.15,.58,.85]),.9,.65);fl.setMatrixAt(n,new THREE.Matrix4().setPosition(x,hgt(x,z)+.3,z));fl.setColorAt(n++,c)}fl.count=n;worldG.add(fl);
- n=0;for(let t=0;t<1100;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*155,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<9.5||roadDist(x,z)<2.8)continue;const s=rand(.7,1.6);gr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,hgt(x,z)+.25*s,z));{const b=biome(x,z);c.setHSL(lerp(lerp(lerp(.3,.7,b.n),.13,b.e),.5,b.w),.5,rand(.3,.45)+b.w*.4)}gr.setColorAt(n++,c)}gr.count=n;worldG.add(gr)}
+ for(let t=0;t<N;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*150,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<10||roadDist(x,z)<2.6||biome(x,z).s>.4||biome(x,z).e>.3)continue;c.setHSL(pick([.0,.12,.15,.58,.85]),.9,.65);fl.setMatrixAt(n,new THREE.Matrix4().setPosition(x,hgt(x,z)+.3,z));fl.setColorAt(n++,c)}fl.count=n;worldG.add(fl);
+ n=0;for(let t=0;t<1100;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*155,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<9.5||roadDist(x,z)<2.8||biome(x,z).s>.4||biome(x,z).e>.3)continue;const s=rand(.7,1.6);gr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,hgt(x,z)+.25*s,z));{const b=biome(x,z);c.setHSL(lerp(lerp(lerp(.3,.7,b.n),.13,b.e),.5,b.w),.5,rand(.3,.45)+b.w*.4)}gr.setColorAt(n++,c)}gr.count=n;worldG.add(gr)}
 // pollen
 const pollen=(()=>{const N=500,g=new THREE.BufferGeometry(),a=new Float32Array(N*3);for(let i=0;i<N;i++){a[i*3]=rand(-40,40);a[i*3+1]=rand(.3,7);a[i*3+2]=rand(-40,40)}g.setAttribute('position',new THREE.BufferAttribute(a,3));const p=new THREE.Points(g,new THREE.PointsMaterial({size:.14,map:glowTex,color:0xfff3c0,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));p.frustumCulled=false;worldG.add(p);return p})();
 // boss gate
@@ -521,13 +532,15 @@ const kid=mkNPC(3.2,3.5,{name:'철수',robe:0xffd04d,pants:0x3a5a9a,hair:0x22151
 const smith=mkNPC(8,-13.6,{name:'무기상인',robe:0x6a4a3a,belt:0x222222,hair:0x222222,brows:1,s:1.1});
 const granny=mkNPC(-11,5.5,{name:'순자 할머니',robe:0xb8a0d8,hair:0xdddddd,brows:1,s:.95,cane:true});
 const ES=[
- {lv:1,hp:40,atk:7,spd:2.7,aggro:11,type:'melee',range:2.1,cd:1.5,xp:14,gold:[3,8],r:.85},
- {lv:3,hp:70,atk:9,spd:3.2,aggro:14,type:'proj',range:10,cd:2,xp:28,gold:[8,16],r:.7},
- {lv:5,hp:140,atk:15,spd:2.5,aggro:12,type:'slam',range:3.4,cd:2.2,xp:55,gold:[15,30],r:1,armor:1},
- {lv:8,hp:420,atk:20,spd:2.6,aggro:16,type:'cone',range:7,cd:2,xp:220,gold:[60,90],r:1.3,armor:1,boss:1},
- {lv:10,hp:560,atk:23,spd:2.8,aggro:18,type:'king',range:9,cd:1.5,xp:380,gold:[100,140],r:1.2,armor:1,boss:1},
- {lv:14,hp:1100,atk:28,spd:2.5,aggro:24,type:'king',range:9,cd:1.3,xp:900,gold:[300,300],r:1.4,armor:1,boss:1,final:1},
- {lv:0,hp:999,atk:0,spd:0,aggro:0,type:'none',range:0,cd:9,xp:0,gold:[0,0],r:1,dummy:1}
+ {lv:1,hp:40,atk:7,spd:2.7,aggro:11,type:'melee',range:2.1,cd:1.5,xp:14,gold:[3,8],r:.85,def:0},
+ {lv:3,hp:70,atk:9,spd:3.2,aggro:14,type:'proj',range:10,cd:2,xp:28,gold:[8,16],r:.7,def:2},
+ {lv:5,hp:140,atk:15,spd:2.5,aggro:12,type:'slam',range:3.4,cd:2.2,xp:55,gold:[15,30],r:1,armor:1,def:5},
+ {lv:9,hp:900,atk:22,spd:2.6,aggro:16,type:'cone',range:7,cd:2,xp:450,gold:[100,150],r:1.3,armor:1,boss:1,def:16},
+ {lv:11,hp:1300,atk:25,spd:2.8,aggro:18,type:'king',range:9,cd:1.5,xp:700,gold:[150,220],r:1.2,armor:1,boss:1,def:22},
+ {lv:15,hp:2200,atk:30,spd:2.5,aggro:24,type:'king',range:9,cd:1.3,xp:1500,gold:[400,400],r:1.4,armor:1,boss:1,final:1,def:34},
+ {lv:0,hp:999,atk:0,spd:0,aggro:0,type:'none',range:0,cd:9,xp:0,gold:[0,0],r:1,dummy:1},
+ {lv:7,hp:620,atk:16,spd:3,aggro:18,type:'proj3',range:10,cd:1.8,xp:300,gold:[60,90],r:1.1,armor:1,boss:1,def:10},
+ {lv:10,hp:1000,atk:21,spd:2.6,aggro:16,type:'slam',range:3.6,cd:2,xp:520,gold:[120,180],r:1.2,armor:1,boss:1,def:14}
 ];
 
 // ---- hidden class hall + cairns
@@ -542,13 +555,14 @@ const master=mkNPC(HALL[0]+1.3,HALL[1]+2.2,{name:'전직 스승',robe:0x2a1a4a,b
 function wmonPos(t){const a=rand(0,6.283),r=Math.sqrt(Math.random())*t.r;return[t.c[0]+Math.cos(a)*r,t.c[1]+Math.sin(a)*r]}
 function spawnWM(t){const g=new THREE.Group(),b=builders[t.i](g);g.scale.setScalar(t.s);const[x,z]=wmonPos(t);g.position.set(x,hgt(x,z),z);
  const mats=[];g.traverse(o=>{if(o.isMesh&&o.material.emissive&&!(o.material instanceof THREE.MeshBasicMaterial)&&!mats.includes(o.material)){o.material.userData.e0=o.material.emissive.clone();o.material.userData.i0=o.material.emissiveIntensity;mats.push(o.material)}});
- g.traverse(o=>{if(o.isMesh)o.castShadow=false});worldG.add(g);const S=Object.assign({},ES[t.i]);if(t.k){S.hp=Math.round(S.hp*t.k);S.atk=Math.round(S.atk*t.k);S.xp=Math.round(S.xp*t.k*1.2);S.gold=[Math.round(S.gold[0]*t.k*1.5),Math.round(S.gold[1]*t.k*1.5)];S.lv+=Math.round((t.k-1)*6)}
+ g.traverse(o=>{if(o.isMesh)o.castShadow=false});if(t.tint){const tc=new THREE.Color(t.tint);mats.forEach(mm=>{mm.color.lerp(tc,.5)})}
+ worldG.add(g);const S=Object.assign({},ES[t.i]);if(t.k){S.hp=Math.round(S.hp*t.k);S.atk=Math.round(S.atk*t.k);S.xp=Math.round(S.xp*t.k*1.2);S.gold=[Math.round(S.gold[0]*t.k*1.5),Math.round(S.gold[1]*t.k*1.5)];S.lv+=Math.round((t.k-1)*6);S.def=Math.round((S.def||0)*t.k)}
  wmons.push({g,b,t,S,mats,hp:S.hp,max:S.hp,alive:true,state:'idle',tt:0,tDur:1,cd:rand(0,1),fightT:0,combatT:0,frozen:0,kv:new THREE.Vector3(),kbT:0,lungeT:0,tx:x,tz:z,wait:rand(0,3),yaw:rand(0,6),ph:rand(0,6),dead:0,repLeft:0,bar:null,sayT:0,tog:0,lockYaw:0,curType:S.type})}
 for(const t of TERR)for(let i=0;i<t.n;i++)spawnWM(t);
 function collide(p){for(const c of colliders){const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz),m=c.r+.45;if(d<m&&d>1e-4){p.x=c.x+dx/d*m;p.z=c.z+dz/d*m}}
  const cx=Math.floor(p.x/4),cz=Math.floor(p.z/4);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const l=treeGrid.get((cx+i)+','+(cz+j));if(l)for(const c of l){const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz),m=c.r+.4;if(d<m&&d>1e-4){p.x=c.x+dx/d*m;p.z=c.z+dz/d*m}}}}
 const angDiff=(a,b)=>{let d=b-a;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return d};
-const stageLabel=()=>{const x=hero.position.x,z=hero.position.z,d=Math.hypot(x,z);return d<19?'🏡 뇌절마을':x>70?'🏜️ 동쪽 사막':x<-70?'❄️ 서쪽 설원':z>65?'🌿 남쪽 초원':z<-78?'🏰 타락성 앞':'🌲 들판 · '+Math.round(d)+'m'};
+const stageLabel=()=>{const x=hero.position.x,z=hero.position.z,d=Math.hypot(x,z);return d<19?'🏔️ 뇌절마을 (산)':x>70?'🌊 동쪽 바다':x<-70?'❄️ 서쪽 툰드라':z>70?'🔥 남쪽 불의 땅':z<-78?'🏰 타락성 앞':'⛰️ 산악 지대 · '+Math.round(d)+'m'};
 let mmBig=false;
 const mmc=$('#mm').getContext('2d');$('#mm').onclick=()=>{mmBig=!mmBig;const m=$('#mm');m.width=m.height=mmBig?260:112;m.classList.toggle('xl',mmBig)};
 function drawMM(){const c=mmc,W=mmBig?260:112,h=W/2,S=.7;c.clearRect(0,0,W,W);c.save();c.beginPath();c.arc(h,h,h-1,0,7);c.clip();c.fillStyle='rgba(18,10,36,.82)';c.fillRect(0,0,W,W);
@@ -563,7 +577,8 @@ function drawMM(){const c=mmc,W=mmBig?260:112,h=W/2,S=.7;c.clearRect(0,0,W,W);c.
  c.translate(h,h);c.rotate(Math.PI-hero.rotation.y);c.fillStyle='#fff';c.beginPath();c.moveTo(0,-6);c.lineTo(4.5,5);c.lineTo(0,3);c.lineTo(-4.5,5);c.closePath();c.fill();c.restore()}
 
 /* ================= GAME STATE ================= */
-const G={lv:1,xp:0,gold:40,hp:100,max:100,atk:8,def:0,thr:5,joke:.3,guardPow:.5,boom:0,pots:2,jelly:0,herb:0,wl:0,al:0,job:'none',jb:{max:0,atk:0,def:0,thr:0,joke:0},wt:{club:0,sword:0,staff:0,bow:0,mic:0,dagger:0,mace:0,fist:0,axe:0},hintHall:false,wps:{village:true}};
+const G={lv:1,xp:0,gold:40,hp:100,max:100,atk:8,def:0,thr:5,joke:.3,guardPow:.5,boom:0,pots:2,jelly:0,herb:0,wl:0,al:0,job:'none',jb:{max:0,atk:0,def:0,thr:0,joke:0},wt:{club:0,sword:0,staff:0,bow:0,mic:0,dagger:0,mace:0,fist:0,axe:0},hintHall:false,wps:{village:true},bd:{}};
+const DMGS=.5;
 const WP={club:[{n:'나무몽둥이',a:2,c:0},{n:'쇠몽둥이',a:9,c:100},{n:'대못 몽둥이',a:18,c:450}],
  sword:[{n:'연습용 철검',a:8,c:0},{n:'강철검',a:20,c:500},{n:'기사의 검',a:36,c:1500},{n:'용사의 검',a:60,c:4000}],
  staff:[{n:'낡은 지팡이',a:8,c:0},{n:'마법 지팡이',a:20,c:500},{n:'수정 지팡이',a:36,c:1500},{n:'대마법사의 지팡이',a:60,c:4000}],
@@ -645,7 +660,8 @@ const PA={stun:0,iframes:0,guard:0,guardPow:.5,last:null,streak:0,streakT:0,comb
 const heroHead=()=>new THREE.Vector3(hero.position.x,hero.position.y+2.7,hero.position.z);
 const enemyHead=m=>new THREE.Vector3(m.g.position.x,m.g.position.y+m.b.hy*m.t.s+.3,m.g.position.z);
 const fwdOf=y=>new THREE.Vector3(Math.sin(y),0,Math.cos(y));
-const bossOpen=()=>qi>5||(qi===5&&qstate!=='none');
+const bossOpen=()=>!!(G.bd[3]&&G.bd[4]&&G.bd[7]&&G.bd[8]);
+const gateLeft=()=>[[7,'산'],[3,'툰드라'],[8,'바다'],[4,'불의 땅']].filter(x=>!G.bd[x[0]]).map(x=>x[1]);
 const isNight=()=>nightF>.5;
 
 /* ================= HUD helpers ================= */
@@ -672,7 +688,7 @@ function updateEnv(real){
  hemi.color.copy(mixC(0x2a2a7a,0xcfe0ff,0xffc090,d,du,_c1));hemi.groundColor.set(0x1a1a30).lerp(_c3.set(0x6a8a3a),d);hemi.intensity=lerp(.3,.75,d);
  key.color.copy(mixC(0x8aa0ff,0xfff0d0,0xffa060,d,du,_c1));key.intensity=lerp(.7,2.1,d)+du*.5;
  const ld=elev>0?sunDir:sunDir.clone().multiplyScalar(-1);const p=hero.position;key.position.set(p.x+ld.x*18,p.y+Math.max(7,Math.abs(ld.y)*20+4),p.z+ld.z*18-4);key.target.position.copy(p);key.target.updateMatrixWorld();
- rim.intensity=lerp(1.2,.7,d);scene.fog.color.copy(mixC(0x0c0820,0xe8bfdc,0xffa078,d,du,_c1));scene.fog.density=lerp(.016,.0075,d);
+ rim.intensity=lerp(1.2,.7,d);scene.fog.color.copy(mixC(0x0c0820,0xe8bfdc,0xffa078,d,du,_c1));scene.fog.density=lerp(.016,.0075,d);{const bm=biome(hero.position.x,hero.position.z),tv=U.tint.value;tv.set(0,0,0);let ta=0;if(bm.s>.01){scene.fog.color.lerp(_c3.set(0xff5a2a),bm.s*.55*(.4+.6*d));scene.fog.density+=bm.s*.004;tv.x+=bm.s;tv.y+=.35*bm.s;tv.z+=.15*bm.s;ta=Math.max(ta,bm.s)}if(bm.w>.01){scene.fog.color.lerp(_c3.set(0xdce8ff),bm.w*.3);tv.x+=.85*bm.w;tv.y+=.92*bm.w;tv.z+=bm.w;ta=Math.max(ta,bm.w*.8)}if(bm.e>.01){scene.fog.color.lerp(_c3.set(0xa8e4ff),bm.e*.4);tv.x+=.5*bm.e;tv.y+=.9*bm.e;tv.z+=bm.e;ta=Math.max(ta,bm.e*.6)}U.ta.value=ta}
  renderer.toneMappingExposure=lerp(1.1,.85,d);
  for(const g of glowMats)g.m.emissiveIntensity=g.base*(.15+nightF*2.6);
  for(const f of flames){const k=1+Math.sin(T*18+f.ph)*.15+Math.sin(T*31+f.ph*2)*.1;f.fl.scale.set(k*.9,k*1.1,k*.9);f.l.intensity=f.base*(.85+(k-1)*2)*(.5+nightF*.8)}
@@ -689,15 +705,26 @@ function mkChest(x,z){const g=grp(worldG,x,hgt(x,z),z);g.rotation.y=rand(0,6);mk
 [[-37,27],[48,12],[4,-60],[36,-64],[-30,-68]].forEach(([x,z])=>mkChest(x,z));
 [[60,12],[84,9],[108,28],[-54,10],[-84,8],[9,58]].forEach(([x,z])=>mkHerb(x,z));
 [[98,-22],[130,10],[-76,-18],[-104,26],[12,90],[36,124],[26,156]].forEach(([x,z])=>mkChest(x,z));
-const WPS=[{id:'village',name:'뇌절마을',x:5,z:-6},{id:'east',name:'동쪽 사막 오아시스',x:102,z:16},{id:'west',name:'서쪽 설원 야영지',x:-102,z:14},{id:'south',name:'남쪽 초원 야영지',x:24,z:103}];
+const WPS=[{id:'village',name:'뇌절마을',x:5,z:-6},{id:'east',name:'동쪽 바다 부두',x:102,z:16},{id:'west',name:'서쪽 툰드라 야영지',x:-102,z:14},{id:'south',name:'남쪽 불의 땅 야영지',x:24,z:103}];
 function mkWaypoint(w){const g=grp(worldG,w.x,hgt(w.x,w.z),w.z);mk(new THREE.CylinderGeometry(.9,1.1,.4,6),M(0x3a3a55,{roughness:.6}),0,.2,0,g);const o=mk(new THREE.OctahedronGeometry(.75),GM(0x66ddff,3),0,1.9,0,g,false);o.scale.y=1.8;mk(new THREE.TorusGeometry(1.1,.05,8,32),GM(0x66ddff,2.5),0,.45,0,g,false).rotation.x=Math.PI/2;const gl=sprite(glowTex,4,{blending:THREE.AdditiveBlending,color:0x66ddff,opacity:.5});gl.position.y=1.9;g.add(gl);props.push({g,x:w.x,z:w.z,kind:'wp',alive:true,id:w.id,name:w.name,label:'🌀 순간이동 지점',o})}
 WPS.forEach(mkWaypoint);
+
+// ---- biome decor: peaks, sea, boats, lava
+const boats=[],lavas=[];
+{const mat=M(0x7a7885,{roughness:.9,flatShading:true}),snowM=M(0xf2f6ff,{roughness:.8,flatShading:true});const N=44,pk=new THREE.InstancedMesh(new THREE.ConeGeometry(1,1,7),mat,N),cap=new THREE.InstancedMesh(new THREE.ConeGeometry(.3,.3,7),snowM,N);let n=0;const m4=new THREE.Matrix4(),q=new THREE.Quaternion();
+ for(let t=0;t<900&&n<N;t++){const a=rand(0,6.283),r=rand(48,150),x=Math.cos(a)*r,z=Math.sin(a)*r,b=biome(x,z);const R=rand(7,15),H=rand(16,36);if(Math.max(b.e,b.w,b.s)>.2||walkable(x,z,R+8))continue;const y=hgt(x,z);
+  pk.setMatrixAt(n,m4.compose(new THREE.Vector3(x,y-1+H/2,z),q,new THREE.Vector3(R,H,R)));cap.setMatrixAt(n,m4.compose(new THREE.Vector3(x,y-1+H*.85,z),q,new THREE.Vector3(R,H,R)));n++}
+ pk.count=cap.count=n;worldG.add(pk,cap)}
+{const sw=new THREE.Mesh(new THREE.PlaneGeometry(190,300),new THREE.MeshPhysicalMaterial({color:0x2a9fd8,transparent:true,opacity:.82,roughness:.06,metalness:.1,clearcoat:1,envMapIntensity:2}));sw.rotation.x=-Math.PI/2;sw.position.set(160,-.35,-25);worldG.add(sw);
+ for(const [x,z] of[[84,-50],[104,56],[145,-34],[152,32],[86,40]]){const g=grp(worldG,x,-.35,z);g.rotation.y=rand(0,6);mk(new THREE.BoxGeometry(3.2,.7,1.3),M(0x7a4a22,{roughness:.7}),0,.2,0,g);mk(new THREE.ConeGeometry(.75,.9,4),M(0x7a4a22),1.9,.25,0,g).rotation.z=-Math.PI/2;mk(new THREE.CylinderGeometry(.06,.06,3,6),M(0x4a2a12),0,1.7,0,g);const sl=mk(new THREE.PlaneGeometry(1.8,2.2),new THREE.MeshStandardMaterial({color:0xf4f4f0,side:THREE.DoubleSide,roughness:.9}),.1,2,0,g);sl.rotation.y=Math.PI/2;boats.push(g)}}
+for(const [x,z,r] of[[-12,92,4],[44,102,5],[0,132,5],[52,142,4],[-6,162,5],[40,164,4],[62,100,4]]){const g=grp(worldG,x,hgt(x,z)+.12,z);const lv=mk(new THREE.CircleGeometry(r,28),E(0xff5a1a,2.2),0,0,0,g,false);lv.rotation.x=-Math.PI/2;lavas.push(lv);const gl=sprite(glowTex,r*3.4,{blending:THREE.AdditiveBlending,color:0xff6a2a,opacity:.5});gl.position.y=1.2;g.add(gl);
+ for(let i=0;i<5;i++){const a=rand(0,6.28);mk(new THREE.ConeGeometry(rand(.4,.9),rand(1.6,3.6),5),M(0x1a1416,{roughness:.8,flatShading:true}),Math.cos(a)*(r+.6),.8,Math.sin(a)*(r+.6),g)}}
 colliders.push({x:26,z:20,r:7});
 // water
 {const w=new THREE.Mesh(new THREE.CircleGeometry(11.5,48),new THREE.MeshPhysicalMaterial({color:0x2a7fe0,transparent:true,opacity:.78,roughness:.05,metalness:.2,clearcoat:1,envMapIntensity:2}));w.rotation.x=-Math.PI/2;w.position.set(26,-.55,20);worldG.add(w);window.__water=w}
 
 function stepMove(dx,dz,sp,dt){const p=hero.position;const ox=p.x,oz=p.z;p.x+=dx*sp*dt;p.z+=dz*sp*dt;if(!walkable(p.x,p.z)){if(walkable(p.x,oz))p.z=oz;else if(walkable(ox,p.z))p.x=ox;else{p.x=ox;p.z=oz}}collide(p);const d=Math.hypot(p.x,p.z);if(d>165){p.x*=165/d;p.z*=165/d}
- if(!bossOpen()&&p.z<-76&&Math.abs(p.x)<12){p.z=-76;if(hintCool<=0){toast('타락성의 문이 굳게 닫혀 있다... 이장님의 퀘스트를 먼저 완료하자');hintCool=4}}}
+ if(!bossOpen()&&p.z<-76&&Math.abs(p.x)<12){p.z=-76;if(hintCool<=0){toast('타락성의 문이 굳게 닫혀 있다... 남은 수문장: '+gateLeft().join(', '));hintCool=4}}}
 function updateWorld(dt){
  const p=hero.position;const px0=p.x,pz0=p.z;let moving=false;hintCool-=dt;
  const free=mode==='world'&&PA.stun<=0&&G.hp>0&&PA.rollT<=0;
@@ -726,7 +753,7 @@ function updateWorld(dt){
  for(const pr of props){if(!pr.alive){if(pr.kind==='herb'){pr.t-=dt;if(pr.t<=0){pr.alive=true;pr.g.visible=true}}continue}
   const d=Math.hypot(p.x-pr.x,p.z-pr.z);pr.g.rotation.y+=(pr.kind==='herb'||pr.kind==='wp')?dt:0;if(d<Math.min(nd,2.8)&&mode==='world'){nd=d;nearTarget={type:'prop',pr,label:pr.label+' (E)'}}}
  const ab=$('#act');if(nearTarget){ab.style.display='block';ab.textContent=nearTarget.label}else ab.style.display='none';
- if(!hallFound&&Math.hypot(p.x-HALL[0],p.z-HALL[1])<15){hallFound=true;toast('✨ 숨겨진 전직관을 발견했다!');SFX.win();bigText('전직관 발견!',1,false)}hallParts.forEach((h,i)=>{h.rotation.y=T*(.8+i*.1);h.position.y+=Math.sin(T*2+i)*.002});windmill.rotation.z+=dt*.8;pollen.rotation.y+=dt*.01;{const b=biome(p.x,p.z);pollen.material.color.setHSL(.13,.6,.75+b.w*.25);pollen.material.size=.14+b.w*.12}pollen.position.set(p.x,0,p.z);if(window.__water)window.__water.position.y=-.55+Math.sin(T*1.2)*.04;
+ if(!hallFound&&Math.hypot(p.x-HALL[0],p.z-HALL[1])<15){hallFound=true;toast('✨ 숨겨진 전직관을 발견했다!');SFX.win();bigText('전직관 발견!',1,false)}hallParts.forEach((h,i)=>{h.rotation.y=T*(.8+i*.1);h.position.y+=Math.sin(T*2+i)*.002});windmill.rotation.z+=dt*.8;pollen.rotation.y+=dt*.01;{const b=biome(p.x,p.z);pollen.material.color.setHSL(.13-.09*b.s,.6+.4*b.s,.75+b.w*.25-.2*b.s);pollen.material.size=.14+b.w*.12+b.s*.1}pollen.position.set(p.x,0,p.z);if(window.__water)window.__water.position.y=-.55+Math.sin(T*1.2)*.04;boats.forEach((b,i)=>{b.position.y=-.35+Math.sin(T*1.4+i)*.12;b.rotation.z=Math.sin(T+i)*.05});lavas.forEach((l,i)=>{l.material.emissiveIntensity=2+Math.sin(T*2+i*1.7)*.6});
  mmT-=dt;if(mmT<=0){mmT=.07;drawMM();if(mode==='world'||mode==='dialog')$('#stage').textContent=stageLabel()}
 }
 
@@ -888,7 +915,7 @@ function fireAttack(m){
   lightPulse(0xff8a3a,30,.5,new THREE.Vector3(gp.x+f.x*3,gp.y+2,gp.z+f.z*3));SFX.boom&&SFX.hit();
   const dx=hp.x-gp.x,dz=hp.z-gp.z;if(Math.hypot(dx,dz)<7.6&&Math.abs(angDiff(yaw,Math.atan2(dx,dz)))<.6)hurtHero(dmg,gp.x,gp.z)}
  else if(type==='proj'){shoot(m,yaw,{tex:frameTex,dmg,spd:10,size:1.5});SFX.slash()}
- else if(type==='proj3'){for(const o of[-.32,0,.32])shoot(m,yaw+o,{tex:badgeTex,dmg:dmg*.8,spd:8,size:1.2});SFX.joke()}
+ else if(type==='proj3'){const gb=m.t.i===7;for(const o of(gb?[-.5,-.25,0,.25,.5]:[-.32,0,.32]))shoot(m,yaw+o,{tex:gb?frameTex:badgeTex,dmg:dmg*.8,spd:8,size:gb?1.5:1.2});SFX.joke()}
  else if(type==='ring'){const pr=m.t.i===5;for(let i=0;i<10;i++)shoot(m,yaw+i/10*Math.PI*2,{tex:pr?heartTex:orbTex,dmg:dmg*.7,spd:7,size:1.4,add:!pr,color:0xff49d8});for(const o of[-.15,0,.15])shoot(m,yaw+o,{tex:pr?replyTex:badgeTex,dmg:dmg*.8,spd:10,size:1.3});ring(gp,{color:0xff49d8,max:8,life:.6,y:.15});SFX.boom()}
  m.state='recover';m.tt=.35}
 const BARK_REP=['!','!!','!!!'];
@@ -931,7 +958,7 @@ function updateEnemies(dt){
   gp.y=hgt(gp.x,gp.z)+(m.t.i===0?Math.abs(Math.sin(T*5+m.ph))*.25:0);
  }
 }
-function showBar(m){if(m.bar||m.t.boss)return;const d=document.createElement('div');d.className='eb';d.innerHTML=`<div class="en">Lv.${m.S.lv} ${ENEMIES[m.t.i].n}</div><div class="eh"><i></i></div><div class="sp"></div>`;$('#ebars').appendChild(d);m.bar=d}
+function showBar(m){if(m.bar||m.t.boss)return;const d=document.createElement('div');d.className='eb';d.innerHTML=`<div class="en">Lv.${m.S.lv} ${(m.t.pre||'')}${ENEMIES[m.t.i].n}</div><div class="eh"><i></i></div><div class="sp"></div>`;$('#ebars').appendChild(d);m.bar=d}
 function updateBars(){let boss=null;
  for(const m of wmons){
   if(m.t.boss&&m.alive&&m.state!=='idle')boss=m;
@@ -940,10 +967,10 @@ function updateBars(){let boss=null;
   if(!show){m.bar.style.display='none';continue}
   const v=enemyHead(m).project(camera);if(v.z>1||Math.abs(v.x)>1.2){m.bar.style.display='none';continue}
   m.bar.style.display='block';m.bar.style.left=((v.x*.5+.5)*innerWidth)+'px';m.bar.style.top=((-v.y*.5+.5)*innerHeight)+'px';m.bar.querySelector('i').style.width=clamp(m.hp/m.max*100,0,100)+'%'}
- const b=$('#boss');if(boss&&mode==='world'){b.style.display='block';$('#bn').textContent=(boss.S.final?'💔 ':'⚔️ ')+ENEMIES[boss.t.i].n;$('#bh').style.width=clamp(boss.hp/boss.max*100,0,100)+'%';$('#bt').textContent=boss.frozen>0?'🥶 썰렁':''}else b.style.display='none'}
+ const b=$('#boss');if(boss&&mode==='world'){b.style.display='block';$('#bn').textContent=(boss.S.final?'💔 ':'⚔️ ')+(boss.t.pre||'')+ENEMIES[boss.t.i].n;$('#bh').style.width=clamp(boss.hp/boss.max*100,0,100)+'%';$('#bt').textContent=boss.frozen>0?'🥶 썰렁':''}else b.style.display='none'}
 function hurtEnemy(m,d,{crit=false,kb=2}={}){
  if(!m.alive)return;if(m.S.dummy){m.combatT=3;showBar(m);fxFloat(crit?d+'!':''+d,enemyHead(m),crit?'#ffd84d':'#fff');burst(enemyHead(m).add(new THREE.Vector3(0,-.6,0)),{color:0xffe9a0,n:14,speed:4,life:.5});SFX.hit();m.g.userData.wob=1;addShake(.15);tutEvent('hit',1);return}
- m.hp-=d;m.combatT=6;if(m.state==='idle'){m.state='chase';m.fightT=0}showBar(m);
+ d=Math.max(Math.ceil(d*DMGS*.25),Math.round(d*DMGS)-(m.S.def||0));m.hp-=d;m.combatT=6;if(m.state==='idle'){m.state='chase';m.fightT=0}showBar(m);
  fxFloat(crit?d+'!':''+d,enemyHead(m),crit?'#ffd84d':'#fff');burst(enemyHead(m).add(new THREE.Vector3(0,-.5,0)),{color:crit?0xffd84d:0xffffff,n:crit?50:22,speed:crit?8:5,life:.6});
  SFX.hit();flashMats(m,0xffffff,crit?4:2.4,.25);addShake(crit?.7:.28);hitstop(crit?110:55,.1);fxPass.uniforms.amt.value=crit?1.4:.7;bloomKick=crit?.4:.1;
  const dx=m.g.position.x-hero.position.x,dz=m.g.position.z-hero.position.z,l=Math.hypot(dx,dz)||1,k=(m.S.armor?.45:1)*(m.t.boss?.25:1)*kb*2.2;m.kv.set(dx/l*k,0,dz/l*k);m.kbT=.2;
@@ -956,7 +983,8 @@ function killEnemy(m){
  const sc=m.t.s,g=m.g;tween(.8,t=>{g.scale.setScalar(sc*(1-t));g.rotation.y+=t*.4;g.position.y+=.02},easeIn).then(()=>{g.visible=false});
  const S=m.S,n=m.t.boss?25:rand(3,6)|0;for(let i=0;i<n;i++)dropItem('gold',m.g.position,Math.max(1,Math.round(rand(S.gold[0],S.gold[1])/n)));
  if(m.t.i===0&&Math.random()<.75)dropItem('jelly',m.g.position,1);if(Math.random()<.14)dropItem('pot',m.g.position,1);
- gainXP(S.xp);onKill(m.t.i);if(m.S.final)setTimeout(victory,1800);else if(m.S.boss){const af=ENEMIES[m.t.i].after;if(af)setTimeout(()=>{if(mode==='world')dialogue(ENEMIES[m.t.i].n,af)},1700)}}
+ gainXP(S.xp);onKill(m.t.i);if(m.S.boss){G.bd[m.t.i]=1;if(!m.S.final&&bossOpen())setTimeout(()=>{toast('🏰 네 지형의 수문장을 모두 쓰러뜨렸다! 북쪽 타락성의 문이 열린다!');bigText('타락성 개방!',1,false);SFX.boom();addShake(.6)},4600)}
+ if(m.S.final)setTimeout(victory,1800);else if(m.S.boss){const af=ENEMIES[m.t.i].after;if(af)setTimeout(()=>{if(mode==='world')dialogue(ENEMIES[m.t.i].n,af)},1700)}}
 function respawnWM(m){const[x,z]=wmonPos(m.t);m.g.position.set(x,hgt(x,z),z);m.tx=x;m.tz=z;m.g.visible=true;m.g.scale.setScalar(m.t.s);m.alive=true;m.rage=false;m.hp=m.max;m.state='idle';m.frozen=0;m.fightT=0;m.combatT=0;if(m.ice)m.ice.visible=false;m.mats.forEach(x=>{x.emissive.copy(x.userData.e0);x.emissiveIntensity=x.userData.i0})}
 
 /* ================= LOOT / XP ================= */
@@ -978,12 +1006,12 @@ function levelUp(){G.lv++;G.max+=12;G.atk+=2;G.hp=G.max;SFX.win();bigText('LEVEL
 
 /* ================= QUESTS / SHOP ================= */
 const QUESTS=[
- {t:'공주의 눈물',en:0,need:2,xp:40,gold:30,ask:['오! 용사님이 오셨구먼! 반갑네, 반갑네!','난 이 마을 이장인데 말이야... 이장인데 말이야... 이장인데 말이야... 아, 본론부터 하지.','옛날에 마왕이 공주님을 좋아했다네. 큰맘 먹고 고백을 했지. 고백... 고백... 고백!','공주님은 받아 주셨고 둘은 사귀었어. 100일 때는 마왕이 직접 케이크도 구웠다네.','그런데 마왕놈이 어느 날부터 메시지를 읽씹하더니... 잠수를 탔네. 잠수이별! 잠수이별!!','공주님은 사흘을 기다리다가 마왕성에 쳐들어가서 프라이팬으로 마왕을 때려잡으셨지. 그리고 그 뒤로... 타락하셨네.','"남자는 다 똑같아"라며 온 세상을 때려부수고 계시다네. 자네가 공주님을 막아 주게.','먼저 서쪽 들판에 공주님의 눈물로 태어난 눈물 슬라임이 있네. 2마리만 처치해 주겠나? 처치해 주겠나? 처치해 주겠나?','자네 장비가 그게 뭔가... 나무몽둥이라니! 골드를 모아 무기상점에서 무기를 사게. 5레벨이 되면 마을 북서쪽 전직관에서 직업을 고를 수 있다네.','(조작: 칼질=J/클릭, 구르기=Space, 같은 행동을 연속하면 뇌절 게이지가 찹니다!)'],hint:'눈물 슬라임은 서쪽 들판에 있네. 서쪽... 서쪽... 서쪽! (지도의 빨간 점을 보게)',done:['오오! 해냈구먼! 해냈구먼! 해냈구먼!','공주님의 눈물이 조금은 마른 것 같네. 약속한 보상일세. 마음껏 골라 보게나.']},
- {t:'읽씹 고블린 소탕',en:1,need:2,xp:80,gold:60,ask:['마왕의 메시지를 배달하던 고블린들이 있었네.','공주님이 답장을 안 읽은 게 아니라 마왕이 읽씹한 건데... 어쨌든 "1"이 안 사라져서 폭주 중이라네. 1이... 1이... 1이!','북동쪽 숲의 읽씹 고블린 2마리를 혼내 주게. 걔들이 던지는 "1"은 구르기로 피하게나!'],hint:'북동쪽이야, 북동쪽. 아까 말했는데... 아까 말했는데...',done:['읽씹 고블린을 잡다니, 자네 진짜 대단하구먼!','이제 마을에 "1"이 날아다니지 않겠군.']},
- {t:'잠수 오크 구출',en:2,need:1,xp:150,gold:100,ask:['북서쪽 깊은 곳의 오크는 마왕의 부하라네.','마왕이 잠수를 탄 뒤로 월급도 잠수를 탔다고, 석 달째 야근 중이래. 야근... 야근... 야근!','바닥에 붉은 원이 보이면 곧 내려친다는 뜻이야. 피하게!'],hint:'오크는 북서쪽 깊은 곳이야. 퇴근 시간 전에 가야 하네!',done:['오크들이 드디어 퇴근했네! 퇴근!! 퇴근!!! 퇴근!!!!','자네는 우리 마을의 영웅일세. 영웅... 영웅... 영웅!']},
- {t:'이별 드래곤 (중간보스)',en:3,need:1,xp:300,gold:200,ask:['북동쪽 끝의 드래곤은 공주님이 아끼던 애마였다네.','이별 후 충격으로 이상해져서 "이별이 별로야?" 같은 개그만 한다네. 중간보스일세!','부채꼴 불길이 나오니 옆으로 구르게! 방어와 물약도 챙기고!'],hint:'드래곤은 북동쪽 끝이네. 개그에 웃어주면 안 돼, 절대로!',done:['드래곤이 조용해졌네! 마을이 한결 따뜻해졌어.','이제 원흉을 찾아야 하네. 마왕이 동쪽 호수 건너편에 숨어 있다는군.']},
- {t:'잠수 마왕 (중간보스)',en:4,need:1,xp:450,gold:300,ask:['자, 이제 진짜 원흉이 남았네. 프라이팬에 두들겨 맞은 마왕은 도망쳐서... 정말로 "잠수"를 탔다네.','동쪽 호수 건너편에 숨어 있다는 소문일세. 반성은커녕 아직도 폰을 꺼놨다고 하네.','놈이 던지는 "1" 탄막과 내려치기를 조심하게나. 중간보스일세!'],hint:'마왕은 동쪽 호수 건너편이야. 호수에 빠지지 않게 조심하게.',done:['마왕이 그런 말을 했다고...? 사랑이 너무 커서 무서웠다니...','이제 길이 열렸네. 마지막 부탁이 있네...']},
- {t:'타락공주',en:5,need:1,xp:1000,gold:800,ask:['이제 북쪽 타락성의 문이 열릴 걸세. 거기에 공주님이 계시네.','"남자는 다 똑같아"를 외치며 프라이팬을 휘두르지. 오래 끌면 연타 횟수가 계속 늘어난다네!','체력이 반쯤 깎이면 분노하실 거야. 조심하게나. 하지만 공주님도 사실은... 그냥 답장이 받고 싶었던 거라네.','부디 정신 차리게 해 주게. 달렸네... 달렸네... 아니 이제 진짜 끝!'],hint:'타락성은 마을에서 쭉 북쪽이네. 큰 붉은 빛기둥이 보일 걸세. 물약은 넉넉히!',done:['공주님이 정신을 차리셨다고...! 정말 해냈구먼!','이제 이 마을도 같은 얘기를 덜 하게 될 걸세. 아마도... 아마도... 아마도.']}
+ {t:'공주의 눈물',en:0,need:2,xp:40,gold:30,ask:['오! 용사님이 오셨구먼! 반갑네, 반갑네!','난 이 마을 이장인데 말이야... 이장인데 말이야... 이장인데 말이야... 아, 본론부터 하지.','옛날에 마왕이 공주님을 좋아했다네. 큰맘 먹고 고백을 했지. 고백... 고백... 고백!','공주님은 받아 주셨고 둘은 사귀었어. 100일 때는 마왕이 직접 케이크도 구웠다네.','그런데 마왕놈이 어느 날부터 메시지를 읽씹하더니... 잠수를 탔네. 잠수이별! 잠수이별!!','공주님은 사흘을 기다리다가 마왕성에 쳐들어가서 프라이팬으로 마왕을 때려잡으셨지. 그리고 그 뒤로... 타락하셨네.','"남자는 다 똑같아"라며 온 세상을 때려부수고 계시다네. 자네가 공주님을 막아 주게.','이 세계는 네 개의 지형으로 되어 있다네. 우리가 사는 이 산악 지대, 서쪽 툰드라, 동쪽 바다, 남쪽 불의 땅. 지형마다 수문장이 있고, 네 수문장을 모두 쓰러뜨려야 공주님이 계신 타락성의 문이 열린다네.','일단 서쪽 길가의 공주님 눈물로 태어난 눈물 슬라임 2마리부터 처치해 주겠나? 처치해 주겠나? 처치해 주겠나?','(조작: 칼질=J/클릭, 구르기=Space. 수문장들은 방어가 단단해서 레벨과 무기가 약하면 흠집도 안 난다네!)','자네 장비가 그게 뭔가... 나무몽둥이라니! 골드를 모아 무기상점에서 무기를 사게. 5레벨이 되면 마을 북서쪽 전직관에서 직업도 고를 수 있다네.'],hint:'눈물 슬라임은 서쪽 길가에 있네. 서쪽... 서쪽... 서쪽! (지도의 빨간 점을 보게)',done:['오오! 해냈구먼! 해냈구먼! 해냈구먼!','공주님의 눈물이 조금은 마른 것 같네. 약속한 보상일세. 마음껏 골라 보게나.']},
+ {t:'읽씹 킹 (산의 수문장)',en:7,need:1,xp:300,gold:150,ask:['먼저 이 산악 지대의 수문장이라네. 북동쪽 끝에 사는 읽씹 킹이지.','마왕의 메시지를 전하던 고블린 대장인데, "1"이 안 사라져서 미쳐 버렸다네. 1이... 1이... 1이!','녀석이 던지는 "1"은 구르기로 피하게. 방어가 단단하니 무기를 꼭 장만하고 가게나.'],hint:'북동쪽 길 끝이야, 북동쪽. 아까 말했는데... 아까 말했는데...',done:['읽씹 킹을 쓰러뜨리다니! 마을의 "1"이 모두 사라졌구먼!','남은 수문장은 서쪽 툰드라, 동쪽 바다, 남쪽 불의 땅에 있다네.']},
+ {t:'이별 드래곤 (툰드라의 수문장)',en:3,need:1,xp:450,gold:250,ask:['서쪽 끝 툰드라... 눈 덮인 땅에 공주님이 아끼던 애마 드래곤이 산다네.','이별 후 충격으로 마음이 얼어붙어서 "이별이 별로야?" 같은 개그만 한다네.','추운 곳이니 두껍게 입고... 아니, 무기를 먼저 사게. 부채꼴 불길은 옆으로 구르게!'],hint:'툰드라는 서쪽 길 끝일세. 개그에 웃어주면 안 돼, 절대로!',done:['드래곤이 조용해졌네! 툰드라가 한결 따뜻해졌어.','이제 남은 수문장은 둘이라네.']},
+ {t:'잠수 오크 선장 (바다의 수문장)',en:8,need:1,xp:600,gold:350,ask:['동쪽 바다의 수문장은 마왕의 부하, 잠수 오크 선장일세.','마왕이 잠수를 타자 자기도 따라서 진짜 잠수함을 타고 다닌다네. 월급도 잠수... 아니 가라앉았지.','바다 위 모래길을 따라가게. 물에 빠지진 말고! 바닥에 붉은 원이 보이면 곧 내려친다는 뜻일세.'],hint:'바다는 동쪽 길 끝이네. 부두에서 순간이동 지점을 활성화해 두면 편하다네.',done:['선장이 드디어 퇴근했네! 퇴근!! 퇴근!!! 퇴근!!!!','이제 마지막 수문장 하나 남았네. 마왕 말일세.']},
+ {t:'잠수 마왕 (불의 땅의 수문장)',en:4,need:1,xp:800,gold:500,ask:['자, 이제 진짜 원흉이 남았네. 프라이팬에 두들겨 맞은 마왕은 도망쳐서... 남쪽 불의 땅 용암 속에 숨었다네. 진짜 "잠수"일세.','반성은커녕 아직도 폰을 꺼놨다고 하네. 놈이 던지는 "1" 탄막과 내려치기를 조심하게나.','불의 땅은 뜨겁고 위험하니 물약을 넉넉히 챙기게!'],hint:'마왕은 남쪽 길 끝, 불의 땅에 있다네. 용암에 빠지지 않게 조심하게.',done:['마왕이 그런 말을 했다고...? 사랑이 너무 커서 무서웠다니...','네 수문장이 모두 쓰러졌네! 이제 타락성의 문이 열릴 걸세. 마지막 부탁이 있네...']},
+ {t:'타락공주',en:5,need:1,xp:1500,gold:1000,ask:['이제 북쪽 타락성의 문이 열려 있을 걸세. 거기에 공주님이 계시네.','"남자는 다 똑같아"를 외치며 프라이팬을 휘두르지. 오래 끌면 연타 횟수가 계속 늘어난다네!','체력이 반쯤 깎이면 분노하실 거야. 조심하게나. 하지만 공주님도 사실은... 그냥 답장이 받고 싶었던 거라네.','부디 정신 차리게 해 주게. 달렸네... 달렸네... 아니 이제 진짜 끝!'],hint:'타락성은 마을에서 쭉 북쪽이네. 큰 붉은 빛기둥이 보일 걸세. 물약은 넉넉히!',done:['공주님이 정신을 차리셨다고...! 정말 해냈구먼!','이제 이 마을도 같은 얘기를 덜 하게 될 걸세. 아마도... 아마도... 아마도.']}
 ];
 let qi=0,qstate='none',qprog=0;const SQ={kid:'none',granny:'none'};
 function onKill(i){if(qstate==='active'&&QUESTS[qi].en===i){qprog++;if(qprog>=QUESTS[qi].need){qstate='ready';setTimeout(()=>toast('퀘스트 목표 달성! 이장님에게 보고하세요'),900);SFX.win()}updateQuestUI()}}
@@ -1036,7 +1064,7 @@ async function talk(n){
  if(n.chief){tutEvent('talk');
   if(qi>=QUESTS.length){await dialogue('이장님',['자네 덕분에 마을이 평화롭네.','평화... 평화... 평화... 아, 또 말이 길어졌군.']);return}
   const q=QUESTS[qi];
-  if(qstate==='none'){await dialogue('이장님',q.ask);qstate='active';qprog=0;SFX.win();toast('퀘스트 수락: '+q.t);updateQuestUI()}
+  if(qstate==='none'){await dialogue('이장님',q.ask);qstate='active';qprog=0;if(G.bd[q.en]){qprog=q.need;qstate='ready';setTimeout(()=>toast('이미 쓰러뜨린 상대입니다! 이장님에게 보고하세요'),600)}SFX.win();toast('퀘스트 수락: '+q.t);updateQuestUI()}
   else if(qstate==='active')await dialogue('이장님',[q.hint,`(${ENEMIES[q.en].n} ${qprog}/${q.need})`]);
   else{await dialogue('이장님',q.done);qi++;qstate='none';qprog=0;G.gold+=q.gold;fxFloat('+'+q.gold+'G',heroHead(),'#ffd84d');gainXP(q.xp);await rewardPick();updateQuestUI();if(qi<QUESTS.length)toast('새 퀘스트가 있습니다! 이장님에게 말을 걸어보세요')}
  }else if(n===smith){await dialogue('무기상인',['어서 와! 무기라면 내가 최고지.','나무몽둥이로는 슬라임도 억울해할 걸? 골드를 모아서 오게나.']);await openWeaponShop()}
@@ -1087,7 +1115,7 @@ const hashS=t=>{let h=5381;for(const c of t)h=((h<<5)+h+c.charCodeAt(0))>>>0;ret
 function listProfiles(){const o=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(SAVEK))o.push(k.slice(SAVEK.length))}}catch(e){}return o}
 function loadProfile(n){try{return JSON.parse(localStorage.getItem(SAVEK+n))}catch(e){return null}}
 function saveGame(){if(!who||mode==='title')return;const d={v:1,name:who,pin:pinHash,G,qi,qstate,qprog,SQ,hallFound,cleared,pos:[hero.position.x,hero.position.z],tod,tutDone:TUT.done,boss:wmons.filter(m=>m.t.boss&&!m.alive).map(m=>m.t.i),chests:props.map(q=>q.kind==='chest'&&!q.alive?1:0),t:Date.now()};try{localStorage.setItem(SAVEK+who,JSON.stringify(d));localStorage.setItem(SAVEK+'__last','1')}catch(e){}}
-function applySave(d){for(const k in d.G)G[k]=d.G[k];G.wt=Object.assign({club:0,sword:0,staff:0,bow:0,mic:0,dagger:0,mace:0,fist:0,axe:0},G.wt);G.wps=Object.assign({village:true},G.wps);if(!JOBKIND[G.job])G.job='none';qi=d.qi;qstate=d.qstate;qprog=d.qprog;Object.assign(SQ,d.SQ);hallFound=true;cleared=!!d.cleared;tod=d.tod??tod;TUT.done=!!d.tutDone;
+function applySave(d){for(const k in d.G)G[k]=d.G[k];G.bd=Object.assign({},G.bd);(d.boss||[]).forEach(i=>{G.bd[i]=1});G.wt=Object.assign({club:0,sword:0,staff:0,bow:0,mic:0,dagger:0,mace:0,fist:0,axe:0},G.wt);G.wps=Object.assign({village:true},G.wps);if(!JOBKIND[G.job])G.job='none';qi=d.qi;qstate=d.qstate;qprog=d.qprog;Object.assign(SQ,d.SQ);hallFound=true;cleared=!!d.cleared;tod=d.tod??tod;TUT.done=!!d.tutDone;
  (d.boss||[]).forEach(i=>wmons.filter(m=>m.t.i===i).forEach(m=>{m.alive=false;m.g.visible=false;m.dead=1e9}));
  (d.chests||[]).forEach((v,i)=>{const q=props[i];if(v&&q){q.alive=false;q.g.traverse(o=>{if(o.isSprite)o.visible=false})}});
  let[x,z]=d.pos||[-4,2];if(!walkable(x,z)||Math.hypot(x,z)>160){x=-4;z=2}hero.position.set(x,hgt(x,z),z);groundY=hgt(x,z);hero.rotation.set(0,0,0);
