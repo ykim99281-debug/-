@@ -75,6 +75,12 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 .sk.ready{border-color:#fdcb6e;box-shadow:0 0 10px #fdcb6e99;background:#fdcb6e22}
 .sk.lock{filter:grayscale(1);opacity:.55}
 .hide{display:none!important}
+#allies{position:absolute;inset:0;pointer-events:none;z-index:5}
+.ally{position:absolute;text-align:center;transition:left .3s}
+.ally .emo{animation:bob 1.1s ease-in-out infinite;opacity:.92}
+.abar{height:4px;background:#0008;border-radius:3px;overflow:hidden;margin:0 auto 2px;width:80%}
+.abar i{display:block;height:100%;width:100%;background:linear-gradient(#b8ffd0,#2ed573);transition:width .12s}
+.undead svg{filter:hue-rotate(95deg) saturate(1.3) brightness(.9) drop-shadow(0 0 6px #7bed9f)}
 .card.lock{opacity:.55;filter:grayscale(.85)}
 .card.lock .pic svg{filter:brightness(.35)}
 #heroMv{position:relative}
@@ -245,6 +251,7 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
       <div id="pets"></div>
     </div>
     <div id="foes"></div>
+    <div id="allies"></div>
     <div id="monName"></div>
   </div>
 
@@ -558,8 +565,8 @@ const CLS={
   arc :{n:"궁수",  d:"공격속도 +60%, 치명타 +10%",skill:"🏹 화살비",cd:8, color:"#55efc4",info:"필살기: 화살 8발 (각 1배)"},
   pal :{n:"성기사",d:"체력 +80%, 받는 피해 -25% (패시브)",skill:"✝️ 심판의 일격",cd:9,color:"#ffe27a",info:"필살기: 전체 5배 + 체력 15% 회복"},
   ber :{n:"광전사",d:"공격력 +40%, 체력 +20%, 체력 절반 이하면 공격력 +60% (패시브)",skill:"🪓 분노의 회전",cd:8,color:"#ff7675",info:"필살기: 전체 6배 회전 베기"},
-  nec :{n:"네크로맨서",d:"공격력 +30%, 체력 -10%, 처치할 때마다 체력 20% 회복 (패시브)",skill:"💀 죽음의 손길",cd:10,color:"#7bed9f",info:"필살기: 전체 7배 + 체력 10% 회복"},
-  dgn :{n:"용기사",d:"공격력 +25%, 체력 +40%, 공속 +20%, 치명타 +5%",skill:"🐉 용의 숨결",cd:9,color:"#ff9f43",info:"필살기: 전체 6배 화염 브레스"},
+  nec :{n:"네크로맨서",d:"공격력 +30%, 체력 -10%, 죽인 몬스터를 소환해요 (소환수는 공격력·체력 10%, 패시브)",skill:"💀 죽음의 손길",cd:10,color:"#7bed9f",info:"필살기: 전체 7배 + 체력 10% 회복"},
+  dgn :{n:"용기사",d:"공격력 +25%, 체력 +40%, 공속 +20%, 치명타 +5%, 공격할 때마다 1% 확률로 용 소환 (패시브)",skill:"🐉 용의 숨결",cd:9,color:"#ff9f43",info:"필살기: 전체 6배 화염 브레스 · 용 소환: 전체 25배"},
 };
 
 /* ================= 상태 ================= */
@@ -985,6 +992,44 @@ function float(txt,cls,box){
 }
 function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("show"),1400)}
 
+let allies=[],allyUid=0;const ALLY_MAX=8;
+function mkAllyEl(a){
+  const i=allies.indexOf(a),d=document.createElement("div");d.className="ally";
+  d.style.cssText=`left:${44+i*34}px;bottom:182px;width:38px`;
+  d.innerHTML=`<div class="abar"><i></i></div><div class="mv"><div class="emo undead" style="width:38px;height:38px;animation-delay:${(-Math.random()*1.1).toFixed(2)}s"></div></div>`;
+  a.el=d;a.sprite=d.querySelector(".emo");a.sprite.innerHTML=a.kind[1]();a.bar=d.querySelector(".abar i");
+  a.bar.style.width=Math.max(0,a.hp/a.max*100)+"%";$("allies").appendChild(d);return d;
+}
+const layoutAllies=()=>allies.forEach((a,i)=>{if(a.el)a.el.style.left=(44+i*34)+"px"});
+function renderAllies(){$("allies").innerHTML="";allies.forEach(mkAllyEl)}
+function clearAllies(){allies=[];$("allies").innerHTML=""}
+function summonAlly(f,quiet){                       // 죽인 몬스터를 공격력·체력 10%의 소환수로
+  const mx=gc().maxHp*0.1,a={id:++allyUid,kind:f.kind,hp:mx,max:mx,t:Math.random()};
+  allies.push(a);
+  while(allies.length>ALLY_MAX){const o=allies.shift();if(o.el)o.el.remove()}
+  if(quiet)return;
+  const e=mkAllyEl(a);layoutAllies();
+  e.animate([{transform:"scale(.2)",opacity:0},{transform:"scale(1.35)",opacity:1,offset:.6},{transform:"scale(1)"}],{duration:420});
+  const r=rel(e);ring(r.cx,r.cy+14,"#7bed9f",76,520);burst(r.cx,r.cy,{n:7,colors:["#7bed9f","#d6ffe5","#2ed573"],dist:32,size:8,shape:"s"});
+}
+function killAlly(a){
+  const i=allies.indexOf(a);if(i<0)return;allies.splice(i,1);
+  if(a.el){const e=a.el;e.animate([{opacity:1},{opacity:0,transform:"translateY(-22px) scale(.6)"}],{duration:380}).onfinish=()=>e.remove();layoutAllies()}
+}
+function summonDragon(quiet){                        // 용기사 패시브: 공격할 때 1% 확률로 용 소환
+  const c=gc(),wid=monId,dmg=c.atk*25;
+  const hit=()=>aliveF().forEach(f=>dealDamage(f,dmg,true,quiet));
+  if(quiet){hit();return}
+  dragonFx();setTimeout(()=>{if(monId===wid)hit()},800);
+}
+function dragonFx(){
+  const ps=foePos(),W=$("battle").clientWidth,H=$("battle").clientHeight,c=centroid(ps,rel($("hero"))),dy=H*.28;
+  banner("🐉 용 소환!","#ff9f43");flashScr("#ff9f43",350,.4);dimScr(.5,1400);
+  fx("🐉",W+90,dy,160,160,[{transform:"translateX(0) scale(.8)",opacity:0},{transform:`translateX(${-(W*.55)}px) scale(1.2)`,opacity:1,offset:.4},{transform:`translateX(${-(W*.6)}px) scale(1.35)`,opacity:1,offset:.78},{transform:`translateX(${-(W*.8)}px) scale(1.1)`,opacity:0}],{duration:1600,easing:"ease-out"});
+  ring(W*.42,dy,"#ffb142",220,700,false,420);ring(W*.42,dy,"#ff4d00",320,800,false,520);
+  for(let i=0;i<18;i++)fly("🔥",rnd(34,56),rnd(34,56),W*.42,dy+24,c.cx+rnd(-80,70),c.cy+rnd(-40,40),rnd(280,380),560+i*20,null,"ease-in");
+  setTimeout(()=>{ps.slice(0,8).forEach((q,i)=>{glow(q.cx,q.cy,Math.max(130,q.w*1.7),"#ffb142",540,i*30,1.6);burst(q.cx,q.cy,{n:10,colors:["#ff4d00","#ffb142","#ffe27a","#fff"],dist:70,size:11,grav:40,delay:i*30})});shakeB(12,500);flashScr("#fff",260,.7)},840);
+}
 let lsT=0;
 function dealDamage(f,d,crit,quiet){
   if(!f||f.dead)return;
@@ -1001,6 +1046,7 @@ function dealDamage(f,d,crit,quiet){
 function heroHit(quiet){
   const f=tgt();if(!f)return;
   const c=gc(),crit=Math.random()<c.crit,d=c.atk*(crit?c.cdmg:1);
+  if(S.cls==="dgn"&&Math.random()<0.01)summonDragon(quiet);
   if(quiet){dealDamage(f,d,crit,true);return}
   const id=monId,delay=playAttack(Math.min(0.34,0.85/c.aspd),f);
   setTimeout(()=>{if(monId!==id||paused)return;const t=f.dead?tgt():f;if(t)dealDamage(t,d,crit,false)},delay);
@@ -1011,7 +1057,8 @@ function killFoe(f,quiet){
   const g=goldFor(S.stage)*(f.boss?5:1)*c.goldMul;
   S.gold+=g;S.earned=(S.earned||0)+g;gpsAcc+=g;S.totalKills++;
   if(!quiet&&f.el){float("+"+fmt(g),"gold",f.sprite);deathFx(f);f.el.remove()}
-  hp=Math.min(c.maxHp,hp+c.maxHp*(S.cls==="nec"?0.2:0.08));   // 네크로맨서 패시브: 처치 시 체력 20% 회복
+  hp=Math.min(c.maxHp,hp+c.maxHp*0.08);
+  if(S.cls==="nec")summonAlly(f,quiet);                 // 네크로맨서 패시브: 죽인 몬스터를 소환해요
   if(Math.random()<0.04){S.gems++;if(!quiet)toast("💎 보석 발견!")}
   if(aliveF().length===0){            // 몰려온 몬스터를 모두 처치 → 스테이지 클리어
     const first=S.stage>=S.best,bs=isBossStage(S.stage);
@@ -1024,7 +1071,7 @@ function killFoe(f,quiet){
   }else if(!quiet){updateName();renderProgress()}
 }
 function heroDie(){
-  const c=gc();
+  const c=gc();clearAllies();
   toast("😵 쓰러졌어요! 이전 스테이지로 후퇴…");
   S.stage=Math.max(1,S.stage-1);S.kill=0;hp=c.maxHp;spawn();
 }
@@ -1078,11 +1125,23 @@ function step(dt,quiet){
     while(f.t>=1.2&&monId===wid){
       f.t-=1.2;
       if(shieldT>0){if(!quiet)monAttackFx(f,true);continue}
+      if(allies.length&&Math.random()<allies.length/(allies.length+3)){   // 소환수가 대신 맞아요
+        const a=allies[Math.floor(Math.random()*allies.length)];a.hp-=f.dmg;
+        if(!quiet&&a.el){a.bar.style.width=Math.max(0,a.hp/a.max*100)+"%";const r=rel(a.sprite);fx(FX.spark,r.cx,r.cy,34,34,[{transform:"scale(.3)",opacity:1},{transform:"scale(1.1)",opacity:0}],{duration:220});if(f.mv)f.mv.animate([{transform:"none"},{transform:"translateX(-34px)"},{transform:"none"}],{duration:300})}
+        if(a.hp<=0)killAlly(a);
+        continue;
+      }
       hp-=f.dmg*(S.cls==="pal"?0.75:1);   // 성기사 패시브: 받는 피해 -25%
       if(!quiet)monAttackFx(f);
       if(hp<=0){heroDie();break}
     }
     if(monId!==wid)break;
+  }
+  for(const a of allies.slice()){                       // 소환수 공격 (공격력 10%)
+    a.t+=dt;
+    if(a.t>=1){a.t-=1;const f=tgt();if(f){
+      if(!quiet&&a.el&&f.el){const r=rel(a.sprite),m=rel(spOf(f));fly(FX.orbG,18,18,r.cx,r.cy,m.cx,m.cy,170,0,null,"linear")}
+      dealDamage(f,gc().atk*0.1,false,quiet)}}
   }
   for(const id in skCd)if(skCd[id]>0)skCd[id]=Math.max(0,skCd[id]-dt);
   if(!quiet){auraT+=dt;if(auraT>0.22){auraT=0;if(rageT>0)emberFx();if(goldT>0)sparkFx()}}
@@ -1920,7 +1979,7 @@ function chooseClass(cb){
     const b=e.target.closest("[data-c]");if(!b||b.disabled)return;
     S.cls=b.dataset.c;dirty=true;
     $("clsModal").classList.remove("show");paused=false;
-    hp=gc().maxHp;setHeroArt();$("clsIc").innerHTML=HEROES[S.cls]();skCd={};setSkills();buildSkills();refreshUI();save();
+    hp=gc().maxHp;setHeroArt();$("clsIc").innerHTML=HEROES[S.cls]();skCd={};clearAllies();setSkills();buildSkills();refreshUI();save();
     toast(`${CLS[S.cls].n} 선택!`);cb&&cb();
   };
 }
@@ -2011,7 +2070,7 @@ function loop(t){
 }
 if(window.__user)requestAnimationFrame(loop);
 // 테스트/디버그용: 화면 없이 시간 빨리 감기
-window.__fast=(sec,auto)=>{sim=true;if(!S.cls)S.cls='war';for(let i=0;i<sec*10;i++){step(0.1,true);if(auto)autoBuy()}sim=false;const q=quiet0;quiet0=true;renderFoes();updateName();renderProgress();quiet0=q;refreshUI()};
+window.__fast=(sec,auto)=>{sim=true;if(!S.cls)S.cls='war';for(let i=0;i<sec*10;i++){step(0.1,true);if(auto)autoBuy()}sim=false;const q=quiet0;quiet0=true;renderAllies();renderFoes();updateName();renderProgress();quiet0=q;refreshUI()};
 function autoBuy(){for(const k of["atk","hp","spd","crit"]){let g=0;while(g++<50&&buyAmtOne(k));}}
 function buyAmtOne(k){if(S.lv[k]>=UP[k].max)return false;const c=upCost(k,S.lv[k]);if(S.gold<c)return false;S.gold-=c;S.lv[k]++;dirty=true;return true}
 window.__S=()=>S;
