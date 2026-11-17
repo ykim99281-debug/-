@@ -106,7 +106,7 @@ button:hover:not(:disabled){filter:brightness(1.25)}button:active:not(:disabled)
     <div class="bar thin"><i class="xp" id="xpb" style="width:0%"></i></div>
     <div class="gauge"><span>뇌절</span><div class="pips" id="pips"></div></div>
   </div>
-  <div id="tr"><div class="glass" id="mute" style="pointer-events:auto">🔊</div><canvas id="mm" class="glass" width="112" height="112"></canvas><div class="glass pill" id="clock" style="font-size:12px"></div></div>
+  <div id="tr"><div style="display:flex;gap:6px"><div class="glass" id="qbtn" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">화질</div><div class="glass" id="mute" style="pointer-events:auto">🔊</div></div><canvas id="mm" class="glass" width="112" height="112"></canvas><div class="glass pill" id="clock" style="font-size:12px"></div></div>
   <div class="glass" id="boss"><div class="nm"><b id="bn">-</b><i id="bt" style="font-style:normal;color:var(--yel);font-size:12px"></i></div><div class="bar"><i class="he" id="bh" style="width:100%"></i></div></div>
   <button id="act"></button>
   <div id="acts">
@@ -170,7 +170,8 @@ $('#mute').onclick=()=>{AU.on=!AU.on;$('#mute').textContent=AU.on?'🔊':'🔇'}
 /* ================= RENDERER ================= */
 const canvas=$('#gl');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
-const PR=Math.min(window.devicePixelRatio||1,1.75);
+const DPR=window.devicePixelRatio||1,mobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);let Q=mobile?1:2;try{const q=localStorage.getItem('q');if(q!==null)Q=+q}catch(e){}
+const prFor=q=>[.6,Math.min(DPR,1),Math.min(DPR,1.5)][q];let PR=prFor(Q);
 renderer.setPixelRatio(PR);
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
@@ -338,7 +339,7 @@ const builders=[
   mk(new THREE.BoxGeometry(.16,.16,1.3),M(0x2a1a10),0,0,-.1,pan);
   const hearts=[];for(let i=0;i<6;i++){const s=sprite(textTex('♥',{font:'bold 110px sans-serif',color:'#ff3b6e',stroke:'#3a0a1a',w:140,h:140}),.9,{});root.add(s);hearts.push(s)}
   const rings=[0,1].map(i=>mk(new THREE.TorusGeometry(2.2+i*.6,.035,8,80),E(i?0xff4be0:0xff2a4a,2.5),0,2.4,0,root,false));
-  const kl=new THREE.PointLight(0xff3b6e,12,14,1.6);kl.position.set(0,3.5,1);root.add(kl);
+  
   return{tick:(t)=>{root.position.y=Math.sin(t*1.4)*.15;crown.rotation.y=t*.8;arm.rotation.x=Math.sin(t*2)*.12;pan.rotation.x=Math.sin(t*3)*.1;hearts.forEach((h,i)=>{const a=t*.9+i/6*6.28;h.position.set(Math.cos(a)*2.9,2.6+Math.sin(t*2+i)*.35,Math.sin(a)*2.9)});rings.forEach((r,i)=>{r.rotation.x=Math.PI/2+Math.sin(t*.7+i)*.5;r.rotation.y=t*(.4+i*.2)*(i?-1:1)})},hy:5.4}}
 ];
 const ENEMIES=[
@@ -391,7 +392,7 @@ const keys={},joy={x:0,y:0},colliders=[],npcs=[],wmons=[];
 const smooth=(x,a,b)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 function hgt(x,z){const d=Math.hypot(x,z);return smooth(d,16,40)*(Math.sin(x*.07+1)*Math.cos(z*.06)*2.6+Math.sin(x*.21+z*.15)*.7)-2.6*smooth(11-Math.hypot(x-26,z-20),0,6)}
 // ---- terrain
-{const geo=new THREE.PlaneGeometry(240,240,180,180);geo.rotateX(-Math.PI/2);const pa=geo.attributes.position,col=new Float32Array(pa.count*3);
+{const geo=new THREE.PlaneGeometry(240,240,110,110);geo.rotateX(-Math.PI/2);const pa=geo.attributes.position,col=new Float32Array(pa.count*3);
  const g1=new THREE.Color(),g2=new THREE.Color(),pu=new THREE.Color(),sand=new THREE.Color(),c=new THREE.Color();
  for(let i=0;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i);pa.setY(i,hgt(x,z));const d=Math.hypot(x,z);const n=Math.sin(x*.5)*Math.cos(z*.43)*.5+.5;
   g1.setHSL(.29,.55,.3+n*.08);g2.setHSL(.2,.42,.27+n*.06);pu.setHSL(.76,.42,.17+n*.06);sand.setHSL(.1,.33,.56-n*.05);
@@ -432,27 +433,27 @@ const windmill=(()=>{const g=grp(worldG,17,hgt(17,-14),-14);mk(new THREE.Cylinde
 const treeGrid=new Map();const tk=(x,z)=>Math.floor(x/4)+','+Math.floor(z/4);
 const TERR=[{i:0,c:[-24,-14],r:8,n:4,s:.8},{i:1,c:[28,-26],r:9,n:4,s:.62},{i:2,c:[-32,-46],r:9,n:2,s:.55},{i:2,c:[-26,-72],r:9,n:2,s:.55},{i:3,c:[34,-60],r:2,n:1,s:.5,boss:1},{i:4,c:[48,8],r:2,n:1,s:.8,boss:1},{i:5,c:[0,-83],r:0,n:1,s:.55,boss:1}];
 function freeSpot(x,z,pad=0){const d=Math.hypot(x,z);if(d<19||d>100)return false;if(Math.hypot(x-26,z-20)<14)return false;for(const t of TERR){if(Math.hypot(x-t.c[0],z-t.c[1])<t.r+3+pad)return false}if(Math.abs(x)<7&&z<-18&&z>-90)return false;return true}
-{const N=420,f1=new THREE.InstancedMesh(new THREE.ConeGeometry(1.5,3,7),M(0xffffff,{roughness:.8}),N),f2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.1,2.4,7),M(0xffffff,{roughness:.8}),N),tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.2,.3,2,6),M(0x5a3a22),N);
+{const N=260,f1=new THREE.InstancedMesh(new THREE.ConeGeometry(1.5,3,7),M(0xffffff,{roughness:.8}),N),f2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.1,2.4,7),M(0xffffff,{roughness:.8}),N),tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.2,.3,2,6),M(0x5a3a22),N);
  const m4=new THREE.Matrix4(),col=new THREE.Color();let n=0;
  for(let tries=0;tries<2000&&n<N;tries++){const a=rand(0,6.283),r=rand(19,100);const x=Math.cos(a)*r,z=Math.sin(a)*r;if(!freeSpot(x,z,0))continue;
   const y=hgt(x,z),s=rand(.7,1.25);m4.makeTranslation(x,y+1*s,z).scale(new THREE.Vector3(s,s,s));tr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+s,z));
   f1.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+2.6*s,z));f2.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+4*s,z));
   const d=Math.hypot(x,z);col.setHSL(lerp(.3,.78,smooth(d,45,85)),lerp(.5,.45,smooth(d,45,85)),lerp(.26,.2,smooth(d,45,85))+rand(0,.06));f1.setColorAt(n,col);col.offsetHSL(0,0,.04);f2.setColorAt(n,col);
   const k=tk(x,z);if(!treeGrid.has(k))treeGrid.set(k,[]);treeGrid.get(k).push({x,z,r:.5*s});n++}
- [f1,f2,tr].forEach(m=>{m.count=n;m.castShadow=true;m.receiveShadow=true;m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;worldG.add(m)})}
+ [f1,f2,tr].forEach(m=>{m.count=n;m.castShadow=false;m.receiveShadow=false;m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;worldG.add(m)})}
 {const N=90,rk=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),M(0x8a8499,{roughness:.9,flatShading:true}),N);let n=0;
  for(let t=0;t<600&&n<N;t++){const a=rand(0,6.283),r=rand(16,100),x=Math.cos(a)*r,z=Math.sin(a)*r;if(!freeSpot(x,z))continue;const s=rand(.4,1.6);rk.setMatrixAt(n++,new THREE.Matrix4().compose(new THREE.Vector3(x,hgt(x,z)+s*.3,z),new THREE.Quaternion().setFromEuler(new THREE.Euler(rand(0,3),rand(0,3),0)),new THREE.Vector3(s,s*.7,s)))}
- rk.count=n;rk.castShadow=true;rk.receiveShadow=true;worldG.add(rk)}
-{const N=700,fl=new THREE.InstancedMesh(new THREE.SphereGeometry(.13,8,6),new THREE.MeshStandardMaterial({roughness:.5,emissive:0x444444}),N),gr=new THREE.InstancedMesh(new THREE.ConeGeometry(.1,.55,4),M(0x4aa04a,{roughness:.9}),1200);const c=new THREE.Color();let n=0;
+ rk.count=n;rk.castShadow=false;worldG.add(rk)}
+{const N=300,fl=new THREE.InstancedMesh(new THREE.SphereGeometry(.13,8,6),new THREE.MeshStandardMaterial({roughness:.5,emissive:0x444444}),N),gr=new THREE.InstancedMesh(new THREE.ConeGeometry(.1,.55,4),M(0x4aa04a,{roughness:.9}),1200);const c=new THREE.Color();let n=0;
  for(let t=0;t<N;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*70,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<10)continue;c.setHSL(pick([.0,.12,.15,.58,.85]),.9,.65);fl.setMatrixAt(n,new THREE.Matrix4().setPosition(x,hgt(x,z)+.3,z));fl.setColorAt(n++,c)}fl.count=n;worldG.add(fl);
- n=0;for(let t=0;t<1200;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*80,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<9.5)continue;const s=rand(.7,1.6);gr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,hgt(x,z)+.25*s,z));c.setHSL(lerp(.3,.7,smooth(r,50,80)),.5,rand(.3,.45));gr.setColorAt(n++,c)}gr.count=n;worldG.add(gr)}
+ n=0;for(let t=0;t<500;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*80,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<9.5)continue;const s=rand(.7,1.6);gr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,hgt(x,z)+.25*s,z));c.setHSL(lerp(.3,.7,smooth(r,50,80)),.5,rand(.3,.45));gr.setColorAt(n++,c)}gr.count=n;worldG.add(gr)}
 // pollen
 const pollen=(()=>{const N=500,g=new THREE.BufferGeometry(),a=new Float32Array(N*3);for(let i=0;i<N;i++){a[i*3]=rand(-40,40);a[i*3+1]=rand(.3,7);a[i*3+2]=rand(-40,40)}g.setAttribute('position',new THREE.BufferAttribute(a,3));const p=new THREE.Points(g,new THREE.PointsMaterial({size:.14,map:glowTex,color:0xfff3c0,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));p.frustumCulled=false;worldG.add(p);return p})();
 // boss gate
 {const g=grp(worldG,0,hgt(0,-90),-90);for(const s of[-1,1]){mk(new THREE.CylinderGeometry(1.1,1.4,14,10),M(0x1c1030,{roughness:.5,metalness:.4}),s*6.5,7,0,g);mk(new THREE.TorusGeometry(1.25,.12,8,24),E(0xff4be0,2.5),s*6.5,10,0,g,false).rotation.x=Math.PI/2}
  const arch=mk(new THREE.TorusGeometry(6.5,.5,10,40,Math.PI),E(0xb04bff,2.2),0,13,0,g,false);
  const beam=mk(new THREE.CylinderGeometry(1.6,1.6,90,24,1,true),ADD(0xff6bd6,{opacity:.16}),0,45,0,g,false);
- const pl=new THREE.PointLight(0xff5be0,30,40,1.4);pl.position.set(0,5,3);g.add(pl);
+
  const s=sprite(textTex('타락성',{font:'bold 90px "Black Han Sans",Jua',color:'#fff',stroke:'#7b2dff',w:320,h:140}),1);s.scale.set(7,3,1);s.position.set(0,17,0);g.add(s)}
 // ---- NPCs
 const markerTex={q:textTex('!',{font:'bold 150px "Black Han Sans",Jua',color:'#ffd84d',stroke:'#7a4a00',w:128,h:160}),r:textTex('?',{font:'bold 150px "Black Han Sans",Jua',color:'#7cf0ff',stroke:'#0a4a7a',w:128,h:160})};
@@ -487,7 +488,7 @@ const ES=[
 function wmonPos(t){const a=rand(0,6.283),r=Math.sqrt(Math.random())*t.r;return[t.c[0]+Math.cos(a)*r,t.c[1]+Math.sin(a)*r]}
 function spawnWM(t){const g=new THREE.Group(),b=builders[t.i](g);g.scale.setScalar(t.s);const[x,z]=wmonPos(t);g.position.set(x,hgt(x,z),z);
  const mats=[];g.traverse(o=>{if(o.isMesh&&o.material.emissive&&!(o.material instanceof THREE.MeshBasicMaterial)&&!mats.includes(o.material)){o.material.userData.e0=o.material.emissive.clone();o.material.userData.i0=o.material.emissiveIntensity;mats.push(o.material)}});
- worldG.add(g);const S=ES[t.i];
+ g.traverse(o=>{if(o.isMesh)o.castShadow=false});worldG.add(g);const S=ES[t.i];
  wmons.push({g,b,t,S,mats,hp:S.hp,max:S.hp,alive:true,state:'idle',tt:0,tDur:1,cd:rand(0,1),fightT:0,combatT:0,frozen:0,kv:new THREE.Vector3(),kbT:0,lungeT:0,tx:x,tz:z,wait:rand(0,3),yaw:rand(0,6),ph:rand(0,6),dead:0,repLeft:0,bar:null,sayT:0,tog:0,lockYaw:0,curType:S.type})}
 for(const t of TERR)for(let i=0;i<t.n;i++)spawnWM(t);
 function collide(p){for(const c of colliders){const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz),m=c.r+.45;if(d<m&&d>1e-4){p.x=c.x+dx/d*m;p.z=c.z+dz/d*m}}
@@ -758,7 +759,8 @@ function updateEnemies(dt){
  const hp=hero.position;
  for(const m of wmons){
   if(!m.alive){m.dead-=dt;if(m.dead<=0&&!m.t.boss)respawnWM(m);continue}
-  const g=m.g,gp=g.position,S=m.S;m.b.tick(T+m.ph);
+  const g=m.g,gp=g.position,S=m.S;{const fx=hp.x-gp.x,fz=hp.z-gp.z;if(fx*fx+fz*fz>4900){g.visible=false;if(m.state!=='idle')m.state='idle';continue}g.visible=true}
+  m.b.tick(T+m.ph);
   const dx=hp.x-gp.x,dz=hp.z-gp.z,d=Math.hypot(dx,dz);m.combatT=Math.max(0,m.combatT-dt);m.sayT-=dt;
   if(m.sayT<=0&&m.bar)m.bar.querySelector('.sp').style.display='none';
   if(m.kbT>0){gp.x+=m.kv.x*dt;gp.z+=m.kv.z*dt;m.kbT-=dt}
@@ -926,16 +928,17 @@ addEventListener('keydown',e=>{const k=kn(e);if(e.repeat&&k!=='j')return keys[k]
 addEventListener('keyup',e=>{keys[kn(e)]=false});addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 $('#mute').onclick=()=>{AU.on=!AU.on;$('#mute').textContent=AU.on?'🔊':'🔇'};
 /* ================= MAIN LOOP ================= */
-const clock=new THREE.Clock();let T=0;
+const clock=new THREE.Clock();let T=0,frameNo=0,fpsAcc=0,fpsN=0;
 function frame(){requestAnimationFrame(frame);
- const real=Math.min(clock.getDelta(),.05),dt=real*timeScale;T+=real;camT+=real;
+ const raw=clock.getDelta(),real=Math.min(raw,.05),dt=real*timeScale;T+=real;camT+=real;frameNo++;
+ if(raw<.25){fpsAcc+=raw;fpsN++;if(fpsAcc>2.5){const f=fpsN/fpsAcc;if(f<30&&Q>0&&T>5&&mode!=='title'){Q--;applyQuality();toast('화질을 자동으로 낮췄어요 (오른쪽 위 버튼으로 변경)')}fpsAcc=fpsN=0}}
  for(let i=tweens.length-1;i>=0;i--){const w=tweens[i];w.t+=dt;const p=Math.min(1,w.t/w.dur);w.fn(w.ease(p));if(p>=1){tweens.splice(i,1);w.res()}}
  for(let i=fxList.length-1;i>=0;i--){const f=fxList[i];f.t+=dt;const k=Math.min(1,f.t/f.life);f.upd(dt,k);if(k>=1){scene.remove(f.o);f.o.geometry&&f.o.geometry.dispose();if(f.o.material&&f.o.material.dispose)f.o.material.dispose();fxList.splice(i,1)}}
  sky.material.uniforms.t.value=T;shieldMat.uniforms.t.value=T;
  updateEnv(real);
  // hero idle
  H.torso.position.y=1.35+Math.sin(T*2)*.02;H.head.position.y=2.02+Math.sin(T*2+.5)*.02;
- const cp=H.cape.geometry,ba=cp.userData.base,pa=cp.attributes.position.array;for(let i=0;i<pa.length;i+=3){const y=ba[i+1];const f=(.75-y)/1.5;pa[i+2]=ba[i+2]+Math.sin(T*3+y*3.5+ba[i]*2)*.09*f+f*.12*(1+Math.sin(T*1.5))}cp.attributes.position.needsUpdate=true;cp.computeVertexNormals();
+ const cp=H.cape.geometry,ba=cp.userData.base,pa=cp.attributes.position.array;for(let i=0;i<pa.length;i+=3){const y=ba[i+1];const f=(.75-y)/1.5;pa[i+2]=ba[i+2]+Math.sin(T*3+y*3.5+ba[i]*2)*.09*f+f*.12*(1+Math.sin(T*1.5))}cp.attributes.position.needsUpdate=true;if((frameNo&3)===0)cp.computeVertexNormals();
  H.plume.rotation.x=-.9+Math.sin(T*3)*.1;
  updateWorld(dt);updateHeroCombat(dt);updateEnemies(dt);updateProjs(dt);updateDrops(dt);
  // camera (orbit follow)
@@ -957,8 +960,11 @@ function frame(){requestAnimationFrame(frame);
  composer.render();
 }
 let hudT=0;
+function applyQuality(){PR=prFor(Q);renderer.setPixelRatio(PR);composer.setPixelRatio(PR);resize();bloom.enabled=Q>=1;key.castShadow=Q>=1;key.shadow.mapSize.set(Q===2?1536:1024,Q===2?1536:1024);if(key.shadow.map){key.shadow.map.dispose();key.shadow.map=null}
+ try{localStorage.setItem('q',Q)}catch(e){}$('#qbtn').textContent='화질 '+['하','중','상'][Q]}
+$('#qbtn').onclick=()=>{Q=(Q+1)%3;applyQuality()};
 /* ================= BOOT ================= */
-scene.add(key.target);
+scene.add(key.target);applyQuality();
 hero.position.set(-4,0,2);hero.rotation.set(0,-2.6,0);groundY=hgt(-4,2);hero.scale.setScalar(1);
 worldG.visible=true;camSmooth.set(-4+Math.sin(camYaw)*6,3,2+Math.cos(camYaw)*6);camLook.set(-4,1.6,2);
 updateQuestUI();updateEnv(.01);
