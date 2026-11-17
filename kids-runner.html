@@ -258,11 +258,11 @@ function moveLane(dir){
 }
 function jump(){
   if(state!=='play' || G.jumping) return;
-  G.jumping = true; G.vy = 9.2; G.sliding = 0; G.jumps++; sfx.jump();
+  G.jumping = true; G.vy = 7; G.sliding = 0; G.jumps++; sfx.jump();
 }
 function slide(){
   if(state!=='play') return;
-  if(G.jumping){ G.vy = -16; }   // 빨리 내려오기
+  if(G.jumping){ G.vy = -14; }   // 빨리 내려오기
   G.sliding = 0.65; sfx.slide();
 }
 addEventListener('keydown', e => {
@@ -315,7 +315,7 @@ function update(dt){
 
   // 점프
   if(g.jumping){
-    g.vy -= 26*dt; g.jumpY += g.vy*dt/ (9.2/1.55);
+    g.vy -= 22*dt; g.jumpY += g.vy*dt;
     if(g.jumpY<=0){ g.jumpY=0; g.vy=0; g.jumping=false; }
   }
   if(g.sliding>0) g.sliding -= dt;
