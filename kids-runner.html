@@ -198,16 +198,20 @@ function newGame(){
     shield:0, magnet:0,
     objs:[], side:[], parts:[],
     nextSpawn:30, t:0, shake:0, hurt:0,
-    combo:0, jumps:0, powersGot:0, rocket:0, dbl:0, toasts:[]
+    lastStorm:0, world:undefined, combo:0, jumps:0, powersGot:0, rocket:0, dbl:0, toasts:[]
   };
   G.missions = pickMissions();
   G.laneX = 1;
   // 길가 장식
   for(let d=0; d<VIEW; d+=7) addSide(d);
 }
+const WORLD_NAMES = ['🌳 초록 마을','🌇 노을 언덕','🌌 별빛 밤하늘','🍭 사탕 나라'];
+const worldIdx = () => Math.floor((G?G.dist:0)/600) % 4;
+const STARS = Array.from({length:50},()=>({x:Math.random(),y:Math.random(),r:.6+Math.random()*1.4,p:Math.random()*6}));
 function addSide(d){
-  const left = Math.random()<.5;
-  G.side.push({ d, x:(left?-1:1)*(2.6+Math.random()*1.4), kind: Math.random()<.55?'tree':'house', h:1.5+Math.random()*2, hue:Math.floor(Math.random()*360) });
+  const left = Math.random()<.5, w = worldIdx();
+  const deco = w===2 ? 'crystal' : w===3 ? 'candy' : 'tree';
+  G.side.push({ d, x:(left?-1:1)*(2.6+Math.random()*1.4), kind: Math.random()<.55?deco:'house', h:1.5+Math.random()*2, hue:Math.floor(Math.random()*360) });
 }
 
 // ---------- 투영 ----------
@@ -396,6 +400,17 @@ function update(dt){
   g.parts = g.parts.filter(p=>p.life>0);
 
   checkMissions();
+  const wi = worldIdx();
+  if(wi !== g.world){ if(g.world!==undefined) { toast('🌍 새 월드! '+WORLD_NAMES[wi]); sfx.power(); } g.world = wi; }
+  const st = Math.floor(g.dist/500);
+  if(st > g.lastStorm){
+    g.lastStorm = st;
+    if(st>0){
+      toast('🌪 코인 폭풍!'); 
+      for(let i=0;i<14;i++) for(let l=0;l<3;l++) g.objs.push({type:'coin', lane:l, d:VIEW+2+i*1.6, y:0});
+      g.nextSpawn = Math.max(g.nextSpawn, VIEW+2+14*1.6+10);
+    }
+  }
   document.getElementById('score').textContent = Math.floor(g.dist);
   document.getElementById('coins').textContent = g.coins;
   const pw = [];
@@ -437,13 +452,14 @@ function theme(){ const i = Math.floor((G?G.dist:0)/600) % THEMES.length; return
 function rr(x,y,w,h,r){ ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x,y,w,h,r) : ctx.rect(x,y,w,h); }
 
 function drawBackground(){
-  const th = theme(), hz = horizon();
+  const th = theme(), hz = horizon(), wi = worldIdx();
   const g = ctx.createLinearGradient(0,0,0,hz+10);
   g.addColorStop(0,th.sky1); g.addColorStop(1,th.sky2);
   ctx.fillStyle=g; ctx.fillRect(0,0,W,hz+10);
-  // 해
   const t = G? G.dist : 0;
-  ctx.fillStyle='rgba(255,247,170,.95)'; ctx.beginPath(); ctx.arc(W*0.78,hz*0.45,Math.min(W,H)*0.07,0,7); ctx.fill();
+  if(wi===2){ ctx.fillStyle='#fff'; for(const st of STARS){ ctx.globalAlpha=.5+.5*Math.sin((G?G.t:0)*2+st.p); ctx.beginPath(); ctx.arc(st.x*W,st.y*hz*.95,st.r,0,7); ctx.fill(); } ctx.globalAlpha=1; }
+  // 해/달
+  ctx.fillStyle = wi===2 ? 'rgba(240,244,255,.95)' : 'rgba(255,247,170,.95)'; ctx.beginPath(); ctx.arc(W*0.78,hz*0.45,Math.min(W,H)*0.07,0,7); ctx.fill();
   // 구름
   ctx.fillStyle='rgba(255,255,255,.8)';
   for(let i=0;i<4;i++){
@@ -537,7 +553,14 @@ function drawObj(o){
 }
 function drawSide(s){
   const sc_=sc(s.d), x=sx(1+s.x,s.d), y=sy(s.d), u=U()*sc_;
-  if(s.kind==='tree'){
+  if(s.kind==='crystal'){
+    ctx.fillStyle=`hsl(${s.hue%80+170},80%,65%)`; ctx.beginPath(); ctx.moveTo(x-u*.22,y); ctx.lineTo(x-u*.1,y-u*1.3); ctx.lineTo(x+u*.05,y-u*1.6); ctx.lineTo(x+u*.2,y-u*.9); ctx.lineTo(x+u*.28,y); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.5)'; ctx.beginPath(); ctx.moveTo(x-u*.1,y-u*1.3); ctx.lineTo(x+u*.05,y-u*1.6); ctx.lineTo(x,y-u*.4); ctx.fill();
+  } else if(s.kind==='candy'){
+    ctx.fillStyle='#fff'; ctx.fillRect(x-u*.04,y-u*1.1,u*.08,u*1.1);
+    ctx.fillStyle=`hsl(${s.hue},85%,62%)`; ctx.beginPath(); ctx.arc(x,y-u*1.3,u*.38,0,7); ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=Math.max(1,u*.07); ctx.beginPath(); ctx.arc(x,y-u*1.3,u*.22,0,5); ctx.stroke(); ctx.beginPath(); ctx.arc(x,y-u*1.3,u*.08,0,5); ctx.stroke();
+  } else if(s.kind==='tree'){
     ctx.fillStyle='#8d5a3b'; ctx.fillRect(x-u*.08,y-u*.7,u*.16,u*.7);
     ctx.fillStyle='#2fa84d'; ctx.beginPath(); ctx.arc(x,y-u*1.0,u*.45,0,7); ctx.fill();
     ctx.fillStyle='#3fd06a'; ctx.beginPath(); ctx.arc(x-u*.12,y-u*1.1,u*.3,0,7); ctx.fill();
