@@ -235,15 +235,15 @@ function buildHero(parent,ghost=false){
  const g=grp(parent);const steel=P(0x9fb0e8,{metalness:.85,roughness:.38,clearcoat:.25,envMapIntensity:.45});const blue=P(0x3a56c8,{metalness:.5,roughness:.35});const gold=P(0xffcc55,{metalness:1,roughness:.25});const red=M(0xd62848,{roughness:.55,side:THREE.DoubleSide});
  const legs=[];for(const s of[-1,1]){const l=grp(g,s*.2,.85,0);mk(new THREE.CapsuleGeometry(.15,.5,6,12),blue,0,-.3,0,l);mk(new THREE.BoxGeometry(.3,.2,.45),steel,0,-.78,.07,l);mk(new THREE.SphereGeometry(.17,12,8),steel,0,-.05,.05,l);legs.push(l)}
  const torso=grp(g,0,1.35,0);mk(new THREE.CapsuleGeometry(.36,.36,8,16),steel,0,0,0,torso);
- mk(new THREE.BoxGeometry(.52,.62,.06),red,0,-.02,.37,torso);mk(new THREE.TorusGeometry(.38,.05,8,20),gold,0,-.32,0,torso).rotation.x=Math.PI/2;
+ mk(new THREE.BoxGeometry(.52,.62,.06),red,0,-.02,.37,torso).userData.part='tabard';mk(new THREE.TorusGeometry(.38,.05,8,20),gold,0,-.32,0,torso).rotation.x=Math.PI/2;
  mk(new THREE.CircleGeometry(.1,6),E(0x9fe8ff,2),0,.08,.41,torso,false);
- for(const s of[-1,1]){const p=mk(new THREE.SphereGeometry(.24,16,10,0,Math.PI*2,0,Math.PI*.6),steel,s*.46,.3,0,torso);p.rotation.z=-s*.3;mk(new THREE.TorusGeometry(.2,.03,6,16),gold,s*.46,.27,0,torso).rotation.x=Math.PI/2}
+ for(const s of[-1,1]){const p=mk(new THREE.SphereGeometry(.24,16,10,0,Math.PI*2,0,Math.PI*.6),steel,s*.46,.3,0,torso);p.rotation.z=-s*.3;p.userData.part='pauld';const t2=mk(new THREE.TorusGeometry(.2,.03,6,16),gold,s*.46,.27,0,torso);t2.rotation.x=Math.PI/2;t2.userData.part='pauld'}
  const head=grp(g,0,2.02,0);mk(new THREE.SphereGeometry(.27,24,18),M(0xffd9bf,{roughness:.6}),0,0,0,head);
  const hel=mk(new THREE.SphereGeometry(.33,24,18,0,Math.PI*2,0,Math.PI*.62),steel,0,.02,0,head);
- mk(new THREE.BoxGeometry(.5,.07,.12),E(0x9fe8ff,3),0,.0,.27,head,false);mk(new THREE.BoxGeometry(.06,.3,.08),gold,0,.03,.3,head);
- const plume=mk(new THREE.CapsuleGeometry(.07,.55,4,10),red,0,.38,-.1,head);plume.rotation.x=-.9;H.plume=plume;
+ hel.userData.part='helm';mk(new THREE.BoxGeometry(.5,.07,.12),E(0x9fe8ff,3),0,.0,.27,head,false).userData.part='helm';mk(new THREE.BoxGeometry(.06,.3,.08),gold,0,.03,.3,head).userData.part='helm';
+ const plume=mk(new THREE.CapsuleGeometry(.07,.55,4,10),red,0,.38,-.1,head);plume.rotation.x=-.9;plume.userData.part='helm';H.plume=plume;
  const cape=new THREE.Mesh(new THREE.PlaneGeometry(.95,1.5,10,16),red);cape.position.set(0,1.3,-.38);cape.castShadow=true;g.add(cape);cape.geometry.userData.base=cape.geometry.attributes.position.array.slice();H.cape=cape;
- const armL=grp(g,-.58,1.55,0);mk(new THREE.CapsuleGeometry(.1,.45,6,10),steel,0,-.3,0,armL);const sh=grp(armL,-.1,-.5,.15);const shield=mk(new THREE.CylinderGeometry(.5,.5,.09,6),gold,0,0,0,sh);shield.rotation.z=Math.PI/2;
+ const armL=grp(g,-.58,1.55,0);mk(new THREE.CapsuleGeometry(.1,.45,6,10),steel,0,-.3,0,armL);const sh=grp(armL,-.1,-.5,.15);sh.userData.part='shield';const shield=mk(new THREE.CylinderGeometry(.5,.5,.09,6),gold,0,0,0,sh);shield.rotation.z=Math.PI/2;
  const sf=mk(new THREE.CircleGeometry(.38,6),M(0xffffff,{map:textTex('뇌',{font:'bold 220px "Black Han Sans",Jua,sans-serif',color:'#ffe9a8',bg:'#2d3fa8',w:256,h:256}),metalness:.3}),-.05,0,0,sh);sf.rotation.y=-Math.PI/2;sf.castShadow=false;
  const armR=grp(g,.58,1.55,0);mk(new THREE.CapsuleGeometry(.1,.45,6,10),steel,0,-.3,0,armR);
  const sword=grp(armR,0,-.62,.05);mk(new THREE.SphereGeometry(.1,10,8),steel,0,0,0,sword);mk(new THREE.CylinderGeometry(.04,.04,.28,8),M(0x442211),0,.12,0,sword);
@@ -252,7 +252,7 @@ function buildHero(parent,ghost=false){
  mk(new THREE.BoxGeometry(.03,1.3,.045),E(0x7ae8ff,2.2),0,1,0,sword,false);mk(new THREE.ConeGeometry(.055,.2,4),E(0x7ae8ff,2.2),0,1.76,0,sword,false);
  sword.rotation.x=Math.PI/2*.9;armR.rotation.x=-.2;
  if(ghost){const gm=ADD(0x7ee0ff,{opacity:.5});g.traverse(o=>{if(o.isMesh){o.material=gm;o.castShadow=false}})}
- return{g,armR,armL,sword,head,torso,legs}}
+ g.userData.mats={steel,blue,gold,red};return{g,armR,armL,sword,head,torso,legs}}
 Object.assign(H,buildHero(hero));
 // sparkle shield bubble
 const shieldMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,uniforms:{t:{value:0},o:{value:0},c:{value:new THREE.Color(0x66ddff)}},
@@ -541,12 +541,37 @@ const WP={club:[{n:'나무몽둥이',a:2,c:0},{n:'쇠몽둥이',a:9,c:100},{n:'�
  staff:[{n:'낡은 지팡이',a:8,c:0},{n:'마법 지팡이',a:20,c:500},{n:'수정 지팡이',a:36,c:1500},{n:'대마법사의 지팡이',a:60,c:4000}],
  bow:[{n:'사냥꾼의 활',a:8,c:0},{n:'장궁',a:20,c:500},{n:'엘프의 활',a:36,c:1500},{n:'신궁',a:60,c:4000}],
  mic:[{n:'노래방 마이크',a:8,c:0},{n:'무선 마이크',a:20,c:500},{n:'황금 마이크',a:36,c:1500},{n:'뇌절 마이크',a:60,c:4000}]};
+
+// ---- class outfits
+const OUT={
+ none:{steel:[0x8a6a4a,.1,.85],blue:[0x5a4a3a,.1,.8],gold:[0xb0905a,.3,.6],red:0xc9a96a,helm:0,pauld:0,shield:0,tabard:1},
+ warrior:{steel:[0x9fb0e8,.85,.38],blue:[0x3a56c8,.5,.35],gold:[0xffcc55,1,.25],red:0xd62848,helm:1,pauld:1,shield:1,tabard:1},
+ mage:{steel:[0x4a2a8a,.1,.6],blue:[0x2a1a5a,.1,.7],gold:[0xb78cff,.8,.3],red:0x2a2a7a,helm:0,pauld:0,shield:0,tabard:0},
+ archer:{steel:[0x3a7a4a,.05,.8],blue:[0x5a4a30,.05,.8],gold:[0xc9a050,.6,.4],red:0x2a5a3a,helm:0,pauld:0,shield:0,tabard:0},
+ comic:{steel:[0xff4aa0,.3,.45],blue:[0xffd04d,.2,.5],gold:[0xffffff,.8,.3],red:0x7b4dff,helm:0,pauld:0,shield:0,tabard:0}};
+const OP={helm:[],pauld:[],shield:[],tabard:[]};hero.traverse(o=>{const k=o.userData.part;if(k&&OP[k])OP[k].push(o)});
+const ACC={};
+{const hd=H.head,g=H.g,pur=M(0x4a2a8a,{roughness:.6}),grn=M(0x2a5a3a,{roughness:.8}),pink=M(0xff7be5,{roughness:.9});
+ ACC.band=grp(hd);{const b=mk(new THREE.TorusGeometry(.27,.035,6,20),M(0xd62848),0,.1,0,ACC.band,false);b.rotation.x=Math.PI/2}
+ ACC.wiz=grp(hd);mk(new THREE.ConeGeometry(.36,.95,16),pur,0,.72,-.04,ACC.wiz).rotation.x=-.12;mk(new THREE.CylinderGeometry(.58,.58,.05,24),pur,0,.2,0,ACC.wiz);mk(new THREE.TorusGeometry(.33,.04,6,20),E(0xffd04d,1.5),0,.26,0,ACC.wiz,false).rotation.x=Math.PI/2;mk(new THREE.SphereGeometry(.08,8,6),E(0xffd04d,3),0,1.2,-.12,ACC.wiz,false);
+ ACC.robe=grp(g);mk(new THREE.ConeGeometry(.72,1.15,20,1,true),new THREE.MeshStandardMaterial({color:0x4a2a8a,roughness:.6,side:THREE.DoubleSide}),0,.7,0,ACC.robe);mk(new THREE.TorusGeometry(.55,.04,6,24),E(0xb78cff,1.5),0,.2,0,ACC.robe,false).rotation.x=Math.PI/2;
+ ACC.hood=grp(hd);mk(new THREE.SphereGeometry(.37,20,14,0,Math.PI*2,0,Math.PI*.52),grn,0,.05,-.07,ACC.hood);const fe=mk(new THREE.CapsuleGeometry(.025,.5,4,6),M(0xff4d4d),.3,.3,0,ACC.hood);fe.rotation.z=-.7;
+ ACC.quiver=grp(g);{const q=mk(new THREE.CylinderGeometry(.11,.1,.75,10),M(0x6a4a2a,{roughness:.8}),.22,1.55,-.5,ACC.quiver);q.rotation.z=.35;for(let i=0;i<3;i++){const a=mk(new THREE.CylinderGeometry(.012,.012,.35,4),M(0xcaa86a),.2+i*.05,1.98,-.5+(i-1)*.04,ACC.quiver,false);a.rotation.z=.35}}
+ ACC.wig=grp(hd);mk(new THREE.SphereGeometry(.42,16,12,0,Math.PI*2,0,Math.PI*.58),pink,0,.1,-.06,ACC.wig);for(const sx of[-1,1])mk(new THREE.SphereGeometry(.22,12,10),M(0x7bd7ff,{roughness:.9}),sx*.38,.05,-.05,ACC.wig);
+ ACC.nose=grp(hd);mk(new THREE.SphereGeometry(.075,10,8),E(0xff2a4a,1.2),0,-.02,.3,ACC.nose,false);
+ ACC.bow=grp(H.torso);for(const sx of[-1,1])mk(new THREE.ConeGeometry(.14,.28,3),M(0x7b4dff),sx*.15,.32,.38,ACC.bow,false).rotation.z=sx*-Math.PI/2;
+ for(const k in ACC)ACC[k].visible=false}
+const OUTACC={none:['band'],warrior:[],mage:['wiz','robe'],archer:['hood','quiver'],comic:['wig','nose','bow']};
+function setOutfit(job){const o=OUT[job],m=H.g.userData.mats;
+ for(const k of['steel','blue','gold']){m[k].color.set(o[k][0]);m[k].metalness=o[k][1];m[k].roughness=o[k][2]}m.red.color.set(o.red);
+ for(const k of['helm','pauld','shield','tabard'])OP[k].forEach(x=>x.visible=!!o[k]);
+ for(const k in ACC)ACC[k].visible=OUTACC[job].includes(k)}
 const JOBKIND={none:'club',warrior:'sword',mage:'staff',archer:'bow',comic:'mic'},JOBNAME={none:'초보자',warrior:'전사',mage:'마법사',archer:'궁수',comic:'개그맨'},WICON={club:'🏏',sword:'🗡️',staff:'🪄',bow:'🏹',mic:'🎤'};
 const JOBS=[{k:'warrior',i:'🗡️',n:'전사',d:'HP +40, 방어 +2<br>넓은 근접 공격',b:{max:40,def:2}},{k:'mage',i:'🪄',n:'마법사',d:'공격력 +4<br>마법 구슬 원거리 공격',b:{atk:4}},{k:'archer',i:'🏹',n:'궁수',d:'HP +10, 공격 +2<br>빠른 화살 원거리',b:{max:10,atk:2}},{k:'comic',i:'🎤',n:'개그맨',d:'뇌절 필요 횟수 -1<br>드립 피해 x1.5, 썰렁 +25%',b:{max:10,thr:-1,joke:.25}}];
 const curWeapon=()=>{const k=JOBKIND[G.job];return WP[k][G.wt[k]]};
 const ATK=()=>G.atk+curWeapon().a;
 function applyJob(k){const o=G.jb;G.max-=o.max;G.atk-=o.atk;G.def-=o.def;G.thr-=o.thr;G.joke-=o.joke;const j=JOBS.find(x=>x.k===k),b=Object.assign({max:0,atk:0,def:0,thr:0,joke:0},j.b);
- if(G.thr+b.thr<3)b.thr=3-G.thr;G.max+=b.max;G.atk+=b.atk;G.def+=b.def;G.thr+=b.thr;G.joke+=b.joke;G.jb=b;G.job=k;G.hp=Math.min(G.max,G.hp+b.max);G.wt[JOBKIND[k]]=Math.max(G.wt[JOBKIND[k]],0);setWeapon(JOBKIND[k],G.wt[JOBKIND[k]])}
+ if(G.thr+b.thr<3)b.thr=3-G.thr;G.max+=b.max;G.atk+=b.atk;G.def+=b.def;G.thr+=b.thr;G.joke+=b.joke;G.jb=b;G.job=k;G.hp=Math.min(G.max,G.hp+b.max);G.wt[JOBKIND[k]]=Math.max(G.wt[JOBKIND[k]],0);setWeapon(JOBKIND[k],G.wt[JOBKIND[k]]);setOutfit(k)}
 function setWeapon(kind,tier){const sw=H.sword;while(sw.children.length)sw.remove(sw.children[0]);const tc=[0xb98a4a,0x9fb3ff,0xffd04d,0xff7be5][Math.min(tier,3)],iron=P(0x8a8a9a,{metalness:1,roughness:.3}),wood=M(0x8a5a2a,{roughness:.8});
  mk(new THREE.SphereGeometry(.1,10,8),iron,0,0,0,sw);
  if(kind==='club'){const b=mk(new THREE.CylinderGeometry(.15,.06,1.2,10),tier?iron:wood,0,.65,0,sw);mk(new THREE.CylinderGeometry(.06,.06,.3,8),wood,0,.1,0,sw);if(tier){for(let i=0;i<8;i++){const a=i*.9;mk(new THREE.ConeGeometry(.035,.12,5),iron,Math.cos(a)*.14,.7+i*.07,Math.sin(a)*.14,sw).rotation.z=-Math.cos(a)*1.4}}}
@@ -1039,13 +1064,13 @@ function applyQuality(){PR=prFor(Q);renderer.setPixelRatio(PR);composer.setPixel
  try{localStorage.setItem('q',Q)}catch(e){}$('#qbtn').textContent='화질 '+['하','중','상'][Q]}
 $('#qbtn').onclick=()=>{Q=(Q+1)%3;applyQuality()};
 /* ================= BOOT ================= */
-scene.add(key.target);applyQuality();setWeapon('club',0);
+scene.add(key.target);applyQuality();setWeapon('club',0);setOutfit('none');
 hero.position.set(-4,0,2);hero.rotation.set(0,-2.6,0);groundY=hgt(-4,2);hero.scale.setScalar(1);
 worldG.visible=true;camSmooth.set(-4+Math.sin(camYaw)*6,3,2+Math.cos(camYaw)*6);camLook.set(-4,1.6,2);
 updateQuestUI();updateEnv(.01);
 frame();title();
 const ld=$('#load');ld.style.opacity=0;setTimeout(()=>ld.remove(),700);
-window.__game={hero,camera,G,PA,doAction,tp(x,z){hero.position.set(x,hgt(x,z),z)},talk,chief,get mode(){return mode},get qi(){return qi},get qprog(){return qprog},get qstate(){return qstate},get wmons(){return wmons},get tod(){return tod},setTod(v){tod=v},interact,get nearTarget(){return nearTarget}};
+window.__game={setOutfit,setWeapon,hero,camera,G,PA,doAction,tp(x,z){hero.position.set(x,hgt(x,z),z)},talk,chief,get mode(){return mode},get qi(){return qi},get qprog(){return qprog},get qstate(){return qstate},get wmons(){return wmons},get tod(){return tod},setTod(v){tod=v},interact,get nearTarget(){return nearTarget}};
 </script>
 </body>
 </html>
