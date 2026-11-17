@@ -391,12 +391,29 @@ let mode='title',curE=0,curMon=null,savedPos=new THREE.Vector3(-4,0,2),savedRot=
 const keys={},joy={x:0,y:0},colliders=[],npcs=[],wmons=[];
 const smooth=(x,a,b)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 function hgt(x,z){const d=Math.hypot(x,z);return smooth(d,16,40)*(Math.sin(x*.07+1)*Math.cos(z*.06)*2.6+Math.sin(x*.21+z*.15)*.7)-2.6*smooth(11-Math.hypot(x-26,z-20),0,6)}
+
+// ---- roads / walkable area
+const ROADS=[
+ [[0,-3],[0,-30],[0,-60],[0,-90]],
+ [[-3,5],[-10,7],[-18,6],[-24,-4],[-24,-14],[-28,-28],[-32,-46],[-30,-60],[-26,-72]],
+ [[0,-22],[12,-24],[24,-26],[28,-26],[32,-42],[34,-60]],
+ [[3,-3],[14,-3],[24,-1],[36,4],[48,8]],
+ [[0,5],[2,16],[4,28],[-6,38]],
+ [[-18,6],[-22,14],[-28,19],[-34,24]]
+];
+const TRAIL=[[-36,25],[-42,30],[-47,34],[-52,36]],HALL=[-52,37];let hallFound=false;
+function segD(px,pz,ax,az,bx,bz){const dx=bx-ax,dz=bz-az,l=dx*dx+dz*dz;let t=l?((px-ax)*dx+(pz-az)*dz)/l:0;t=t<0?0:t>1?1:t;return Math.hypot(px-(ax+dx*t),pz-(az+dz*t))}
+function roadDist(x,z){let m=99;for(const r of ROADS)for(let i=0;i<r.length-1;i++){const d=segD(x,z,r[i][0],r[i][1],r[i+1][0],r[i+1][1]);if(d<m)m=d}return m}
+function trailDist(x,z){let m=99;for(let i=0;i<TRAIL.length-1;i++){const d=segD(x,z,TRAIL[i][0],TRAIL[i][1],TRAIL[i+1][0],TRAIL[i+1][1]);if(d<m)m=d}return m}
+function walkable(x,z,pad=0){if(x*x+z*z<(19+pad)*(19+pad))return true;if(roadDist(x,z)<4.2+pad)return true;if(trailDist(x,z)<2.3+pad)return true;
+ if(Math.hypot(x-HALL[0],z-HALL[1])<9+pad||Math.hypot(x+36,z-25)<6+pad)return true;
+ for(const t of TERR){if(Math.hypot(x-t.c[0],z-t.c[1])<Math.max(t.r,6)+4+pad)return true}return false}
 // ---- terrain
-{const geo=new THREE.PlaneGeometry(240,240,110,110);geo.rotateX(-Math.PI/2);const pa=geo.attributes.position,col=new Float32Array(pa.count*3);
- const g1=new THREE.Color(),g2=new THREE.Color(),pu=new THREE.Color(),sand=new THREE.Color(),c=new THREE.Color();
+{const geo=new THREE.PlaneGeometry(240,240,130,130);geo.rotateX(-Math.PI/2);const pa=geo.attributes.position,col=new Float32Array(pa.count*3);
+ const g1=new THREE.Color(),g2=new THREE.Color(),pu=new THREE.Color(),sand=new THREE.Color(),path=new THREE.Color(),c=new THREE.Color();
  for(let i=0;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i);pa.setY(i,hgt(x,z));const d=Math.hypot(x,z);const n=Math.sin(x*.5)*Math.cos(z*.43)*.5+.5;
   g1.setHSL(.29,.55,.3+n*.08);g2.setHSL(.2,.42,.27+n*.06);pu.setHSL(.76,.42,.17+n*.06);sand.setHSL(.1,.33,.56-n*.05);
-  c.copy(g1).lerp(g2,smooth(d,25,50)).lerp(pu,smooth(d,55,80));if(d<9.5)c.lerp(sand,smooth(9.5-d,0,2.5));{const ld=Math.hypot(x-26,z-20);if(ld<13)c.lerp(sand,smooth(13-ld,0,3)*.8)}
+  c.copy(g1).lerp(g2,smooth(d,25,50)).lerp(pu,smooth(d,55,80));if(d<9.5)c.lerp(sand,smooth(9.5-d,0,2.5));{const ld=Math.hypot(x-26,z-20);if(ld<13)c.lerp(sand,smooth(13-ld,0,3)*.8)}{const rd=roadDist(x,z);if(rd<3.4){path.setHSL(.09,.38,.4+n*.05);c.lerp(path,smooth(3.4-rd,0,1.6))}const td=trailDist(x,z);if(td<1.6)c.lerp(path.setHSL(.09,.3,.36),smooth(1.6-td,0,.8)*.4)}
   col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
  geo.setAttribute('color',new THREE.BufferAttribute(col,3));geo.computeVertexNormals();
  const ter=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,metalness:0,envMapIntensity:.4}));ter.receiveShadow=true;worldG.add(ter)}
@@ -414,7 +431,7 @@ house(-8,-9,0,{w:5.4,wall:0xe9d2a6,roof:0x9a7a2e,h:3,sign:'이장 댁'});
 house(9,-8,-.25,{w:4,wall:0xdcc6e8,roof:0x5a3fa8,sign:'여관'});
 house(-14,3,Math.PI/2*.9,{wall:0xc8e4d0,roof:0xc2492f});
 house(14,3,-Math.PI/2*.9,{wall:0xf3d6c0,roof:0x2f7a8a});
-house(0,-15,0,{w:4.4,wall:0xefe2c2,roof:0xc2492f});
+house(8,-17,-.12,{w:4.4,wall:0xd8d8e8,roof:0x4a5a7a,sign:'무기상점'});
 house(-6,13,Math.PI,{wall:0xe3d0f0,roof:0x7a3fa8});
 // well
 {const g=grp(worldG,0,hgt(0,-1),-1);mk(new THREE.CylinderGeometry(1.1,1.2,.9,16),M(0x8a8a9a,{roughness:.9}),0,.45,0,g);mk(new THREE.CylinderGeometry(.85,.85,.05,16),M(0x1a3a6a,{roughness:.1,metalness:.5}),0,.88,0,g);
@@ -426,27 +443,27 @@ house(-6,13,Math.PI,{wall:0xe3d0f0,roof:0x7a3fa8});
 // lamp posts
 for(const [x,z] of[[-2,7],[4,-5],[-9,-2],[10,0],[2,9],[-3,-12]]){const g=grp(worldG,x,hgt(x,z),z);mk(new THREE.CylinderGeometry(.06,.08,2.8,8),M(0x2a2036,{metalness:.6}),0,1.4,0,g);mk(new THREE.SphereGeometry(.22,12,10),GM(0xffd890,1.6),0,2.9,0,g,false);colliders.push({x,z,r:.2})}
 // signpost
-{const g=grp(worldG,0,hgt(0,-21),-21);mk(new THREE.CylinderGeometry(.1,.1,2.4,6),M(0x5a3a22),0,1.2,0,g);const s=sprite(textTex('타락성 ↑ 위험!',{font:'bold 54px "Black Han Sans",Jua',color:'#fff',bg:'#7a1f2e',w:420,h:110}),1);s.scale.set(3.2,.84,1);s.position.set(0,2.6,0);g.add(s)}
+{const g=grp(worldG,3.4,hgt(3.4,-21),-21);mk(new THREE.CylinderGeometry(.1,.1,2.4,6),M(0x5a3a22),0,1.2,0,g);const s=sprite(textTex('타락성 ↑ 위험!',{font:'bold 54px "Black Han Sans",Jua',color:'#fff',bg:'#7a1f2e',w:420,h:110}),1);s.scale.set(3.2,.84,1);s.position.set(0,2.6,0);g.add(s)}
 // windmill
 const windmill=(()=>{const g=grp(worldG,17,hgt(17,-14),-14);mk(new THREE.CylinderGeometry(1,1.6,5,14),M(0xf1e6d2),0,2.5,0,g);mk(new THREE.ConeGeometry(1.5,1.6,14),M(0xc2492f),0,5.8,0,g);const b=grp(g,0,5,1.3);for(let i=0;i<4;i++){const bl=mk(new THREE.BoxGeometry(.45,3.2,.06),M(0xf1e6d2),0,1.7,0,b);const p=grp(b);p.rotation.z=i*Math.PI/2;p.add(bl)}b.children.filter(c=>c.isMesh).forEach(m=>b.remove(m));colliders.push({x:17,z:-14,r:1.8});return b})();
 // trees / rocks / flowers (instanced)
 const treeGrid=new Map();const tk=(x,z)=>Math.floor(x/4)+','+Math.floor(z/4);
 const TERR=[{i:0,c:[-24,-14],r:8,n:4,s:.8},{i:1,c:[28,-26],r:9,n:4,s:.62},{i:2,c:[-32,-46],r:9,n:2,s:.55},{i:2,c:[-26,-72],r:9,n:2,s:.55},{i:3,c:[34,-60],r:2,n:1,s:.5,boss:1},{i:4,c:[48,8],r:2,n:1,s:.8,boss:1},{i:5,c:[0,-83],r:0,n:1,s:.55,boss:1}];
 function freeSpot(x,z,pad=0){const d=Math.hypot(x,z);if(d<19||d>100)return false;if(Math.hypot(x-26,z-20)<14)return false;for(const t of TERR){if(Math.hypot(x-t.c[0],z-t.c[1])<t.r+3+pad)return false}if(Math.abs(x)<7&&z<-18&&z>-90)return false;return true}
-{const N=260,f1=new THREE.InstancedMesh(new THREE.ConeGeometry(1.5,3,7),M(0xffffff,{roughness:.8}),N),f2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.1,2.4,7),M(0xffffff,{roughness:.8}),N),tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.2,.3,2,6),M(0x5a3a22),N);
+{const N=1500,f1=new THREE.InstancedMesh(new THREE.ConeGeometry(1.5,3,7),M(0xffffff,{roughness:.8}),N),f2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.1,2.4,7),M(0xffffff,{roughness:.8}),N),tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.2,.3,2,6),M(0x5a3a22),N);
  const m4=new THREE.Matrix4(),col=new THREE.Color();let n=0;
- for(let tries=0;tries<2000&&n<N;tries++){const a=rand(0,6.283),r=rand(19,100);const x=Math.cos(a)*r,z=Math.sin(a)*r;if(!freeSpot(x,z,0))continue;
+ for(let tries=0;tries<9000&&n<N;tries++){const a=rand(0,6.283),r=rand(19,100);const x=Math.cos(a)*r,z=Math.sin(a)*r;if(walkable(x,z,1.3)||Math.hypot(x-26,z-20)<14)continue;
   const y=hgt(x,z),s=rand(.7,1.25);m4.makeTranslation(x,y+1*s,z).scale(new THREE.Vector3(s,s,s));tr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+s,z));
   f1.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+2.6*s,z));f2.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+4*s,z));
   const d=Math.hypot(x,z);col.setHSL(lerp(.3,.78,smooth(d,45,85)),lerp(.5,.45,smooth(d,45,85)),lerp(.26,.2,smooth(d,45,85))+rand(0,.06));f1.setColorAt(n,col);col.offsetHSL(0,0,.04);f2.setColorAt(n,col);
-  const k=tk(x,z);if(!treeGrid.has(k))treeGrid.set(k,[]);treeGrid.get(k).push({x,z,r:.5*s});n++}
+  const k=tk(x,z);if(!treeGrid.has(k))treeGrid.set(k,[]);treeGrid.get(k).push({x,z,r:.75*s});n++}
  [f1,f2,tr].forEach(m=>{m.count=n;m.castShadow=false;m.receiveShadow=false;m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;worldG.add(m)})}
 {const N=90,rk=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),M(0x8a8499,{roughness:.9,flatShading:true}),N);let n=0;
  for(let t=0;t<600&&n<N;t++){const a=rand(0,6.283),r=rand(16,100),x=Math.cos(a)*r,z=Math.sin(a)*r;if(!freeSpot(x,z))continue;const s=rand(.4,1.6);rk.setMatrixAt(n++,new THREE.Matrix4().compose(new THREE.Vector3(x,hgt(x,z)+s*.3,z),new THREE.Quaternion().setFromEuler(new THREE.Euler(rand(0,3),rand(0,3),0)),new THREE.Vector3(s,s*.7,s)))}
  rk.count=n;rk.castShadow=false;worldG.add(rk)}
 {const N=300,fl=new THREE.InstancedMesh(new THREE.SphereGeometry(.13,8,6),new THREE.MeshStandardMaterial({roughness:.5,emissive:0x444444}),N),gr=new THREE.InstancedMesh(new THREE.ConeGeometry(.1,.55,4),M(0x4aa04a,{roughness:.9}),1200);const c=new THREE.Color();let n=0;
- for(let t=0;t<N;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*70,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<10)continue;c.setHSL(pick([.0,.12,.15,.58,.85]),.9,.65);fl.setMatrixAt(n,new THREE.Matrix4().setPosition(x,hgt(x,z)+.3,z));fl.setColorAt(n++,c)}fl.count=n;worldG.add(fl);
- n=0;for(let t=0;t<500;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*80,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<9.5)continue;const s=rand(.7,1.6);gr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,hgt(x,z)+.25*s,z));c.setHSL(lerp(.3,.7,smooth(r,50,80)),.5,rand(.3,.45));gr.setColorAt(n++,c)}gr.count=n;worldG.add(gr)}
+ for(let t=0;t<N;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*70,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<10||roadDist(x,z)<2.6)continue;c.setHSL(pick([.0,.12,.15,.58,.85]),.9,.65);fl.setMatrixAt(n,new THREE.Matrix4().setPosition(x,hgt(x,z)+.3,z));fl.setColorAt(n++,c)}fl.count=n;worldG.add(fl);
+ n=0;for(let t=0;t<500;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*80,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<9.5||roadDist(x,z)<2.8)continue;const s=rand(.7,1.6);gr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,hgt(x,z)+.25*s,z));c.setHSL(lerp(.3,.7,smooth(r,50,80)),.5,rand(.3,.45));gr.setColorAt(n++,c)}gr.count=n;worldG.add(gr)}
 // pollen
 const pollen=(()=>{const N=500,g=new THREE.BufferGeometry(),a=new Float32Array(N*3);for(let i=0;i<N;i++){a[i*3]=rand(-40,40);a[i*3+1]=rand(.3,7);a[i*3+2]=rand(-40,40)}g.setAttribute('position',new THREE.BufferAttribute(a,3));const p=new THREE.Points(g,new THREE.PointsMaterial({size:.14,map:glowTex,color:0xfff3c0,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));p.frustumCulled=false;worldG.add(p);return p})();
 // boss gate
@@ -475,6 +492,7 @@ function mkNPC(x,z,o){const g=grp(worldG,x,hgt(x,z),z);const s=o.s||1,skin=M(0xf
 const chief=mkNPC(-8,-5.2,{name:'이장님',robe:0x4a7c9a,belt:0xffd04d,hat:'straw',beard:true,cane:true,s:1.05});chief.chief=true;
 const innkeeper=mkNPC(9,-4.8,{name:'여관 주인',robe:0x9a4a6a,hair:0x3a2020,s:1});
 const kid=mkNPC(3.2,3.5,{name:'철수',robe:0xffd04d,pants:0x3a5a9a,hair:0x221510,s:.7});
+const smith=mkNPC(8,-13.6,{name:'무기상인',robe:0x6a4a3a,belt:0x222222,hair:0x222222,brows:1,s:1.1});
 const granny=mkNPC(-11,5.5,{name:'순자 할머니',robe:0xb8a0d8,hair:0xdddddd,brows:1,s:.95,cane:true});
 const ES=[
  {lv:1,hp:40,atk:7,spd:2.7,aggro:11,type:'melee',range:2.1,cd:1.5,xp:14,gold:[3,8],r:.85},
@@ -484,6 +502,16 @@ const ES=[
  {lv:10,hp:560,atk:23,spd:2.8,aggro:18,type:'king',range:9,cd:1.5,xp:380,gold:[100,140],r:1.2,armor:1,boss:1},
  {lv:14,hp:1100,atk:28,spd:2.5,aggro:24,type:'king',range:9,cd:1.3,xp:900,gold:[300,300],r:1.4,armor:1,boss:1,final:1}
 ];
+
+// ---- hidden class hall + cairns
+const hallParts=[];
+{const g=grp(worldG,HALL[0],hgt(HALL[0],HALL[1]),HALL[1]);mk(new THREE.CylinderGeometry(5,5.3,.35,40),M(0x2a2040,{roughness:.6,metalness:.3}),0,.17,0,g);
+ mk(new THREE.TorusGeometry(4.2,.06,8,60),GM(0x66ddff,2.5),0,.4,0,g,false).rotation.x=Math.PI/2;mk(new THREE.TorusGeometry(2.6,.05,8,50),GM(0xff7be5,2.5),0,.4,0,g,false).rotation.x=Math.PI/2;
+ for(let i=0;i<4;i++){const a=i/4*6.28+.78,x=Math.cos(a)*4.2,z=Math.sin(a)*4.2;mk(new THREE.CylinderGeometry(.4,.5,4,8),M(0x3a2e66),x,2,z,g);const cr=mk(new THREE.OctahedronGeometry(.45),GM(0x66ddff,3),x,4.6,z,g,false);hallParts.push(cr)}
+ const alt=mk(new THREE.OctahedronGeometry(.9),GM(0xb78cff,3),0,2.4,-1.5,g,false);alt.scale.y=1.5;hallParts.push(alt);
+ const lab=sprite(textTex('전직관',{font:'bold 90px "Black Han Sans",Jua',color:'#fff',stroke:'#2a7aff',w:320,h:140}),1);lab.scale.set(5,2.2,1);lab.position.set(0,6.2,0);g.add(lab);}
+const master=mkNPC(HALL[0]+1.5,HALL[1]+1.5,{name:'전직 스승',robe:0x2a1a4a,belt:0x66ddff,beard:true,hat:'straw',s:1.1,cane:true});
+for(const [x,z] of[[-34.6,26.9],[-37.5,23.1]]){const g=grp(worldG,x,hgt(x,z),z);for(let i=0;i<4;i++)mk(new THREE.IcosahedronGeometry(.75-i*.14,0),M(0x6a6a7a,{roughness:.9,flatShading:true}),(i%2?.08:-.08),.45+i*.62,0,g);mk(new THREE.SphereGeometry(.14,8,6),GM(0x66ddff,3),0,2.9,0,g,false);colliders.push({x,z,r:.7})}
 // ---- world monsters
 function wmonPos(t){const a=rand(0,6.283),r=Math.sqrt(Math.random())*t.r;return[t.c[0]+Math.cos(a)*r,t.c[1]+Math.sin(a)*r]}
 function spawnWM(t){const g=new THREE.Group(),b=builders[t.i](g);g.scale.setScalar(t.s);const[x,z]=wmonPos(t);g.position.set(x,hgt(x,z),z);
@@ -499,13 +527,34 @@ const mmc=$('#mm').getContext('2d');
 function drawMM(){const c=mmc,W=112,h=W/2,S=.7;c.clearRect(0,0,W,W);c.save();c.beginPath();c.arc(h,h,h-1,0,7);c.clip();c.fillStyle='rgba(18,10,36,.82)';c.fillRect(0,0,W,W);
  const px=x=>h+(x-hero.position.x)*S,pz=z=>h+(z-hero.position.z)*S;
  c.fillStyle='rgba(110,200,120,.28)';c.beginPath();c.arc(px(0),pz(0),17*S,0,7);c.fill();c.strokeStyle='rgba(255,255,255,.12)';c.beginPath();c.arc(h,h,h-2,0,7);c.stroke();
+ c.strokeStyle='rgba(225,185,125,.9)';c.lineWidth=2;for(const r of ROADS){c.beginPath();r.forEach(([x,z],i)=>i?c.lineTo(px(x),pz(z)):c.moveTo(px(x),pz(z)));c.stroke()}
+ if(hallFound){c.strokeStyle='rgba(120,230,255,.7)';c.beginPath();TRAIL.forEach(([x,z],i)=>i?c.lineTo(px(x),pz(z)):c.moveTo(px(x),pz(z)));c.stroke();c.fillStyle='#7cf0ff';c.beginPath();c.arc(px(HALL[0]),pz(HALL[1]),4,0,7);c.fill()}
  c.fillStyle='#d8b070';for(const k of colliders)if(k.r>2.5)c.fillRect(px(k.x)-3,pz(k.z)-3,6,6);
  for(const m of wmons){if(!m.alive)continue;c.fillStyle=m.t.boss?'#ff49d8':'#ff6b6b';const x=px(m.g.position.x),y=pz(m.g.position.z);c.beginPath();c.arc(x,y,m.t.boss?4:2.6,0,7);c.fill()}
  for(const n of npcs){c.fillStyle=n.marker.visible?(n.marker.material.map===markerTex.r?'#7cf0ff':'#ffd84d'):'#9fd6ff';c.beginPath();c.arc(px(n.x),pz(n.z),n.chief?4:2.5,0,7);c.fill()}
  c.translate(h,h);c.rotate(Math.PI-hero.rotation.y);c.fillStyle='#fff';c.beginPath();c.moveTo(0,-6);c.lineTo(4.5,5);c.lineTo(0,3);c.lineTo(-4.5,5);c.closePath();c.fill();c.restore()}
 
 /* ================= GAME STATE ================= */
-const G={lv:1,xp:0,gold:0,hp:100,max:100,atk:12,def:0,thr:5,joke:.3,guardPow:.5,boom:0,pots:2,jelly:0,herb:0,wl:0,al:0};
+const G={lv:1,xp:0,gold:40,hp:100,max:100,atk:8,def:0,thr:5,joke:.3,guardPow:.5,boom:0,pots:2,jelly:0,herb:0,wl:0,al:0,job:'none',jb:{max:0,atk:0,def:0,thr:0,joke:0},wt:{club:0,sword:0,staff:0,bow:0,mic:0},hintHall:false};
+const WP={club:[{n:'나무몽둥이',a:2,c:0},{n:'쇠몽둥이',a:9,c:100},{n:'대못 몽둥이',a:18,c:450}],
+ sword:[{n:'연습용 철검',a:8,c:0},{n:'강철검',a:20,c:500},{n:'기사의 검',a:36,c:1500},{n:'용사의 검',a:60,c:4000}],
+ staff:[{n:'낡은 지팡이',a:8,c:0},{n:'마법 지팡이',a:20,c:500},{n:'수정 지팡이',a:36,c:1500},{n:'대마법사의 지팡이',a:60,c:4000}],
+ bow:[{n:'사냥꾼의 활',a:8,c:0},{n:'장궁',a:20,c:500},{n:'엘프의 활',a:36,c:1500},{n:'신궁',a:60,c:4000}],
+ mic:[{n:'노래방 마이크',a:8,c:0},{n:'무선 마이크',a:20,c:500},{n:'황금 마이크',a:36,c:1500},{n:'뇌절 마이크',a:60,c:4000}]};
+const JOBKIND={none:'club',warrior:'sword',mage:'staff',archer:'bow',comic:'mic'},JOBNAME={none:'초보자',warrior:'전사',mage:'마법사',archer:'궁수',comic:'개그맨'},WICON={club:'🏏',sword:'🗡️',staff:'🪄',bow:'🏹',mic:'🎤'};
+const JOBS=[{k:'warrior',i:'🗡️',n:'전사',d:'HP +40, 방어 +2<br>넓은 근접 공격',b:{max:40,def:2}},{k:'mage',i:'🪄',n:'마법사',d:'공격력 +4<br>마법 구슬 원거리 공격',b:{atk:4}},{k:'archer',i:'🏹',n:'궁수',d:'HP +10, 공격 +2<br>빠른 화살 원거리',b:{max:10,atk:2}},{k:'comic',i:'🎤',n:'개그맨',d:'뇌절 필요 횟수 -1<br>드립 피해 x1.5, 썰렁 +25%',b:{max:10,thr:-1,joke:.25}}];
+const curWeapon=()=>{const k=JOBKIND[G.job];return WP[k][G.wt[k]]};
+const ATK=()=>G.atk+curWeapon().a;
+function applyJob(k){const o=G.jb;G.max-=o.max;G.atk-=o.atk;G.def-=o.def;G.thr-=o.thr;G.joke-=o.joke;const j=JOBS.find(x=>x.k===k),b=Object.assign({max:0,atk:0,def:0,thr:0,joke:0},j.b);
+ if(G.thr+b.thr<3)b.thr=3-G.thr;G.max+=b.max;G.atk+=b.atk;G.def+=b.def;G.thr+=b.thr;G.joke+=b.joke;G.jb=b;G.job=k;G.hp=Math.min(G.max,G.hp+b.max);G.wt[JOBKIND[k]]=Math.max(G.wt[JOBKIND[k]],0);setWeapon(JOBKIND[k],G.wt[JOBKIND[k]])}
+function setWeapon(kind,tier){const sw=H.sword;while(sw.children.length)sw.remove(sw.children[0]);const tc=[0xb98a4a,0x9fb3ff,0xffd04d,0xff7be5][Math.min(tier,3)],iron=P(0x8a8a9a,{metalness:1,roughness:.3}),wood=M(0x8a5a2a,{roughness:.8});
+ mk(new THREE.SphereGeometry(.1,10,8),iron,0,0,0,sw);
+ if(kind==='club'){const b=mk(new THREE.CylinderGeometry(.15,.06,1.2,10),tier?iron:wood,0,.65,0,sw);mk(new THREE.CylinderGeometry(.06,.06,.3,8),wood,0,.1,0,sw);if(tier){for(let i=0;i<8;i++){const a=i*.9;mk(new THREE.ConeGeometry(.035,.12,5),iron,Math.cos(a)*.14,.7+i*.07,Math.sin(a)*.14,sw).rotation.z=-Math.cos(a)*1.4}}}
+ else if(kind==='sword'){mk(new THREE.CylinderGeometry(.04,.04,.28,8),M(0x442211),0,.12,0,sw);mk(new THREE.BoxGeometry(.4,.07,.1),P(0xffcc55,{metalness:1,roughness:.25}),0,.28,0,sw);mk(new THREE.BoxGeometry(.11,1.35,.035),P(0xeaf6ff,{metalness:1,roughness:.1,clearcoat:1,emissive:tc,emissiveIntensity:.25}),0,1,0,sw);mk(new THREE.BoxGeometry(.03,1.3,.045),E(tier?tc:0x7ae8ff,2.2),0,1,0,sw,false);mk(new THREE.ConeGeometry(.055,.2,4),E(tier?tc:0x7ae8ff,2.2),0,1.76,0,sw,false)}
+ else if(kind==='staff'){mk(new THREE.CylinderGeometry(.045,.06,1.7,8),wood,0,.8,0,sw);mk(new THREE.TorusGeometry(.16,.03,6,16),P(0xffd04d,{metalness:1,roughness:.3}),0,1.7,0,sw);mk(new THREE.SphereGeometry(.13+tier*.02,12,10),E(tier?tc:0xb78cff,3),0,1.7,0,sw,false)}
+ else if(kind==='bow'){const a=mk(new THREE.TorusGeometry(.75,.045,6,24,Math.PI),tier?P(tc,{metalness:.8,roughness:.3}):wood,0,.6,0,sw);a.rotation.z=-Math.PI/2;mk(new THREE.CylinderGeometry(.01,.01,1.5,4),M(0xeeeeee),0,.6,0,sw,false)}
+ else{mk(new THREE.CylinderGeometry(.05,.06,.8,10),M(0x222233),0,.4,0,sw);mk(new THREE.SphereGeometry(.2,14,10),tier?P(tc,{metalness:1,roughness:.2}):iron,0,.95,0,sw);mk(new THREE.TorusGeometry(.2,.03,6,16),E(0xff7be5,1.5),0,.95,0,sw,false).rotation.x=Math.PI/2}}
+
 const need=lv=>Math.round(30*Math.pow(lv,1.45));
 const UPS=[
  {i:'🗡️',t:'공격력 +4',f:p=>p.atk+=4},
@@ -529,7 +578,7 @@ function fxFloat(text,pos,color){const p=toScreen(pos);if(p.z>1)return;const d=d
 function bigText(txt,n=1,spread=true){for(let i=0;i<n;i++){setTimeout(()=>{const d=document.createElement('div');d.className='big';d.textContent=txt;d.style.setProperty('--r',rand(-14,14)+'deg');d.style.left=(spread?rand(18,82):50)+'vw';d.style.top=(spread?rand(18,70):38)+'vh';d.style.fontSize=(spread?rand(34,84):96)+'px';$('#fx').appendChild(d);setTimeout(()=>d.remove(),1350)},i*(spread?70:0))}}
 function screenFlash(o=.8,ms=500){const f=$('#flash');f.style.transition='none';f.style.opacity=o;requestAnimationFrame(()=>{f.style.transition=`opacity ${ms}ms`;f.style.opacity=0})}
 function hud(){
- $('#lv').textContent='Lv.'+G.lv;$('#ph').style.width=clamp(G.hp/G.max*100,0,100)+'%';$('#phn').textContent=`${Math.max(0,Math.ceil(G.hp))} / ${G.max}`;
+ $('#lv').textContent='Lv.'+G.lv+' '+JOBNAME[G.job];$('#ph').style.width=clamp(G.hp/G.max*100,0,100)+'%';$('#phn').textContent=`${Math.max(0,Math.ceil(G.hp))} / ${G.max}`;
  $('#xpb').style.width=clamp(G.xp/need(G.lv)*100,0,100)+'%';$('#gold').textContent='💰'+G.gold;$('#npot').textContent=G.pots;
  const pips=$('#pips');if(pips.children.length!==G.thr){pips.innerHTML='';for(let i=0;i<G.thr;i++){const d=document.createElement('div');d.className='pip';pips.appendChild(d)}}
  [...pips.children].forEach((p,i)=>p.classList.toggle('on',i<PA.streak&&PA.streakT>0));
@@ -561,13 +610,13 @@ function mkHerb(x,z){const g=grp(worldG,x,hgt(x,z),z);for(let i=0;i<5;i++){const
 function mkChest(x,z){const g=grp(worldG,x,hgt(x,z),z);g.rotation.y=rand(0,6);mk(new THREE.BoxGeometry(1.2,.7,.8),M(0x7a4a22,{roughness:.6}),0,.35,0,g);const lid=mk(new THREE.CylinderGeometry(.4,.4,1.2,12,1,false,0,Math.PI),M(0x8a5a2a),0,.7,0,g);lid.rotation.set(0,0,Math.PI/2);lid.rotation.order='ZYX';lid.rotation.y=Math.PI/2;
  mk(new THREE.BoxGeometry(1.24,.12,.84),P(0xffd04d,{metalness:1,roughness:.25}),0,.55,0,g);mk(new THREE.BoxGeometry(.16,.28,.1),P(0xffd04d,{metalness:1,roughness:.25}),0,.62,.42,g);
  const gl=sprite(glowTex,3,{blending:THREE.AdditiveBlending,color:0xffd04d,opacity:.6});gl.position.y=1;g.add(gl);props.push({g,x,z,kind:'chest',alive:true,label:'🎁 상자 열기'})}
-[[10,18],[-20,14],[22,-6],[-24,6],[4,26],[-8,30]].forEach(([x,z])=>mkHerb(x,z));
-[[-58,-26],[54,-40],[-14,-60],[62,26],[40,-84]].forEach(([x,z])=>mkChest(x,z));
+[[3,26],[-7,36],[-21,15],[-27,19],[14,8],[-3,-22]].forEach(([x,z])=>mkHerb(x,z));
+[[-50,41],[48,12],[4,-60],[36,-64],[-30,-68]].forEach(([x,z])=>mkChest(x,z));
 colliders.push({x:26,z:20,r:7});
 // water
 {const w=new THREE.Mesh(new THREE.CircleGeometry(11.5,48),new THREE.MeshPhysicalMaterial({color:0x2a7fe0,transparent:true,opacity:.78,roughness:.05,metalness:.2,clearcoat:1,envMapIntensity:2}));w.rotation.x=-Math.PI/2;w.position.set(26,-.55,20);worldG.add(w);window.__water=w}
 
-function stepMove(dx,dz,sp,dt){const p=hero.position;p.x+=dx*sp*dt;p.z+=dz*sp*dt;collide(p);const d=Math.hypot(p.x,p.z);if(d>96){p.x*=96/d;p.z*=96/d}
+function stepMove(dx,dz,sp,dt){const p=hero.position;const ox=p.x,oz=p.z;p.x+=dx*sp*dt;p.z+=dz*sp*dt;if(!walkable(p.x,p.z)){if(walkable(p.x,oz))p.z=oz;else if(walkable(ox,p.z))p.x=ox;else{p.x=ox;p.z=oz}}collide(p);const d=Math.hypot(p.x,p.z);if(d>96){p.x*=96/d;p.z*=96/d}
  if(!bossOpen()&&p.z<-76&&Math.abs(p.x)<12){p.z=-76;if(hintCool<=0){toast('타락성의 문이 굳게 닫혀 있다... 이장님의 퀘스트를 먼저 완료하자');hintCool=4}}}
 function updateWorld(dt){
  const p=hero.position;let moving=false;hintCool-=dt;
@@ -597,7 +646,7 @@ function updateWorld(dt){
  for(const pr of props){if(!pr.alive){if(pr.kind==='herb'){pr.t-=dt;if(pr.t<=0){pr.alive=true;pr.g.visible=true}}continue}
   const d=Math.hypot(p.x-pr.x,p.z-pr.z);pr.g.rotation.y+=pr.kind==='herb'?dt:0;if(d<Math.min(nd,2.8)&&mode==='world'){nd=d;nearTarget={type:'prop',pr,label:pr.label+' (E)'}}}
  const ab=$('#act');if(nearTarget){ab.style.display='block';ab.textContent=nearTarget.label}else ab.style.display='none';
- windmill.rotation.z+=dt*.8;pollen.rotation.y+=dt*.01;pollen.position.set(p.x,0,p.z);if(window.__water)window.__water.position.y=-.55+Math.sin(T*1.2)*.04;
+ if(!hallFound&&Math.hypot(p.x-HALL[0],p.z-HALL[1])<15){hallFound=true;toast('✨ 숨겨진 전직관을 발견했다!');SFX.win();bigText('전직관 발견!',1,false)}hallParts.forEach((h,i)=>{h.rotation.y=T*(.8+i*.1);h.position.y+=Math.sin(T*2+i)*.002});windmill.rotation.z+=dt*.8;pollen.rotation.y+=dt*.01;pollen.position.set(p.x,0,p.z);if(window.__water)window.__water.position.y=-.55+Math.sin(T*1.2)*.04;
  mmT-=dt;if(mmT<=0){mmT=.07;drawMM();if(mode==='world'||mode==='dialog')$('#stage').textContent=stageLabel()}
 }
 
@@ -618,8 +667,19 @@ function doAction(a,again=false){
  const r=registerAction(a,again);if(r.boom)return doBoom(a);
  if(a==='atk')doAttack(r.mult,again);else if(a==='joke')doJoke(r.mult);else doGuard(r.mult,again)}
 function doAttack(mult,again){
- PA.lock=.34;PA.cd.atk=.28;const e=nearestEnemy(6.5);if(e)faceTo(e.g.position);
- PA.combo=PA.comboT>0?(PA.combo+1)%3:0;PA.comboT=1;PA.swingT=0;PA.swingHit=false;PA.swingK=PA.combo;PA.swingMult=mult*[1,1.1,1.6][PA.combo];PA.lungeT=.16;SFX.slash();if(again)burst(heroHead(),{color:0xff8ae8,n:30,speed:4,life:.5})}
+ const rg=G.job==='mage'||G.job==='archer';PA.lock=.34;PA.cd.atk=.28;const e=nearestEnemy(rg?20:6.5);if(e)faceTo(e.g.position);
+ PA.combo=PA.comboT>0?(PA.combo+1)%3:0;PA.comboT=1;PA.swingT=0;PA.swingHit=false;PA.swingK=PA.combo;PA.swingMult=mult*[1,1.1,1.6][PA.combo];PA.lungeT=rg?0:.16;SFX.slash();if(again)burst(heroHead(),{color:0xff8ae8,n:30,speed:4,life:.5})}
+const hprojs=[];
+function attackEffect(){const J=G.job,m=PA.swingMult,big=PA.swingK===2;if(J==='mage'||J==='archer')fireRanged(J,m,big);else if(J==='warrior')meleeHit(4.1,1.7,m*1.15,big);else if(J==='comic')meleeHit(3.1,1.4,m,big);else meleeHit(3.2,1.3,m,big)}
+function fireRanged(J,m,big){const p=hero.position,f=fwdOf(hero.rotation.y);let s;
+ if(J==='mage'){s=sprite(glowTex,big?2.4:1.6,{blending:THREE.AdditiveBlending,color:big?0xff7be5:0xb78cff})}
+ else{s=new THREE.Group();const sh=mk(new THREE.CylinderGeometry(.03,.03,1.3,5),M(0xcaa86a),0,0,0,s,false);sh.rotation.x=Math.PI/2;const tip=mk(new THREE.ConeGeometry(.07,.2,5),P(0xcfd6e0,{metalness:1}),0,0,.7,s,false);tip.rotation.x=Math.PI/2;s.rotation.y=Math.atan2(f.x,f.z)}
+ s.position.set(p.x+f.x*1.1,p.y+1.6,p.z+f.z*1.1);scene.add(s);const spd=J==='mage'?15:26;
+ hprojs.push({s,vx:f.x*spd,vz:f.z*spd,life:J==='mage'?1.1:.9,J,big,dmg:Math.round(ATK()*m*(J==='archer'?1.15:1)*rand(.9,1.1))});SFX.slash();if(J==='mage')burst(s.position,{color:0xb78cff,n:12,speed:3,life:.4})}
+function updateHProjs(dt){for(let i=hprojs.length-1;i>=0;i--){const o=hprojs[i];o.s.position.x+=o.vx*dt;o.s.position.z+=o.vz*dt;o.life-=dt;let hit=null;
+  for(const m of wmons){if(!m.alive)continue;if(Math.hypot(m.g.position.x-o.s.position.x,m.g.position.z-o.s.position.z)<m.S.r+.7){hit=m;break}}
+  if(hit){hurtEnemy(hit,o.dmg,{crit:o.big,kb:o.J==='mage'?2:3});if(o.J==='mage'){ring(hit.g.position,{color:0xb78cff,max:3,life:.4,y:.2});for(const m of wmons){if(m!==hit&&m.alive&&Math.hypot(m.g.position.x-hit.g.position.x,m.g.position.z-hit.g.position.z)<2.6)hurtEnemy(m,Math.round(o.dmg*.5),{kb:1})}}burst(o.s.position,{color:o.J==='mage'?0xb78cff:0xffe9b0,n:16,speed:4,life:.4})}
+  if(hit||o.life<=0){scene.remove(o.s);if(o.s.material)o.s.material.dispose();hprojs.splice(i,1)}}}
 function meleeHit(range,half,mult,big){
  const f=fwdOf(hero.rotation.y),p=hero.position;let any=false;
  const pos=new THREE.Vector3(p.x,p.y+1.5,p.z).addScaledVector(f,1.6);
@@ -627,7 +687,7 @@ function meleeHit(range,half,mult,big){
  if(big){ring(p,{color:0xff9af0,max:5,life:.5,y:.1});addShake(.3)}
  for(const m of wmons){if(!m.alive)continue;const dx=m.g.position.x-p.x,dz=m.g.position.z-p.z,d=Math.hypot(dx,dz);if(d>range+m.S.r)continue;
   if(Math.abs(angDiff(hero.rotation.y,Math.atan2(dx,dz)))>half&&d>m.S.r+1)continue;
-  hurtEnemy(m,Math.round(G.atk*mult*rand(.9,1.1)),{crit:big||mult>=2.5,kb:big?6:3});any=true}
+  hurtEnemy(m,Math.round(ATK()*mult*rand(.9,1.1)),{crit:big||mult>=2.5,kb:big?6:3});any=true}
  return any}
 function slashAt(pos,yaw,rotZ,color,size,flip){slashFx(pos,rotZ,color,size,flip,yaw)}
 function doJoke(mult){
@@ -637,7 +697,7 @@ function doJoke(mult){
  // visual wave cone
  const half=.95;const geo=new THREE.CircleGeometry(1,32,yaw0-Math.PI/2-half,half*2),m=new THREE.Mesh(geo,ADD(0xffe066,{opacity:.5}));m.rotation.x=-Math.PI/2;m.position.set(hero.position.x,groundY+.15,hero.position.z);scene.add(m);fxList.push({o:m,t:0,life:.5,upd(dt,k){m.scale.setScalar(1+k*9);m.material.opacity=.5*(1-k)}});
  tween(.28,()=>{}).then(()=>{for(const mo of wmons){if(!mo.alive)continue;const dx=mo.g.position.x-hero.position.x,dz=mo.g.position.z-hero.position.z,d=Math.hypot(dx,dz);if(d>9.5+mo.S.r||Math.abs(angDiff(yaw0,Math.atan2(dx,dz)))>half)continue;
-   hurtEnemy(mo,Math.round(G.atk*.7*mult*rand(.9,1.1)),{kb:2});if(Math.random()<G.joke+.08*(PA.streak-1))freezeEnemy(mo,2.8)}})}
+   hurtEnemy(mo,Math.round(ATK()*.7*mult*(G.job==='comic'?1.5:1)*rand(.9,1.1)),{kb:2});if(Math.random()<G.joke+.08*(PA.streak-1))freezeEnemy(mo,2.8)}})}
 function doGuard(mult,again){
  PA.lock=.25;PA.cd.guard=PA.cdMax.guard;PA.guard=1.5+.2*PA.streak;PA.guardPow=Math.min(.92,G.guardPow+.1*(PA.streak-1));SFX.guard();
  const h=Math.round(3*PA.streak*(again?1.5:1));heal(h);ring(hero.position,{color:0x66ddff,max:5,life:.8,y:.1})}
@@ -663,14 +723,14 @@ async function doBoom(c){
    tween(.14,t=>{gh.armR.rotation.x=lerp(-2.6,.6,t)},easeIn);
    const sp=new THREE.Vector3(gh.g.position.x+ox*1.4,p.y+1.6,gh.g.position.z+oz*1.4);slashAt(sp,gh.g.rotation.y,rand(-.8,.8),pick([0xbff4ff,0xffa8f2,0xfff2a8]),2.6,pick([-1,1]));
    burst(sp,{color:0xffffff,n:18,speed:5,life:.5});SFX.slash();addShake(.3+i*.06);fxPass.uniforms.amt.value=1+i*.2;
-   for(const m of wmons){if(m.alive&&Math.hypot(m.g.position.x-gh.g.position.x,m.g.position.z-gh.g.position.z)<6)hurtEnemy(m,Math.round(G.atk*1.1*(1+G.boom*.3)),{kb:2})}
+   for(const m of wmons){if(m.alive&&Math.hypot(m.g.position.x-gh.g.position.x,m.g.position.z-gh.g.position.z)<6)hurtEnemy(m,Math.round(ATK()*1.1*(1+G.boom*.3)),{kb:2})}
    await sleep(150-i*8)}
   await sleep(150);
   screenFlash(1,700);ring(p,{color:0xff66ee,max:20,life:1.2});ring(p,{color:0xffffff,max:12,life:.9,w:.1});ring(p,{color:0x66ccff,max:26,life:1.5,w:.5});
   burst(new THREE.Vector3(p.x,p.y+1.5,p.z),{color:0xff77ee,n:220,speed:12,life:1.4});burst(new THREE.Vector3(p.x,p.y+1,p.z),{color:0xffffff,n:100,speed:7,life:1});lightPulse(0xff88ff,80,1,new THREE.Vector3(p.x,p.y+2.5,p.z));
   fxPass.uniforms.amt.value=3;fxPass.uniforms.warp.value=4;bloomKick=1.2;fovPunch=-9;addShake(1.2);SFX.boom();bigText('뇌절',9);
   for(const m of wmons){if(!m.alive)continue;const d=Math.hypot(m.g.position.x-p.x,m.g.position.z-p.z);if(d>16)continue;
-   hurtEnemy(m,Math.round(G.atk*(c==='joke'?4:7)*(1+G.boom)*(m.t.boss?.7:1)),{crit:true,kb:9});if(c==='joke')freezeEnemy(m,4.5)}
+   hurtEnemy(m,Math.round(ATK()*(c==='joke'?4:7)*(1+G.boom)*(m.t.boss?.7:1)),{crit:true,kb:9});if(c==='joke')freezeEnemy(m,4.5)}
   await sleep(500);ghosts.forEach(gh=>{tween(.5,t=>{gh.g.traverse(o=>{if(o.isMesh)o.material.opacity=.5*(1-t)})}).then(()=>scene.remove(gh.g))});
  }
  PA.stun=2;PA.last=null;PA.streak=0;PA.streakT=0;PA.lock=0;toast('😳 너무 민망해서 움직일 수 없다...')}
@@ -688,7 +748,7 @@ function updateHeroCombat(dt){
  if(PA.swingT<.4){PA.swingT+=dt;const t=PA.swingT,a=H.armR,k=PA.swingK;
   if(t<.09)a.rotation.x=lerp(-.2,-2.7,t/.09);else if(t<.18)a.rotation.x=lerp(-2.7,.7,(t-.09)/.09);else a.rotation.x=lerp(.7,-.2,clamp((t-.18)/.18,0,1));
   a.rotation.z=k===1?lerp(0,.8,Math.sin(Math.min(1,t/.2)*Math.PI)):0;
-  if(!PA.swingHit&&t>=.09){PA.swingHit=true;meleeHit(3.4,1.35,PA.swingMult,PA.swingK===2)}
+  if(!PA.swingHit&&t>=.09){PA.swingHit=true;attackEffect()}
  }else{H.armR.rotation.z=0;H.armR.rotation.x=-.2+(PA.moving?-PA.sw*.6:Math.sin(T*2)*.03)}
  if(PA.swingT>=.4)H.armL.rotation.x=PA.moving?PA.sw*.6:0;
  hero.position.y=groundY+heroY;
@@ -760,7 +820,7 @@ function updateEnemies(dt){
  for(const m of wmons){
   if(!m.alive){m.dead-=dt;if(m.dead<=0&&!m.t.boss)respawnWM(m);continue}
   const g=m.g,gp=g.position,S=m.S;{const fx=hp.x-gp.x,fz=hp.z-gp.z;if(fx*fx+fz*fz>4900){g.visible=false;if(m.state!=='idle')m.state='idle';continue}g.visible=true}
-  m.b.tick(T+m.ph);
+  const lx0=gp.x,lz0=gp.z;m.b.tick(T+m.ph);
   const dx=hp.x-gp.x,dz=hp.z-gp.z,d=Math.hypot(dx,dz);m.combatT=Math.max(0,m.combatT-dt);m.sayT-=dt;
   if(m.sayT<=0&&m.bar)m.bar.querySelector('.sp').style.display='none';
   if(m.kbT>0){gp.x+=m.kv.x*dt;gp.z+=m.kv.z*dt;m.kbT-=dt}
@@ -784,6 +844,7 @@ function updateEnemies(dt){
     case 'recover':m.fightT+=dt;m.tt-=dt;if(m.tt<=0){if(m.repLeft>0){m.repLeft--;beginWindup(m,.38)}else{m.state='chase';m.cd=S.cd}}break;
    }
   }
+  if(!walkable(gp.x,gp.z)){gp.x=lx0;gp.z=lz0}
   g.rotation.y+=angDiff(g.rotation.y,m.yaw)*Math.min(1,dt*7);
   const dd=Math.hypot(gp.x,gp.z);if(dd<17){gp.x*=17/dd;gp.z*=17/dd}
   gp.y=hgt(gp.x,gp.z)+(m.t.i===0?Math.abs(Math.sin(T*5+m.ph))*.25:0);
@@ -831,11 +892,11 @@ function pickup(o){SFX.ui();const p=heroHead();
  else if(o.kind==='jelly'){G.jelly++;fxFloat('눈물 젤리',p,'#7cffb0');updateQuestUI()}
  else{G.pots++;fxFloat('🧪 물약 +1',p,'#ff8aa0')}hud()}
 function gainXP(n){G.xp+=n;fxFloat('+'+n+' XP',heroHead().add(new THREE.Vector3(0,.6,0)),'#b78cff');while(G.xp>=need(G.lv)){G.xp-=need(G.lv);levelUp()}hud()}
-function levelUp(){G.lv++;G.max+=12;G.atk+=2;G.hp=G.max;SFX.win();bigText('LEVEL UP!',1,false);ring(hero.position,{color:0xffd84d,max:10,life:1,y:.1});ring(hero.position,{color:0xffffff,max:6,life:.8,y:.2});burst(heroHead(),{color:0xffd84d,n:100,speed:6,life:1.4,up:3});lightPulse(0xffd84d,30,.7,heroHead());toast(`레벨 ${G.lv}! 공격력 +2, 최대 HP +12, HP 전부 회복`)}
+function levelUp(){G.lv++;G.max+=12;G.atk+=2;G.hp=G.max;SFX.win();bigText('LEVEL UP!',1,false);ring(hero.position,{color:0xffd84d,max:10,life:1,y:.1});ring(hero.position,{color:0xffffff,max:6,life:.8,y:.2});burst(heroHead(),{color:0xffd84d,n:100,speed:6,life:1.4,up:3});lightPulse(0xffd84d,30,.7,heroHead());toast(`레벨 ${G.lv}! 공격력 +2, 최대 HP +12, HP 전부 회복`);if(G.lv===5&&G.job==='none')setTimeout(()=>toast('✨ 5레벨! 이제 직업을 가질 수 있다... 전직관은 숨겨져 있다고 한다 (순자 할머니에게 물어보자)'),2500)}
 
 /* ================= QUESTS / SHOP ================= */
 const QUESTS=[
- {t:'공주의 눈물',en:0,need:2,xp:40,gold:30,ask:['오! 용사님이 오셨구먼! 반갑네, 반갑네!','난 이 마을 이장인데 말이야... 이장인데 말이야... 이장인데 말이야... 아, 본론부터 하지.','옛날에 마왕이 공주님을 좋아했다네. 큰맘 먹고 고백을 했지. 고백... 고백... 고백!','공주님은 받아 주셨고 둘은 사귀었어. 100일 때는 마왕이 직접 케이크도 구웠다네.','그런데 마왕놈이 어느 날부터 메시지를 읽씹하더니... 잠수를 탔네. 잠수이별! 잠수이별!!','공주님은 사흘을 기다리다가 마왕성에 쳐들어가서 프라이팬으로 마왕을 때려잡으셨지. 그리고 그 뒤로... 타락하셨네.','"남자는 다 똑같아"라며 온 세상을 때려부수고 계시다네. 자네가 공주님을 막아 주게.','먼저 서쪽 들판에 공주님의 눈물로 태어난 눈물 슬라임이 있네. 2마리만 처치해 주겠나? 처치해 주겠나? 처치해 주겠나?','(조작: 칼질=J/클릭, 구르기=Space, 같은 행동을 연속하면 뇌절 게이지가 찹니다!)'],hint:'눈물 슬라임은 서쪽 들판에 있네. 서쪽... 서쪽... 서쪽! (지도의 빨간 점을 보게)',done:['오오! 해냈구먼! 해냈구먼! 해냈구먼!','공주님의 눈물이 조금은 마른 것 같네. 약속한 보상일세. 마음껏 골라 보게나.']},
+ {t:'공주의 눈물',en:0,need:2,xp:40,gold:30,ask:['오! 용사님이 오셨구먼! 반갑네, 반갑네!','난 이 마을 이장인데 말이야... 이장인데 말이야... 이장인데 말이야... 아, 본론부터 하지.','옛날에 마왕이 공주님을 좋아했다네. 큰맘 먹고 고백을 했지. 고백... 고백... 고백!','공주님은 받아 주셨고 둘은 사귀었어. 100일 때는 마왕이 직접 케이크도 구웠다네.','그런데 마왕놈이 어느 날부터 메시지를 읽씹하더니... 잠수를 탔네. 잠수이별! 잠수이별!!','공주님은 사흘을 기다리다가 마왕성에 쳐들어가서 프라이팬으로 마왕을 때려잡으셨지. 그리고 그 뒤로... 타락하셨네.','"남자는 다 똑같아"라며 온 세상을 때려부수고 계시다네. 자네가 공주님을 막아 주게.','먼저 서쪽 들판에 공주님의 눈물로 태어난 눈물 슬라임이 있네. 2마리만 처치해 주겠나? 처치해 주겠나? 처치해 주겠나?','자네 장비가 그게 뭔가... 나무몽둥이라니! 골드를 모아 무기상점에서 무기를 사게. 5레벨이 되면 직업도 고를 수 있다는데, 전직관은 비밀 장소에 있다네. 순자 할머니가 아실 걸세.','(조작: 칼질=J/클릭, 구르기=Space, 같은 행동을 연속하면 뇌절 게이지가 찹니다!)'],hint:'눈물 슬라임은 서쪽 들판에 있네. 서쪽... 서쪽... 서쪽! (지도의 빨간 점을 보게)',done:['오오! 해냈구먼! 해냈구먼! 해냈구먼!','공주님의 눈물이 조금은 마른 것 같네. 약속한 보상일세. 마음껏 골라 보게나.']},
  {t:'읽씹 고블린 소탕',en:1,need:2,xp:80,gold:60,ask:['마왕의 메시지를 배달하던 고블린들이 있었네.','공주님이 답장을 안 읽은 게 아니라 마왕이 읽씹한 건데... 어쨌든 "1"이 안 사라져서 폭주 중이라네. 1이... 1이... 1이!','북동쪽 숲의 읽씹 고블린 2마리를 혼내 주게. 걔들이 던지는 "1"은 구르기로 피하게나!'],hint:'북동쪽이야, 북동쪽. 아까 말했는데... 아까 말했는데...',done:['읽씹 고블린을 잡다니, 자네 진짜 대단하구먼!','이제 마을에 "1"이 날아다니지 않겠군.']},
  {t:'잠수 오크 구출',en:2,need:1,xp:150,gold:100,ask:['북서쪽 깊은 곳의 오크는 마왕의 부하라네.','마왕이 잠수를 탄 뒤로 월급도 잠수를 탔다고, 석 달째 야근 중이래. 야근... 야근... 야근!','바닥에 붉은 원이 보이면 곧 내려친다는 뜻이야. 피하게!'],hint:'오크는 북서쪽 깊은 곳이야. 퇴근 시간 전에 가야 하네!',done:['오크들이 드디어 퇴근했네! 퇴근!! 퇴근!!! 퇴근!!!!','자네는 우리 마을의 영웅일세. 영웅... 영웅... 영웅!']},
  {t:'이별 드래곤 (중간보스)',en:3,need:1,xp:300,gold:200,ask:['북동쪽 끝의 드래곤은 공주님이 아끼던 애마였다네.','이별 후 충격으로 이상해져서 "이별이 별로야?" 같은 개그만 한다네. 중간보스일세!','부채꼴 불길이 나오니 옆으로 구르게! 방어와 물약도 챙기고!'],hint:'드래곤은 북동쪽 끝이네. 개그에 웃어주면 안 돼, 절대로!',done:['드래곤이 조용해졌네! 마을이 한결 따뜻해졌어.','이제 원흉을 찾아야 하네. 마왕이 동쪽 호수 건너편에 숨어 있다는군.']},
@@ -869,12 +930,22 @@ function rewardPick(){return new Promise(res=>{mode='dialog';const pool=UPS.filt
 function openShop(){return new Promise(res=>{mode='dialog';const s=$('#scr');
  const render=()=>{const sw=60+G.wl*50,ar=60+G.al*50;const items=[
   {i:'🧪',n:'체력 물약',c:30,f:()=>G.pots++,d:`보유 ${G.pots}`},
-  {i:'🗡️',n:`검 강화 +${G.wl}`,c:sw,f:()=>{G.atk+=4;G.wl++},d:'공격력 +4'},
   {i:'🛡️',n:`갑옷 강화 +${G.al}`,c:ar,f:()=>{G.max+=25;G.hp+=25;G.def++;G.al++},d:'최대 HP +25 / 방어 +1'},
   {i:'🛏️',n:'푹 쉬기',c:20,f:()=>{G.hp=G.max},d:'HP 전부 회복'}];
   s.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,52px)">여관 상점</h2><div class="desc">보유 골드 <b>💰${G.gold}</b></div><div class="cards">${items.map((it,i)=>`<button class="card" data-i="${i}" ${G.gold<it.c?'style="opacity:.5"':''}><div class="ic">${it.i}</div><div>${it.n}</div><small>${it.d}</small><small>💰 ${it.c}</small></button>`).join('')}</div><button class="go" id="shopx" style="font-size:20px;padding:10px 30px;animation:none">나가기</button>`;s.className='on';
   s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{const it=items[b.dataset.i];if(G.gold<it.c){toast('골드가 부족합니다');return}G.gold-=it.c;it.f();SFX.heal();hud();render()});
   $('#shopx').onclick=()=>{SFX.ui();s.className='';mode='world';res()}};render()})}
+function openWeaponShop(){return new Promise(res=>{mode='dialog';const s=$('#scr');
+ const render=()=>{const kind=JOBKIND[G.job],list=WP[kind],cur=G.wt[kind],items=[{i:WICON[kind],n:'장착: '+list[cur].n,c:-1,d:'공격 +'+list[cur].a}];
+  if(cur+1<list.length){const nx=list[cur+1];items.push({i:'🛒',n:nx.n,c:nx.c,d:'공격 +'+nx.a,f:()=>{G.wt[kind]++;setWeapon(kind,G.wt[kind]);toast(nx.n+' 장착!')}})}else items.push({i:'🏆',n:'최고 등급 무기!',c:-1,d:'더 이상 없습니다'});
+  if(G.job==='none')items.push({i:'❓',n:'직업 무기',c:-1,d:'5레벨에 전직하면 직업 전용 무기를 살 수 있어요'});
+  s.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,52px)">무기상점</h2><div class="desc">${JOBNAME[G.job]} · 보유 골드 <b>💰${G.gold}</b></div><div class="cards">${items.map((it,i)=>`<button class="card" data-i="${i}" ${it.c<0?'style="opacity:.7"':G.gold<it.c?'style="opacity:.5"':''}><div class="ic">${it.i}</div><div>${it.n}</div><small>${it.d}</small>${it.c>=0?`<small>💰 ${it.c}</small>`:''}</button>`).join('')}</div><button class="go" id="shopx" style="font-size:20px;padding:10px 30px;animation:none">나가기</button>`;s.className='on';
+  s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{const it=items[b.dataset.i];if(it.c<0)return;if(G.gold<it.c){toast('골드가 부족합니다');return}G.gold-=it.c;it.f();SFX.heal();hud();render()});
+  $('#shopx').onclick=()=>{SFX.ui();s.className='';mode='world';res()}};render()})}
+function openJobs(){return new Promise(res=>{mode='dialog';const s=$('#scr');const first=G.job==='none',cost=first?0:500;
+ s.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,52px)">전직</h2><div class="desc">${first?'직업을 선택하세요. (처음 한 번은 무료)':'다른 직업으로 바꿀까요? 💰500'}</div><div class="cards">${JOBS.map((j,i)=>`<button class="card" data-i="${i}"><div class="ic">${j.i}</div><div><b>${j.n}</b></div><small>${j.d}</small></button>`).join('')}</div><button class="go" id="shopx" style="font-size:20px;padding:10px 30px;animation:none">나가기</button>`;s.className='on';
+ s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{const j=JOBS[b.dataset.i];if(j.k===G.job){toast('이미 그 직업입니다');return}if(G.gold<cost){toast('골드가 부족합니다');return}G.gold-=cost;applyJob(j.k);SFX.win();bigText('전직 완료!',1,false);burst(heroHead(),{color:0xb78cff,n:100,speed:6,life:1.3,up:3});ring(hero.position,{color:0x66ddff,max:8,life:1,y:.1});toast(`${j.n}(으)로 전직! ${curWeapon().n} 장착`);hud();s.className='';mode='world';res()});
+ $('#shopx').onclick=()=>{SFX.ui();s.className='';mode='world';res()}})}
 async function talk(n){
  if(n.chief){
   if(qi>=QUESTS.length){await dialogue('이장님',['자네 덕분에 마을이 평화롭네.','평화... 평화... 평화... 아, 또 말이 길어졌군.']);return}
@@ -882,12 +953,16 @@ async function talk(n){
   if(qstate==='none'){await dialogue('이장님',q.ask);qstate='active';qprog=0;SFX.win();toast('퀘스트 수락: '+q.t);updateQuestUI()}
   else if(qstate==='active')await dialogue('이장님',[q.hint,`(${ENEMIES[q.en].n} ${qprog}/${q.need})`]);
   else{await dialogue('이장님',q.done);qi++;qstate='none';qprog=0;G.gold+=q.gold;fxFloat('+'+q.gold+'G',heroHead(),'#ffd84d');gainXP(q.xp);await rewardPick();updateQuestUI();if(qi<QUESTS.length)toast('새 퀘스트가 있습니다! 이장님에게 말을 걸어보세요')}
- }else if(n===innkeeper){await dialogue('여관 주인',['어서 오세요! 푹 쉬고 가세요.','푹... 푹... 푹 쉬세요! 물건도 팔아요.']);await openShop()}
+ }else if(n===smith){await dialogue('무기상인',['어서 와! 무기라면 내가 최고지.','나무몽둥이로는 슬라임도 억울해할 걸? 골드를 모아서 오게나.']);await openWeaponShop()}
+ else if(n===master){
+  if(G.lv<5){await dialogue('전직 스승',['호오... 여기를 찾아내다니 대단하군.','하지만 아직 때가 아니야. 5레벨이 되면 다시 오게. 5레벨... 5레벨... 5레벨!'])}
+  else{await dialogue('전직 스승',[G.job==='none'?'자네는 5레벨을 넘었군. 이제 직업을 선택할 자격이 있네.':'직업을 바꾸고 싶은가? 500골드만 내게.','신중히 고르게. 뇌절 같은 선택은 하지 말고.']);await openJobs()}}
+ else if(n===innkeeper){await dialogue('여관 주인',['어서 오세요! 푹 쉬고 가세요.','푹... 푹... 푹 쉬세요! 물건도 팔아요.']);await openShop()}
  else if(n===kid){
   if(SQ.kid==='none'){await dialogue('철수',['아저씨 아저씨 아저씨 아저씨!','눈물 젤리가 먹고 싶어요! 먹고 싶어요! 먹고 싶어요!','젤리 3개만 가져다 주세요. 눈물 슬라임이 가끔 떨어뜨려요!']);SQ.kid='active';toast('퀘스트 수락: 철수의 부탁');updateQuestUI()}
   else if(SQ.kid==='active'){if(G.jelly>=3){await dialogue('철수',['와아아아! 젤리다!','맛있다... 맛있다... 맛있다! 고마워요!']);G.jelly-=3;SQ.kid='done';G.pots+=2;G.gold+=80;gainXP(40);toast('보상: 💰80 + 🧪물약 2개');updateQuestUI();hud()}else await dialogue('철수',[`젤리 ${G.jelly}/3개... 더 주세요 더 주세요!`])}
   else await dialogue('철수',pick([['제 점심은 김치찌개예요. 어제도 김치찌개...','근데 저는 안 질려요! 안 질려요! 안 질려요!'],['마왕 아저씨가 읽씹했대요! 읽씹! 읽씹!','나쁜 어른이에요. 답장은 바로바로 해야 해요.']]))}
- else if(n===granny){
+ else if(n===granny){if(G.lv>=5&&!G.hintHall){G.hintHall=true;await dialogue('순자 할머니',['오, 벌써 5레벨이구나! 이제 직업을 가질 수 있겠어.','전직관은 아무나 못 찾는 곳에 숨어 있단다. 서남쪽 길 끝에 이끼 낀 돌탑 두 개가 서 있지?','그 사이로 난 좁은 오솔길을 따라가 보렴. 따라가 보렴... 따라가 보렴...']);return}
   if(SQ.granny==='none'){await dialogue('순자 할머니',['공주님은 원래 마음이 따뜻한 분이었지... 마왕이 고백하기 전까지는 말이야.','내 무릎엔 약초가 최고야. 마을 근처 들판에 빛나는 약초 4개만 캐다 주겠나?','같은 행동을 연속으로 하면 점점 세진다네. 5번째엔 폭발한다더군.']);SQ.granny='active';toast('퀘스트 수락: 할머니의 부탁');updateQuestUI()}
   else if(SQ.granny==='active'){if(G.herb>=4){await dialogue('순자 할머니',['아이고 고마워라. 고마워라. 고마워라.','이건 답례야. 받아 두렴.']);G.herb-=4;SQ.granny='done';G.pots+=3;gainXP(60);toast('보상: 🧪물약 3개 + 경험치');updateQuestUI();hud()}else await dialogue('순자 할머니',[`약초가 ${G.herb}/4개구나. 파랗게 빛나는 풀이야.`])}
   else await dialogue('순자 할머니',['폭발하고 나면 민망해서 잠깐 쉰다던데... 쉰다던데... 쉰다던데...'])}}
@@ -901,7 +976,7 @@ function victory(){if(cleared)return;cleared=true;SFX.win();bigText('CLEAR!!',6)
  $('#vback').onclick=()=>{SFX.ui();s.className='';mode='world';updateQuestUI()}}
 function title(){
  mode='title';showUI('title');
- const s=$('#scr');s.innerHTML=`<h1 class="ttl">뇌절<br>RPG</h1><div class="desc">마왕이 공주에게 고백했다. 사귀었다. 그리고 <b>잠수이별</b>했다.<br>분노한 공주는 마왕을 프라이팬으로 때려잡고 <b style="color:#ff7a93">타락</b>했다...<br>이제 용사가 <b>타락공주를 잡으러</b> 간다!<br><b>오픈월드 실시간 액션</b> · 중간보스 2명 + 최종보스<br>이장님의 <b>퀘스트</b>, 레벨업, 전리품, 상점, 낮과 밤이 있습니다.<br><b>같은 행동을 연속으로</b> 하면 점점 강해지고 게이지가 차면 <b style="color:#ff9bf0">뇌절 폭발!</b><br>(폭발 후엔 민망해서 잠시 움직일 수 없어요)</div><button class="go" id="start">모험 시작</button><div class="desc" style="font-size:13px;opacity:.75">PC: WASD 이동 · 마우스 드래그 시점 · J/클릭 공격 · L 드립 · K 방어 · Space 구르기 · R 한번 더 · Q 물약 · E 대화<br>모바일: 왼쪽 드래그 이동, 오른쪽 화면 드래그 시점, 오른쪽 아래 버튼으로 전투</div>`;s.className='on';
+ const s=$('#scr');s.innerHTML=`<h1 class="ttl">뇌절<br>RPG</h1><div class="desc">마왕이 공주에게 고백했다. 사귀었다. 그리고 <b>잠수이별</b>했다.<br>분노한 공주는 마왕을 프라이팬으로 때려잡고 <b style="color:#ff7a93">타락</b>했다...<br>이제 용사가 <b>타락공주를 잡으러</b> 간다!<br><b>실시간 액션</b> · 길을 따라 모험 · 나무몽둥이로 시작 · 5렙에 숨겨진 전직관에서 전직 · 중간보스 2명 + 최종보스<br>이장님의 <b>퀘스트</b>, 레벨업, 전리품, 상점, 낮과 밤이 있습니다.<br><b>같은 행동을 연속으로</b> 하면 점점 강해지고 게이지가 차면 <b style="color:#ff9bf0">뇌절 폭발!</b><br>(폭발 후엔 민망해서 잠시 움직일 수 없어요)</div><button class="go" id="start">모험 시작</button><div class="desc" style="font-size:13px;opacity:.75">PC: WASD 이동 · 마우스 드래그 시점 · J/클릭 공격 · L 드립 · K 방어 · Space 구르기 · R 한번 더 · Q 물약 · E 대화<br>모바일: 왼쪽 드래그 이동, 오른쪽 화면 드래그 시점, 오른쪽 아래 버튼으로 전투</div>`;s.className='on';
  $('#start').onclick=async()=>{ac();startMusic();SFX.ui();s.className='';mode='world';camDistT=11;camPitch=.55;camYaw=0;showUI('world');updateQuestUI();hud();await sleep(500);talk(chief)}}
 
 /* ================= INPUT ================= */
@@ -940,7 +1015,7 @@ function frame(){requestAnimationFrame(frame);
  H.torso.position.y=1.35+Math.sin(T*2)*.02;H.head.position.y=2.02+Math.sin(T*2+.5)*.02;
  const cp=H.cape.geometry,ba=cp.userData.base,pa=cp.attributes.position.array;for(let i=0;i<pa.length;i+=3){const y=ba[i+1];const f=(.75-y)/1.5;pa[i+2]=ba[i+2]+Math.sin(T*3+y*3.5+ba[i]*2)*.09*f+f*.12*(1+Math.sin(T*1.5))}cp.attributes.position.needsUpdate=true;if((frameNo&3)===0)cp.computeVertexNormals();
  H.plume.rotation.x=-.9+Math.sin(T*3)*.1;
- updateWorld(dt);updateHeroCombat(dt);updateEnemies(dt);updateProjs(dt);updateDrops(dt);
+ updateWorld(dt);updateHeroCombat(dt);updateEnemies(dt);updateProjs(dt);updateHProjs(dt);updateDrops(dt);
  // camera (orbit follow)
  if(mode==='title')camYaw+=real*.12;
  camDistC=lerp(camDistC,camDistT*(aspect<1?1.3:1),1-Math.pow(.02,real));
@@ -964,7 +1039,7 @@ function applyQuality(){PR=prFor(Q);renderer.setPixelRatio(PR);composer.setPixel
  try{localStorage.setItem('q',Q)}catch(e){}$('#qbtn').textContent='화질 '+['하','중','상'][Q]}
 $('#qbtn').onclick=()=>{Q=(Q+1)%3;applyQuality()};
 /* ================= BOOT ================= */
-scene.add(key.target);applyQuality();
+scene.add(key.target);applyQuality();setWeapon('club',0);
 hero.position.set(-4,0,2);hero.rotation.set(0,-2.6,0);groundY=hgt(-4,2);hero.scale.setScalar(1);
 worldG.visible=true;camSmooth.set(-4+Math.sin(camYaw)*6,3,2+Math.cos(camYaw)*6);camLook.set(-4,1.6,2);
 updateQuestUI();updateEnv(.01);
