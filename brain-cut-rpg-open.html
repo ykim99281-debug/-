@@ -411,7 +411,7 @@ const ROADS=[
  [[0,5],[2,16],[4,28],[-6,38]],
  [[-18,6],[-22,14],[-28,19],[-34,24]]
 ];
-const TRAIL=[[-36,25],[-42,30],[-47,34],[-52,36]],HALL=[-52,37];let hallFound=false;
+const TRAIL=[[-14.5,-6.5],[-14.5,-6.7]],HALL=[-14.5,-6.5];let hallFound=true;
 function segD(px,pz,ax,az,bx,bz){const dx=bx-ax,dz=bz-az,l=dx*dx+dz*dz;let t=l?((px-ax)*dx+(pz-az)*dz)/l:0;t=t<0?0:t>1?1:t;return Math.hypot(px-(ax+dx*t),pz-(az+dz*t))}
 function roadDist(x,z){let m=99;for(const r of ROADS)for(let i=0;i<r.length-1;i++){const d=segD(x,z,r[i][0],r[i][1],r[i+1][0],r[i+1][1]);if(d<m)m=d}return m}
 function trailDist(x,z){let m=99;for(let i=0;i<TRAIL.length-1;i++){const d=segD(x,z,TRAIL[i][0],TRAIL[i][1],TRAIL[i+1][0],TRAIL[i+1][1]);if(d<m)m=d}return m}
@@ -516,13 +516,12 @@ const ES=[
 
 // ---- hidden class hall + cairns
 const hallParts=[];
-{const g=grp(worldG,HALL[0],hgt(HALL[0],HALL[1]),HALL[1]);mk(new THREE.CylinderGeometry(5,5.3,.35,40),M(0x2a2040,{roughness:.6,metalness:.3}),0,.17,0,g);
+{const g=grp(worldG,HALL[0],hgt(HALL[0],HALL[1]),HALL[1]);g.scale.setScalar(.62);mk(new THREE.CylinderGeometry(5,5.3,.35,40),M(0x2a2040,{roughness:.6,metalness:.3}),0,.17,0,g);
  mk(new THREE.TorusGeometry(4.2,.06,8,60),GM(0x66ddff,2.5),0,.4,0,g,false).rotation.x=Math.PI/2;mk(new THREE.TorusGeometry(2.6,.05,8,50),GM(0xff7be5,2.5),0,.4,0,g,false).rotation.x=Math.PI/2;
  for(let i=0;i<4;i++){const a=i/4*6.28+.78,x=Math.cos(a)*4.2,z=Math.sin(a)*4.2;mk(new THREE.CylinderGeometry(.4,.5,4,8),M(0x3a2e66),x,2,z,g);const cr=mk(new THREE.OctahedronGeometry(.45),GM(0x66ddff,3),x,4.6,z,g,false);hallParts.push(cr)}
  const alt=mk(new THREE.OctahedronGeometry(.9),GM(0xb78cff,3),0,2.4,-1.5,g,false);alt.scale.y=1.5;hallParts.push(alt);
  const lab=sprite(textTex('전직관',{font:'bold 90px "Black Han Sans",Jua',color:'#fff',stroke:'#2a7aff',w:320,h:140}),1);lab.scale.set(5,2.2,1);lab.position.set(0,6.2,0);g.add(lab);}
-const master=mkNPC(HALL[0]+1.5,HALL[1]+1.5,{name:'전직 스승',robe:0x2a1a4a,belt:0x66ddff,beard:true,hat:'straw',s:1.1,cane:true});
-for(const [x,z] of[[-34.6,26.9],[-37.5,23.1]]){const g=grp(worldG,x,hgt(x,z),z);for(let i=0;i<4;i++)mk(new THREE.IcosahedronGeometry(.75-i*.14,0),M(0x6a6a7a,{roughness:.9,flatShading:true}),(i%2?.08:-.08),.45+i*.62,0,g);mk(new THREE.SphereGeometry(.14,8,6),GM(0x66ddff,3),0,2.9,0,g,false);colliders.push({x,z,r:.7})}
+const master=mkNPC(HALL[0]+1.3,HALL[1]+2.2,{name:'전직 스승',robe:0x2a1a4a,belt:0x66ddff,beard:true,hat:'straw',s:1.1,cane:true});
 // ---- world monsters
 function wmonPos(t){const a=rand(0,6.283),r=Math.sqrt(Math.random())*t.r;return[t.c[0]+Math.cos(a)*r,t.c[1]+Math.sin(a)*r]}
 function spawnWM(t){const g=new THREE.Group(),b=builders[t.i](g);g.scale.setScalar(t.s);const[x,z]=wmonPos(t);g.position.set(x,hgt(x,z),z);
@@ -669,7 +668,7 @@ function mkChest(x,z){const g=grp(worldG,x,hgt(x,z),z);g.rotation.y=rand(0,6);mk
  mk(new THREE.BoxGeometry(1.24,.12,.84),P(0xffd04d,{metalness:1,roughness:.25}),0,.55,0,g);mk(new THREE.BoxGeometry(.16,.28,.1),P(0xffd04d,{metalness:1,roughness:.25}),0,.62,.42,g);
  const gl=sprite(glowTex,3,{blending:THREE.AdditiveBlending,color:0xffd04d,opacity:.6});gl.position.y=1;g.add(gl);props.push({g,x,z,kind:'chest',alive:true,label:'🎁 상자 열기'})}
 [[3,26],[-7,36],[-21,15],[-27,19],[14,8],[-3,-22]].forEach(([x,z])=>mkHerb(x,z));
-[[-50,41],[48,12],[4,-60],[36,-64],[-30,-68]].forEach(([x,z])=>mkChest(x,z));
+[[-37,27],[48,12],[4,-60],[36,-64],[-30,-68]].forEach(([x,z])=>mkChest(x,z));
 colliders.push({x:26,z:20,r:7});
 // water
 {const w=new THREE.Mesh(new THREE.CircleGeometry(11.5,48),new THREE.MeshPhysicalMaterial({color:0x2a7fe0,transparent:true,opacity:.78,roughness:.05,metalness:.2,clearcoat:1,envMapIntensity:2}));w.rotation.x=-Math.PI/2;w.position.set(26,-.55,20);worldG.add(w);window.__water=w}
@@ -888,7 +887,7 @@ function updateEnemies(dt){
   if(mode==='dialog'){}
   else if(mode==='dead'||mode==='title'){m.state='idle';wonder(m,dt)}
   else{
-   const safe=Math.hypot(hp.x,hp.z)<16,open=!S.final||bossOpen();
+   const safe=Math.hypot(hp.x,hp.z)<19,open=!S.final||bossOpen();
    const alert=!safe&&G.hp>0&&open&&d<S.aggro*(isNight()?1.25:1);
    m.cd-=dt;
    switch(m.state){
@@ -905,7 +904,7 @@ function updateEnemies(dt){
   }
   if(!walkable(gp.x,gp.z)){gp.x=lx0;gp.z=lz0}
   g.rotation.y+=angDiff(g.rotation.y,m.yaw)*Math.min(1,dt*7);
-  const dd=Math.hypot(gp.x,gp.z);if(dd<17){gp.x*=17/dd;gp.z*=17/dd}
+  const dd=Math.hypot(gp.x,gp.z);if(dd<19){gp.x*=19/dd;gp.z*=19/dd}
   gp.y=hgt(gp.x,gp.z)+(m.t.i===0?Math.abs(Math.sin(T*5+m.ph))*.25:0);
  }
 }
@@ -952,11 +951,11 @@ function pickup(o){SFX.ui();const p=heroHead();
  else if(o.kind==='jelly'){G.jelly++;fxFloat('눈물 젤리',p,'#7cffb0');updateQuestUI()}
  else{G.pots++;fxFloat('🧪 물약 +1',p,'#ff8aa0')}hud()}
 function gainXP(n){G.xp+=n;fxFloat('+'+n+' XP',heroHead().add(new THREE.Vector3(0,.6,0)),'#b78cff');while(G.xp>=need(G.lv)){G.xp-=need(G.lv);levelUp()}hud()}
-function levelUp(){G.lv++;G.max+=12;G.atk+=2;G.hp=G.max;SFX.win();bigText('LEVEL UP!',1,false);ring(hero.position,{color:0xffd84d,max:10,life:1,y:.1});ring(hero.position,{color:0xffffff,max:6,life:.8,y:.2});burst(heroHead(),{color:0xffd84d,n:100,speed:6,life:1.4,up:3});lightPulse(0xffd84d,30,.7,heroHead());toast(`레벨 ${G.lv}! 공격력 +2, 최대 HP +12, HP 전부 회복`);if(G.lv===5&&G.job==='none')setTimeout(()=>toast('✨ 5레벨! 이제 직업을 가질 수 있다... 전직관은 숨겨져 있다고 한다 (순자 할머니에게 물어보자)'),2500)}
+function levelUp(){G.lv++;G.max+=12;G.atk+=2;G.hp=G.max;SFX.win();bigText('LEVEL UP!',1,false);ring(hero.position,{color:0xffd84d,max:10,life:1,y:.1});ring(hero.position,{color:0xffffff,max:6,life:.8,y:.2});burst(heroHead(),{color:0xffd84d,n:100,speed:6,life:1.4,up:3});lightPulse(0xffd84d,30,.7,heroHead());toast(`레벨 ${G.lv}! 공격력 +2, 최대 HP +12, HP 전부 회복`);if(G.lv===5&&G.job==='none')setTimeout(()=>toast('✨ 5레벨! 이제 직업을 가질 수 있다! 마을 북서쪽 전직관으로 가보자'),2500)}
 
 /* ================= QUESTS / SHOP ================= */
 const QUESTS=[
- {t:'공주의 눈물',en:0,need:2,xp:40,gold:30,ask:['오! 용사님이 오셨구먼! 반갑네, 반갑네!','난 이 마을 이장인데 말이야... 이장인데 말이야... 이장인데 말이야... 아, 본론부터 하지.','옛날에 마왕이 공주님을 좋아했다네. 큰맘 먹고 고백을 했지. 고백... 고백... 고백!','공주님은 받아 주셨고 둘은 사귀었어. 100일 때는 마왕이 직접 케이크도 구웠다네.','그런데 마왕놈이 어느 날부터 메시지를 읽씹하더니... 잠수를 탔네. 잠수이별! 잠수이별!!','공주님은 사흘을 기다리다가 마왕성에 쳐들어가서 프라이팬으로 마왕을 때려잡으셨지. 그리고 그 뒤로... 타락하셨네.','"남자는 다 똑같아"라며 온 세상을 때려부수고 계시다네. 자네가 공주님을 막아 주게.','먼저 서쪽 들판에 공주님의 눈물로 태어난 눈물 슬라임이 있네. 2마리만 처치해 주겠나? 처치해 주겠나? 처치해 주겠나?','자네 장비가 그게 뭔가... 나무몽둥이라니! 골드를 모아 무기상점에서 무기를 사게. 5레벨이 되면 직업도 고를 수 있다는데, 전직관은 비밀 장소에 있다네. 순자 할머니가 아실 걸세.','(조작: 칼질=J/클릭, 구르기=Space, 같은 행동을 연속하면 뇌절 게이지가 찹니다!)'],hint:'눈물 슬라임은 서쪽 들판에 있네. 서쪽... 서쪽... 서쪽! (지도의 빨간 점을 보게)',done:['오오! 해냈구먼! 해냈구먼! 해냈구먼!','공주님의 눈물이 조금은 마른 것 같네. 약속한 보상일세. 마음껏 골라 보게나.']},
+ {t:'공주의 눈물',en:0,need:2,xp:40,gold:30,ask:['오! 용사님이 오셨구먼! 반갑네, 반갑네!','난 이 마을 이장인데 말이야... 이장인데 말이야... 이장인데 말이야... 아, 본론부터 하지.','옛날에 마왕이 공주님을 좋아했다네. 큰맘 먹고 고백을 했지. 고백... 고백... 고백!','공주님은 받아 주셨고 둘은 사귀었어. 100일 때는 마왕이 직접 케이크도 구웠다네.','그런데 마왕놈이 어느 날부터 메시지를 읽씹하더니... 잠수를 탔네. 잠수이별! 잠수이별!!','공주님은 사흘을 기다리다가 마왕성에 쳐들어가서 프라이팬으로 마왕을 때려잡으셨지. 그리고 그 뒤로... 타락하셨네.','"남자는 다 똑같아"라며 온 세상을 때려부수고 계시다네. 자네가 공주님을 막아 주게.','먼저 서쪽 들판에 공주님의 눈물로 태어난 눈물 슬라임이 있네. 2마리만 처치해 주겠나? 처치해 주겠나? 처치해 주겠나?','자네 장비가 그게 뭔가... 나무몽둥이라니! 골드를 모아 무기상점에서 무기를 사게. 5레벨이 되면 마을 북서쪽 전직관에서 직업을 고를 수 있다네.','(조작: 칼질=J/클릭, 구르기=Space, 같은 행동을 연속하면 뇌절 게이지가 찹니다!)'],hint:'눈물 슬라임은 서쪽 들판에 있네. 서쪽... 서쪽... 서쪽! (지도의 빨간 점을 보게)',done:['오오! 해냈구먼! 해냈구먼! 해냈구먼!','공주님의 눈물이 조금은 마른 것 같네. 약속한 보상일세. 마음껏 골라 보게나.']},
  {t:'읽씹 고블린 소탕',en:1,need:2,xp:80,gold:60,ask:['마왕의 메시지를 배달하던 고블린들이 있었네.','공주님이 답장을 안 읽은 게 아니라 마왕이 읽씹한 건데... 어쨌든 "1"이 안 사라져서 폭주 중이라네. 1이... 1이... 1이!','북동쪽 숲의 읽씹 고블린 2마리를 혼내 주게. 걔들이 던지는 "1"은 구르기로 피하게나!'],hint:'북동쪽이야, 북동쪽. 아까 말했는데... 아까 말했는데...',done:['읽씹 고블린을 잡다니, 자네 진짜 대단하구먼!','이제 마을에 "1"이 날아다니지 않겠군.']},
  {t:'잠수 오크 구출',en:2,need:1,xp:150,gold:100,ask:['북서쪽 깊은 곳의 오크는 마왕의 부하라네.','마왕이 잠수를 탄 뒤로 월급도 잠수를 탔다고, 석 달째 야근 중이래. 야근... 야근... 야근!','바닥에 붉은 원이 보이면 곧 내려친다는 뜻이야. 피하게!'],hint:'오크는 북서쪽 깊은 곳이야. 퇴근 시간 전에 가야 하네!',done:['오크들이 드디어 퇴근했네! 퇴근!! 퇴근!!! 퇴근!!!!','자네는 우리 마을의 영웅일세. 영웅... 영웅... 영웅!']},
  {t:'이별 드래곤 (중간보스)',en:3,need:1,xp:300,gold:200,ask:['북동쪽 끝의 드래곤은 공주님이 아끼던 애마였다네.','이별 후 충격으로 이상해져서 "이별이 별로야?" 같은 개그만 한다네. 중간보스일세!','부채꼴 불길이 나오니 옆으로 구르게! 방어와 물약도 챙기고!'],hint:'드래곤은 북동쪽 끝이네. 개그에 웃어주면 안 돼, 절대로!',done:['드래곤이 조용해졌네! 마을이 한결 따뜻해졌어.','이제 원흉을 찾아야 하네. 마왕이 동쪽 호수 건너편에 숨어 있다는군.']},
@@ -1015,14 +1014,14 @@ async function talk(n){
   else{await dialogue('이장님',q.done);qi++;qstate='none';qprog=0;G.gold+=q.gold;fxFloat('+'+q.gold+'G',heroHead(),'#ffd84d');gainXP(q.xp);await rewardPick();updateQuestUI();if(qi<QUESTS.length)toast('새 퀘스트가 있습니다! 이장님에게 말을 걸어보세요')}
  }else if(n===smith){await dialogue('무기상인',['어서 와! 무기라면 내가 최고지.','나무몽둥이로는 슬라임도 억울해할 걸? 골드를 모아서 오게나.']);await openWeaponShop()}
  else if(n===master){
-  if(G.lv<5){await dialogue('전직 스승',['호오... 여기를 찾아내다니 대단하군.','하지만 아직 때가 아니야. 5레벨이 되면 다시 오게. 5레벨... 5레벨... 5레벨!'])}
+  if(G.lv<5){await dialogue('전직 스승',['호오... 전직관에 찾아왔군.','하지만 아직 때가 아니야. 5레벨이 되면 다시 오게. 5레벨... 5레벨... 5레벨!'])}
   else{await dialogue('전직 스승',[G.job==='none'?'자네는 5레벨을 넘었군. 이제 직업을 선택할 자격이 있네.':'직업을 바꾸고 싶은가? 500골드만 내게.','신중히 고르게. 뇌절 같은 선택은 하지 말고.']);await openJobs()}}
  else if(n===innkeeper){await dialogue('여관 주인',['어서 오세요! 푹 쉬고 가세요.','푹... 푹... 푹 쉬세요! 물건도 팔아요.']);await openShop()}
  else if(n===kid){
   if(SQ.kid==='none'){await dialogue('철수',['아저씨 아저씨 아저씨 아저씨!','눈물 젤리가 먹고 싶어요! 먹고 싶어요! 먹고 싶어요!','젤리 3개만 가져다 주세요. 눈물 슬라임이 가끔 떨어뜨려요!']);SQ.kid='active';toast('퀘스트 수락: 철수의 부탁');updateQuestUI()}
   else if(SQ.kid==='active'){if(G.jelly>=3){await dialogue('철수',['와아아아! 젤리다!','맛있다... 맛있다... 맛있다! 고마워요!']);G.jelly-=3;SQ.kid='done';G.pots+=2;G.gold+=80;gainXP(40);toast('보상: 💰80 + 🧪물약 2개');updateQuestUI();hud()}else await dialogue('철수',[`젤리 ${G.jelly}/3개... 더 주세요 더 주세요!`])}
   else await dialogue('철수',pick([['제 점심은 김치찌개예요. 어제도 김치찌개...','근데 저는 안 질려요! 안 질려요! 안 질려요!'],['마왕 아저씨가 읽씹했대요! 읽씹! 읽씹!','나쁜 어른이에요. 답장은 바로바로 해야 해요.']]))}
- else if(n===granny){if(G.lv>=5&&!G.hintHall){G.hintHall=true;await dialogue('순자 할머니',['오, 벌써 5레벨이구나! 이제 직업을 가질 수 있겠어.','전직관은 아무나 못 찾는 곳에 숨어 있단다. 서남쪽 길 끝에 이끼 낀 돌탑 두 개가 서 있지?','그 사이로 난 좁은 오솔길을 따라가 보렴. 따라가 보렴... 따라가 보렴...']);return}
+ else if(n===granny){if(G.lv>=5&&!G.hintHall){G.hintHall=true;await dialogue('순자 할머니',['오, 벌써 5레벨이구나! 이제 직업을 가질 수 있겠어.','마을 북서쪽, 이장님 댁 옆에 푸르게 빛나는 전직관이 있단다. 가 보렴. 가 보렴... 가 보렴...']);return}
   if(SQ.granny==='none'){await dialogue('순자 할머니',['공주님은 원래 마음이 따뜻한 분이었지... 마왕이 고백하기 전까지는 말이야.','내 무릎엔 약초가 최고야. 마을 근처 들판에 빛나는 약초 4개만 캐다 주겠나?','같은 행동을 연속으로 하면 점점 세진다네. 5번째엔 폭발한다더군.']);SQ.granny='active';toast('퀘스트 수락: 할머니의 부탁');updateQuestUI()}
   else if(SQ.granny==='active'){if(G.herb>=4){await dialogue('순자 할머니',['아이고 고마워라. 고마워라. 고마워라.','이건 답례야. 받아 두렴.']);G.herb-=4;SQ.granny='done';G.pots+=3;gainXP(60);toast('보상: 🧪물약 3개 + 경험치');updateQuestUI();hud()}else await dialogue('순자 할머니',[`약초가 ${G.herb}/4개구나. 파랗게 빛나는 풀이야.`])}
   else await dialogue('순자 할머니',['폭발하고 나면 민망해서 잠깐 쉰다던데... 쉰다던데... 쉰다던데...'])}}
@@ -1060,7 +1059,7 @@ const hashS=t=>{let h=5381;for(const c of t)h=((h<<5)+h+c.charCodeAt(0))>>>0;ret
 function listProfiles(){const o=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(SAVEK))o.push(k.slice(SAVEK.length))}}catch(e){}return o}
 function loadProfile(n){try{return JSON.parse(localStorage.getItem(SAVEK+n))}catch(e){return null}}
 function saveGame(){if(!who||mode==='title')return;const d={v:1,name:who,pin:pinHash,G,qi,qstate,qprog,SQ,hallFound,cleared,pos:[hero.position.x,hero.position.z],tod,tutDone:TUT.done,boss:wmons.filter(m=>m.t.boss&&!m.alive).map(m=>m.t.i),chests:props.map(q=>q.kind==='chest'&&!q.alive?1:0),t:Date.now()};try{localStorage.setItem(SAVEK+who,JSON.stringify(d));localStorage.setItem(SAVEK+'__last','1')}catch(e){}}
-function applySave(d){for(const k in d.G)G[k]=d.G[k];qi=d.qi;qstate=d.qstate;qprog=d.qprog;Object.assign(SQ,d.SQ);hallFound=!!d.hallFound;cleared=!!d.cleared;tod=d.tod??tod;TUT.done=!!d.tutDone;
+function applySave(d){for(const k in d.G)G[k]=d.G[k];qi=d.qi;qstate=d.qstate;qprog=d.qprog;Object.assign(SQ,d.SQ);hallFound=true;cleared=!!d.cleared;tod=d.tod??tod;TUT.done=!!d.tutDone;
  (d.boss||[]).forEach(i=>wmons.filter(m=>m.t.i===i).forEach(m=>{m.alive=false;m.g.visible=false;m.dead=1e9}));
  (d.chests||[]).forEach((v,i)=>{const q=props[i];if(v&&q){q.alive=false;q.g.traverse(o=>{if(o.isSprite)o.visible=false})}});
  let[x,z]=d.pos||[-4,2];if(!walkable(x,z)||Math.hypot(x,z)>95){x=-4;z=2}hero.position.set(x,hgt(x,z),z);groundY=hgt(x,z);hero.rotation.set(0,0,0);
@@ -1133,7 +1132,7 @@ function frame(){requestAnimationFrame(frame);
  fxPass.uniforms.t.value=T;fxPass.uniforms.amt.value*=Math.pow(.03,real);fxPass.uniforms.tint.value.multiplyScalar(Math.pow(.01,real));fxPass.uniforms.warp.value*=Math.pow(.05,real);
  const gg=PA.streakT>0?PA.streak/Math.max(1,G.thr):0;bloom.strength=lerp(.42,.65,nightF)+gg*.4+bloomKick;bloomKick*=Math.pow(.004,real);
  sky.material.uniforms.boost.value=lerp(sky.material.uniforms.boost.value,gg*.9+boomBoost,.05);boomBoost*=.96;
- if(G.hp>0&&G.hp<G.max&&mode==='world'&&PA.stun<=0){const village=Math.hypot(hp.x,hp.z)<16;G.hp=Math.min(G.max,G.hp+dt*(village?4:.6))}
+ if(G.hp>0&&G.hp<G.max&&mode==='world'&&PA.stun<=0){const village=Math.hypot(hp.x,hp.z)<19;G.hp=Math.min(G.max,G.hp+dt*(village?4:.6))}
  updateBars();hudT-=real;if(hudT<=0){hudT=.1;hud()}
  composer.render();
 }
