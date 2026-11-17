@@ -60,6 +60,8 @@
   <h1>슬라임 대탐험<small>🌈 달려라 러너! 🌈</small></h1>
   <div class="stat">🏆 최고 기록 <b id="bestStart">0</b>m &nbsp; 🪙 내 코인 <b id="walletStart">0</b></div>
   <div class="row" id="skins"></div>
+  <div class="stat" style="margin-top:2px">🎩 꾸미기</div>
+  <div class="row" id="hats"></div>
   <button class="btn" id="playBtn">▶ 시작하기</button>
   <div class="hint">
     📱 화면을 <b>위/아래/좌/우로 쓱</b> 밀어요<br>
@@ -105,6 +107,16 @@ let best = store.get('best', 0);
 let wallet = store.get('wallet', 0);
 let owned = store.get('owned', [0]);
 let skinId = store.get('skin', 0);
+let ownedHats = store.get('hats', [0]);
+let hatId = store.get('hat', 0);
+const HATS = [
+  { name:'없음',   cost:0 },
+  { name:'왕관',   cost:80 },
+  { name:'파티모자', cost:120 },
+  { name:'리본',   cost:150 },
+  { name:'선글라스', cost:200 },
+  { name:'마법사모자', cost:350 },
+];
 
 const SKINS = [
   { name:'초록 슬라임', cost:0,   body:'#5ee07a', dark:'#2fa84d', extra:'none' },
@@ -569,6 +581,16 @@ function drawChar(c, skin, x, y, u, t, opt={}){
     c.stroke();
     c.fillStyle='rgba(255,100,120,.4)'; for(const sgn of[-1,1]){ c.beginPath(); c.ellipse(sgn*bw*.62,-bh*.38,u*.07,u*.045,0,0,7); c.fill(); }
   }
+  const hat = opt.hat||0, top=-bh*1.02;
+  if(hat===1){ c.fillStyle='#ffd23f'; c.beginPath(); c.moveTo(-bw*.5,top+bh*.04); c.lineTo(-bw*.5,top-bh*.28); c.lineTo(-bw*.25,top-bh*.12); c.lineTo(0,top-bh*.34); c.lineTo(bw*.25,top-bh*.12); c.lineTo(bw*.5,top-bh*.28); c.lineTo(bw*.5,top+bh*.04); c.fill();
+    c.fillStyle='#ff5252'; c.beginPath(); c.arc(0,top-bh*.04,u*.04,0,7); c.fill(); }
+  if(hat===2){ c.fillStyle='#ff6bd6'; c.beginPath(); c.moveTo(-bw*.35,top+bh*.06); c.lineTo(0,top-bh*.55); c.lineTo(bw*.35,top+bh*.06); c.fill();
+    c.fillStyle='#fff'; c.beginPath(); c.arc(0,top-bh*.57,u*.05,0,7); c.fill(); c.fillStyle='#ffe066'; for(const f of[.2,.45]){ c.beginPath(); c.arc(-bw*.08*f*3,top-bh*f,u*.03,0,7); c.fill(); } }
+  if(hat===3){ c.fillStyle='#ff4d8d'; const bx=bw*.55, by=top+bh*.02; for(const sgn of[-1,1]){ c.beginPath(); c.moveTo(bx,by); c.lineTo(bx+sgn*bw*.45,by-bh*.2); c.lineTo(bx+sgn*bw*.45,by+bh*.18); c.fill(); } c.beginPath(); c.arc(bx,by,u*.05,0,7); c.fill(); }
+  if(hat===4){ c.fillStyle='#111'; for(const sgn of[-1,1]){ rr(sgn*ex-er*1.7,ey-er*1.3,er*3.4,er*2.6,er*.8); c.fill(); } c.fillRect(-ex+er*1.7,ey-er*.3,2*ex-er*3.4,er*.5);
+    c.fillStyle='rgba(255,255,255,.35)'; c.fillRect(-ex-er,ey-er*.9,er*.8,er*.3); c.fillRect(ex-er,ey-er*.9,er*.8,er*.3); }
+  if(hat===5){ c.fillStyle='#5b3fd6'; c.beginPath(); c.moveTo(-bw*.75,top+bh*.08); c.lineTo(-bw*.3,top-bh*.02); c.lineTo(-bw*.05,top-bh*.75); c.lineTo(bw*.3,top-bh*.02); c.lineTo(bw*.75,top+bh*.08); c.lineTo(0,top+bh*.12); c.fill();
+    c.fillStyle='#ffe066'; c.beginPath(); c.arc(0,top-bh*.18,u*.045,0,7); c.fill(); }
   c.restore();
 }
 
@@ -579,7 +601,7 @@ function drawPlayer(){
   ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(x,baseY,u*.45*sh,u*.1*sh,0,0,7); ctx.fill();
   const y = baseY - g.jumpY*u;
   if(g.hurt>0 && Math.floor(g.t*20)%2===0) return;   // 깜빡임
-  drawChar(ctx, skinId, x, y, u, g.t, {sliding:g.sliding>0, air:g.jumping, dead:state==='dead', lookX:(g.lane-g.laneX)});
+  drawChar(ctx, skinId, x, y, u, g.t, {hat:hatId, sliding:g.sliding>0, air:g.jumping, dead:state==='dead', lookX:(g.lane-g.laneX)});
   if(g.rocket>0){
     ctx.font=`${u*.5}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText('🔥', x, y+u*.15+Math.sin(g.t*30)*3); ctx.fillText('🚀', x, y-u*.95);
@@ -647,7 +669,7 @@ function buildSkins(){
   SKINS.forEach((s,i)=>{
     const card = document.createElement('div'); card.className='card'+(i===skinId?' sel':'');
     const c = document.createElement('canvas'); c.width=128; c.height=128;
-    const cc = c.getContext('2d'); drawChar(cc, i, 64, 112, 120, 0, {still:true});
+    const cc = c.getContext('2d'); drawChar(cc, i, 64, 112, 120, 0, {still:true, hat:hatId});
     const label = document.createElement('div');
     const isOwned = owned.includes(i);
     label.textContent = isOwned ? s.name : `${s.name} 🪙${s.cost}`;
@@ -663,10 +685,43 @@ function buildSkins(){
     box.appendChild(card);
   });
 }
+function buildHats(){
+  const box = document.getElementById('hats'); box.innerHTML='';
+  HATS.forEach((h,i)=>{
+    const card = document.createElement('div'); card.className='card'+(i===hatId?' sel':'');
+    card.style.width='88px';
+    const c = document.createElement('canvas'); c.width=128; c.height=128;
+    const cc = c.getContext('2d'); if(i>0) drawChar(cc, skinId, 64, 112, 120, 0, {still:true, hat:i}); else { cc.font='60px sans-serif'; cc.textAlign='center'; cc.fillText('🚫',64,80); }
+    const label = document.createElement('div');
+    const has = ownedHats.includes(i);
+    label.textContent = has ? h.name : `${h.name} 🪙${h.cost}`;
+    if(!has && wallet < h.cost) card.style.opacity='.6';
+    card.append(c,label);
+    card.onclick = () => {
+      if(!ownedHats.includes(i)){
+        if(wallet < h.cost){ beep(150,.2,'square',.06); return; }
+        wallet -= h.cost; ownedHats.push(i); store.set('wallet',wallet); store.set('hats',ownedHats); sfx.power();
+      }
+      hatId = i; store.set('hat',i); refreshMenu();
+    };
+    box.appendChild(card);
+  });
+}
+function dailyBonus(){
+  const today = new Date().toISOString().slice(0,10);
+  const last = store.get('daily', '');
+  if(last === today) return;
+  const y = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  const streak = last===y ? Math.min(7, store.get('streak',0)+1) : 1;
+  const reward = 20 + streak*10;
+  store.set('daily', today); store.set('streak', streak);
+  wallet += reward; store.set('wallet', wallet);
+  setTimeout(()=>{ toast(`🎁 출석 ${streak}일째! +🪙${reward}`); sfx.power(); }, 400);
+}
 function refreshMenu(){
   document.getElementById('bestStart').textContent = best;
   document.getElementById('walletStart').textContent = wallet;
-  buildSkins();
+  buildSkins(); buildHats();
 }
 function toMenu(){
   state='menu'; newGame(); setHud(false); refreshMenu(); show('start');
@@ -688,6 +743,7 @@ document.getElementById('quitBtn').onclick = toMenu;
 document.addEventListener('visibilitychange', () => { if(document.hidden && state==='play') togglePause(); });
 
 window.__game = { get state(){return state;}, get G(){return G;}, startGame };
+dailyBonus();
 toMenu();
 requestAnimationFrame(loop);
 })();
