@@ -111,6 +111,7 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 .row .tx{flex:1;min-width:0}
 .row .tx b{display:block;font-size:15px}
 .row .tx small{color:#b8b3dd;font-size:12px}
+.row .tx small b{display:inline;font-size:inherit;color:#fdcb6e}
 .btn{border:0;border-radius:12px;padding:10px 12px;font-weight:900;font-size:14px;color:#fff;background:linear-gradient(135deg,#0984e3,#6c5ce7);min-width:92px}
 .btn:disabled,.btn.off{background:#4b4770;color:#9a95c4}
 .btn.gem{background:linear-gradient(135deg,#e84393,#a29bfe)}
@@ -127,6 +128,21 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 .pull .btn{flex:1;padding:9px 6px;font-size:14px}
 #gachaRes{min-height:44px;background:#0003;border-radius:14px;padding:6px;text-align:center;font-size:24px;margin-bottom:6px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-items:center}
 #gachaRes small{font-size:13px;color:#b8b3dd}
+/* 로그인 */
+#loginModal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:18px;background:radial-gradient(circle at 50% 18%,#3b2f80,#12101f 70%)}
+#loginModal.show{display:flex}
+#lbox{width:100%;max-width:360px;background:#272250;border:2px solid #fdcb6e;border-radius:22px;padding:24px 20px;text-align:center}
+#lbox .logo{font-size:54px;line-height:1}
+#lbox h1{margin:8px 0 2px;font-size:24px;color:#fdcb6e}
+#lbox p{margin:0 0 14px;font-size:13px;color:#b8b3dd}
+.ltabs{display:flex;gap:6px;margin-bottom:12px}
+.ltabs button{flex:1;border:2px solid #fff3;background:#0003;color:#fff;border-radius:10px;padding:9px;font-weight:900;font-size:15px;font-family:inherit}
+.ltabs button.on{background:#6c5ce7;border-color:#a29bfe}
+#lbox input{width:100%;margin-bottom:8px;border:2px solid #fff3;background:#1a1730;color:#fff;border-radius:12px;padding:12px;font-size:16px;font-family:inherit;user-select:text;-webkit-user-select:text}
+#lbox input:focus{outline:none;border-color:#fdcb6e}
+#lerr{min-height:20px;font-size:13px;font-weight:800;color:#ff7675;margin:2px 0 8px;word-break:keep-all}
+#lgo{width:100%;padding:14px;font-size:17px}
+#lbox small{display:block;margin-top:12px;font-size:11.5px;color:#9a95c4;line-height:1.5;word-break:keep-all}
 /* 직업 선택 */
 #clsModal{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:60;padding:14px}
 #clsModal.show{display:flex}
@@ -287,6 +303,16 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
         <div class="tx"><b>기록</b><small>최고 스테이지 <b id="bestS">1</b> · 처치한 몬스터 <b id="kills">0</b></small></div>
       </div>
       <div class="row">
+        <div class="ic">👤</div>
+        <div class="tx"><b>계정: <span id="acctName"></span></b><small>이 게임에서만 쓰는 계정이에요</small></div>
+        <button class="btn" id="logoutBtn">로그아웃</button>
+      </div>
+      <div class="row">
+        <div class="ic">💾</div>
+        <div class="tx"><b>저장 코드</b><small>다른 기기로 옮기거나 백업할 때 써요</small></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><button class="btn" id="expBtn" style="min-width:80px;padding:7px 8px">내보내기</button><button class="btn" id="impBtn" style="min-width:80px;padding:7px 8px">불러오기</button></div>
+      </div>
+      <div class="row">
         <div class="ic">🗑️</div>
         <div class="tx"><b>처음부터 다시</b><small>저장 데이터를 모두 지워요</small></div>
         <button class="btn off" id="resetBtn">초기화</button>
@@ -295,14 +321,103 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
   </div>
 </div>
 
+<div id="loginModal"><div id="lbox">
+  <div class="logo">🦸</div><h1>용사 키우기</h1><p>내 계정으로 로그인하고 이어서 키워요!</p>
+  <div class="ltabs"><button class="on" data-m="in">로그인</button><button data-m="up">회원가입</button></div>
+  <input id="lname" placeholder="닉네임 (2~12글자)" maxlength="12" autocomplete="username">
+  <input id="lpw" type="password" placeholder="비밀번호 (4글자 이상)" autocomplete="current-password">
+  <input id="lpw2" type="password" placeholder="비밀번호 한 번 더" autocomplete="new-password" style="display:none">
+  <div id="lerr"></div>
+  <button class="btn" id="lgo">로그인</button>
+  <small>이 계정은 이 게임에서만 쓰는 계정이에요. 이 기기의 브라우저에 저장돼서, 다른 기기에서 하려면 <b>저장 코드</b>를 써요.</small>
+</div></div>
+
 <div id="clsModal"><div id="cbox"><h2>직업을 골라요!</h2><p>직업마다 능력과 필살기가 달라요</p><div id="cards"></div></div></div>
 
 <div id="modal"><div id="mbox"><h2 id="mt"></h2><p id="mp"></p><button class="btn" id="mok" style="width:100%;padding:14px">확인</button></div></div>
 
 <script>
+/* ================= 이 게임 전용 계정 (이 기기의 브라우저에 저장) ================= */
+(function(){
+  const AK="hero_idle_accounts_v1",SK="hero_idle_session_v1",LEG="hero_idle_v1",CLAIM="hero_idle_legacy_claimed";
+  const rd=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
+  const wr=(k,v)=>{try{localStorage.setItem(k,typeof v==="string"?v:JSON.stringify(v));return true}catch(e){return false}};
+  const uid=n=>n.trim().toLowerCase();
+  const keyOf=n=>"hero_idle_v1_u_"+encodeURIComponent(uid(n));
+  function h53(str){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}
+    h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
+    return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)}
+  async function hashPw(pw,salt,method){
+    if(method==="s"){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(salt+":"+pw));return "s"+[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+    return "h"+h53(salt+":"+pw+":"+salt.length);
+  }
+  const canSub=!!(window.crypto&&crypto.subtle&&window.isSecureContext);
+  const accounts=()=>rd(AK)||{};
+  const sess=rd(SK);
+  const accs=accounts();
+  if(sess&&sess.u&&accs[uid(sess.u)]){window.__user=accs[uid(sess.u)].name;window.__saveKey=keyOf(window.__user)}
+  window.HeroAuth={
+    logout(){try{localStorage.removeItem(SK)}catch(e){}location.reload()},
+    saveKey:keyOf
+  };
+  if(window.__user)return;
+
+  // ---- 로그인/가입 화면 ----
+  const $=id=>document.getElementById(id);
+  let mode="in";
+  function setMode(m){
+    mode=m;
+    document.querySelectorAll(".ltabs button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
+    $("lpw2").style.display=m==="up"?"block":"none";
+    $("lgo").textContent=m==="up"?"가입하고 시작!":"로그인";
+    $("lpw").autocomplete=m==="up"?"new-password":"current-password";
+    $("lerr").textContent="";
+  }
+  function done(name){wr(SK,{u:name});location.reload()}
+  async function submit(){
+    const name=$("lname").value.trim(),pw=$("lpw").value,err=t=>{$("lerr").textContent=t};
+    if(name.length<2||name.length>12)return err("닉네임은 2~12글자로 해줘요");
+    if(/\s/.test(name))return err("닉네임에는 띄어쓰기를 쓸 수 없어요");
+    if(pw.length<4)return err("비밀번호는 4글자 이상이어야 해요");
+    const all=accounts(),id=uid(name);
+    $("lgo").disabled=true;
+    try{
+      if(mode==="up"){
+        if(pw!==$("lpw2").value)return err("비밀번호가 서로 달라요");
+        if(all[id])return err("이미 있는 닉네임이에요");
+        const salt=Math.random().toString(36).slice(2)+Date.now().toString(36),method=canSub?"s":"h";
+        all[id]={name,salt,hash:await hashPw(pw,salt,method),created:Date.now()};
+        if(!wr(AK,all))return err("저장할 수 없어요. 브라우저 저장 공간을 확인해줘요");
+        // 예전(계정 없이 하던) 저장 데이터가 있으면 첫 계정이 이어받아요
+        if(!localStorage.getItem(CLAIM)&&localStorage.getItem(LEG)&&!localStorage.getItem(keyOf(name))){
+          wr(keyOf(name),localStorage.getItem(LEG));wr(CLAIM,"1");
+        }
+        done(name);
+      }else{
+        const a=all[id];
+        if(!a)return err("없는 닉네임이에요. 회원가입을 먼저 해줘요");
+        const method=a.hash[0];
+        if(method==="s"&&!canSub)return err("이 주소에서는 이 계정으로 로그인할 수 없어요");
+        if(await hashPw(pw,a.salt,method)!==a.hash)return err("비밀번호가 틀렸어요");
+        done(a.name);
+      }
+    }catch(e){err("문제가 생겼어요. 다시 해줘요")}
+    finally{$("lgo").disabled=false}
+  }
+  function init(){
+    $("loginModal").classList.add("show");
+    document.querySelectorAll(".ltabs button").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+    $("lgo").onclick=submit;
+    ["lname","lpw","lpw2"].forEach(i=>$(i).addEventListener("keydown",e=>{if(e.key==="Enter")submit()}));
+    const last=Object.keys(accs).length;if(!last)setMode("up");
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
+</script>
+<script>
 "use strict";
 /* ================= 설정 ================= */
-const SAVE_KEY="hero_idle_v1";
+const SAVE_KEY=window.__saveKey||null;   // 로그인한 계정 전용 저장 칸
 const stageCount=s=>Math.min(s,10);      // 1스테이지=1마리, 2스테이지=2마리 … 최대 10마리
 const isBossStage=s=>s%10===0;           // 10스테이지마다 보스
 const UP={
@@ -361,6 +476,7 @@ let heroT=0,saveT=0,gpsT=0,gpsAcc=0;
 let buyAmt=1;
 
 function load(){
+  if(!SAVE_KEY)return def();
   try{const j=JSON.parse(localStorage.getItem(SAVE_KEY));if(j&&j.lv){
     const d=def();
     const o=Object.assign(d,j,{lv:Object.assign(d.lv,j.lv),items:Object.assign(d.items,j.items),eq:Object.assign(d.eq,j.eq),gl:Object.assign(d.gl,j.gl),sk:Object.assign(d.sk,j.sk)});
@@ -374,7 +490,7 @@ function load(){
   }}catch(e){}
   return def();
 }
-function save(){try{S.last=Date.now();localStorage.setItem(SAVE_KEY,JSON.stringify(S))}catch(e){}}
+function save(){if(!SAVE_KEY)return;try{S.last=Date.now();localStorage.setItem(SAVE_KEY,JSON.stringify(S))}catch(e){}}
 
 /* ================= 계산 ================= */
 const UNITS=["","만","억","조","경","해","자","양","구","간","정","재","극"];
@@ -1177,6 +1293,22 @@ $("glBtn").onclick=enhanceSlot;
 $("gear").addEventListener("click",e=>{const b=e.target.closest("[data-gear]");if(b){selSlot=b.dataset.gear;document.querySelector('.tab[data-t="2"]').click();refreshUI()}});
 $("autoBtn").onclick=()=>{S.auto=!S.auto;refreshUI()};
 $("rebBtn").onclick=rebirth;$("resetBtn").onclick=reset;
+$("logoutBtn").onclick=()=>{if(confirm("로그아웃할까요? (진행 상황은 저장돼요)")){save();HeroAuth.logout()}};
+$("expBtn").onclick=()=>{
+  save();const code="HI1."+btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+  const done=()=>toast("📋 저장 코드를 복사했어요!");
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(done,()=>prompt("이 코드를 길게 눌러 복사해요",code));
+  else prompt("이 코드를 복사해요",code);
+};
+$("impBtn").onclick=()=>{
+  const code=prompt("저장 코드를 붙여넣어요\n(지금 진행 상황은 덮어써져요!)");if(!code)return;
+  try{
+    if(!code.startsWith("HI1."))throw 0;
+    const j=JSON.parse(decodeURIComponent(escape(atob(code.slice(4)))));
+    if(!j||!j.lv||typeof j.stage!=="number")throw 0;
+    localStorage.setItem(SAVE_KEY,JSON.stringify(j));location.reload();
+  }catch(e){toast("❌ 저장 코드가 올바르지 않아요")}
+};
 document.addEventListener("visibilitychange",()=>{if(document.hidden)save();else offline()});
 window.addEventListener("pagehide",save);
 
@@ -1195,11 +1327,14 @@ function offline(){
 }
 
 /* ================= 시작 ================= */
+if(window.__user){
 buildUp();buildSkills();buildEquip();buildPets();
 hp=gc().maxHp;setHeroArt();spawn();quiet0=false;
 offline();refreshUI();
 if(S.cls)$("clsIc").innerHTML=HEROES[S.cls]();
 else chooseClass();
+$("acctName").textContent=window.__user;
+}
 let prev=performance.now(),uiT=0;
 function loop(t){
   let dt=Math.min((t-prev)/1000,0.5);prev=t;
@@ -1208,7 +1343,7 @@ function loop(t){
   saveT+=dt;if(saveT>=5){saveT=0;save()}
   requestAnimationFrame(loop);
 }
-requestAnimationFrame(loop);
+if(window.__user)requestAnimationFrame(loop);
 // 테스트/디버그용: 화면 없이 시간 빨리 감기
 window.__fast=(sec,auto)=>{sim=true;if(!S.cls)S.cls='war';for(let i=0;i<sec*10;i++){step(0.1,true);if(auto)autoBuy()}sim=false;const q=quiet0;quiet0=true;renderFoes();updateName();renderProgress();quiet0=q;refreshUI()};
 function autoBuy(){for(const k of["atk","hp","spd","crit"]){let g=0;while(g++<50&&buyAmtOne(k));}}
