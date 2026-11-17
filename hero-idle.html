@@ -122,11 +122,11 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 /* 직업 선택 */
 #clsModal{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:60;padding:14px}
 #clsModal.show{display:flex}
-#cbox{background:#272250;border:2px solid #fdcb6e;border-radius:20px;padding:18px 12px;max-width:440px;width:100%}
+#cbox{max-height:94vh;overflow-y:auto;background:#272250;border:2px solid #fdcb6e;border-radius:20px;padding:18px 12px;max-width:440px;width:100%}
 #cbox h2{margin:0 0 4px;text-align:center;color:#fdcb6e;font-size:22px}
 #cbox p{margin:0 0 12px;text-align:center;font-size:13px;color:#b8b3dd}
-#cards{display:flex;gap:8px}
-.card{flex:1;background:#1a1730;border:2px solid #fff3;border-radius:14px;padding:8px 4px 10px;text-align:center;color:#fff;font-family:inherit}
+#cards{display:flex;flex-wrap:wrap;gap:8px}
+.card{flex:1 1 44%;background:#1a1730;border:2px solid #fff3;border-radius:14px;padding:8px 4px 10px;text-align:center;color:#fff;font-family:inherit}
 .card:active{transform:scale(.96);border-color:#fdcb6e}
 .card .pic{width:70px;height:84px;margin:0 auto}
 .card .pic svg{width:100%;height:100%}
@@ -164,6 +164,7 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 <linearGradient id="gDragon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffa07e"/><stop offset="1" stop-color="#c7412c"/></linearGradient>
 <linearGradient id="gDemon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9566fa"/><stop offset="1" stop-color="#43209f"/></linearGradient>
 <linearGradient id="gBellyY" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3bd"/><stop offset="1" stop-color="#ffd166"/></linearGradient>
+<linearGradient id="gDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e6896"/><stop offset="1" stop-color="#2b2745"/></linearGradient>
 <radialGradient id="gOrb"><stop offset="0" stop-color="#f0fdff"/><stop offset="1" stop-color="#2fb4f5"/></radialGradient>
 </defs></svg>
 <div id="app">
@@ -319,6 +320,7 @@ const PETS=[
 const CLS={
   war :{n:"전사",  d:"체력 +50%",           skill:"⚔️ 대폭격",  cd:8, color:"#ff7675",info:"필살기: 5배 강타 + 체력 20% 회복"},
   mage:{n:"마법사",d:"공격력 +30%, 체력 -20%",skill:"⚡ 번개",    cd:10,color:"#a29bfe",info:"필살기: 8배 번개 데미지"},
+  asn :{n:"어쌔신",d:"치명타 +15%, 치명타 데미지 3배",skill:"🗡️ 연속 베기",cd:9,color:"#a55eea",info:"필살기: 5연속 베기 (각 2배)"},
   arc :{n:"궁수",  d:"공격속도 +25%, 치명타 +10%",skill:"🏹 화살비",cd:8, color:"#55efc4",info:"필살기: 화살 4발 (각 2배)"},
 };
 
@@ -364,7 +366,8 @@ function calc(){
     atk:10*(1+(S.lv.atk-1)*0.6)*(1+E.w)*(1+pa)*soul*(S.cls==="mage"?1.3:1)*(rg?rv.atk:1),
     maxHp:100*(1+(S.lv.hp-1)*0.5)*(1+E.a)*soul*(S.cls==="war"?1.5:S.cls==="mage"?0.8:1),
     aspd:Math.min(6,(1+(S.lv.spd-1)*0.03+E.b)*(S.cls==="arc"?1.25:1)*(rg?1.5:1)),
-    crit:Math.min(0.85,0.05+(S.lv.crit-1)*0.01+E.h+(S.cls==="arc"?0.1:0)),
+    crit:Math.min(0.9,0.05+(S.lv.crit-1)*0.01+E.h+(S.cls==="arc"?0.1:S.cls==="asn"?0.15:0)),
+    cdmg:S.cls==="asn"?3:2,
     goldMul:(1+pg)*soul*(gd?gv.gold:1),
   };
 }
@@ -377,7 +380,7 @@ const skLv=id=>S.sk[id]||1;
 function skVals(id){
   const lv=skLv(id),m=1+0.15*(lv-1);
   return{m,lv,
-    dmg:id==="cls"?({war:5,mage:8,arc:2}[S.cls||"war"])*m:12*m,
+    dmg:id==="cls"?({war:5,mage:8,arc:2,asn:2}[S.cls||"war"])*m:12*m,
     heal:Math.min(0.95,0.5+0.03*(lv-1)),
     dur:id==="rage"?Math.min(20,8+0.5*(lv-1)):Math.min(30,10+0.5*(lv-1)),
     atk:2+0.1*(lv-1),gold:3+0.2*(lv-1)};
@@ -387,7 +390,7 @@ function skInfo(id){
   const v=skVals(id);
   if(id==="cls"){const k=CLS[S.cls||"war"],p=k.skill.split(" ");
     return{ic:p[0],n:p.slice(1).join(" "),cd:k.cd,color:k.color,unlock:1,
-      desc:S.cls==="war"?`공격력 ${n1(v.dmg)}배 강타 + 체력 20% 회복`:S.cls==="mage"?`공격력 ${n1(v.dmg)}배 번개 공격`:`화살 4발 (각 ${n1(v.dmg)}배)`}}
+      desc:S.cls==="war"?`공격력 ${n1(v.dmg)}배 강타 + 체력 20% 회복`:S.cls==="mage"?`공격력 ${n1(v.dmg)}배 번개 공격`:S.cls==="asn"?`5연속 베기 (각 ${n1(v.dmg)}배)`:`화살 4발 (각 ${n1(v.dmg)}배)`}}
   const d=SKILLS.find(x=>x.id===id);
   const desc={fire:`공격력 ${n1(v.dmg)}배 불꽃 폭발`,heal:`체력 ${Math.round(v.heal*100)}% 즉시 회복`,
     rage:`${n1(v.dur)}초 동안 공격력 ${n1(v.atk)}배 · 공격속도 1.5배`,gold:`${n1(v.dur)}초 동안 골드 ${n1(v.gold)}배`}[id];
@@ -430,6 +433,19 @@ const HEROES={
     FACE+
     `<ellipse cx="60" cy="50" rx="41" ry="11" fill="url(#gPurpleD)" ${O}/><path d="M35 48 Q60 40 85 48 Q82 22 74 8 Q68 -2 56 3 Q44 14 35 48z" fill="url(#gPurple)" ${O}/><path d="M36 45 Q60 37 84 45" stroke="url(#gGold)" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M62 18 l3 7 7.5 1 -5.5 5 1.5 7.5 -6.5 -4 -6.5 4 1.5 -7.5 -5.5 -5 7.5 -1z" fill="url(#gGold)" stroke="${OL}" stroke-width="2"/>`+
     `<g class="wp" ${PV}><g transform="translate(0 10)">${limb(78,92,97,102,"#b9a9ff")}<rect x="97" y="38" width="6" height="104" rx="3" fill="url(#gWood)" ${O}/><circle cx="100" cy="30" r="20" fill="#7fe0ff" opacity=".3"/><circle cx="100" cy="30" r="11" fill="url(#gOrb)" ${O}/><circle cx="96" cy="26" r="3" fill="#fff"/><circle cx="100" cy="104" r="8" fill="url(#gSkin)" ${O}/></g></g>`),
+  asn:()=>svg(HERO_VB,HSH+
+    `<path d="M44 78 Q10 84 4 118 Q24 106 50 100z" fill="url(#gRed)" ${O}/>`+
+    `<path d="M44 90 L27 104" stroke="${OL}" stroke-width="17" stroke-linecap="round"/><path d="M44 90 L27 104" stroke="#4a4468" stroke-width="11" stroke-linecap="round"/><path d="M21 106 Q11 82 19 66 Q29 82 32 104z" fill="url(#gSteel)" ${O}/><rect x="19" y="103" width="15" height="5" rx="2" fill="url(#gGold)" ${O}/><circle cx="26" cy="108" r="7" fill="url(#gSkin)" ${O}/>`+
+    `<rect x="46" y="114" width="12" height="22" rx="5" fill="#3a3558" ${O}/><rect x="70" y="114" width="12" height="22" rx="5" fill="#3a3558" ${O}/>`+
+    `<path d="M36 134 h24 q7 0 7 8 v3 h-35 v-3 q0 -8 4 -8z" fill="#2b2538" ${O}/><path d="M62 134 h24 q7 0 7 8 v3 h-35 v-3 q0 -8 4 -8z" fill="#2b2538" ${O}/>`+
+    `<path d="M42 82 Q42 74 60 74 Q78 74 78 82 L82 122 Q60 128 38 122z" fill="url(#gDark)" ${O}/><path d="M44 80 L76 118 M76 80 L44 118" stroke="#1c1830" stroke-width="3.5" stroke-linecap="round"/><rect x="39" y="108" width="43" height="8" rx="3" fill="url(#gRed)" ${O}/>`+
+    `<circle cx="58" cy="68" r="31" fill="url(#gDark)" ${O}/>`+
+    `<circle cx="60" cy="68" r="27" fill="url(#gSkin)" ${O}/>`+
+    `<ellipse cx="53" cy="70" rx="5.5" ry="4" fill="#fff"/><ellipse cx="73" cy="70" rx="5.5" ry="4" fill="#fff"/><circle cx="55" cy="70" r="3" fill="#c0392b"/><circle cx="75" cy="70" r="3" fill="#c0392b"/><circle cx="56" cy="69" r="1" fill="#fff"/><circle cx="76" cy="69" r="1" fill="#fff"/>`+
+    `<path d="M44 62 L58 67 M80 62 L68 67" stroke="${OL}" stroke-width="3.5" stroke-linecap="round"/>`+
+    `<path d="M33 76 Q60 70 87 76 Q86 96 60 100 Q34 96 33 76z" fill="url(#gDark)" ${O}/><path d="M42 84 Q60 90 78 84" stroke="#1c1830" stroke-width="2" fill="none"/>`+
+    `<path d="M29 72 Q24 28 60 30 Q96 28 91 72 Q88 52 60 49 Q34 52 29 72z" fill="url(#gDark)" ${O}/><path d="M30 58 Q6 50 0 70 Q14 64 32 70z" fill="url(#gRed)" ${O}/><path d="M32 54 Q60 44 88 54" stroke="url(#gRed)" stroke-width="5" fill="none" stroke-linecap="round"/>`+
+    `<g class="wp" ${PV}><g transform="translate(0 10)">${limb(78,88,97,102,"#4a4468")}<path d="M94 98 Q91 70 101 52 Q108 72 106 98z" fill="url(#gSteel)" ${O}/><path d="M100 60 Q99 80 100 94" stroke="#fff" stroke-width="2" fill="none" opacity=".8"/><rect x="88" y="97" width="22" height="6" rx="3" fill="url(#gGold)" ${O}/><rect x="96" y="103" width="7" height="12" rx="2" fill="#3a3558" ${O}/><circle cx="99" cy="106" r="8" fill="url(#gSkin)" ${O}/></g></g>`),
   arc:()=>svg(HERO_VB,HSH+
     `<path d="M28 84 l14 -8 l10 34 l-14 8z" fill="url(#gWood)" ${O}/><path d="M36 76 l-3 -12 M42 74 l-1 -13 M48 76 l3 -12" stroke="#ff6b6b" stroke-width="4" stroke-linecap="round"/>`+
     `<circle cx="58" cy="70" r="32" fill="url(#gGreenD)" ${O}/>`+
@@ -523,7 +539,7 @@ function dealDamage(d,crit,quiet){
   if(monHp<=0)killMonster(quiet);
 }
 function heroHit(quiet){
-  const c=gc(),crit=Math.random()<c.crit,d=c.atk*(crit?2:1);
+  const c=gc(),crit=Math.random()<c.crit,d=c.atk*(crit?c.cdmg:1);
   if(quiet){dealDamage(d,crit,true);return}
   const id=monId,delay=playAttack(Math.min(0.34,0.85/c.aspd));
   setTimeout(()=>{if(monId===id&&!paused)dealDamage(d,crit,false)},delay);
@@ -565,6 +581,7 @@ function useSkill(id,quiet){
       if(!quiet)float("+"+fmt(h),"heal","heroBox");
       dealDamage(c.atk*v.dmg,true,quiet);
     }else if(S.cls==="mage")dealDamage(c.atk*v.dmg,true,quiet);
+    else if(S.cls==="asn")for(let i=0;i<5&&monId===mid;i++)dealDamage(c.atk*v.dmg,true,quiet);
     else for(let i=0;i<4&&monId===mid;i++)dealDamage(c.atk*v.dmg,true,quiet);
   }else if(id==="fire"){
     if(!quiet)skillFx2("fire");
@@ -623,7 +640,7 @@ function dashDist(){const h=rel($("hero")),m=rel($("mon"));return Math.max(20,Ma
 function playAttack(D){
   const dur=D*1000,h=rel($("hero")),m=rel($("mon")),wp=$("hero").querySelector(".wp"),mv=$("heroMv");
   const ox=h.x+h.w*0.78,oy=h.y+h.h*0.62;
-  if(S.cls==="war"){
+  if(S.cls==="war"||S.cls==="asn"){
     const dd=dashDist()+"px";
     mv.animate([{transform:"none"},{transform:`translateX(${dd}) rotate(5deg)`,offset:.4},{transform:`translateX(${dd}) rotate(5deg)`,offset:.62},{transform:"none"}],{duration:dur,easing:"ease-out"});
     wp&&wp.animate([{transform:"rotate(-40deg)"},{transform:"rotate(-40deg)",offset:.15},{transform:"rotate(95deg)",offset:.42},{transform:"rotate(95deg)",offset:.62},{transform:"rotate(0deg)"}],{duration:dur});
@@ -672,7 +689,12 @@ function deathFx(){
 function skillFx(){
   const m=rel($("mon")),h=rel($("hero"));
   const shake=()=>$("battle").animate([{transform:"translate(0,0)"},{transform:"translate(-5px,3px)"},{transform:"translate(5px,-3px)"},{transform:"translate(-3px,2px)"},{transform:"none"}],{duration:280});
-  if(S.cls==="war"){
+  if(S.cls==="asn"){
+    $("heroMv").animate([{transform:"none"},{transform:`translateX(${dashDist()}px) scale(1.05)`,offset:.2},{transform:`translateX(${dashDist()}px) scale(1.05)`,offset:.8},{transform:"none"}],{duration:700,easing:"ease-out"});
+    const wp=$("hero").querySelector(".wp");wp&&wp.animate([{transform:"rotate(-60deg)"},{transform:"rotate(100deg)"},{transform:"rotate(-60deg)"},{transform:"rotate(100deg)"},{transform:"rotate(-60deg)"},{transform:"rotate(100deg)"},{transform:"rotate(0)"}],{duration:700});
+    for(let i=0;i<5;i++)setTimeout(()=>{const mm=rel($("mon"));fx(FX.slash,mm.cx+(i%2?10:-14),mm.cy+(i-2)*8,110,110,[{transform:`scale(.4) rotate(${-50+i*40}deg)`,opacity:1},{transform:`scale(1.2) rotate(${-20+i*40}deg)`,opacity:0}],{duration:260,easing:"ease-out"})},150+i*100);
+    setTimeout(shake,600);
+  }else if(S.cls==="war"){
     $("heroMv").animate([{transform:"none"},{transform:`translateX(${dashDist()}px) scale(1.12)`,offset:.35},{transform:`translateX(${dashDist()}px) scale(1.12)`,offset:.7},{transform:"none"}],{duration:520,easing:"ease-out"});
     const wp=$("hero").querySelector(".wp");wp&&wp.animate([{transform:"rotate(-70deg)"},{transform:"rotate(110deg)",offset:.4},{transform:"rotate(110deg)",offset:.7},{transform:"rotate(0)"}],{duration:520});
     setTimeout(()=>{fx(FX.slash,m.cx-10,m.cy,170,170,[{transform:"scale(.4) rotate(-25deg)",opacity:1},{transform:"scale(1.2) rotate(10deg)",opacity:0}],{duration:360,easing:"ease-out"});shake()},180);
