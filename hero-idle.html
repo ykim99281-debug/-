@@ -15,13 +15,16 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 /* 전투 */
 #battle{position:relative;height:250px;overflow:hidden;transition:background 1s}
 #ground{position:absolute;left:0;right:0;bottom:0;height:60px;background:#0003;border-top:3px solid #0004}
-.unit{position:absolute;bottom:50px;text-align:center;width:90px}
+.unit{position:absolute;bottom:50px;text-align:center;width:100px}
 #heroBox{left:12%}
-#heroBox .bar,#monBox .bar{width:90px}
+#heroBox .bar,#monBox .bar{width:90px;margin-left:5px}
 #monBox{right:12%}
 .emo{display:block;filter:drop-shadow(0 4px 2px #0006)}
 .emo svg{width:100%;height:100%;display:block;overflow:visible}
-#hero{width:90px;height:108px}
+#hero{width:100px;height:118px}
+.mv{transform-origin:50% 100%}
+.fx{position:absolute;pointer-events:none;z-index:6}
+.fx svg{width:100%;height:100%;display:block;overflow:visible}
 #mon{width:90px;height:90px}
 #scene{position:absolute;inset:0}
 #scene svg{width:100%;height:100%;display:block}
@@ -113,6 +116,30 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<linearGradient id="gSkin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe9d0"/><stop offset="1" stop-color="#f2b185"/></linearGradient>
+<linearGradient id="gSteel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f9fc"/><stop offset="1" stop-color="#8493a5"/></linearGradient>
+<linearGradient id="gBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#63b6ff"/><stop offset="1" stop-color="#1c5fc7"/></linearGradient>
+<linearGradient id="gRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8080"/><stop offset="1" stop-color="#c0392b"/></linearGradient>
+<linearGradient id="gGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff39a"/><stop offset="1" stop-color="#d9921a"/></linearGradient>
+<linearGradient id="gPurple" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ab9dff"/><stop offset="1" stop-color="#5a3fd8"/></linearGradient>
+<linearGradient id="gPurpleD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7d66f2"/><stop offset="1" stop-color="#3a299c"/></linearGradient>
+<linearGradient id="gGreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#58e6b8"/><stop offset="1" stop-color="#0a9a74"/></linearGradient>
+<linearGradient id="gGreenD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34c795"/><stop offset="1" stop-color="#06775a"/></linearGradient>
+<linearGradient id="gWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b98260"/><stop offset="1" stop-color="#6b432d"/></linearGradient>
+<linearGradient id="gMint" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9afadc"/><stop offset="1" stop-color="#1ec59a"/></linearGradient>
+<linearGradient id="gRedMon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8574"/><stop offset="1" stop-color="#c0392b"/></linearGradient>
+<linearGradient id="gBone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#cdd5de"/></linearGradient>
+<linearGradient id="gGhost" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#c9defa"/></linearGradient>
+<linearGradient id="gGray" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c3cedb"/><stop offset="1" stop-color="#697889"/></linearGradient>
+<linearGradient id="gBat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9b8bff"/><stop offset="1" stop-color="#4a35b5"/></linearGradient>
+<linearGradient id="gGob" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cdf075"/><stop offset="1" stop-color="#7ab336"/></linearGradient>
+<linearGradient id="gImp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffa398"/><stop offset="1" stop-color="#df4636"/></linearGradient>
+<linearGradient id="gDragon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffa07e"/><stop offset="1" stop-color="#c7412c"/></linearGradient>
+<linearGradient id="gDemon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9566fa"/><stop offset="1" stop-color="#43209f"/></linearGradient>
+<linearGradient id="gBellyY" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3bd"/><stop offset="1" stop-color="#ffd166"/></linearGradient>
+<radialGradient id="gOrb"><stop offset="0" stop-color="#f0fdff"/><stop offset="1" stop-color="#2fb4f5"/></radialGradient>
+</defs></svg>
 <div id="app">
   <div id="top">
     <div class="chip">💰 <span id="gold">0</span></div>
@@ -128,12 +155,12 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
     <div id="ground"></div>
     <div class="unit" id="heroBox">
       <div class="bar"><i id="hpH"></i></div>
-      <div class="emo" id="hero"></div>
+      <div class="mv" id="heroMv"><div class="emo" id="hero"></div></div>
       <div id="pets"></div>
     </div>
     <div class="unit" id="monBox">
       <div class="bar"><i id="hpM"></i></div>
-      <div class="emo" id="mon"></div>
+      <div class="mv" id="monMv"><div class="emo" id="mon"></div></div>
     </div>
   </div>
 
@@ -286,52 +313,64 @@ const monAtkFor=s=>6*Math.pow(1.12,s-1);
 const goldFor=s=>5*Math.pow(1.13,s-1);
 
 /* ================= 그림 (SVG) ================= */
-const E=(x,y,r,c="#2d3436")=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/><circle cx="${x+r*.3}" cy="${y-r*.3}" r="${r*.35}" fill="#fff"/>`;
-const SHD='<ellipse cx="50" cy="104" rx="27" ry="5" fill="#0004"/>';
-const FACE='<circle cx="50" cy="44" r="22" fill="#ffd9b3" stroke="#e0b48a" stroke-width="1.5"/>'+E(41,46,4)+E(59,46,4)+
-  '<path d="M45 55 q5 4 10 0" stroke="#c0392b" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="35" cy="53" r="3.5" fill="#ff9aa2" opacity=".6"/><circle cx="65" cy="53" r="3.5" fill="#ff9aa2" opacity=".6"/>';
+const OL="#2b1d3a",O=`stroke="${OL}" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"`;
 const svg=(vb,b)=>`<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${b}</svg>`;
-const HERO_VB="0 -12 100 122";
+const E=(x,y,r,c=OL)=>`<ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*1.15}" fill="${c}"/><circle cx="${x+r*.35}" cy="${y-r*.4}" r="${r*.42}" fill="#fff"/><circle cx="${x-r*.3}" cy="${y+r*.4}" r="${r*.2}" fill="#fff"/>`;
+/* 용사 얼굴(오른쪽을 보고 있어요) */
+const FACE=`<circle cx="60" cy="68" r="27" fill="url(#gSkin)" ${O}/>`+E(53,72,5)+E(73,72,5)+
+  `<path d="M46 62 q6 -4 11 -1 M70 61 q6 -3 11 1" stroke="${OL}" stroke-width="2.5" fill="none" stroke-linecap="round"/><ellipse cx="46" cy="82" rx="5" ry="3" fill="#ff8a9a" opacity=".7"/><ellipse cx="82" cy="82" rx="5" ry="3" fill="#ff8a9a" opacity=".7"/><path d="M60 83 q6 6 13 0" stroke="#b03a2e" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+const HSH='<ellipse cx="60" cy="150" rx="32" ry="6" fill="#0005"/>';
+const boot=cx=>`<path d="M${cx-15} 134 h24 q7 0 7 8 v3 h-35 v-3 q0 -8 4 -8z" fill="url(#gWood)" ${O}/>`;
+const limb=(x1,y1,x2,y2,c)=>`<path d="M${x1} ${y1} L${x2} ${y2}" stroke="${OL}" stroke-width="17" stroke-linecap="round"/><path d="M${x1} ${y1} L${x2} ${y2}" stroke="${c}" stroke-width="11" stroke-linecap="round"/>`;
+const HERO_VB="0 0 132 156";
+const PV='style="transform-origin:78px 98px"';
 const HEROES={
-  war:()=>svg(HERO_VB,SHD+
-    '<rect x="36" y="84" width="11" height="17" rx="4" fill="#4b5d7a"/><rect x="53" y="84" width="11" height="17" rx="4" fill="#4b5d7a"/><rect x="33" y="96" width="16" height="8" rx="4" fill="#2d3436"/><rect x="51" y="96" width="16" height="8" rx="4" fill="#2d3436"/>'+
-    '<rect x="30" y="62" width="40" height="30" rx="10" fill="#b2bec3" stroke="#636e72" stroke-width="2"/><rect x="30" y="78" width="40" height="7" fill="#c0392b"/><circle cx="50" cy="81" r="4" fill="#fdcb6e"/>'+
-    '<path d="M10 60 h24 v20 q0 13 -12 18 q-12 -5 -12 -18z" fill="#0984e3" stroke="#2d3436" stroke-width="2.5"/><path d="M22 66 v26 M13 76 h18" stroke="#fdcb6e" stroke-width="4"/>'+
-    '<rect x="77" y="10" width="8" height="58" rx="3" fill="#dfe6e9" stroke="#636e72" stroke-width="2"/><path d="M77 10 L81 0 L85 10z" fill="#dfe6e9" stroke="#636e72" stroke-width="2"/><rect x="70" y="66" width="22" height="6" rx="2" fill="#fdcb6e" stroke="#b7791f"/><rect x="78" y="72" width="6" height="14" fill="#6d4c41"/>'+
-    FACE+'<path d="M28 44 a22 22 0 0 1 44 0 q-22 -8 -44 0z" fill="#b2bec3" stroke="#636e72" stroke-width="2"/><path d="M50 22 q-8 -14 10 -16 q-3 8 5 16z" fill="#d63031"/><rect x="47" y="28" width="6" height="14" rx="2" fill="#b2bec3" stroke="#636e72"/>'),
-  mage:()=>svg(HERO_VB,SHD+
-    '<path d="M33 62 h34 l10 41 h-54z" fill="#a29bfe" stroke="#6c5ce7" stroke-width="2"/><path d="M50 64 v38" stroke="#6c5ce7" stroke-width="2"/><rect x="33" y="76" width="34" height="6" fill="#fdcb6e"/>'+
-    '<rect x="80" y="26" width="6" height="76" rx="3" fill="#6d4c41"/><circle cx="83" cy="22" r="12" fill="#74b9ff" opacity=".35"/><circle cx="83" cy="22" r="8" fill="#0984e3" stroke="#dff9fb" stroke-width="2"/><circle cx="80" cy="19" r="2.5" fill="#fff"/>'+
-    FACE+'<path d="M24 30 Q50 22 76 30 Q50 38 24 30z" fill="#5541d1" stroke="#3c2ea6" stroke-width="2"/><path d="M30 29 Q50 24 70 29 L58 -4 Q52 -12 44 -4z" fill="#6c5ce7" stroke="#3c2ea6" stroke-width="2"/><path d="M52 6 l2.5 5 5.5 .8 -4 4 1 5.5 -5 -2.7 -5 2.7 1 -5.5 -4 -4 5.5 -.8z" fill="#fdcb6e"/>'),
-  arc:()=>svg(HERO_VB,SHD+
-    '<rect x="36" y="84" width="11" height="17" rx="4" fill="#6d4c41"/><rect x="53" y="84" width="11" height="17" rx="4" fill="#6d4c41"/><rect x="33" y="96" width="16" height="8" rx="4" fill="#3d2b1f"/><rect x="51" y="96" width="16" height="8" rx="4" fill="#3d2b1f"/>'+
-    '<rect x="62" y="52" width="12" height="34" rx="4" transform="rotate(14 68 68)" fill="#8d6e63" stroke="#5d4037" stroke-width="2"/><path d="M66 54 l-3 -10 M70 55 l0 -11 M74 56 l3 -10" stroke="#e17055" stroke-width="3" stroke-linecap="round"/>'+
-    '<circle cx="50" cy="42" r="28" fill="#00a383" stroke="#007a63" stroke-width="2"/>'+
-    '<rect x="30" y="62" width="40" height="30" rx="10" fill="#00b894" stroke="#007a63" stroke-width="2"/><rect x="30" y="78" width="40" height="6" fill="#6d4c41"/><circle cx="50" cy="81" r="3.5" fill="#fdcb6e"/>'+
-    '<path d="M84 30 Q108 66 84 100" stroke="#6d4c41" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M84 30 V100" stroke="#fff" stroke-width="1.5"/><path d="M60 66 L96 52" stroke="#b2bec3" stroke-width="3"/><path d="M96 52 l-7 -1 4 6z" fill="#b2bec3"/>'+
-    FACE+'<path d="M26 40 Q50 8 74 40 Q50 24 26 40z" fill="#00b894" stroke="#007a63" stroke-width="2"/><path d="M62 20 q14 -20 22 -14 q-6 8 -10 20z" fill="#ff7675" stroke="#d63031" stroke-width="1.5"/>'),
+  war:()=>svg(HERO_VB,HSH+
+    `<path d="M46 80 Q12 100 18 142 Q38 128 58 136 L64 86z" fill="url(#gRed)" ${O}/>`+
+    `<rect x="44" y="114" width="14" height="22" rx="5" fill="#51628a" ${O}/><rect x="70" y="114" width="14" height="22" rx="5" fill="#51628a" ${O}/>`+boot(51)+boot(77)+
+    `<path d="M42 82 Q42 74 60 74 Q78 74 78 82 L82 122 Q60 128 38 122z" fill="url(#gSteel)" ${O}/><path d="M48 84 Q60 90 72 84" stroke="#fff" stroke-width="3" fill="none" opacity=".7"/>`+
+    `<rect x="39" y="108" width="43" height="9" rx="3" fill="url(#gGold)" ${O}/><circle cx="61" cy="112.5" r="4.5" fill="#e84118" stroke="${OL}" stroke-width="2"/>`+
+    `<path d="M10 86 h32 v26 q0 20 -16 26 q-16 -6 -16 -26z" fill="url(#gBlue)" ${O}/><path d="M26 92 v38 M14 106 h24" stroke="url(#gGold)" stroke-width="5" stroke-linecap="round"/>`+
+    FACE+
+    `<path d="M31 70 Q30 34 60 34 Q90 34 89 70 Q60 55 31 70z" fill="url(#gSteel)" ${O}/><path d="M60 36 V58" stroke="${OL}" stroke-width="3"/><path d="M60 36 Q46 10 80 14 Q68 24 74 42z" fill="url(#gRed)" ${O}/><path d="M38 52 Q44 42 54 40" stroke="#fff" stroke-width="3" fill="none" opacity=".8" stroke-linecap="round"/>`+
+    `<g class="wp" ${PV}><g transform="translate(0 10)">${limb(78,88,97,102,"#b8c4d0")}<path d="M94 94 V46 L99 33 L104 46 V94z" fill="url(#gSteel)" ${O}/><path d="M99 40 V92" stroke="#fff" stroke-width="2" opacity=".8"/><rect x="87" y="93" width="24" height="8" rx="3" fill="url(#gGold)" ${O}/><rect x="96" y="101" width="6" height="14" rx="2" fill="url(#gWood)" ${O}/><circle cx="99" cy="104" r="8" fill="url(#gSkin)" ${O}/></g></g>`),
+  mage:()=>svg(HERO_VB,HSH+
+    `<path d="M34 68 Q26 104 44 112 L48 80z" fill="#efeaff" ${O}/>`+
+    `<ellipse cx="48" cy="146" rx="11" ry="5.5" fill="url(#gWood)" ${O}/><ellipse cx="74" cy="146" rx="11" ry="5.5" fill="url(#gWood)" ${O}/>`+
+    `<path d="M38 82 Q60 72 82 82 L96 140 Q60 152 24 140z" fill="url(#gPurple)" ${O}/><path d="M26 136 Q60 148 94 136" stroke="url(#gGold)" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M40 108 Q60 116 80 108" stroke="url(#gGold)" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M60 112 l3 6 6 1 -4.5 4 1.5 6 -6 -3.5 -6 3.5 1.5 -6 -4.5 -4 6 -1z" fill="url(#gGold)" stroke="${OL}" stroke-width="2"/>`+
+    FACE+
+    `<ellipse cx="60" cy="50" rx="41" ry="11" fill="url(#gPurpleD)" ${O}/><path d="M35 48 Q60 40 85 48 Q82 22 74 8 Q68 -2 56 3 Q44 14 35 48z" fill="url(#gPurple)" ${O}/><path d="M36 45 Q60 37 84 45" stroke="url(#gGold)" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M62 18 l3 7 7.5 1 -5.5 5 1.5 7.5 -6.5 -4 -6.5 4 1.5 -7.5 -5.5 -5 7.5 -1z" fill="url(#gGold)" stroke="${OL}" stroke-width="2"/>`+
+    `<g class="wp" ${PV}><g transform="translate(0 10)">${limb(78,92,97,102,"#b9a9ff")}<rect x="97" y="38" width="6" height="104" rx="3" fill="url(#gWood)" ${O}/><circle cx="100" cy="30" r="20" fill="#7fe0ff" opacity=".3"/><circle cx="100" cy="30" r="11" fill="url(#gOrb)" ${O}/><circle cx="96" cy="26" r="3" fill="#fff"/><circle cx="100" cy="104" r="8" fill="url(#gSkin)" ${O}/></g></g>`),
+  arc:()=>svg(HERO_VB,HSH+
+    `<path d="M28 84 l14 -8 l10 34 l-14 8z" fill="url(#gWood)" ${O}/><path d="M36 76 l-3 -12 M42 74 l-1 -13 M48 76 l3 -12" stroke="#ff6b6b" stroke-width="4" stroke-linecap="round"/>`+
+    `<circle cx="58" cy="70" r="32" fill="url(#gGreenD)" ${O}/>`+
+    `<rect x="44" y="114" width="14" height="22" rx="5" fill="#8a5a3a" ${O}/><rect x="70" y="114" width="14" height="22" rx="5" fill="#8a5a3a" ${O}/>`+boot(51)+boot(77)+
+    `<path d="M42 82 Q42 74 60 74 Q78 74 78 82 L82 122 Q60 128 38 122z" fill="url(#gGreen)" ${O}/><path d="M44 80 L76 118" stroke="url(#gWood)" stroke-width="6" stroke-linecap="round"/><rect x="39" y="108" width="43" height="8" rx="3" fill="url(#gWood)" ${O}/><circle cx="61" cy="112" r="4" fill="url(#gGold)" stroke="${OL}" stroke-width="2"/>`+
+    FACE+
+    `<path d="M29 72 Q24 32 60 33 Q96 32 91 72 Q88 50 60 47 Q34 50 29 72z" fill="url(#gGreen)" ${O}/><path d="M76 40 Q104 18 112 28 Q100 30 88 48z" fill="url(#gRed)" ${O}/><path d="M40 50 Q60 42 82 52 Q68 48 58 55z" fill="#7a4b2a" ${O}/>`+
+    `<g class="wp" ${PV}><g transform="translate(0 10)">${limb(78,88,100,93,"#2fbf91")}<path d="M105 38 Q136 92 105 146" stroke="${OL}" stroke-width="10" fill="none" stroke-linecap="round"/><path d="M105 38 Q136 92 105 146" stroke="url(#gWood)" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M105 38 V146" stroke="#fff" stroke-width="1.8" opacity=".9"/><path d="M80 93 H116" stroke="#8d6e63" stroke-width="3.5" stroke-linecap="round"/><path d="M114 86 L128 93 L114 100z" fill="#cfd8dc" stroke="${OL}" stroke-width="2.5" stroke-linejoin="round"/><path d="M80 93 l8 -6 M80 93 l8 6" stroke="#ff6b6b" stroke-width="4" stroke-linecap="round"/><circle cx="102" cy="93" r="7" fill="url(#gSkin)" ${O}/></g></g>`),
 };
 const MON_VB="0 0 100 100";
-const MS='<ellipse cx="50" cy="93" rx="30" ry="5" fill="#0004"/>';
-const SLIME=MS+'<path d="M12 90 Q6 42 50 38 Q94 42 88 90 Q50 98 12 90z" fill="#55efc4" stroke="#00b894" stroke-width="3"/><ellipse cx="32" cy="54" rx="9" ry="5" fill="#fff" opacity=".55"/>'+E(38,68,5.5)+E(62,68,5.5)+'<path d="M43 79 q7 7 14 0" stroke="#00805f" stroke-width="3" fill="none" stroke-linecap="round"/>';
-const SKULL=MS+'<path d="M20 54 Q20 14 50 14 Q80 14 80 54 Q80 66 70 68 V86 H30 V68 Q20 66 20 54z" fill="#f5f6fa" stroke="#b2bec3" stroke-width="3"/><ellipse cx="37" cy="50" rx="9" ry="11" fill="#2d3436"/><ellipse cx="63" cy="50" rx="9" ry="11" fill="#2d3436"/><circle cx="37" cy="52" r="3" fill="#ff4757"/><circle cx="63" cy="52" r="3" fill="#ff4757"/><path d="M50 60 l-5 9 h10z" fill="#2d3436"/><path d="M38 76 v10 M46 76 v10 M54 76 v10 M62 76 v10" stroke="#b2bec3" stroke-width="3"/>';
+const MS='<ellipse cx="50" cy="94" rx="32" ry="5" fill="#0005"/>';
+const SLIME=MS+`<path d="M50 34 Q40 22 48 12 Q58 20 50 34z" fill="#4cd964" ${O}/><path d="M10 90 Q4 40 50 38 Q96 40 90 90 Q50 100 10 90z" fill="url(#gMint)" ${O}/><ellipse cx="30" cy="54" rx="10" ry="6" fill="#fff" opacity=".6" transform="rotate(-25 30 54)"/>`+E(36,68,6)+E(64,68,6)+`<ellipse cx="25" cy="78" rx="5" ry="3" fill="#ff8a9a" opacity=".7"/><ellipse cx="75" cy="78" rx="5" ry="3" fill="#ff8a9a" opacity=".7"/><path d="M43 79 q7 7 14 0" stroke="#0a7a5a" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+const SKULL=MS+`<path d="M18 54 Q18 12 50 12 Q82 12 82 54 Q82 68 70 70 V88 H30 V70 Q18 68 18 54z" fill="url(#gBone)" ${O}/><ellipse cx="36" cy="50" rx="10" ry="12" fill="${OL}"/><ellipse cx="64" cy="50" rx="10" ry="12" fill="${OL}"/><circle cx="36" cy="53" r="3.5" fill="#ff4757"/><circle cx="64" cy="53" r="3.5" fill="#ff4757"/><path d="M50 60 l-6 10 h12z" fill="${OL}"/><path d="M38 78 v9 M46 78 v9 M54 78 v9 M62 78 v9" stroke="${OL}" stroke-width="3"/>`;
+const CROWN=`<path d="M30 24 L34 2 L43 15 L50 -4 L57 15 L66 2 L70 24z" fill="url(#gGold)" ${O}/><circle cx="50" cy="14" r="3" fill="#e84393" stroke="${OL}" stroke-width="1.5"/>`;
 const MONS=[
   ()=>svg(MON_VB,SLIME),
-  ()=>svg(MON_VB,MS+'<path d="M34 58 h32 v28 q-16 9 -32 0z" fill="#ffeaa7" stroke="#e1b12c" stroke-width="2.5"/><path d="M8 62 Q8 12 50 12 Q92 12 92 62 Q50 72 8 62z" fill="#e74c3c" stroke="#a93226" stroke-width="3"/><circle cx="28" cy="38" r="9" fill="#fff"/><circle cx="56" cy="27" r="7" fill="#fff"/><circle cx="74" cy="48" r="7" fill="#fff"/>'+E(43,74,4)+E(58,74,4)+'<path d="M45 81 q6 5 12 0" stroke="#a93226" stroke-width="2.5" fill="none" stroke-linecap="round"/>'),
-  ()=>svg(MON_VB,'<path d="M50 52 Q22 14 3 38 Q16 42 13 56 Q26 52 28 66 Q42 60 50 66z" fill="#6c5ce7" stroke="#4834d4" stroke-width="2.5"/><path d="M50 52 Q78 14 97 38 Q84 42 87 56 Q74 52 72 66 Q58 60 50 66z" fill="#6c5ce7" stroke="#4834d4" stroke-width="2.5"/><path d="M34 40 L30 18 L46 34z M66 40 L70 18 L54 34z" fill="#4a3f8a"/><circle cx="50" cy="56" r="21" fill="#4a3f8a" stroke="#2d2566" stroke-width="2.5"/>'+E(42,53,5,"#ff4757")+E(58,53,5,"#ff4757")+'<path d="M43 64 l3 7 3 -7z M51 64 l3 7 3 -7z" fill="#fff"/>'),
-  ()=>svg(MON_VB,MS+'<path d="M26 52 L1 32 L24 66z M74 52 L99 32 L76 66z" fill="#8bc34a" stroke="#558b2f" stroke-width="2.5"/><ellipse cx="50" cy="56" rx="28" ry="28" fill="#a3cb38" stroke="#6ab04c" stroke-width="3"/><path d="M30 42 L45 50 M70 42 L55 50" stroke="#2d3436" stroke-width="4" stroke-linecap="round"/>'+E(39,54,5,"#f9ca24")+E(61,54,5,"#f9ca24")+'<ellipse cx="50" cy="63" rx="5" ry="4" fill="#6ab04c"/><path d="M34 72 Q50 84 66 72z" fill="#2d3436"/><path d="M40 73 v5 M60 73 v5" stroke="#fff" stroke-width="4"/>'),
+  ()=>svg(MON_VB,MS+`<path d="M33 58 h34 v28 q-17 10 -34 0z" fill="#ffeaa7" ${O}/><path d="M6 62 Q6 10 50 10 Q94 10 94 62 Q50 74 6 62z" fill="url(#gRedMon)" ${O}/><circle cx="27" cy="38" r="9" fill="#fff" stroke="${OL}" stroke-width="2.5"/><circle cx="57" cy="26" r="7" fill="#fff" stroke="${OL}" stroke-width="2.5"/><circle cx="76" cy="48" r="7" fill="#fff" stroke="${OL}" stroke-width="2.5"/>`+E(43,74,4.5)+E(58,74,4.5)+`<path d="M45 82 q6 5 12 0" stroke="#a93226" stroke-width="2.5" fill="none" stroke-linecap="round"/>`),
+  ()=>svg(MON_VB,`<path d="M50 54 Q22 10 2 36 Q15 40 12 56 Q26 52 28 68 Q42 62 50 68z" fill="url(#gBat)" ${O}/><path d="M50 54 Q78 10 98 36 Q85 40 88 56 Q74 52 72 68 Q58 62 50 68z" fill="url(#gBat)" ${O}/><path d="M33 42 L28 14 L47 34z M67 42 L72 14 L53 34z" fill="#5a45c9" ${O}/><circle cx="50" cy="58" r="22" fill="#5a45c9" ${O}/><ellipse cx="50" cy="62" rx="12" ry="10" fill="#8d7bff"/>`+E(41,54,5.5,"#ff4757")+E(59,54,5.5,"#ff4757")+`<path d="M43 66 l3 8 3 -8z M51 66 l3 8 3 -8z" fill="#fff" stroke="${OL}" stroke-width="1.5"/>`),
+  ()=>svg(MON_VB,MS+`<path d="M26 52 L0 30 L24 68z M74 52 L100 30 L76 68z" fill="url(#gGob)" ${O}/><ellipse cx="50" cy="56" rx="29" ry="29" fill="url(#gGob)" ${O}/><path d="M28 42 L45 50 M72 42 L55 50" stroke="${OL}" stroke-width="4.5" stroke-linecap="round"/>`+E(39,55,5.5,"#ffd32a")+E(61,55,5.5,"#ffd32a")+`<ellipse cx="50" cy="64" rx="5" ry="4" fill="#5a9a2a"/><path d="M33 72 Q50 86 67 72z" fill="${OL}"/><path d="M39 73 v6 M61 73 v6" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/>`),
   ()=>svg(MON_VB,SKULL),
-  ()=>svg(MON_VB,'<path d="M22 92 V46 Q22 10 50 10 Q78 10 78 46 V92 L68 82 L59 92 L50 82 L41 92 L32 82z" fill="#f1f2f6" stroke="#ced6e0" stroke-width="3" opacity=".96"/>'+E(40,44,6,"#0984e3")+E(60,44,6,"#0984e3")+'<ellipse cx="50" cy="62" rx="6" ry="8" fill="#2d3436"/><circle cx="32" cy="56" r="4" fill="#ff9aa2" opacity=".6"/><circle cx="68" cy="56" r="4" fill="#ff9aa2" opacity=".6"/>'),
-  ()=>svg(MON_VB,MS+'<path d="M28 42 L20 10 L44 32z M72 42 L80 10 L56 32z" fill="#fdcb6e" stroke="#b7791f" stroke-width="2.5"/><circle cx="50" cy="60" r="30" fill="#ff7675" stroke="#d63031" stroke-width="3"/><circle cx="38" cy="54" r="8" fill="#fff"/><circle cx="62" cy="54" r="8" fill="#fff"/><circle cx="40" cy="56" r="4" fill="#2d3436"/><circle cx="60" cy="56" r="4" fill="#2d3436"/><path d="M28 42 L46 50 M72 42 L54 50" stroke="#2d3436" stroke-width="4" stroke-linecap="round"/><path d="M34 70 Q50 86 66 70z" fill="#2d3436"/><path d="M40 71 l3 6 3 -5 M54 71 l3 5 3 -6" fill="#fff" stroke="#fff" stroke-width="2"/>'),
-  ()=>svg(MON_VB,MS+'<rect x="4" y="38" width="20" height="34" rx="9" fill="#8395a7" stroke="#576574" stroke-width="2.5"/><rect x="76" y="38" width="20" height="34" rx="9" fill="#8395a7" stroke="#576574" stroke-width="2.5"/><rect x="22" y="36" width="56" height="52" rx="10" fill="#95a5b5" stroke="#576574" stroke-width="3"/><rect x="31" y="8" width="38" height="30" rx="9" fill="#a5b4c3" stroke="#576574" stroke-width="3"/><rect x="38" y="19" width="8" height="7" rx="2" fill="#ff9f43"/><rect x="54" y="19" width="8" height="7" rx="2" fill="#ff9f43"/><path d="M42 30 h16" stroke="#576574" stroke-width="3"/><path d="M30 50 l8 10 -4 8 M70 48 l-6 12" stroke="#576574" stroke-width="2.5" fill="none"/><path d="M24 80 Q36 72 44 82 L30 88z" fill="#6ab04c"/>'),
-  ()=>svg(MON_VB,MS+'<path d="M24 60 Q8 40 18 22 Q26 40 38 44z M76 60 Q92 40 82 22 Q74 40 62 44z" fill="#e17055" stroke="#b33939" stroke-width="2"/><ellipse cx="50" cy="60" rx="30" ry="28" fill="#fab1a0" stroke="#e17055" stroke-width="3"/><path d="M36 22 q4 -12 14 -4 q10 -8 14 4 q-14 -4 -28 0z" fill="#e17055"/>'+E(38,56,5.5)+E(62,56,5.5)+'<path d="M32 46 l12 3 M68 46 l-12 3" stroke="#2d3436" stroke-width="3.5" stroke-linecap="round"/><path d="M40 72 Q50 66 60 72" stroke="#b33939" stroke-width="3" fill="none" stroke-linecap="round"/>'),
+  ()=>svg(MON_VB,`<path d="M20 94 V46 Q20 8 50 8 Q80 8 80 46 V94 L70 83 L60 94 L50 83 L40 94 L30 83z" fill="url(#gGhost)" ${O} opacity=".97"/>`+E(40,44,6.5,"#2d8cff")+E(60,44,6.5,"#2d8cff")+`<ellipse cx="50" cy="64" rx="6" ry="8" fill="${OL}"/><ellipse cx="30" cy="57" rx="5" ry="3" fill="#ff8a9a" opacity=".7"/><ellipse cx="70" cy="57" rx="5" ry="3" fill="#ff8a9a" opacity=".7"/>`),
+  ()=>svg(MON_VB,MS+`<path d="M27 42 L18 8 L45 32z M73 42 L82 8 L55 32z" fill="url(#gGold)" ${O}/><circle cx="50" cy="60" r="31" fill="url(#gImp)" ${O}/><circle cx="38" cy="55" r="9" fill="#fff" stroke="${OL}" stroke-width="2.5"/><circle cx="62" cy="55" r="9" fill="#fff" stroke="${OL}" stroke-width="2.5"/><circle cx="40" cy="57" r="4.5" fill="${OL}"/><circle cx="60" cy="57" r="4.5" fill="${OL}"/><path d="M27 42 L46 51 M73 42 L54 51" stroke="${OL}" stroke-width="4.5" stroke-linecap="round"/><path d="M33 71 Q50 88 67 71z" fill="${OL}"/><path d="M40 72 l3 7 3 -6 M54 72 l3 6 3 -7" fill="#fff" stroke="#fff" stroke-width="2"/>`),
+  ()=>svg(MON_VB,MS+`<rect x="2" y="38" width="22" height="36" rx="10" fill="url(#gGray)" ${O}/><rect x="76" y="38" width="22" height="36" rx="10" fill="url(#gGray)" ${O}/><rect x="21" y="36" width="58" height="53" rx="11" fill="url(#gGray)" ${O}/><rect x="30" y="6" width="40" height="32" rx="10" fill="url(#gGray)" ${O}/><rect x="37" y="18" width="9" height="8" rx="2" fill="#ffb142" stroke="${OL}" stroke-width="1.5"/><rect x="54" y="18" width="9" height="8" rx="2" fill="#ffb142" stroke="${OL}" stroke-width="1.5"/><path d="M41 31 h18" stroke="${OL}" stroke-width="3"/><path d="M29 50 l9 11 -4 9 M72 48 l-7 12" stroke="${OL}" stroke-width="2.5" fill="none"/><path d="M23 82 Q36 72 45 84 L30 89z" fill="#5bbf4a" stroke="${OL}" stroke-width="2"/>`),
+  ()=>svg(MON_VB,MS+`<path d="M24 60 Q6 40 18 20 Q26 40 38 44z M76 60 Q94 40 82 20 Q74 40 62 44z" fill="#e0483a" ${O}/><ellipse cx="50" cy="60" rx="31" ry="29" fill="url(#gImp)" ${O}/><path d="M34 22 q4 -13 16 -4 q12 -9 16 4 q-16 -5 -32 0z" fill="#e0483a" ${O}/>`+E(37,56,6)+E(63,56,6)+`<path d="M30 45 l13 4 M70 45 l-13 4" stroke="${OL}" stroke-width="4" stroke-linecap="round"/><path d="M40 72 Q50 65 60 72" stroke="#8a1f16" stroke-width="3" fill="none" stroke-linecap="round"/>`),
 ];
-const CROWN='<path d="M32 22 L36 4 L44 16 L50 0 L56 16 L64 4 L68 22z" fill="#fdcb6e" stroke="#b7791f" stroke-width="2.5"/><circle cx="50" cy="12" r="2.5" fill="#e84393"/>';
 const BOSSES=[
-  ()=>svg("0 -6 100 106",MS+SLIME.replace(MS,"").replace(/M12 90/,"M12 90")+'<g transform="translate(0 22)">'+CROWN+'</g>'),
-  ()=>svg(MON_VB,MS+'<path d="M30 58 L2 24 L14 62z M70 58 L98 24 L86 62z" fill="#c0392b" stroke="#7f1d1d" stroke-width="2.5"/><ellipse cx="50" cy="68" rx="28" ry="24" fill="#e17055" stroke="#b33939" stroke-width="3"/><ellipse cx="50" cy="74" rx="16" ry="16" fill="#ffeaa7"/><path d="M38 70 h24 M38 77 h24 M40 84 h20" stroke="#fdcb6e" stroke-width="2"/><circle cx="50" cy="36" r="22" fill="#e17055" stroke="#b33939" stroke-width="3"/><path d="M34 22 L26 2 L44 16z M66 22 L74 2 L56 16z" fill="#fdcb6e" stroke="#b7791f" stroke-width="2.5"/><ellipse cx="50" cy="46" rx="13" ry="9" fill="#fab1a0" stroke="#b33939" stroke-width="2"/><circle cx="45" cy="45" r="2" fill="#7f1d1d"/><circle cx="55" cy="45" r="2" fill="#7f1d1d"/><ellipse cx="40" cy="32" rx="5" ry="6" fill="#fff"/><ellipse cx="60" cy="32" rx="5" ry="6" fill="#fff"/><ellipse cx="41" cy="33" rx="2" ry="5" fill="#2d3436"/><ellipse cx="59" cy="33" rx="2" ry="5" fill="#2d3436"/><path d="M40 52 l3 6 3 -5 M54 52 l3 5 3 -6" fill="#fff"/>'),
-  ()=>svg(MON_VB,MS+'<path d="M24 46 Q4 30 18 4 Q18 24 34 34z M76 46 Q96 30 82 4 Q82 24 66 34z" fill="#fdcb6e" stroke="#b7791f" stroke-width="2.5"/><circle cx="50" cy="56" r="34" fill="#5f27cd" stroke="#341f97" stroke-width="3"/><path d="M26 44 L46 54 M74 44 L54 54" stroke="#1e1252" stroke-width="5" stroke-linecap="round"/><ellipse cx="38" cy="56" rx="7" ry="6" fill="#ff4757"/><ellipse cx="62" cy="56" rx="7" ry="6" fill="#ff4757"/><circle cx="38" cy="56" r="2.5" fill="#1e1252"/><circle cx="62" cy="56" r="2.5" fill="#1e1252"/><path d="M28 72 Q50 94 72 72 Q50 78 28 72z" fill="#1e1252"/><path d="M36 74 l4 9 4 -8 M56 74 l4 8 4 -9" fill="#fff"/><circle cx="50" cy="66" r="3" fill="#341f97"/>'),
-  ()=>svg("0 -6 100 106",MS+SKULL.replace(MS,"").replace(/#ff4757/g,"#ff9f1a")+'<g transform="translate(0 -2) scale(1)">'+CROWN.replace(/fill="#e84393"/,'fill="#ff4757"')+'</g>'),
+  ()=>svg("0 -8 100 108",SLIME+`<g transform="translate(0 12)">${CROWN}</g>`),
+  ()=>svg(MON_VB,MS+`<path d="M30 60 L0 22 L14 64z M70 60 L100 22 L86 64z" fill="#b83227" ${O}/><ellipse cx="50" cy="68" rx="29" ry="25" fill="url(#gDragon)" ${O}/><ellipse cx="50" cy="75" rx="17" ry="16" fill="url(#gBellyY)" stroke="${OL}" stroke-width="2.5"/><path d="M38 70 h24 M38 77 h24 M40 84 h20" stroke="#e8a92a" stroke-width="2"/><circle cx="50" cy="36" r="23" fill="url(#gDragon)" ${O}/><path d="M33 22 L24 0 L44 16z M67 22 L76 0 L56 16z" fill="url(#gGold)" ${O}/><ellipse cx="50" cy="47" rx="14" ry="10" fill="#ffb59e" stroke="${OL}" stroke-width="2.5"/><circle cx="45" cy="46" r="2" fill="${OL}"/><circle cx="55" cy="46" r="2" fill="${OL}"/><ellipse cx="40" cy="32" rx="6" ry="7" fill="#fff" stroke="${OL}" stroke-width="2.5"/><ellipse cx="60" cy="32" rx="6" ry="7" fill="#fff" stroke="${OL}" stroke-width="2.5"/><ellipse cx="41" cy="33" rx="2" ry="5.5" fill="${OL}"/><ellipse cx="59" cy="33" rx="2" ry="5.5" fill="${OL}"/><path d="M40 53 l3 6 3 -5 M54 53 l3 5 3 -6" fill="#fff" stroke="${OL}" stroke-width="1.5"/>`),
+  ()=>svg(MON_VB,MS+`<path d="M24 46 Q2 30 16 2 Q16 24 34 34z M76 46 Q98 30 84 2 Q84 24 66 34z" fill="url(#gGold)" ${O}/><circle cx="50" cy="57" r="35" fill="url(#gDemon)" ${O}/><path d="M25 44 L46 54 M75 44 L54 54" stroke="#1e1252" stroke-width="5.5" stroke-linecap="round"/><ellipse cx="37" cy="57" rx="8" ry="7" fill="#ff4757" stroke="${OL}" stroke-width="2.5"/><ellipse cx="63" cy="57" rx="8" ry="7" fill="#ff4757" stroke="${OL}" stroke-width="2.5"/><circle cx="37" cy="57" r="3" fill="${OL}"/><circle cx="63" cy="57" r="3" fill="${OL}"/><path d="M27 73 Q50 96 73 73 Q50 80 27 73z" fill="#1e1252" stroke="${OL}" stroke-width="2.5"/><path d="M36 76 l4 10 4 -9 M56 76 l4 9 4 -10" fill="#fff" stroke="${OL}" stroke-width="1.5"/>`),
+  ()=>svg("0 -8 100 108",SKULL.replace(/#ff4757/g,"#ffa502")+`<g transform="translate(0 2)">${CROWN}</g>`),
 ];
 const THEMES=[
   {a:"#74b9ff",b:"#dff9fb",h1:"#7bed9f",h2:"#2ed573",d:"sun",t:"#218c53"},
@@ -357,6 +396,7 @@ function setHeroArt(){$("hero").innerHTML=HEROES[S.cls||"war"]()}
 
 /* ================= 전투 ================= */
 const $=id=>document.getElementById(id);
+let quiet0=true;
 function spawn(){
   isBoss=S.kill===KILLS_PER_STAGE-1;
   const s=S.stage;
@@ -367,6 +407,7 @@ function spawn(){
   mon.innerHTML=isBoss?BOSSES[Math.floor((s-1)/10)%BOSSES.length]():MONS[(zone*3+S.kill%3)%MONS.length]();
   mon.className="emo"+(isBoss?" boss":"");
   monT=0;monId++;
+  if(!quiet0)$("monMv").animate([{transform:"scale(.2)",opacity:0},{transform:"scale(1.12)",opacity:1,offset:.7},{transform:"none"}],{duration:320});
   renderScene(Math.floor((s-1)/10));
   renderProgress();
 }
@@ -388,20 +429,21 @@ function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");cle
 
 function dealDamage(d,crit,quiet){
   monHp-=d;
-  if(!quiet){float((crit?"💥":"")+fmt(d),crit?"crit":"","monBox");anim("mon","hurt")}
+  if(!quiet){float((crit?"💥":"")+fmt(d),crit?"crit":"","monBox");monHurt(crit)}
   $("hpM").style.width=Math.max(0,monHp/monMax*100)+"%";
   if(monHp<=0)killMonster(quiet);
 }
 function heroHit(quiet){
-  const c=gc(),crit=Math.random()<c.crit;
-  if(!quiet)anim("hero","atk-h");
-  dealDamage(c.atk*(crit?2:1),crit,quiet);
+  const c=gc(),crit=Math.random()<c.crit,d=c.atk*(crit?2:1);
+  if(quiet){dealDamage(d,crit,true);return}
+  const id=monId,delay=playAttack(Math.min(0.34,0.85/c.aspd));
+  setTimeout(()=>{if(monId===id&&!paused)dealDamage(d,crit,false)},delay);
 }
 function killMonster(quiet){
   const c=gc();
   const g=goldFor(S.stage)*(isBoss?5:1)*c.goldMul;
   S.gold+=g;gpsAcc+=g;S.totalKills++;
-  if(!quiet)float("+"+fmt(g),"gold","monBox");
+  if(!quiet){float("+"+fmt(g),"gold","monBox");deathFx()}
   hp=Math.min(c.maxHp,hp+c.maxHp*0.15);
   if(Math.random()<0.03){S.gems++;if(!quiet)toast("💎 보석 발견!")}
   if(isBoss){
@@ -425,6 +467,7 @@ function useSkill(quiet){
   skillT=k.cd;
   if(!quiet){const b=$("bolt");b.style.background=k.color;b.classList.remove("go");void b.offsetWidth;b.classList.add("go")}
   const id=monId;
+  if(!quiet)skillFx();
   if(S.cls==="war"){
     const h=c.maxHp*0.2;hp=Math.min(c.maxHp,hp+h);
     if(!quiet)float("+"+fmt(h),"heal","heroBox");
@@ -439,13 +482,97 @@ function step(dt,quiet){
   monT+=dt;
   while(monT>=1.2){
     monT-=1.2;hp-=monAtk;
-    if(!quiet){anim("hero","hurt");float("-"+fmt(monAtk),"hurtn","heroBox")}
+    if(!quiet)monAttackFx(monAtk);
     if(hp<=0){heroDie();break}
   }
   if(skillT>0)skillT=Math.max(0,skillT-dt);
   if(S.auto&&skillT<=0)useSkill(quiet);
   gpsT+=dt;
   if(gpsT>=5){S.gps=S.gps?S.gps*0.7+(gpsAcc/gpsT)*0.3:gpsAcc/gpsT;gpsAcc=0;gpsT=0}
+}
+
+
+/* ================= 공격 연출 ================= */
+function rel(el){const b=$("battle").getBoundingClientRect(),r=el.getBoundingClientRect();return{x:r.left-b.left,y:r.top-b.top,w:r.width,h:r.height,cx:r.left-b.left+r.width/2,cy:r.top-b.top+r.height/2}}
+function fx(html,cx,cy,w,h,frames,opt){
+  const bt=$("battle");if(bt.querySelectorAll(".fx").length>40)return;
+  const d=document.createElement("div");d.className="fx";
+  d.style.cssText=`left:${cx-w/2}px;top:${cy-h/2}px;width:${w}px;height:${h}px`;
+  d.innerHTML=html;bt.appendChild(d);
+  const a=d.animate(frames,opt);a.onfinish=()=>d.remove();return d;
+}
+const FX={
+  spark:'<svg viewBox="-50 -50 100 100"><path d="M0 -46 L10 -14 L44 -20 L18 2 L36 34 L2 18 L-14 44 L-14 12 L-46 8 L-18 -6 L-28 -38 L-4 -20z" fill="#fff3a0" stroke="#ff8c42" stroke-width="5" stroke-linejoin="round"/></svg>',
+  slash:'<svg viewBox="0 0 100 100"><path d="M82 6 Q96 52 30 96 Q64 52 82 6z" fill="#fff" stroke="#8fd3ff" stroke-width="3" stroke-linejoin="round"/></svg>',
+  orb:'<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="#7fe0ff" opacity=".35"/><circle cx="20" cy="20" r="11" fill="url(#gOrb)" stroke="#2b1d3a" stroke-width="3"/><circle cx="16" cy="16" r="3" fill="#fff"/></svg>',
+  arrow:'<svg viewBox="0 0 60 16"><path d="M4 8 H50" stroke="#8d6e63" stroke-width="3.5" stroke-linecap="round"/><path d="M48 1.5 L60 8 L48 14.5z" fill="#cfd8dc" stroke="#2b1d3a" stroke-width="2.5" stroke-linejoin="round"/><path d="M4 8 l8 -6 M4 8 l8 6" stroke="#ff6b6b" stroke-width="4" stroke-linecap="round"/></svg>',
+  bolt:'<svg viewBox="0 0 60 200"><path d="M36 0 L10 90 L30 90 L16 200 L52 70 L32 70 L48 0z" fill="#fff7ae" stroke="#a78bfa" stroke-width="5" stroke-linejoin="round"/></svg>',
+};
+function dashDist(){const h=rel($("hero")),m=rel($("mon"));return Math.max(20,Math.min(120,m.x-(h.x+h.w)+46))}
+function playAttack(D){
+  const dur=D*1000,h=rel($("hero")),m=rel($("mon")),wp=$("hero").querySelector(".wp"),mv=$("heroMv");
+  const ox=h.x+h.w*0.78,oy=h.y+h.h*0.62;
+  if(S.cls==="war"){
+    const dd=dashDist()+"px";
+    mv.animate([{transform:"none"},{transform:`translateX(${dd}) rotate(5deg)`,offset:.4},{transform:`translateX(${dd}) rotate(5deg)`,offset:.62},{transform:"none"}],{duration:dur,easing:"ease-out"});
+    wp&&wp.animate([{transform:"rotate(-40deg)"},{transform:"rotate(-40deg)",offset:.15},{transform:"rotate(95deg)",offset:.42},{transform:"rotate(95deg)",offset:.62},{transform:"rotate(0deg)"}],{duration:dur});
+    setTimeout(()=>{const mm=rel($("mon"));fx(FX.slash,mm.cx-6,mm.cy,80,80,[{transform:"scale(.4) rotate(-20deg)",opacity:1},{transform:"scale(1.15) rotate(10deg)",opacity:0}],{duration:240,easing:"ease-out"})},dur*.38);
+    return dur*.4;
+  }
+  mv.animate([{transform:"none"},{transform:"translateX(-8px) rotate(-3deg)",offset:.3},{transform:"none"}],{duration:dur});
+  const send=(html,w,hh,sx,sy,ms)=>{
+    const mm=rel($("mon")),dx=mm.cx-sx,dy=mm.cy-sy,a=Math.atan2(dy,dx);
+    fx(html,sx,sy,w,hh,[{transform:`translate(0,0) rotate(${a}rad)`},{transform:`translate(${dx}px,${dy}px) rotate(${a}rad)`}],{duration:ms,easing:"linear"});
+  };
+  if(S.cls==="mage"){
+    wp&&wp.animate([{transform:"rotate(0)"},{transform:"rotate(32deg)",offset:.35},{transform:"rotate(0)"}],{duration:dur});
+    const sx=h.x+h.w*0.76,sy=h.y+h.h*0.2;
+    setTimeout(()=>send(FX.orb,30,30,sx,sy,190),dur*.3);
+    return dur*.3+190;
+  }
+  wp&&wp.animate([{transform:"translateX(0)"},{transform:"translateX(-7px)",offset:.3},{transform:"translateX(3px)",offset:.45},{transform:"translateX(0)"}],{duration:dur});
+  setTimeout(()=>send(FX.arrow,46,13,ox+8,oy-8,170),dur*.4);
+  return dur*.4+170;
+}
+function monHurt(crit){
+  const mv=$("monMv"),m=rel($("mon"));
+  mv.animate([{transform:"none"},{transform:`translateX(${crit?22:12}px) scale(.92,1.08)`,offset:.35},{transform:"none"}],{duration:200,easing:"ease-out"});
+  $("mon").animate([{filter:"brightness(2.6) saturate(.2)"},{filter:"brightness(1)"}],{duration:200});
+  fx(FX.spark,m.cx+(Math.random()*16-8),m.cy+(Math.random()*16-8),crit?70:46,crit?70:46,[{transform:"scale(.3) rotate(0)",opacity:1},{transform:"scale(1.1) rotate(25deg)",opacity:0}],{duration:240,easing:"ease-out"});
+}
+function monAttackFx(dmg){
+  const mv=$("monMv"),dd=Math.min(100,dashDist()+10)+"px";
+  mv.animate([{transform:"none"},{transform:`translateX(-${dd}) scale(1.08)`,offset:.4},{transform:`translateX(-${dd}) scale(1.08)`,offset:.55},{transform:"none"}],{duration:380,easing:"ease-out"});
+  setTimeout(()=>{
+    $("heroMv").animate([{transform:"none"},{transform:"translateX(-14px) rotate(-6deg)",offset:.3},{transform:"translateX(3px)",offset:.6},{transform:"none"}],{duration:240});
+    $("hero").animate([{filter:"brightness(2) sepia(1) saturate(6) hue-rotate(-30deg)"},{filter:"brightness(1)"}],{duration:260});
+    const h=rel($("hero"));
+    fx(FX.spark,h.cx+14,h.cy,50,50,[{transform:"scale(.3)",opacity:1},{transform:"scale(1.1) rotate(25deg)",opacity:0}],{duration:240});
+    float("-"+fmt(dmg),"hurtn","heroBox");
+  },150);
+}
+function deathFx(){
+  const m=$("mon"),r=rel(m),g=m.cloneNode(true);g.removeAttribute("id");
+  g.style.cssText=`position:absolute;left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px;margin:0;animation:none;z-index:3;pointer-events:none`;
+  $("battle").appendChild(g);
+  g.animate([{transform:"none",opacity:1,filter:"brightness(2.5)"},{transform:"translateY(-34px) scale(1.25) rotate(18deg)",opacity:0,filter:"brightness(3)"}],{duration:480,easing:"ease-out"}).onfinish=()=>g.remove();
+  for(let i=0;i<4;i++)fx("🪙",r.cx,r.cy,24,24,[{transform:"translate(0,0) scale(.6)",opacity:1},{transform:`translate(${(i-1.5)*26}px,${-50-Math.random()*30}px) scale(1.1)`,opacity:0}],{duration:600,easing:"ease-out",delay:i*40});
+}
+function skillFx(){
+  const m=rel($("mon")),h=rel($("hero"));
+  const shake=()=>$("battle").animate([{transform:"translate(0,0)"},{transform:"translate(-5px,3px)"},{transform:"translate(5px,-3px)"},{transform:"translate(-3px,2px)"},{transform:"none"}],{duration:280});
+  if(S.cls==="war"){
+    $("heroMv").animate([{transform:"none"},{transform:`translateX(${dashDist()}px) scale(1.12)`,offset:.35},{transform:`translateX(${dashDist()}px) scale(1.12)`,offset:.7},{transform:"none"}],{duration:520,easing:"ease-out"});
+    const wp=$("hero").querySelector(".wp");wp&&wp.animate([{transform:"rotate(-70deg)"},{transform:"rotate(110deg)",offset:.4},{transform:"rotate(110deg)",offset:.7},{transform:"rotate(0)"}],{duration:520});
+    setTimeout(()=>{fx(FX.slash,m.cx-10,m.cy,170,170,[{transform:"scale(.4) rotate(-25deg)",opacity:1},{transform:"scale(1.2) rotate(10deg)",opacity:0}],{duration:360,easing:"ease-out"});shake()},180);
+  }else if(S.cls==="mage"){
+    $("hero").querySelector(".wp")?.animate([{transform:"rotate(0)"},{transform:"rotate(-25deg)",offset:.4},{transform:"rotate(0)"}],{duration:500});
+    setTimeout(()=>{fx(FX.bolt,m.cx,m.cy-70,46,170,[{transform:"scaleY(.2)",opacity:1,transformOrigin:"50% 0"},{transform:"scaleY(1)",opacity:1,offset:.25},{transform:"scaleY(1)",opacity:0}],{duration:420});shake()},150);
+  }else{
+    for(let i=0;i<4;i++)setTimeout(()=>{const mm=rel($("mon")),x=mm.cx+(i-1.5)*14;
+      fx(FX.arrow,x,mm.cy-130,52,14,[{transform:"rotate(90deg) translateX(0)"},{transform:"rotate(90deg) translateX(130px)"}],{duration:200,easing:"ease-in"});
+      setTimeout(()=>{const q=rel($("mon"));fx(FX.spark,x,q.cy+6,44,44,[{transform:"scale(.3)",opacity:1},{transform:"scale(1)",opacity:0}],{duration:200})},190)},i*90);
+  }
 }
 
 /* ================= UI 구성 ================= */
@@ -603,7 +730,7 @@ function offline(){
 
 /* ================= 시작 ================= */
 buildUp();buildWeapons();buildPets();
-hp=gc().maxHp;setHeroArt();spawn();
+hp=gc().maxHp;setHeroArt();spawn();quiet0=false;
 offline();refreshUI();
 if(S.cls)$("clsIc").innerHTML=HEROES[S.cls]();
 else chooseClass();
@@ -617,7 +744,7 @@ function loop(t){
 }
 requestAnimationFrame(loop);
 // 테스트/디버그용: 화면 없이 시간 빨리 감기
-window.__fast=(sec,auto)=>{if(!S.cls)S.cls='war';for(let i=0;i<sec*10;i++){step(0.1,true);if(auto)autoBuy()}refreshUI()};
+window.__fast=(sec,auto)=>{quiet0=true;setTimeout(()=>quiet0=false,0);if(!S.cls)S.cls='war';for(let i=0;i<sec*10;i++){step(0.1,true);if(auto)autoBuy()}refreshUI()};
 function autoBuy(){for(const k of["atk","hp","spd","crit"]){let g=0;while(g++<50&&buyAmtOne(k));}}
 function buyAmtOne(k){if(S.lv[k]>=UP[k].max)return false;const c=upCost(k,S.lv[k]);if(S.gold<c)return false;S.gold-=c;S.lv[k]++;dirty=true;return true}
 window.__S=()=>S;
