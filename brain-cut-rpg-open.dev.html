@@ -556,7 +556,7 @@ function drawMM(){const c=mmc,W=mmBig?260:112,h=W/2,S=.7;c.clearRect(0,0,W,W);c.
  c.translate(h,h);c.rotate(Math.PI-hero.rotation.y);c.fillStyle='#fff';c.beginPath();c.moveTo(0,-6);c.lineTo(4.5,5);c.lineTo(0,3);c.lineTo(-4.5,5);c.closePath();c.fill();c.restore()}
 
 /* ================= GAME STATE ================= */
-const G={lv:1,xp:0,gold:40,hp:100,max:100,atk:8,def:0,thr:5,joke:.3,guardPow:.5,boom:0,pots:2,jelly:0,herb:0,wl:0,al:0,job:'none',jb:{max:0,atk:0,def:0,thr:0,joke:0},wt:{club:0,sword:0,staff:0,bow:0,mic:0},hintHall:false,wps:{village:true}};
+const G={lv:1,xp:0,gold:40,hp:100,max:100,atk:8,def:0,thr:5,joke:.3,guardPow:.5,boom:0,pots:2,jelly:0,herb:0,wl:0,al:0,job:'none',jb:{max:0,atk:0,def:0,thr:0,joke:0},wt:{club:0,sword:0,staff:0,bow:0,mic:0,dagger:0,mace:0,fist:0,axe:0},hintHall:false,wps:{village:true}};
 const WP={club:[{n:'나무몽둥이',a:2,c:0},{n:'쇠몽둥이',a:9,c:100},{n:'대못 몽둥이',a:18,c:450}],
  sword:[{n:'연습용 철검',a:8,c:0},{n:'강철검',a:20,c:500},{n:'기사의 검',a:36,c:1500},{n:'용사의 검',a:60,c:4000}],
  staff:[{n:'낡은 지팡이',a:8,c:0},{n:'마법 지팡이',a:20,c:500},{n:'수정 지팡이',a:36,c:1500},{n:'대마법사의 지팡이',a:60,c:4000}],
@@ -607,10 +607,10 @@ const JOBS=[{k:'warrior',i:'🗡️',n:'전사',d:'HP +40, 방어 +2<br>넓은 �
  {k:'cleric',i:'🔨',n:'성직자',d:'HP +25, 타격 시 회복<br>방어 회복 2.5배, 물약 강화',b:{max:25}},
  {k:'monk',i:'🥊',n:'격투가',d:'HP +20, 방어 +1<br>양손 2연타, 흡혈',b:{max:20,def:1}},
  {k:'berserker',i:'🪓',n:'광전사',d:'공격력 +5, HP +20<br>느리지만 강타, 체력 낮을수록 강함',b:{atk:5,max:20}}];
-const curWeapon=()=>{const k=JOBKIND[G.job];return WP[k][G.wt[k]]};
+const curWeapon=()=>{const k=JOBKIND[G.job]||'club';const t=Math.min(Math.max(G.wt[k]|0,0),WP[k].length-1);return WP[k][t]};
 const ATK=()=>G.atk+curWeapon().a;
 function applyJob(k){const o=G.jb;G.max-=o.max;G.atk-=o.atk;G.def-=o.def;G.thr-=o.thr;G.joke-=o.joke;const j=JOBS.find(x=>x.k===k),b=Object.assign({max:0,atk:0,def:0,thr:0,joke:0},j.b);
- if(G.thr+b.thr<3)b.thr=3-G.thr;G.max+=b.max;G.atk+=b.atk;G.def+=b.def;G.thr+=b.thr;G.joke+=b.joke;G.jb=b;G.job=k;G.hp=Math.min(G.max,G.hp+b.max);G.wt[JOBKIND[k]]=Math.max(G.wt[JOBKIND[k]],0);setWeapon(JOBKIND[k],G.wt[JOBKIND[k]]);setOutfit(k)}
+ if(G.thr+b.thr<3)b.thr=3-G.thr;G.max+=b.max;G.atk+=b.atk;G.def+=b.def;G.thr+=b.thr;G.joke+=b.joke;G.jb=b;G.job=k;G.hp=Math.min(G.max,G.hp+b.max);G.wt[JOBKIND[k]]=Math.max(G.wt[JOBKIND[k]]|0,0);setWeapon(JOBKIND[k],G.wt[JOBKIND[k]]);setOutfit(k)}
 function setWeapon(kind,tier){const sw=H.sword;while(sw.children.length)sw.remove(sw.children[0]);const tc=[0xb98a4a,0x9fb3ff,0xffd04d,0xff7be5][Math.min(tier,3)],iron=P(0x8a8a9a,{metalness:1,roughness:.3}),wood=M(0x8a5a2a,{roughness:.8});
  mk(new THREE.SphereGeometry(.1,10,8),iron,0,0,0,sw);
  if(kind==='club'){const b=mk(new THREE.CylinderGeometry(.15,.06,1.2,10),tier?iron:wood,0,.65,0,sw);mk(new THREE.CylinderGeometry(.06,.06,.3,8),wood,0,.1,0,sw);if(tier){for(let i=0;i<8;i++){const a=i*.9;mk(new THREE.ConeGeometry(.035,.12,5),iron,Math.cos(a)*.14,.7+i*.07,Math.sin(a)*.14,sw).rotation.z=-Math.cos(a)*1.4}}}
@@ -1080,7 +1080,7 @@ const hashS=t=>{let h=5381;for(const c of t)h=((h<<5)+h+c.charCodeAt(0))>>>0;ret
 function listProfiles(){const o=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(SAVEK))o.push(k.slice(SAVEK.length))}}catch(e){}return o}
 function loadProfile(n){try{return JSON.parse(localStorage.getItem(SAVEK+n))}catch(e){return null}}
 function saveGame(){if(!who||mode==='title')return;const d={v:1,name:who,pin:pinHash,G,qi,qstate,qprog,SQ,hallFound,cleared,pos:[hero.position.x,hero.position.z],tod,tutDone:TUT.done,boss:wmons.filter(m=>m.t.boss&&!m.alive).map(m=>m.t.i),chests:props.map(q=>q.kind==='chest'&&!q.alive?1:0),t:Date.now()};try{localStorage.setItem(SAVEK+who,JSON.stringify(d));localStorage.setItem(SAVEK+'__last','1')}catch(e){}}
-function applySave(d){for(const k in d.G)G[k]=d.G[k];qi=d.qi;qstate=d.qstate;qprog=d.qprog;Object.assign(SQ,d.SQ);hallFound=true;cleared=!!d.cleared;tod=d.tod??tod;TUT.done=!!d.tutDone;
+function applySave(d){for(const k in d.G)G[k]=d.G[k];G.wt=Object.assign({club:0,sword:0,staff:0,bow:0,mic:0,dagger:0,mace:0,fist:0,axe:0},G.wt);G.wps=Object.assign({village:true},G.wps);if(!JOBKIND[G.job])G.job='none';qi=d.qi;qstate=d.qstate;qprog=d.qprog;Object.assign(SQ,d.SQ);hallFound=true;cleared=!!d.cleared;tod=d.tod??tod;TUT.done=!!d.tutDone;
  (d.boss||[]).forEach(i=>wmons.filter(m=>m.t.i===i).forEach(m=>{m.alive=false;m.g.visible=false;m.dead=1e9}));
  (d.chests||[]).forEach((v,i)=>{const q=props[i];if(v&&q){q.alive=false;q.g.traverse(o=>{if(o.isSprite)o.visible=false})}});
  let[x,z]=d.pos||[-4,2];if(!walkable(x,z)||Math.hypot(x,z)>160){x=-4;z=2}hero.position.set(x,hgt(x,z),z);groundY=hgt(x,z);hero.rotation.set(0,0,0);
@@ -1168,7 +1168,7 @@ worldG.visible=true;camSmooth.set(-4+Math.sin(camYaw)*6,3,2+Math.cos(camYaw)*6);
 updateQuestUI();updateEnv(.01);
 frame();title();
 const ld=$('#load');ld.style.opacity=0;setTimeout(()=>ld.remove(),700);
-window.__game={setOutfit,setWeapon,hero,camera,G,PA,doAction,tp(x,z){hero.position.set(x,hgt(x,z),z)},talk,chief,get mode(){return mode},get qi(){return qi},get qprog(){return qprog},get qstate(){return qstate},get wmons(){return wmons},get tod(){return tod},setTod(v){tod=v},interact,get nearTarget(){return nearTarget}};
+window.__game={applyJob,setOutfit,setWeapon,hero,camera,G,PA,doAction,tp(x,z){hero.position.set(x,hgt(x,z),z)},talk,chief,get mode(){return mode},get qi(){return qi},get qprog(){return qprog},get qstate(){return qstate},get wmons(){return wmons},get tod(){return tod},setTod(v){tod=v},interact,get nearTarget(){return nearTarget}};
 </script>
 </body>
 </html>
