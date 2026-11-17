@@ -31,6 +31,9 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 #hero{animation:bob 1s ease-in-out infinite}
 #mon{animation:bob 1.3s ease-in-out infinite;transform-origin:bottom}
 #mon.boss{width:132px;height:132px;margin-left:-42px}
+#monName{width:150px;margin-left:-25px;font-size:11px;font-weight:900;text-shadow:0 1px 3px #000,0 0 3px #000;white-space:nowrap;margin-bottom:2px;text-align:center}
+#monName span{color:#ffd36a;font-weight:800}
+#monName .bt{background:#ff4757;border-radius:4px;padding:0 4px;font-size:9.5px;font-style:normal}
 @keyframes bob{50%{transform:translateY(-6px)}}
 .atk-h{animation:lunge .18s}
 @keyframes lunge{40%{transform:translateX(34px) rotate(8deg)}}
@@ -165,6 +168,26 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 <linearGradient id="gDemon" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9566fa"/><stop offset="1" stop-color="#43209f"/></linearGradient>
 <linearGradient id="gBellyY" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3bd"/><stop offset="1" stop-color="#ffd166"/></linearGradient>
 <linearGradient id="gDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6e6896"/><stop offset="1" stop-color="#2b2745"/></linearGradient>
+<linearGradient id="gIce" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#b6e2ff"/></linearGradient>
+<linearGradient id="gWolf" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1f4f9"/><stop offset="1" stop-color="#7a879c"/></linearGradient>
+<linearGradient id="gScorp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb870"/><stop offset="1" stop-color="#b2501a"/></linearGradient>
+<linearGradient id="gCact" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86e78f"/><stop offset="1" stop-color="#2a9648"/></linearGradient>
+<linearGradient id="gMummy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6edd3"/><stop offset="1" stop-color="#b8a679"/></linearGradient>
+<linearGradient id="gSpider" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a55a0"/><stop offset="1" stop-color="#2a1840"/></linearGradient>
+<linearGradient id="gEye" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dcb0ff"/><stop offset="1" stop-color="#7438cf"/></linearGradient>
+<linearGradient id="gLiz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a4e872"/><stop offset="1" stop-color="#3b8c2e"/></linearGradient>
+<linearGradient id="gFlame" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff4a1c"/><stop offset="1" stop-color="#ffb52e"/></linearGradient>
+<linearGradient id="gCerb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#74514a"/><stop offset="1" stop-color="#2a1a1a"/></linearGradient>
+<linearGradient id="gBlack" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b6078"/><stop offset="1" stop-color="#12121c"/></linearGradient>
+<linearGradient id="gReap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#51437a"/><stop offset="1" stop-color="#150f22"/></linearGradient>
+<linearGradient id="gVamp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf6fb"/><stop offset="1" stop-color="#cdc0d3"/></linearGradient>
+<linearGradient id="gThunder" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8672d6"/><stop offset="1" stop-color="#2a2060"/></linearGradient>
+<linearGradient id="gVoid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6644b4"/><stop offset="1" stop-color="#0c0524"/></linearGradient>
+<linearGradient id="gShadow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#43305f"/><stop offset="1" stop-color="#07040d"/></linearGradient>
+<linearGradient id="gYeti" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#a6d2ee"/></linearGradient>
+<linearGradient id="gMino" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aa6a3f"/><stop offset="1" stop-color="#4a2813"/></linearGradient>
+<linearGradient id="gHyd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8b3fd0"/><stop offset="1" stop-color="#2a0f4a"/></linearGradient>
+<linearGradient id="gDragonD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d4452e"/><stop offset="1" stop-color="#5e140e"/></linearGradient>
 <radialGradient id="gOrb"><stop offset="0" stop-color="#f0fdff"/><stop offset="1" stop-color="#2fb4f5"/></radialGradient>
 </defs></svg>
 <div id="app">
@@ -187,6 +210,7 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
       <div id="pets"></div>
     </div>
     <div class="unit" id="monBox">
+      <div id="monName"></div>
       <div class="bar"><i id="hpM"></i></div>
       <div class="mv" id="monMv"><div class="emo" id="mon"></div></div>
     </div>
@@ -477,6 +501,129 @@ const BOSSES=[
   ()=>svg(MON_VB,MS+`<path d="M24 46 Q2 30 16 2 Q16 24 34 34z M76 46 Q98 30 84 2 Q84 24 66 34z" fill="url(#gGold)" ${O}/><circle cx="50" cy="57" r="35" fill="url(#gDemon)" ${O}/><path d="M25 44 L46 54 M75 44 L54 54" stroke="#1e1252" stroke-width="5.5" stroke-linecap="round"/><ellipse cx="37" cy="57" rx="8" ry="7" fill="#ff4757" stroke="${OL}" stroke-width="2.5"/><ellipse cx="63" cy="57" rx="8" ry="7" fill="#ff4757" stroke="${OL}" stroke-width="2.5"/><circle cx="37" cy="57" r="3" fill="${OL}"/><circle cx="63" cy="57" r="3" fill="${OL}"/><path d="M27 73 Q50 96 73 73 Q50 80 27 73z" fill="#1e1252" stroke="${OL}" stroke-width="2.5"/><path d="M36 76 l4 10 4 -9 M56 76 l4 9 4 -10" fill="#fff" stroke="${OL}" stroke-width="1.5"/>`),
   ()=>svg("0 -8 100 108",SKULL.replace(/#ff4757/g,"#ffa502")+`<g transform="translate(0 2)">${CROWN}</g>`),
 ];
+
+/* ===== 단계별 몬스터 (10스테이지마다 새 종류!) ===== */
+const GE=(x,y,r,c="#ff3b3b")=>`<circle cx="${x}" cy="${y}" r="${r*2}" fill="${c}" opacity=".28"/><ellipse cx="${x}" cy="${y}" rx="${r}" ry="${r*.8}" fill="${c}" stroke="${OL}" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="${r*.4}" fill="#fff"/>`;
+const MIR=b=>`<g transform="translate(100 0) scale(-1 1)">${b}</g>`;
+const BR=(a,b,c,d)=>`<path d="M${a} ${b} L${c} ${d}" stroke="${OL}" stroke-width="4.5" stroke-linecap="round"/>`;
+const NEW={
+snowman:()=>svg(MON_VB,MS+`<circle cx="50" cy="70" r="26" fill="url(#gIce)" ${O}/><circle cx="50" cy="38" r="20" fill="url(#gIce)" ${O}/>`+
+  `<path d="M26 66 L6 52 M12 56 L8 44 M10 54 L1 55" stroke="#6d4c41" stroke-width="3.5" fill="none" stroke-linecap="round"/>`+MIR(`<path d="M26 66 L6 52 M12 56 L8 44 M10 54 L1 55" stroke="#6d4c41" stroke-width="3.5" fill="none" stroke-linecap="round"/>`)+
+  `<rect x="33" y="14" width="34" height="7" rx="2" fill="#2d3436" ${O}/><path d="M39 15 V1 H61 V15z" fill="#2d3436" ${O}/><rect x="39" y="9" width="22" height="4" fill="#e74c3c"/>`+
+  `<circle cx="43" cy="36" r="3.6" fill="${OL}"/><circle cx="57" cy="36" r="3.6" fill="${OL}"/>`+BR(36,30,47,34)+BR(64,30,53,34)+
+  `<path d="M50 41 L28 47 L50 48z" fill="#ff8c42" ${O}/><circle cx="41" cy="50" r="2.2" fill="${OL}"/><circle cx="47" cy="53" r="2.2" fill="${OL}"/><circle cx="54" cy="53" r="2.2" fill="${OL}"/><circle cx="60" cy="50" r="2.2" fill="${OL}"/>`+
+  `<path d="M31 55 Q50 66 69 55 L71 63 Q50 74 29 63z" fill="#e74c3c" ${O}/><path d="M62 64 l9 15 -9 -3z" fill="#e74c3c" ${O}/><circle cx="50" cy="72" r="3" fill="${OL}"/><circle cx="50" cy="84" r="3" fill="${OL}"/>`),
+wolf:()=>svg(MON_VB,`<path d="M22 42 L14 6 L40 28z M78 42 L86 6 L60 28z" fill="url(#gWolf)" ${O}/><path d="M22 34 L19 16 L33 28z M78 34 L81 16 L67 28z" fill="#e8909a"/>`+
+  `<path d="M12 56 L1 62 L13 66 L5 78 L21 74z M88 56 L99 62 L87 66 L95 78 L79 74z" fill="url(#gWolf)" ${O}/>`+
+  `<path d="M12 56 Q14 26 50 24 Q86 26 88 56 Q86 80 66 86 Q50 92 34 86 Q14 80 12 56z" fill="url(#gWolf)" ${O}/>`+
+  `<path d="M36 62 Q50 54 64 62 Q64 82 50 90 Q36 82 36 62z" fill="#f4f7fb" ${O}/><ellipse cx="50" cy="64" rx="6" ry="4" fill="${OL}"/><path d="M50 68 V76 M40 80 Q50 86 60 80" stroke="${OL}" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M41 80 l3 8 3 -7 M53 81 l3 7 3 -8" fill="#fff" stroke="${OL}" stroke-width="1.5"/>`+
+  `<ellipse cx="34" cy="50" rx="7" ry="5" fill="#ffc83d" ${O}/><ellipse cx="66" cy="50" rx="7" ry="5" fill="#ffc83d" ${O}/><ellipse cx="34" cy="50" rx="1.8" ry="4.5" fill="${OL}"/><ellipse cx="66" cy="50" rx="1.8" ry="4.5" fill="${OL}"/>`+BR(24,40,42,50)+BR(76,40,58,50)+`<path d="M62 34 L72 60" stroke="#c0392b" stroke-width="2.5" stroke-linecap="round"/>`),
+scorpion:()=>svg(MON_VB,MS+`<path d="M50 66 Q50 32 72 26 Q90 22 84 8" stroke="${OL}" stroke-width="13" fill="none" stroke-linecap="round"/><path d="M50 66 Q50 32 72 26 Q90 22 84 8" stroke="#d9772f" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M78 4 L92 8 L84 20z" fill="#ff4757" ${O}/>`+
+  `<path d="M22 84 L8 90 M26 90 L14 98 M78 84 L92 90 M74 90 L86 98" stroke="${OL}" stroke-width="4" stroke-linecap="round"/>`+
+  `<ellipse cx="50" cy="70" rx="28" ry="19" fill="url(#gScorp)" ${O}/><path d="M38 54 Q46 70 38 86 M50 52 Q56 70 50 88 M62 54 Q68 70 62 86" stroke="#8a3b10" stroke-width="2.5" fill="none" opacity=".7"/>`+
+  `<path d="M26 62 Q8 62 10 44" stroke="${OL}" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M26 62 Q8 62 10 44" stroke="#d9772f" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M10 44 Q-2 28 14 22 Q10 34 18 38 Q22 30 28 36 Q22 50 10 44z" fill="url(#gScorp)" ${O}/>`+
+  MIR(`<path d="M26 62 Q8 62 10 44" stroke="${OL}" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M26 62 Q8 62 10 44" stroke="#d9772f" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M10 44 Q-2 28 14 22 Q10 34 18 38 Q22 30 28 36 Q22 50 10 44z" fill="url(#gScorp)" ${O}/>`)+
+  GE(41,66,3.6,"#ffee58")+GE(59,66,3.6,"#ffee58")+BR(35,59,46,64)+BR(65,59,54,64)),
+cactus:()=>svg(MON_VB,MS+`<path d="M34 94 V30 Q34 10 50 10 Q66 10 66 30 V94z" fill="url(#gCact)" ${O}/><path d="M34 64 H22 Q13 64 13 54 V38 Q13 31 20 31 Q27 31 27 38 V52 H34z" fill="url(#gCact)" ${O}/><path d="M66 56 H78 Q87 56 87 46 V30 Q87 23 80 23 Q73 23 73 30 V44 H66z" fill="url(#gCact)" ${O}/>`+
+  `<path d="M44 14 V92 M56 14 V92" stroke="#1d7a38" stroke-width="2" opacity=".5"/><path d="M34 40 l-6 -3 M34 52 l-6 -1 M66 40 l6 -3 M66 70 l6 -1 M13 44 l-6 -2 M87 36 l6 -2 M34 78 l-6 1" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>`+
+  `<circle cx="50" cy="10" r="8" fill="#ff7eb6" ${O}/><circle cx="50" cy="10" r="3.2" fill="#ffd32a"/>`+
+  `<circle cx="43" cy="44" r="5.5" fill="#fff" stroke="${OL}" stroke-width="2.5"/><circle cx="57" cy="44" r="5.5" fill="#fff" stroke="${OL}" stroke-width="2.5"/><circle cx="42" cy="45" r="2.6" fill="${OL}"/><circle cx="58" cy="45" r="2.6" fill="${OL}"/>`+BR(36,36,47,41)+BR(64,36,53,41)+`<path d="M41 58 l3 -4 3 4 3 -4 3 4 3 -4 3 4" stroke="${OL}" stroke-width="3" fill="none" stroke-linejoin="round"/>`),
+mummy:()=>svg(MON_VB,MS+`<path d="M62 62 Q92 62 86 36" stroke="${OL}" stroke-width="15" fill="none" stroke-linecap="round"/><path d="M62 62 Q92 62 86 36" stroke="#e8dcb5" stroke-width="9" fill="none" stroke-linecap="round"/><circle cx="86" cy="32" r="7" fill="#e8dcb5" ${O}/>`+
+  `<path d="M24 94 V54 Q24 10 50 10 Q76 10 76 54 V94z" fill="url(#gMummy)" ${O}/><path d="M24 26 L76 36 M24 44 L76 54 M24 60 L76 68 M24 76 L76 84" stroke="#8a7a52" stroke-width="3.2" opacity=".75"/><path d="M26 70 Q8 74 12 94 Q20 84 30 86z" fill="url(#gMummy)" ${O}/>`+
+  `<path d="M30 30 Q50 24 70 30 L68 48 Q50 44 32 48z" fill="#120d1c"/>`+GE(41,38,4.2,"#6dff6d")+GE(59,38,4.2,"#6dff6d")),
+spider:()=>{const L=`<path d="M40 52 L14 26 L6 50 M38 60 L4 52 L5 80 M38 68 L6 80 L15 98 M42 74 L26 92 L36 100" fill="none" stroke-linecap="round" stroke-linejoin="round"`;
+  return svg(MON_VB,L+` stroke="${OL}" stroke-width="7.5"/>`+L+` stroke="#5a3a7e" stroke-width="3.5"/>`+MIR(L+` stroke="${OL}" stroke-width="7.5"/>`+L+` stroke="#5a3a7e" stroke-width="3.5"/>`)+
+  `<ellipse cx="50" cy="70" rx="25" ry="23" fill="url(#gSpider)" ${O}/><path d="M50 56 l7 11 -7 14 -7 -14z" fill="#ff3b3b" ${O}/><circle cx="50" cy="42" r="16" fill="url(#gSpider)" ${O}/>`+
+  GE(43,38,2.8)+GE(57,38,2.8)+GE(38,44,2.2)+GE(62,44,2.2)+`<path d="M43 52 l-4 12 7 -7z M57 52 l4 12 -7 -7z" fill="#fff" ${O}/>`)},
+beholder:()=>svg(MON_VB,`<path d="M36 36 Q24 16 16 14 M50 30 Q50 14 50 8 M64 36 Q76 16 84 14" stroke="${OL}" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M36 36 Q24 16 16 14 M50 30 Q50 14 50 8 M64 36 Q76 16 84 14" stroke="#a468e0" stroke-width="4" fill="none" stroke-linecap="round"/>`+
+  [[16,12],[50,6],[84,12]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="7" fill="#fff" ${O}/><circle cx="${x}" cy="${y}" r="3.4" fill="#e84393"/>`).join("")+
+  `<circle cx="50" cy="60" r="33" fill="url(#gEye)" ${O}/><ellipse cx="50" cy="54" rx="21" ry="18" fill="#fff" ${O}/><circle cx="50" cy="54" r="12" fill="#ff3b3b" stroke="${OL}" stroke-width="2.5"/><ellipse cx="50" cy="54" rx="3.2" ry="10" fill="${OL}"/><circle cx="46" cy="49" r="3" fill="#fff"/><path d="M32 48 L40 50 M68 48 L60 50 M34 60 L40 58 M66 60 L60 58" stroke="#e57373" stroke-width="1.6"/>`+
+  `<path d="M26 78 Q50 98 74 78 Q50 86 26 78z" fill="#2a0f3a" ${O}/><path d="M32 81 l3 7 3 -5 M44 85 l3 7 3 -7 M56 85 l3 7 3 -7 M64 81 l3 5 3 -7" fill="#fff" stroke="${OL}" stroke-width="1.3"/>`),
+lizard:()=>svg(MON_VB,`<path d="M12 96 Q14 76 34 78 L34 96z" fill="#6b4a2a" ${O}/>`+MIR(`<path d="M12 96 Q14 76 34 78 L34 96z" fill="#6b4a2a" ${O}/>`)+
+  `<path d="M34 24 L28 2 L42 16 L50 -2 L58 16 L72 2 L66 24z" fill="#e0483a" ${O}/><path d="M24 46 Q26 20 50 20 Q74 20 76 46 Q78 68 64 78 Q50 86 36 78 Q22 68 24 46z" fill="url(#gLiz)" ${O}/>`+
+  `<circle cx="34" cy="62" r="2.2" fill="#2f6d22"/><circle cx="66" cy="62" r="2.2" fill="#2f6d22"/><circle cx="50" cy="30" r="2.2" fill="#2f6d22"/><circle cx="42" cy="28" r="1.8" fill="#2f6d22"/><circle cx="58" cy="28" r="1.8" fill="#2f6d22"/>`+
+  `<ellipse cx="38" cy="44" rx="8" ry="6" fill="#ffd32a" ${O}/><ellipse cx="62" cy="44" rx="8" ry="6" fill="#ffd32a" ${O}/><ellipse cx="38" cy="44" rx="1.8" ry="5" fill="${OL}"/><ellipse cx="62" cy="44" rx="1.8" ry="5" fill="${OL}"/>`+BR(26,34,44,42)+BR(74,34,56,42)+
+  `<circle cx="46" cy="58" r="1.8" fill="${OL}"/><circle cx="54" cy="58" r="1.8" fill="${OL}"/><path d="M34 68 Q50 76 66 68" stroke="${OL}" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M38 70 l2 6 3 -5 M57 71 l3 5 2 -6" fill="#fff" stroke="${OL}" stroke-width="1.3"/><path d="M50 74 V84 L46 90 M50 84 L55 90" stroke="#ff4757" stroke-width="3" fill="none" stroke-linecap="round"/>`),
+flame:()=>svg(MON_VB,`<path d="M50 2 Q64 26 80 38 Q96 56 84 76 Q74 94 50 94 Q26 94 16 76 Q4 56 20 38 Q30 30 34 14 Q42 26 50 2z" fill="url(#gFlame)" ${O}/><path d="M50 30 Q60 48 70 56 Q80 72 68 82 Q60 90 50 90 Q40 90 32 82 Q20 72 30 56 Q40 48 50 30z" fill="#ffe36b"/><path d="M12 54 Q2 42 8 28 Q18 38 20 48z M88 54 Q98 42 92 28 Q82 38 80 48z" fill="#ff7a1c" ${O}/>`+
+  `<ellipse cx="40" cy="66" rx="5.5" ry="6.5" fill="#fff" ${O}/><ellipse cx="60" cy="66" rx="5.5" ry="6.5" fill="#fff" ${O}/><circle cx="41" cy="67" r="2.6" fill="#c0392b"/><circle cx="59" cy="67" r="2.6" fill="#c0392b"/>`+BR(32,57,46,63)+BR(68,57,54,63)+`<path d="M40 78 Q50 88 60 78" stroke="${OL}" stroke-width="3" fill="none" stroke-linecap="round"/>`),
+cerberus:()=>{const dog=(x,y,sc)=>`<g transform="translate(${x} ${y}) scale(${sc})"><path d="M-22 -10 L-27 -36 L-8 -20z M22 -10 L27 -36 L8 -20z" fill="#3a2220" ${O}/><path d="M-24 -4 Q-24 -26 0 -26 Q24 -26 24 -4 Q24 18 10 24 Q0 28 -10 24 Q-24 18 -24 -4z" fill="url(#gCerb)" ${O}/><ellipse cx="0" cy="10" rx="12" ry="9" fill="#5a3a35" ${O}/><ellipse cx="0" cy="6" rx="4.5" ry="3" fill="${OL}"/><path d="M-8 14 l2 9 3 -8 M3 15 l3 8 3 -9" fill="#fff" stroke="${OL}" stroke-width="1.2"/>${GE(-11,-8,3.8)}${GE(11,-8,3.8)}<path d="M-20 -15 L-6 -8 M20 -15 L6 -8" stroke="${OL}" stroke-width="3.2" stroke-linecap="round"/></g>`;
+  const fl=(x,y,sc)=>`<path transform="translate(${x} ${y}) scale(${sc})" d="M0 0 Q-8 -10 -2 -22 Q2 -12 8 -14 Q10 -6 0 0z" fill="#ff7a1c" stroke="${OL}" stroke-width="2"/>`;
+  return svg(MON_VB,MS+dog(22,56,.68)+dog(78,56,.68)+`<path d="M12 94 Q14 68 50 68 Q86 68 88 94z" fill="url(#gCerb)" ${O}/><path d="M30 76 l-3 -9 8 4 2 -9 7 7 4 -9 4 9 7 -7 2 9 8 -4 -3 9z" fill="url(#gGold)" ${O}/>`+dog(50,44,1)+fl(22,30,1)+fl(50,20,1.3)+fl(78,30,1))},
+darkknight:()=>svg(MON_VB,`<path d="M20 40 Q4 70 10 96 L90 96 Q96 70 80 40z" fill="#4b2a7a" ${O}/><path d="M82 16 L89 16 L89 72 L85.5 80 L82 72z" fill="url(#gSteel)" ${O}/><rect x="77" y="70" width="17" height="5" rx="2" fill="url(#gGold)" ${O}/>`+
+  `<path d="M28 52 Q50 44 72 52 L70 94 H30z" fill="url(#gBlack)" ${O}/><path d="M50 58 V82 M41 66 H59" stroke="#ff3b3b" stroke-width="3.5" stroke-linecap="round"/>`+
+  `<path d="M12 58 Q14 40 32 44 L34 62 Q22 68 12 58z" fill="url(#gBlack)" ${O}/><path d="M14 46 L4 30 L24 42z" fill="url(#gBlack)" ${O}/>`+MIR(`<path d="M12 58 Q14 40 32 44 L34 62 Q22 68 12 58z" fill="url(#gBlack)" ${O}/><path d="M14 46 L4 30 L24 42z" fill="url(#gBlack)" ${O}/>`)+
+  `<path d="M30 40 Q30 6 50 6 Q70 6 70 40 L70 54 Q50 60 30 54z" fill="url(#gBlack)" ${O}/><path d="M30 24 Q10 22 6 4 Q22 6 36 16z" fill="#2a2a3a" ${O}/><path d="M70 24 Q90 22 94 4 Q78 6 64 16z" fill="#2a2a3a" ${O}/><path d="M34 31 H66 V41 H34z" fill="#0b0b10"/><path d="M38 36 H48 M52 36 H62" stroke="#ff2a2a" stroke-width="4" stroke-linecap="round"/><path d="M50 8 V30" stroke="${OL}" stroke-width="3"/>`),
+reaper:()=>svg(MON_VB,`<path d="M86 4 V98" stroke="#5a3d2b" stroke-width="4.5" stroke-linecap="round"/><path d="M86 6 Q56 -2 38 20 Q62 12 86 24z" fill="url(#gSteel)" ${O}/>`+
+  `<path d="M50 6 Q22 12 20 44 L8 96 L18 90 L28 98 L38 90 L50 98 L62 90 L72 98 L82 90 L92 96 L80 44 Q78 12 50 6z" fill="url(#gReap)" ${O}/>`+
+  `<ellipse cx="50" cy="34" rx="18" ry="21" fill="#07040d"/><ellipse cx="50" cy="38" rx="12" ry="14" fill="url(#gBone)" ${O}/>`+GE(45,35,3.6,"#7dffb0")+GE(55,35,3.6,"#7dffb0")+`<path d="M50 41 l-3 6 h6z" fill="${OL}"/><path d="M43 48 h14 M46 46 v5 M50 46 v5 M54 46 v5" stroke="${OL}" stroke-width="1.8"/>`+
+  `<circle cx="82" cy="62" r="6" fill="url(#gBone)" ${O}/><path d="M24 62 Q14 66 12 76" stroke="#07040d" stroke-width="9" fill="none" stroke-linecap="round"/><circle cx="12" cy="78" r="5.5" fill="url(#gBone)" ${O}/>`),
+vampire:()=>svg(MON_VB,`<path d="M30 50 Q2 28 2 60 Q12 54 14 70 Q22 62 30 72z" fill="url(#gBat)" ${O}/>`+MIR(`<path d="M30 50 Q2 28 2 60 Q12 54 14 70 Q22 62 30 72z" fill="url(#gBat)" ${O}/>`)+
+  `<path d="M20 96 L26 56 Q50 72 74 56 L80 96z" fill="#a4162a" ${O}/><path d="M34 96 L40 68 Q50 76 60 68 L66 96z" fill="#14101f"/><path d="M20 62 L30 38 L40 62z M80 62 L70 38 L60 62z" fill="#6e0f1d" ${O}/>`+
+  `<path d="M30 42 Q30 14 50 14 Q70 14 70 42 Q70 62 50 68 Q30 62 30 42z" fill="url(#gVamp)" ${O}/><path d="M27 42 Q26 6 50 6 Q74 6 73 42 Q66 24 50 30 Q34 24 27 42z" fill="#14101f" ${O}/>`+
+  GE(41,42,3.6,"#ff2a2a")+GE(59,42,3.6,"#ff2a2a")+BR(33,35,46,41)+BR(67,35,54,41)+`<path d="M42 56 Q50 60 58 56" stroke="${OL}" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M44 57 l2 8 3 -7 M53 58 l3 7 2 -8" fill="#fff" stroke="${OL}" stroke-width="1.3"/>`),
+thunder:()=>svg(MON_VB,`<path d="M10 42 L2 30 L9 28 L2 18 M92 40 L99 28 L92 26 L99 16" stroke="#ffe94a" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`+
+  `<path d="M18 60 Q4 58 8 46 Q10 34 26 38 Q28 20 46 24 Q58 10 72 26 Q92 24 92 44 Q100 58 82 62 Q80 74 62 72 Q50 82 36 72 Q22 76 18 60z" fill="url(#gThunder)" ${O}/>`+
+  `<path d="M46 68 L34 90 L45 87 L38 100 L58 78 L47 81 L54 68z" fill="#ffe94a" ${O}/><path d="M72 70 L66 82 L72 81 L68 90 L80 76 L73 77z" fill="#ffe94a" ${O}/>`+
+  GE(40,46,4.4,"#ffe94a")+GE(60,46,4.4,"#ffe94a")+BR(32,38,46,44)+BR(68,38,54,44)+`<path d="M40 58 l3 -4 3 4 3 -4 3 4 3 -4 3 4 3 -4" stroke="#ffe94a" stroke-width="3" fill="none" stroke-linejoin="round"/>`),
+voidwiz:()=>svg(MON_VB,`<path d="M72 96 L77 24" stroke="#5a3d2b" stroke-width="4" stroke-linecap="round"/><path d="M77 10 L84 22 L77 34 L70 22z" fill="#e056fd" ${O}/>`+
+  `<path d="M50 6 Q22 12 22 50 L8 96 H92 L78 50 Q78 12 50 6z" fill="url(#gVoid)" ${O}/>`+[[30,60,1.6],[66,72,1.4],[40,84,1.2],[58,56,1.2],[28,80,1.4],[72,50,1.1],[48,70,1.5]].map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="#fff"/>`).join("")+`<path d="M34 90 Q50 70 66 90" stroke="#e056fd" stroke-width="2" fill="none" opacity=".7"/>`+
+  `<ellipse cx="50" cy="34" rx="16" ry="19" fill="#05010f"/>`+GE(44,33,3.4,"#e056fd")+GE(56,33,3.4,"#e056fd")+
+  `<circle cx="14" cy="56" r="8" fill="#e056fd" ${O}/><circle cx="11" cy="53" r="2.4" fill="#fff"/><circle cx="90" cy="40" r="6" fill="#7d5fff" ${O}/><circle cx="88" cy="38" r="1.8" fill="#fff"/>`),
+shadow:()=>svg(MON_VB,`<path d="M50 54 Q20 6 0 34 Q12 38 8 52 Q20 50 20 66 Q36 60 50 70z" fill="url(#gShadow)" ${O}/>`+MIR(`<path d="M50 54 Q20 6 0 34 Q12 38 8 52 Q20 50 20 66 Q36 60 50 70z" fill="url(#gShadow)" ${O}/>`)+
+  `<path d="M30 96 Q26 56 50 46 Q74 56 70 96z" fill="url(#gShadow)" ${O}/><path d="M26 72 l-12 16 M31 76 l-7 16 M74 72 l12 16 M69 76 l7 16" stroke="#9b59d6" stroke-width="3.2" stroke-linecap="round"/>`+
+  `<circle cx="50" cy="38" r="20" fill="url(#gShadow)" ${O}/><path d="M34 26 Q16 20 18 0 Q32 10 42 22z" fill="#2a1a40" ${O}/><path d="M66 26 Q84 20 82 0 Q68 10 58 22z" fill="#2a1a40" ${O}/>`+
+  GE(42,38,4.2,"#ff2bd6")+GE(58,38,4.2,"#ff2bd6")+`<path d="M37 49 Q50 60 63 49" stroke="#ff2bd6" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M41 52 l2 5 3 -4 M54 53 l3 4 2 -5" fill="#fff"/>`),
+};
+const NB={
+yeti:()=>svg(MON_VB,MS+`<path d="M26 60 Q4 56 6 30 Q18 40 28 46z" fill="url(#gYeti)" ${O}/><circle cx="9" cy="28" r="10" fill="url(#gYeti)" ${O}/>`+MIR(`<path d="M26 60 Q4 56 6 30 Q18 40 28 46z" fill="url(#gYeti)" ${O}/><circle cx="9" cy="28" r="10" fill="url(#gYeti)" ${O}/>`)+
+  `<path d="M22 94 L18 80 L24 78 L20 64 Q16 52 50 46 Q84 52 80 64 L76 78 L82 80 L78 94z" fill="url(#gYeti)" ${O}/>`+
+  `<path d="M26 40 Q26 12 50 12 Q74 12 74 40 Q74 58 50 62 Q26 58 26 40z" fill="url(#gYeti)" ${O}/><path d="M34 34 Q50 28 66 34 Q68 52 50 58 Q32 52 34 34z" fill="#8fd3ff" ${O}/>`+
+  `<path d="M28 20 L20 -2 L38 14z M72 20 L80 -2 L62 14z M44 13 L50 -6 L56 13z" fill="#cdeeff" ${O}/>`+GE(43,41,3.8)+GE(57,41,3.8)+BR(35,33,46,38)+BR(65,33,54,38)+
+  `<path d="M38 50 Q50 58 62 50 L59 60 L55 54 L50 61 L45 54 L41 60z" fill="#fff" ${O}/>`),
+minotaur:()=>svg(MON_VB,MS+`<path d="M12 96 L20 40" stroke="#5a3d2b" stroke-width="5" stroke-linecap="round"/><path d="M12 44 Q-4 54 10 70 L24 58z" fill="url(#gSteel)" ${O}/>`+
+  `<path d="M8 96 Q10 62 34 58 L66 58 Q90 62 92 96z" fill="url(#gMino)" ${O}/><rect x="26" y="84" width="48" height="8" fill="#3a2a1a" ${O}/><circle cx="50" cy="88" r="4" fill="url(#gGold)" stroke="${OL}" stroke-width="2"/>`+
+  `<path d="M30 26 Q4 28 2 4 Q16 12 36 14z M70 26 Q96 28 98 4 Q84 12 64 14z" fill="#f4efe0" ${O}/><path d="M28 34 Q28 8 50 8 Q72 8 72 34 Q74 52 62 62 L38 62 Q26 52 28 34z" fill="url(#gMino)" ${O}/>`+
+  `<ellipse cx="50" cy="50" rx="16" ry="12" fill="#c98f66" ${O}/><ellipse cx="44" cy="48" rx="2.6" ry="3.4" fill="${OL}"/><ellipse cx="56" cy="48" rx="2.6" ry="3.4" fill="${OL}"/><circle cx="50" cy="59" r="6" fill="none" stroke="#f7c948" stroke-width="3"/>`+
+  GE(39,32,3.8)+GE(61,32,3.8)+BR(28,24,44,32)+BR(72,24,56,32)+`<ellipse cx="34" cy="58" rx="6" ry="3" fill="#fff" opacity=".6"/><ellipse cx="66" cy="58" rx="6" ry="3" fill="#fff" opacity=".6"/>`),
+archangel:()=>svg(MON_VB,`<path d="M50 56 Q18 4 0 20 Q6 30 3 40 Q12 40 11 54 Q22 52 24 66 Q36 62 50 74z" fill="url(#gBlack)" ${O}/>`+MIR(`<path d="M50 56 Q18 4 0 20 Q6 30 3 40 Q12 40 11 54 Q22 52 24 66 Q36 62 50 74z" fill="url(#gBlack)" ${O}/>`)+
+  `<path d="M32 96 Q28 58 50 50 Q72 58 68 96z" fill="#2b2b3d" ${O}/><path d="M50 56 V84 M38 70 H62" stroke="url(#gGold)" stroke-width="3.5" stroke-linecap="round"/><path d="M46 64 L52 72 L47 80" stroke="#ff4d4d" stroke-width="2.4" fill="none"/><path d="M82 26 L88 26 L88 80 L85 88 L82 80z" fill="url(#gSteel)" ${O}/><rect x="77" y="78" width="17" height="5" rx="2" fill="url(#gGold)" ${O}/>`+
+  `<circle cx="50" cy="34" r="20" fill="url(#gVamp)" ${O}/><path d="M26 36 Q26 8 50 8 Q74 8 74 36 Q74 56 70 62 Q68 40 50 22 Q32 40 30 62 Q26 54 26 36z" fill="#f4f4ff" ${O}/>`+
+  GE(43,36,3.4,"#ff2a2a")+GE(57,36,3.4,"#ff2a2a")+BR(36,29,46,34)+BR(64,29,54,34)+
+  `<ellipse cx="50" cy="3" rx="20" ry="5" fill="none" stroke="#ff4d4d" stroke-width="3.5" stroke-dasharray="15 6"/><ellipse cx="50" cy="3" rx="20" ry="5" fill="none" stroke="#ffd0d0" stroke-width="1.2" stroke-dasharray="15 6"/>`),
+hydra:()=>{const hd=(x,y,sc)=>`<g transform="translate(${x} ${y}) scale(${sc})"><path d="M-12 -8 L-20 -28 L-4 -14z M12 -8 L20 -28 L4 -14z" fill="url(#gGold)" ${O}/><path d="M-15 6 Q-17 -14 0 -16 Q17 -14 15 6 Q13 18 0 20 Q-13 18 -15 6z" fill="url(#gHyd)" ${O}/><ellipse cx="0" cy="10" rx="9" ry="6" fill="#6a2fa8" ${O}/>${GE(-7,-3,3.2,"#ff2bd6")}${GE(7,-3,3.2,"#ff2bd6")}<path d="M-8 12 l2 8 3 -7 M3 13 l3 7 3 -8" fill="#fff" stroke="${OL}" stroke-width="1.2"/></g>`;
+  const neck=(d)=>`<path d="${d}" stroke="${OL}" stroke-width="13" fill="none" stroke-linecap="round"/><path d="${d}" stroke="#7a37c0" stroke-width="8" fill="none" stroke-linecap="round"/>`;
+  return svg(MON_VB,MS+`<path d="M6 80 L0 62 L14 70z M94 80 L100 62 L86 70z M20 66 L10 48 L28 58z M80 66 L90 48 L72 58z" fill="#2a0f4a" ${O}/>`+neck("M38 78 Q16 62 22 38")+neck("M62 78 Q84 62 78 38")+neck("M50 76 Q50 54 50 34")+
+  `<ellipse cx="50" cy="82" rx="34" ry="16" fill="url(#gShadow)" ${O}/><path d="M26 76 l3 -10 4 8 M44 70 l3 -10 4 8 M60 72 l3 -10 4 8" fill="#7a37c0" ${O}/>`+hd(22,32,.82)+hd(78,32,.82)+hd(50,24,1.05))},
+};
+const TIERS=[
+ {n:[["슬라임",MONS[0]],["꼬마 버섯",MONS[1]],["박쥐",MONS[2]]],b:["킹 슬라임",BOSSES[0]]},
+ {n:[["고블린",MONS[3]],["눈사람 전사",NEW.snowman],["서리 늑대",NEW.wolf]],b:["예티왕",NB.yeti]},
+ {n:[["독 전갈",NEW.scorpion],["가시 선인장",NEW.cactus],["사막 미라",NEW.mummy]],b:["화염 드래곤",BOSSES[1]]},
+ {n:[["해골 병사",MONS[4]],["떠도는 유령",MONS[5]],["독거미",NEW.spider]],b:["해골왕",BOSSES[3]]},
+ {n:[["바위 골렘",MONS[7]],["눈알 괴물",NEW.beholder],["리자드맨",NEW.lizard]],b:["미노타우로스",NB.minotaur]},
+ {n:[["불꽃 도깨비",MONS[6]],["화염 정령",NEW.flame],["케르베로스",NEW.cerberus]],b:["마왕",BOSSES[2]]},
+ {n:[["암흑 기사",NEW.darkknight],["사신",NEW.reaper],["뱀파이어",NEW.vampire]],b:["타락한 대천사",NB.archangel]},
+ {n:[["번개 정령",NEW.thunder],["공허의 마법사",NEW.voidwiz],["그림자 악마",NEW.shadow]],b:["혼돈의 히드라",NB.hydra]},
+];
+
+const WING=`<path d="M34 62 Q8 54 0 14 L18 28 L20 6 L34 30 L42 12 L46 48z" fill="url(#gDragonD)" ${O}/><path d="M20 8 L28 46 M34 30 L34 52 M42 14 L40 50" stroke="#2b1d3a" stroke-width="2" opacity=".7"/>`;
+NB.dragon=()=>svg(MON_VB,MS+WING+MIR(WING)+
+  `<path d="M22 94 Q20 70 50 66 Q80 70 78 94z" fill="url(#gDragon)" ${O}/><path d="M36 94 Q38 76 50 74 Q62 76 64 94z" fill="url(#gBellyY)" stroke="${OL}" stroke-width="2.5"/><path d="M40 82 H60 M39 88 H61" stroke="#e0a02a" stroke-width="2"/>`+
+  `<path d="M32 28 Q16 26 12 8 Q26 12 38 22z" fill="#d9cfb4" ${O}/>`+MIR(`<path d="M32 28 Q16 26 12 8 Q26 12 38 22z" fill="#d9cfb4" ${O}/>`)+
+  `<path d="M26 44 Q24 18 50 16 Q76 18 74 44 Q74 60 62 66 L38 66 Q26 60 26 44z" fill="url(#gDragon)" ${O}/><path d="M42 20 L50 2 L58 20z" fill="#b8321f" ${O}/>`+
+  `<path d="M34 44 Q50 36 66 44 Q64 62 50 66 Q36 62 34 44z" fill="#ff9d7a" ${O}/><ellipse cx="44" cy="52" rx="2.4" ry="3.2" fill="${OL}"/><ellipse cx="56" cy="52" rx="2.4" ry="3.2" fill="${OL}"/><path d="M38 62 Q50 70 62 62" stroke="${OL}" stroke-width="2.8" fill="none"/><path d="M40 62 l2 9 3 -8 M55 63 l3 8 2 -9" fill="#fff" stroke="${OL}" stroke-width="1.4"/>`+
+  `<ellipse cx="38" cy="36" rx="8" ry="5.5" fill="#ffd32a" ${O}/><ellipse cx="62" cy="36" rx="8" ry="5.5" fill="#ffd32a" ${O}/><ellipse cx="38" cy="36" rx="1.8" ry="5" fill="${OL}"/><ellipse cx="62" cy="36" rx="1.8" ry="5" fill="${OL}"/>`+BR(28,28,44,36)+BR(72,28,56,36)+
+  `<path d="M44 70 Q40 78 48 84 Q44 76 50 72z" fill="#ff7a1c"/><circle cx="43" cy="49" r="3" fill="#fff" opacity=".5"/>`);
+NB.demon=()=>{const wing=`<path d="M30 58 Q4 50 0 20 L16 30 L18 12 L30 34 L38 20 L44 52z" fill="#2c1565" ${O}/>`;
+  const fl=(x,y,sc)=>`<path transform="translate(${x} ${y}) scale(${sc})" d="M0 0 Q-9 -10 -3 -24 Q2 -13 9 -16 Q11 -7 0 0z" fill="url(#gFlame)" stroke="${OL}" stroke-width="2"/>`;
+  return svg("0 -10 100 110",MS+wing+MIR(wing)+
+  `<path d="M24 46 Q2 32 14 4 Q16 26 34 34z" fill="url(#gGold)" ${O}/>`+MIR(`<path d="M24 46 Q2 32 14 4 Q16 26 34 34z" fill="url(#gGold)" ${O}/>`)+
+  `<path d="M18 96 Q16 76 50 74 Q84 76 82 96z" fill="url(#gDemon)" ${O}/><path d="M50 78 V94 M40 84 H60" stroke="#ff4757" stroke-width="3" stroke-linecap="round"/>`+
+  `<circle cx="50" cy="52" r="32" fill="url(#gDemon)" ${O}/>`+fl(34,22,.9)+fl(50,16,1.2)+fl(66,22,.9)+
+  `<path d="M50 28 L54 36 L50 42 L46 36z" fill="#ff4757" ${O}/><path d="M24 42 L46 54 M76 42 L54 54" stroke="#1e1252" stroke-width="6" stroke-linecap="round"/>`+
+  GE(37,54,5,"#ff4757")+GE(63,54,5,"#ff4757")+`<path d="M28 70 Q50 94 72 70 Q50 78 28 70z" fill="#1e1252" ${O}/><path d="M34 73 l4 10 4 -9 M54 73 l4 9 4 -10" fill="#fff" stroke="${OL}" stroke-width="1.5"/>`)};
+TIERS[2].b=["화염 드래곤",NB.dragon];TIERS[5].b=["마왕",NB.demon];
+const AURA=[null,"#9be7ff","#ffd36a","#c9c9ff","#5ef2c0","#ff9a3c","#ff3b3b","#e0b3ff"];
 const THEMES=[
   {a:"#74b9ff",b:"#dff9fb",h1:"#7bed9f",h2:"#2ed573",d:"sun",t:"#218c53"},
   {a:"#81ecec",b:"#f1f9ff",h1:"#dff9fb",h2:"#b8e6f5",d:"snow",t:"#7aa6b8"},
@@ -502,18 +649,28 @@ function setHeroArt(){$("hero").innerHTML=HEROES[S.cls||"war"]();if($("gear"))ap
 /* ================= 전투 ================= */
 const $=id=>document.getElementById(id);
 let quiet0=true;
+let auraAnim=null;
 function spawn(){
   isBoss=S.kill===KILLS_PER_STAGE-1;
   const s=S.stage;
   monMax=monHpFor(s)*(isBoss?6:1);monHp=monMax;
   monAtk=monAtkFor(s)*(isBoss?1.5:1);
-  const zone=Math.floor((s-1)/5);
+  const tier=Math.floor((s-1)/10),ti=tier%TIERS.length,loop=Math.floor(tier/TIERS.length);
+  const T=TIERS[ti],m=isBoss?T.b:T.n[S.kill%3];
   const mon=$("mon");
-  mon.innerHTML=isBoss?BOSSES[Math.floor((s-1)/10)%BOSSES.length]():MONS[(zone*3+S.kill%3)%MONS.length]();
+  mon.innerHTML=m[1]();
+  mon.firstChild.style.filter=loop?`hue-rotate(${loop*70}deg) saturate(1.2)`:"";
   mon.className="emo"+(isBoss?" boss":"");
+  const w=isBoss?Math.min(152,128+ti*3+loop*4):Math.min(110,90+ti*2+loop*3);
+  mon.style.width=w+"px";mon.style.height=w+"px";mon.style.marginLeft=-(w-90)+"px";
+  $("monName").innerHTML=(isBoss?'<b class="bt">BOSS</b> ':"")+(loop?"심연의 ":"")+m[0]+" <span>Lv."+s+"</span>";
   monT=0;monId++;
+  if(auraAnim){auraAnim.cancel();auraAnim=null}
+  const col=AURA[ti]||(isBoss?"#ffd36a":null);
+  if(col){const a=2+ti*1.3+(isBoss?3:0);
+    auraAnim=$("monMv").animate([{filter:`drop-shadow(0 0 ${a}px ${col})`},{filter:`drop-shadow(0 0 ${a+6}px ${col}) drop-shadow(0 0 2px ${col})`}],{duration:isBoss?700:1100,iterations:Infinity,direction:"alternate",easing:"ease-in-out"})}
   if(!quiet0)$("monMv").animate([{transform:"scale(.2)",opacity:0},{transform:"scale(1.12)",opacity:1,offset:.7},{transform:"none"}],{duration:320});
-  renderScene(Math.floor((s-1)/10));
+  renderScene(tier);
   renderProgress();
 }
 function renderProgress(){
