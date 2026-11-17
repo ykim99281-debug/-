@@ -73,6 +73,22 @@ button kbd{font-family:inherit;opacity:.6;margin-right:4px;font-size:13px}
 .card .ic{font-size:44px;filter:drop-shadow(0 0 10px rgba(200,150,255,.8))}
 @keyframes cardin{from{opacity:0;transform:translateY(40px) scale(.8)}}
 .vig{position:fixed;inset:0;pointer-events:none;box-shadow:inset 0 0 160px rgba(0,0,0,.55);z-index:3}
+.toast{position:absolute;left:50%;top:22%;transform:translateX(-50%);padding:10px 18px;border-radius:14px;background:rgba(20,10,44,.85);border:1px solid var(--line);font-size:18px;text-align:center;white-space:nowrap;animation:ts 3.2s forwards;max-width:94vw;white-space:normal}
+@keyframes ts{0%{opacity:0;transform:translate(-50%,10px)}10%,85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+#wui{position:fixed;inset:0;pointer-events:none;z-index:4}
+#quest{position:absolute;left:12px;top:56px;padding:8px 12px;font-size:13px;line-height:1.5;max-width:210px;background:var(--glass);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(10px)}
+#mm{position:absolute;right:12px;top:56px;width:112px;height:112px;border-radius:50%;border:2px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+#act{position:absolute;right:18px;bottom:max(26px,env(safe-area-inset-bottom));pointer-events:auto;font-size:19px;padding:16px 22px;border-radius:40px;background:linear-gradient(180deg,#ffd84d,#ff9a3d);color:#3a2008;border:2px solid #fff3b0;box-shadow:0 0 26px rgba(255,200,80,.6);animation:pu .6s infinite alternate}
+#joyzone{position:absolute;left:0;bottom:0;width:55%;height:55%;pointer-events:auto;touch-action:none}
+#joy{position:fixed;width:110px;height:110px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);display:none}
+#knob{position:absolute;left:30px;top:30px;width:50px;height:50px;border-radius:50%;background:rgba(200,160,255,.65);box-shadow:0 0 14px rgba(200,160,255,.8)}
+#hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);font-size:13px;color:#e8dcff;text-shadow:0 1px 4px #000;opacity:.8;white-space:nowrap}
+@media(max-width:700px){#hint{display:none}}
+#dlg{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(580px,92vw);padding:14px 18px 22px;display:none;z-index:15;pointer-events:auto;cursor:pointer}
+#dlg.on{display:block;animation:in .25s}
+#dname{color:var(--yel);font-size:19px;margin-bottom:6px;font-family:"Black Han Sans","Jua",sans-serif}
+#dtext{min-height:3.4em;font-size:18px;line-height:1.55}
+#dnext{position:absolute;right:16px;bottom:8px;color:var(--pur);animation:pu .5s infinite alternate}
 #load{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0a0614;z-index:50;font-size:20px;color:var(--pur);transition:opacity .6s}
 </style>
 <script type="importmap">
@@ -85,7 +101,7 @@ button kbd{font-family:inherit;opacity:.6;margin-right:4px;font-size:13px}
 <div id="ui">
   <div class="hdr">
     <div class="glass pill" id="stage">STAGE 1</div>
-    <div class="glass pill gauge"><span>뇌절</span><div class="pips" id="pips"></div></div>
+    <div class="glass pill gauge" id="gpill" style="display:none"><span>뇌절</span><div class="pips" id="pips"></div></div>
     <div class="glass" id="mute" title="소리">🔊</div>
   </div>
   <div class="glass ebar" id="ebar" style="display:none">
@@ -108,6 +124,13 @@ button kbd{font-family:inherit;opacity:.6;margin-right:4px;font-size:13px}
     </div>
   </div>
 </div>
+<div id="wui" style="display:none">
+  <div id="quest"></div><canvas id="mm" width="112" height="112"></canvas>
+  <button id="act" style="display:none"></button>
+  <div id="joyzone"><div id="joy"><div id="knob"></div></div></div>
+  <div id="hint">WASD / 방향키 이동 · Shift 달리기 · E / Space 대화</div>
+</div>
+<div class="glass" id="dlg"><div id="dname"></div><div id="dtext"></div><div id="dnext">▶</div></div>
 <div id="bubble"></div>
 <div id="fx"></div>
 <div id="flash"></div>
@@ -183,9 +206,9 @@ function textTex(txt,{font='bold 80px Jua, sans-serif',color='#fff',bg=null,w=25
 /* ================= WORLD ================= */
 // sky dome with nebula shader
 const sky=new THREE.Mesh(new THREE.SphereGeometry(90,48,24),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,
- uniforms:{t:{value:0},boost:{value:0}},
+ uniforms:{t:{value:0},boost:{value:0},day:{value:1}},
  vertexShader:`varying vec3 v;void main(){v=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
- fragmentShader:`varying vec3 v;uniform float t,boost;
+ fragmentShader:`varying vec3 v;uniform float t,boost,day;
  float h(vec3 p){p=fract(p*.3183+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
  float n(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);return mix(mix(mix(h(i),h(i+vec3(1,0,0)),f.x),mix(h(i+vec3(0,1,0)),h(i+vec3(1,1,0)),f.x),f.y),mix(mix(h(i+vec3(0,0,1)),h(i+vec3(1,0,1)),f.x),mix(h(i+vec3(0,1,1)),h(i+vec3(1,1,1)),f.x),f.y),f.z);}
  float fbm(vec3 p){float a=.5,s=0.;for(int i=0;i<5;i++){s+=a*n(p);p*=2.03;a*=.5;}return s;}
@@ -196,7 +219,7 @@ const sky=new THREE.Mesh(new THREE.SphereGeometry(90,48,24),new THREE.ShaderMate
   c+=vec3(.1,.35,.8)*pow(g,3.)*.55;
   c+=vec3(1.,.3,.8)*boost*pow(f,2.)*.5;
   float st=step(.9965,h(floor(d*260.)));c+=st*vec3(.9,.85,1.)*(.6+.4*sin(t*3.+d.x*90.));
-  gl_FragColor=vec4(c,1.);}`}));
+  vec3 dc=mix(vec3(1.,.78,.86),vec3(.28,.48,1.),pow(clamp(y*1.5-.35,0.,1.),.7));dc+=vec3(1.,.92,.96)*pow(fbm(d*vec3(4.,9.,4.)+t*.01),3.)*1.4*smoothstep(.5,.62,y);dc+=vec3(1.,.8,.5)*pow(max(dot(d,normalize(vec3(.4,.35,-.8))),0.),48.)*2.;gl_FragColor=vec4(mix(c,dc,day),1.);}`}));sky.renderOrder=-10;
 scene.add(sky);
 // lights
 const hemi=new THREE.HemisphereLight(0x8a7cff,0x1a0a2e,.55);scene.add(hemi);
@@ -204,6 +227,7 @@ const key=new THREE.DirectionalLight(0xffe6ff,2.4);key.position.set(-6,11,8);key
 key.shadow.mapSize.set(2048,2048);Object.assign(key.shadow.camera,{left:-10,right:10,top:10,bottom:-10,near:1,far:40});key.shadow.bias=-.0004;key.shadow.normalBias=.03;scene.add(key);
 const rim=new THREE.DirectionalLight(0x6a8cff,2.2);rim.position.set(8,5,-9);scene.add(rim);
 const fxLight=new THREE.PointLight(0xff77ee,0,22,1.6);fxLight.position.set(0,2.5,0);scene.add(fxLight);
+const arenaG=new THREE.Group();scene.add(arenaG);scene.add(key.target);
 // floor
 function stoneTex(){return canvasTex(1024,1024,(g,w,h)=>{g.fillStyle='#241a3a';g.fillRect(0,0,w,h);
  for(let i=0;i<9000;i++){g.fillStyle=`rgba(${rand(0,60)|0},${rand(0,40)|0},${rand(40,110)|0},${rand(.02,.09)})`;g.fillRect(rand(0,w),rand(0,h),rand(1,6),rand(1,6))}
@@ -220,26 +244,26 @@ function runeTex(){return canvasTex(1024,1024,(g,w,h)=>{g.fillStyle='#000';g.fil
 const floorMat=M(0xffffff,{map:stoneTex(),roughness:.38,metalness:.25,emissive:0xaa66ff,emissiveMap:runeTex(),emissiveIntensity:.5,envMapIntensity:.9});
 floorMat.map.anisotropy=8;
 const plat=mk(new THREE.CylinderGeometry(7.4,7.9,.7,96),M(0x1b1230,{roughness:.6,metalness:.3}),0,-.35,0);
-const floor=mk(new THREE.CircleGeometry(7.4,96),floorMat,0,.001,0);floor.rotation.x=-Math.PI/2;floor.castShadow=false;scene.add(plat,floor);
-const rimGlow=mk(new THREE.TorusGeometry(7.4,.07,12,128),E(0xb06bff,3),0,.02,0,null,false);rimGlow.rotation.x=Math.PI/2;scene.add(rimGlow);
-const rimGlow2=mk(new THREE.TorusGeometry(7.9,.04,8,128),E(0xff6bd6,2),0,-.5,0,null,false);rimGlow2.rotation.x=Math.PI/2;scene.add(rimGlow2);
+const floor=mk(new THREE.CircleGeometry(7.4,96),floorMat,0,.001,0);floor.rotation.x=-Math.PI/2;floor.castShadow=false;arenaG.add(plat,floor);
+const rimGlow=mk(new THREE.TorusGeometry(7.4,.07,12,128),E(0xb06bff,3),0,.02,0,null,false);rimGlow.rotation.x=Math.PI/2;arenaG.add(rimGlow);
+const rimGlow2=mk(new THREE.TorusGeometry(7.9,.04,8,128),E(0xff6bd6,2),0,-.5,0,null,false);rimGlow2.rotation.x=Math.PI/2;arenaG.add(rimGlow2);
 // pillars + torches
 const flames=[];
 for(let i=0;i<10;i++){const a=Math.PI+.15+i/9*(Math.PI*1.0-.3)*1,r=10.2,x=Math.cos(a)*r,z=Math.sin(a)*r-2;
- const p=grp(scene,x,0,z);const h=rand(3.6,5.5);
+ const p=grp(arenaG,x,0,z);const h=rand(3.6,5.5);
  mk(new THREE.CylinderGeometry(.55,.7,h,12),M(0x2a2048,{roughness:.7}),0,h/2,0,p);
  mk(new THREE.BoxGeometry(1.5,.35,1.5),M(0x3a2e66),0,h+.1,0,p);mk(new THREE.BoxGeometry(1.2,.3,1.2),M(0x1e1638),0,.15,0,p);
  for(let k=0;k<3;k++)mk(new THREE.TorusGeometry(.6,.05,6,20),E(0x8a5bff,1.6),0,1+k*(h/3.3),0,p,false).rotation.x=Math.PI/2;
  if(i%2===0){const f=grp(p,0,h+.5,0);mk(new THREE.CylinderGeometry(.22,.12,.22,10),M(0x111,{metalness:.8}),0,0,0,f);
   const fl=mk(new THREE.ConeGeometry(.17,.55,10),ADD(0xff9a3a),0,.38,0,f,false);const l=new THREE.PointLight(i%4===0?0xff8a3c:0xb96bff,5,13,1.7);l.position.set(0,.6,0);f.add(l);flames.push({fl,l,ph:rand(0,6),base:5})}}
 // floating debris
-const debris=[];for(let i=0;i<26;i++){const m=mk(new THREE.IcosahedronGeometry(rand(.25,1.1),0),M(0x2b2150,{roughness:.8,flatShading:true}),0,0,0,scene);const a=rand(0,6.28),r=rand(11,26);m.position.set(Math.cos(a)*r,rand(-3,9),Math.sin(a)*r-8);debris.push({m,s:rand(.1,.5),ph:rand(0,6),y:m.position.y})}
+const debris=[];for(let i=0;i<26;i++){const m=mk(new THREE.IcosahedronGeometry(rand(.25,1.1),0),M(0x2b2150,{roughness:.8,flatShading:true}),0,0,0,arenaG);const a=rand(0,6.28),r=rand(11,26);m.position.set(Math.cos(a)*r,rand(-3,9),Math.sin(a)*r-8);debris.push({m,s:rand(.1,.5),ph:rand(0,6),y:m.position.y})}
 // starfield dust
 const dustN=500,dg=new THREE.BufferGeometry(),dp=new Float32Array(dustN*3);for(let i=0;i<dustN;i++){dp[i*3]=rand(-14,14);dp[i*3+1]=rand(0,10);dp[i*3+2]=rand(-14,8)}dg.setAttribute('position',new THREE.BufferAttribute(dp,3));
-const dust=new THREE.Points(dg,new THREE.PointsMaterial({size:.09,map:glowTex,color:0xcaa8ff,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(dust);
+const dust=new THREE.Points(dg,new THREE.PointsMaterial({size:.09,map:glowTex,color:0xcaa8ff,transparent:true,opacity:.7,blending:THREE.AdditiveBlending,depthWrite:false}));arenaG.add(dust);
 // drifting meme glyphs
 const glyphs=[];const GL=['ㅋㅋㅋ','?!','뇌절','ㄹㅇ','띠링','!!','ㅇㅈ','…','ㅠㅠ','실화?'];
-for(let i=0;i<16;i++){const s=sprite(textTex(pick(GL),{color:'#e9d5ff',stroke:'#4b1d96',font:'bold 84px Jua, sans-serif'}),rand(1.4,2.6),{opacity:rand(.18,.45),fog:false,blending:THREE.AdditiveBlending});s.position.set(rand(-16,16),rand(-1,10),rand(-18,-6));scene.add(s);glyphs.push({s,v:rand(.1,.35),ph:rand(0,6)})}
+for(let i=0;i<16;i++){const s=sprite(textTex(pick(GL),{color:'#e9d5ff',stroke:'#4b1d96',font:'bold 84px Jua, sans-serif'}),rand(1.4,2.6),{opacity:rand(.18,.45),fog:false,blending:THREE.AdditiveBlending});s.position.set(rand(-16,16),rand(-1,10),rand(-18,-6));arenaG.add(s);glyphs.push({s,v:rand(.1,.35),ph:rand(0,6)})}
 
 /* ================= CHARACTERS ================= */
 const hero=new THREE.Group();scene.add(hero);
@@ -279,7 +303,7 @@ const dizzy=grp(hero,0,2.6,0);dizzy.visible=false;for(let i=0;i<4;i++){const s=s
 // ice cage for frozen enemy
 const iceMat=P(0x9ee9ff,{transparent:true,opacity:.45,roughness:.05,metalness:0,clearcoat:1,emissive:0x2a9fd0,emissiveIntensity:.5,flatShading:true});
 const ice=new THREE.Group();for(let i=0;i<9;i++){const s=rand(.35,.8);const c=mk(new THREE.ConeGeometry(s*.5,s*2.6,5),iceMat,Math.cos(i/9*6.28)*1.15,s*1.1,Math.sin(i/9*6.28)*1.15,ice,false);c.rotation.set(rand(-.3,.3),0,rand(-.3,.3))}
-ice.visible=false;scene.add(ice);
+ice.visible=false;arenaG.add(ice);
 
 /* ----- enemies ----- */
 let enemyObj=null;
@@ -368,10 +392,10 @@ const ENEMIES=[
  {n:'뇌절왕',hp:300,atk:18,sc:.68,boss:1,lines:['아직 안 끝났다','아직 안 끝났다 아직 안 끝났다','내가 이걸 몇 번째 말하고 있지?']}
 ];
 function spawnEnemy(i){
- if(enemyObj){scene.remove(enemyObj.g)}
+ if(enemyObj){enemyObj.g.parent&&enemyObj.g.parent.remove(enemyObj.g)}
  const g=new THREE.Group();const b=builders[i](g);g.position.copy(ENEMY_POS);g.rotation.y=-Math.PI/2*.92;g.scale.setScalar(ENEMIES[i].sc);
  g.traverse(o=>{if(o.isMesh){o.userData.hasEm=!!o.material.emissive}});
- scene.add(g);enemyObj={g,tick:b.tick,hy:b.hy*ENEMIES[i].sc,base:ENEMY_POS.clone(),sc:ENEMIES[i].sc,t0:rand(0,6)};
+ arenaG.add(g);enemyObj={g,tick:b.tick,hy:b.hy*ENEMIES[i].sc,base:ENEMY_POS.clone(),sc:ENEMIES[i].sc,t0:rand(0,6)};
  const mats=new Set();g.traverse(o=>{if(o.isMesh&&o.material.emissive&&!(o.material instanceof THREE.MeshBasicMaterial))mats.add(o.material)});mats.forEach(m=>{m.userData.e0=m.emissive.clone();m.userData.i0=m.emissiveIntensity});enemyObj.mats=[...mats];
 }
 function flashMats(obj,color=0xffffff,intensity=2.5,dur=.25){const mats=obj.mats;mats.forEach(m=>{m.emissive.set(color);m.emissiveIntensity=intensity});tween(dur,t=>{mats.forEach(m=>{m.emissive.copy(m.userData.e0).lerp(new THREE.Color(color),1-t);m.emissiveIntensity=lerp(intensity,m.userData.i0,t)})},easeOut)}
@@ -403,7 +427,8 @@ const SHOTS={
  enemy:d=>({p:[-1.4,2.3,d*.62],l:[2.4,1.9,-.2]}),
  boom:d=>({p:[-.5,1.2,d*.58],l:[1.2,1.9,-.3]}),
  top:d=>({p:[0,6,d*.8],l:[0,.8,0]}),
- title:d=>({p:[-3.6+Math.sin(camT*.25)*2,2.1,d*.52],l:[-2.7,1.5,.2]}),
+ title:d=>({p:[hero.position.x+Math.sin(camT*.25)*4.5,hero.position.y+2.4,hero.position.z+Math.cos(camT*.25)*5.5],l:[hero.position.x,hero.position.y+1.5,hero.position.z]}),
+ follow:d=>({p:[hero.position.x,hero.position.y+7.4,hero.position.z+d*.74],l:[hero.position.x,hero.position.y+1,hero.position.z-2.2]}),
  menu:d=>({p:[1,2.8,d*.95],l:[0,1.3,0]})
 };
 function camDist(){const f=THREE.MathUtils.degToRad(camera.fov)/2;return Math.max(11,5.6/(Math.tan(f)*aspect))}
@@ -436,13 +461,14 @@ function frame(){requestAnimationFrame(frame);
  for(let i=fxList.length-1;i>=0;i--){const f=fxList[i];f.t+=dt;const k=Math.min(1,f.t/f.life);f.upd(dt,k);if(k>=1){scene.remove(f.o);f.o.geometry&&f.o.geometry.dispose();if(f.o.material&&f.o.material.dispose)f.o.material.dispose();fxList.splice(i,1)}}
  // idle
  sky.material.uniforms.t.value=T;shieldMat.uniforms.t.value=T;
- hero.position.y=Math.max(hero.position.y*0+heroY,0);
+ hero.position.y=groundY+heroY;
  H.torso.position.y=1.35+Math.sin(T*2)*.02;H.head.position.y=2.02+Math.sin(T*2+.5)*.02;
  if(H.armR&&!heroBusy)H.armR.rotation.x=-.2+Math.sin(T*2)*.03;
  const cp=H.cape.geometry,ba=cp.userData.base,pa=cp.attributes.position.array;for(let i=0;i<pa.length;i+=3){const y=ba[i+1];const f=(.75-y)/1.5;pa[i+2]=ba[i+2]+Math.sin(T*3+y*3.5+ba[i]*2)*.09*f+f*.12*(1+Math.sin(T*1.5))}cp.attributes.position.needsUpdate=true;cp.computeVertexNormals();
  H.plume.rotation.x=-.9+Math.sin(T*3)*.1;
  if(dizzy.visible){dizzy.children.forEach((s,i)=>{const a=T*4+i*1.57;s.position.set(Math.cos(a)*.5,Math.sin(T*3+i)*.05,Math.sin(a)*.5)})}
  if(enemyObj){const e=enemyObj;if(!enemyBusy){e.g.position.y=e.base.y+(enemyFloat?0:0)}e.tick(T+e.t0);if(ice.visible){ice.position.copy(e.g.position);ice.scale.setScalar(e.sc*1.1);ice.rotation.y=Math.sin(T)*.05}}
+ if(worldG.visible)updateWorld(dt,real);
  flames.forEach(f=>{const k=1+Math.sin(T*18+f.ph)*.15+Math.sin(T*31+f.ph*2)*.1;f.fl.scale.set(k*.9,k*1.1,k*.9);f.l.intensity=f.base*(.85+(k-1)*2)});
  debris.forEach(d=>{d.m.rotation.x+=d.s*real*.3;d.m.rotation.y+=d.s*real*.2;d.m.position.y=d.y+Math.sin(T*d.s+d.ph)*.4});
  glyphs.forEach(g=>{g.s.position.y+=g.v*real;if(g.s.position.y>11)g.s.position.y=-1;g.s.material.rotation=Math.sin(T+g.ph)*.15;g.s.lookAt&&0});
@@ -456,7 +482,7 @@ function frame(){requestAnimationFrame(frame);
  camPos.lerp(tp,1-Math.pow(.0016,real));camLook.lerp(tl,1-Math.pow(.0016,real));
  shake*=Math.pow(.02,real);const sh=shake*shake;
  camera.position.copy(camPos).add(new THREE.Vector3((Math.random()-.5)*sh*1.1+Math.sin(T*.4)*.12,(Math.random()-.5)*sh*1.1+Math.sin(T*.55)*.06,(Math.random()-.5)*sh*.6));
- camera.lookAt(camLook);camera.rotation.z+=(Math.random()-.5)*sh*.06;
+ camera.lookAt(camLook);sky.position.copy(camera.position);sky.material.uniforms.day.value=lerp(sky.material.uniforms.day.value,envTarget,.1);camera.rotation.z+=(Math.random()-.5)*sh*.06;
  fovPunch*=Math.pow(.02,real);camera.fov=40+fovPunch;camera.updateProjectionMatrix();
  fxPass.uniforms.t.value=T;fxPass.uniforms.amt.value*=Math.pow(.03,real);fxPass.uniforms.tint.value.multiplyScalar(Math.pow(.01,real));fxPass.uniforms.warp.value*=Math.pow(.05,real);
  bloom.strength=.5+gg*.4+bloomKick;bloomKick*=Math.pow(.004,real);
@@ -465,6 +491,226 @@ function frame(){requestAnimationFrame(frame);
  composer.render();
 }
 let heroY=0,heroBusy=false,enemyBusy=false,enemyFloat=false,boomBoost=0,bloomKick=0,gaugeVal=0;
+
+/* ================= OPEN WORLD ================= */
+const worldG=new THREE.Group();scene.add(worldG);
+let mode='title',curE=0,curMon=null,savedPos=new THREE.Vector3(-4,0,2),savedRot=0,envTarget=1;
+const keys={},joy={x:0,y:0},colliders=[],npcs=[],wmons=[];
+const smooth=(x,a,b)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+function hgt(x,z){const d=Math.hypot(x,z);return smooth(d,16,40)*(Math.sin(x*.07+1)*Math.cos(z*.06)*2.6+Math.sin(x*.21+z*.15)*.7)}
+// ---- terrain
+{const geo=new THREE.PlaneGeometry(240,240,180,180);geo.rotateX(-Math.PI/2);const pa=geo.attributes.position,col=new Float32Array(pa.count*3);
+ const g1=new THREE.Color(),g2=new THREE.Color(),pu=new THREE.Color(),sand=new THREE.Color(),c=new THREE.Color();
+ for(let i=0;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i);pa.setY(i,hgt(x,z));const d=Math.hypot(x,z);const n=Math.sin(x*.5)*Math.cos(z*.43)*.5+.5;
+  g1.setHSL(.29,.55,.3+n*.08);g2.setHSL(.2,.42,.27+n*.06);pu.setHSL(.76,.42,.17+n*.06);sand.setHSL(.1,.33,.56-n*.05);
+  c.copy(g1).lerp(g2,smooth(d,25,50)).lerp(pu,smooth(d,55,80));if(d<9.5)c.lerp(sand,smooth(9.5-d,0,2.5));
+  col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
+ geo.setAttribute('color',new THREE.BufferAttribute(col,3));geo.computeVertexNormals();
+ const ter=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,metalness:0,envMapIntensity:.4}));ter.receiveShadow=true;worldG.add(ter)}
+// ---- buildings
+function house(x,z,rot,{w=3.8,wall=0xefdcb8,roof=0xc2492f,h=2.6,sign=null}={}){
+ const g=grp(worldG,x,hgt(x,z),z);g.rotation.y=rot;
+ mk(new THREE.BoxGeometry(w,h,w),M(wall,{roughness:.9}),0,h/2,0,g);mk(new THREE.BoxGeometry(w+.1,.25,w+.1),M(0x8a6a4a),0,.12,0,g);
+ const r=mk(new THREE.ConeGeometry(w*.82,h*.75,4),M(roof,{roughness:.75}),0,h+h*.37,0,g);r.rotation.y=Math.PI/4;
+ mk(new THREE.BoxGeometry(.9,1.7,.12),M(0x5a3a22),0,.95,w/2+.03,g);mk(new THREE.SphereGeometry(.06,8,6),E(0xffd84d,1),.28,.95,w/2+.1,g,false);
+ for(const s of[-1,1]){mk(new THREE.BoxGeometry(.8,.8,.1),E(0xffc86b,1.6),s*(w/2-.1)-s*.2*0,1.7,w/2+.03,g,false).position.x=s*1.25;const f=mk(new THREE.BoxGeometry(.95,.1,.14),M(0x6a4a2a),s*1.25,1.28,w/2+.05,g)}
+ mk(new THREE.BoxGeometry(.5,1.4,.5),M(0x8a5a4a),w*.25,h+1.1,-w*.2,g);
+ if(sign){const s=sprite(textTex(sign,{font:'bold 64px "Black Han Sans",Jua',color:'#3a2008',bg:'#f1d08a',w:300,h:110}),1);s.scale.set(2.4,.88,1);s.position.set(0,h+.1,w/2+.4);g.add(s)}
+ colliders.push({x,z,r:w*.72});return g}
+house(-8,-9,0,{w:5.4,wall:0xe9d2a6,roof:0x9a7a2e,h:3,sign:'이장 댁'});
+house(9,-8,-.25,{w:4,wall:0xdcc6e8,roof:0x5a3fa8,sign:'여관'});
+house(-14,3,Math.PI/2*.9,{wall:0xc8e4d0,roof:0xc2492f});
+house(14,3,-Math.PI/2*.9,{wall:0xf3d6c0,roof:0x2f7a8a});
+house(0,-15,0,{w:4.4,wall:0xefe2c2,roof:0xc2492f});
+house(-6,13,Math.PI,{wall:0xe3d0f0,roof:0x7a3fa8});
+// well
+{const g=grp(worldG,0,hgt(0,-1),-1);mk(new THREE.CylinderGeometry(1.1,1.2,.9,16),M(0x8a8a9a,{roughness:.9}),0,.45,0,g);mk(new THREE.CylinderGeometry(.85,.85,.05,16),M(0x1a3a6a,{roughness:.1,metalness:.5}),0,.88,0,g);
+ for(const s of[-1,1])mk(new THREE.BoxGeometry(.12,1.7,.12),M(0x6a4a2a),s*.95,1.5,0,g);const rf=mk(new THREE.ConeGeometry(1.5,.7,4),M(0xc2492f),0,2.55,0,g);rf.rotation.y=Math.PI/4;colliders.push({x:0,z:-1,r:1.4})}
+// bonfire
+{const g=grp(worldG,6,hgt(6,4),4);for(let i=0;i<6;i++){const l=mk(new THREE.CylinderGeometry(.1,.1,1.1,6),M(0x3a2410),0,.3,0,g);l.rotation.set(Math.PI/2.6,i/6*6.28,0);l.position.set(Math.cos(i/6*6.28)*.25,.2,Math.sin(i/6*6.28)*.25)}
+ for(let i=0;i<3;i++){const fl=mk(new THREE.ConeGeometry(.3-i*.07,1.1+i*.2,10),ADD(i?0xffd23a:0xff6a1a,{opacity:.9}),0,.7+i*.1,0,g,false);flames.push({fl,l:i?{intensity:0}:Object.assign(new THREE.PointLight(0xff9040,14,18,1.5),{}),ph:rand(0,6),base:14,skip:i>0});if(!i){g.add(flames[flames.length-1].l);flames[flames.length-1].l.position.set(0,1.2,0)}}
+ colliders.push({x:6,z:4,r:.9})}
+// lamp posts
+for(const [x,z] of[[-2,7],[4,-5],[-9,-2],[10,0],[2,9],[-3,-12]]){const g=grp(worldG,x,hgt(x,z),z);mk(new THREE.CylinderGeometry(.06,.08,2.8,8),M(0x2a2036,{metalness:.6}),0,1.4,0,g);mk(new THREE.SphereGeometry(.22,12,10),E(0xffd890,1.6),0,2.9,0,g,false);colliders.push({x,z,r:.2})}
+// signpost
+{const g=grp(worldG,0,hgt(0,-21),-21);mk(new THREE.CylinderGeometry(.1,.1,2.4,6),M(0x5a3a22),0,1.2,0,g);const s=sprite(textTex('뇌절성 ↑ 위험!',{font:'bold 54px "Black Han Sans",Jua',color:'#fff',bg:'#7a1f2e',w:420,h:110}),1);s.scale.set(3.2,.84,1);s.position.set(0,2.6,0);g.add(s)}
+// windmill
+const windmill=(()=>{const g=grp(worldG,17,hgt(17,-14),-14);mk(new THREE.CylinderGeometry(1,1.6,5,14),M(0xf1e6d2),0,2.5,0,g);mk(new THREE.ConeGeometry(1.5,1.6,14),M(0xc2492f),0,5.8,0,g);const b=grp(g,0,5,1.3);for(let i=0;i<4;i++){const bl=mk(new THREE.BoxGeometry(.45,3.2,.06),M(0xf1e6d2),0,1.7,0,b);const p=grp(b);p.rotation.z=i*Math.PI/2;p.add(bl)}b.children.filter(c=>c.isMesh).forEach(m=>b.remove(m));colliders.push({x:17,z:-14,r:1.8});return b})();
+// trees / rocks / flowers (instanced)
+const treeGrid=new Map();const tk=(x,z)=>Math.floor(x/4)+','+Math.floor(z/4);
+const TERR=[{i:0,c:[-24,-14],r:8,n:4,s:.8},{i:1,c:[28,-26],r:9,n:4,s:.62},{i:2,c:[-32,-46],r:9,n:3,s:.55},{i:3,c:[34,-60],r:10,n:2,s:.36},{i:4,c:[-26,-70],r:10,n:2,s:.5},{i:5,c:[0,-83],r:0,n:1,s:.55,boss:1}];
+function freeSpot(x,z,pad=0){const d=Math.hypot(x,z);if(d<19||d>100)return false;for(const t of TERR){if(Math.hypot(x-t.c[0],z-t.c[1])<t.r+3+pad)return false}if(Math.abs(x)<7&&z<-18&&z>-90)return false;return true}
+{const N=420,f1=new THREE.InstancedMesh(new THREE.ConeGeometry(1.5,3,7),M(0xffffff,{roughness:.8}),N),f2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.1,2.4,7),M(0xffffff,{roughness:.8}),N),tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.2,.3,2,6),M(0x5a3a22),N);
+ const m4=new THREE.Matrix4(),col=new THREE.Color();let n=0;
+ for(let tries=0;tries<2000&&n<N;tries++){const a=rand(0,6.283),r=rand(19,100);const x=Math.cos(a)*r,z=Math.sin(a)*r;if(!freeSpot(x,z,0))continue;
+  const y=hgt(x,z),s=rand(.7,1.25);m4.makeTranslation(x,y+1*s,z).scale(new THREE.Vector3(s,s,s));tr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+s,z));
+  f1.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+2.6*s,z));f2.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+4*s,z));
+  const d=Math.hypot(x,z);col.setHSL(lerp(.3,.78,smooth(d,45,85)),lerp(.5,.45,smooth(d,45,85)),lerp(.26,.2,smooth(d,45,85))+rand(0,.06));f1.setColorAt(n,col);col.offsetHSL(0,0,.04);f2.setColorAt(n,col);
+  const k=tk(x,z);if(!treeGrid.has(k))treeGrid.set(k,[]);treeGrid.get(k).push({x,z,r:.5*s});n++}
+ [f1,f2,tr].forEach(m=>{m.count=n;m.castShadow=true;m.receiveShadow=true;m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;worldG.add(m)})}
+{const N=90,rk=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),M(0x8a8499,{roughness:.9,flatShading:true}),N);let n=0;
+ for(let t=0;t<600&&n<N;t++){const a=rand(0,6.283),r=rand(16,100),x=Math.cos(a)*r,z=Math.sin(a)*r;if(!freeSpot(x,z))continue;const s=rand(.4,1.6);rk.setMatrixAt(n++,new THREE.Matrix4().compose(new THREE.Vector3(x,hgt(x,z)+s*.3,z),new THREE.Quaternion().setFromEuler(new THREE.Euler(rand(0,3),rand(0,3),0)),new THREE.Vector3(s,s*.7,s)))}
+ rk.count=n;rk.castShadow=true;rk.receiveShadow=true;worldG.add(rk)}
+{const N=700,fl=new THREE.InstancedMesh(new THREE.SphereGeometry(.13,8,6),new THREE.MeshStandardMaterial({roughness:.5,emissive:0x444444}),N),gr=new THREE.InstancedMesh(new THREE.ConeGeometry(.1,.55,4),M(0x4aa04a,{roughness:.9}),1200);const c=new THREE.Color();let n=0;
+ for(let t=0;t<N;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*70,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<10)continue;c.setHSL(pick([.0,.12,.15,.58,.85]),.9,.65);fl.setMatrixAt(n,new THREE.Matrix4().setPosition(x,hgt(x,z)+.3,z));fl.setColorAt(n++,c)}fl.count=n;worldG.add(fl);
+ n=0;for(let t=0;t<1200;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*80,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<9.5)continue;const s=rand(.7,1.6);gr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,hgt(x,z)+.25*s,z));c.setHSL(lerp(.3,.7,smooth(r,50,80)),.5,rand(.3,.45));gr.setColorAt(n++,c)}gr.count=n;worldG.add(gr)}
+// pollen
+const pollen=(()=>{const N=500,g=new THREE.BufferGeometry(),a=new Float32Array(N*3);for(let i=0;i<N;i++){a[i*3]=rand(-40,40);a[i*3+1]=rand(.3,7);a[i*3+2]=rand(-40,40)}g.setAttribute('position',new THREE.BufferAttribute(a,3));const p=new THREE.Points(g,new THREE.PointsMaterial({size:.14,map:glowTex,color:0xfff3c0,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));p.frustumCulled=false;worldG.add(p);return p})();
+// boss gate
+{const g=grp(worldG,0,hgt(0,-90),-90);for(const s of[-1,1]){mk(new THREE.CylinderGeometry(1.1,1.4,14,10),M(0x1c1030,{roughness:.5,metalness:.4}),s*6.5,7,0,g);mk(new THREE.TorusGeometry(1.25,.12,8,24),E(0xff4be0,2.5),s*6.5,10,0,g,false).rotation.x=Math.PI/2}
+ const arch=mk(new THREE.TorusGeometry(6.5,.5,10,40,Math.PI),E(0xb04bff,2.2),0,13,0,g,false);
+ const beam=mk(new THREE.CylinderGeometry(1.6,1.6,90,24,1,true),ADD(0xff6bd6,{opacity:.16}),0,45,0,g,false);
+ const pl=new THREE.PointLight(0xff5be0,30,40,1.4);pl.position.set(0,5,3);g.add(pl);
+ const s=sprite(textTex('뇌절성',{font:'bold 90px "Black Han Sans",Jua',color:'#fff',stroke:'#7b2dff',w:320,h:140}),1);s.scale.set(7,3,1);s.position.set(0,17,0);g.add(s)}
+// ---- NPCs
+const markerTex={q:textTex('!',{font:'bold 150px "Black Han Sans",Jua',color:'#ffd84d',stroke:'#7a4a00',w:128,h:160}),r:textTex('?',{font:'bold 150px "Black Han Sans",Jua',color:'#7cf0ff',stroke:'#0a4a7a',w:128,h:160})};
+function mkNPC(x,z,o){const g=grp(worldG,x,hgt(x,z),z);const s=o.s||1,skin=M(0xf0c9a0,{roughness:.6}),rb=M(o.robe,{roughness:.7});
+ for(const sx of[-1,1])mk(new THREE.CapsuleGeometry(.12*s,.5*s,4,8),M(o.pants||0x4a3a2a),sx*.17*s,.45*s,0,g);
+ mk(new THREE.CapsuleGeometry(.36*s,.6*s,8,14),rb,0,1.3*s,0,g);mk(new THREE.ConeGeometry(.58*s,.95*s,14),rb,0,.8*s,0,g);
+ if(o.belt)mk(new THREE.TorusGeometry(.38*s,.05*s,6,16),M(o.belt),0,1.05*s,0,g).rotation.x=Math.PI/2;
+ const hd=grp(g,0,2.02*s,0);mk(new THREE.SphereGeometry(.3*s,20,16),skin,0,0,0,hd);
+ for(const sx of[-1,1]){mk(new THREE.SphereGeometry(.04*s,6,6),M(0x111),sx*.11*s,.04*s,.27*s,hd,false);if(o.hat==='straw'||o.brows)mk(new THREE.BoxGeometry(.13*s,.03*s,.03*s),M(0xdddddd),sx*.11*s,.12*s,.27*s,hd,false)}
+ if(o.hat==='straw'){mk(new THREE.CylinderGeometry(.7*s,.7*s,.05*s,24),M(0xe5c46b,{roughness:.9}),0,.2*s,0,hd);mk(new THREE.ConeGeometry(.36*s,.3*s,16),M(0xe5c46b,{roughness:.9}),0,.38*s,0,hd)}
+ if(o.hair)mk(new THREE.SphereGeometry(.32*s,16,12,0,Math.PI*2,0,Math.PI*.55),M(o.hair),0,.04*s,-.02*s,hd);
+ if(o.beard){mk(new THREE.ConeGeometry(.22*s,.6*s,10),M(0xf4f4f4,{roughness:.9}),0,-.32*s,.12*s,hd).rotation.x=Math.PI;const mu=mk(new THREE.CapsuleGeometry(.04*s,.28*s,4,6),M(0xf4f4f4),0,-.1*s,.28*s,hd);mu.rotation.z=Math.PI/2;
+  for(const sx of[-1,1]){const gl=mk(new THREE.TorusGeometry(.09*s,.015*s,6,14),M(0x222,{metalness:.8}),sx*.11*s,.04*s,.29*s,hd,false)}}
+ for(const sx of[-1,1]){const a=mk(new THREE.CapsuleGeometry(.09*s,.5*s,4,8),rb,sx*.48*s,1.35*s,.05*s,g);a.rotation.z=sx*.25}
+ if(o.cane){mk(new THREE.CylinderGeometry(.03,.03,1.5*s,6),M(0x5a3a22),.62*s,.75*s,.2*s,g);const t=mk(new THREE.TorusGeometry(.1*s,.03*s,6,12,Math.PI*1.4),M(0x5a3a22),.55*s,1.5*s,.2*s,g);t.rotation.z=Math.PI/2}
+ const tag=sprite(textTex(o.name,{font:'bold 56px Jua',color:'#fff',bg:'rgba(20,10,40,.75)',w:360,h:100}),1);tag.scale.set(2.3,.64,1);tag.position.set(0,2.75*s,0);g.add(tag);
+ const mkr=sprite(markerTex.q,1,{depthTest:false});mkr.scale.set(.8,1,1);mkr.position.set(0,3.5*s,0);mkr.visible=false;g.add(mkr);
+ const n={g,o,marker:mkr,x,z,ph:rand(0,6),hd};colliders.push({x,z,r:.6});npcs.push(n);return n}
+const chief=mkNPC(-8,-5.2,{name:'이장님',robe:0x4a7c9a,belt:0xffd04d,hat:'straw',beard:true,cane:true,s:1.05});chief.chief=true;
+const innkeeper=mkNPC(9,-4.8,{name:'여관 주인',robe:0x9a4a6a,hair:0x3a2020,s:1});
+const kid=mkNPC(3.2,3.5,{name:'철수',robe:0xffd04d,pants:0x3a5a9a,hair:0x221510,s:.7});
+const granny=mkNPC(-11,5.5,{name:'순자 할머니',robe:0xb8a0d8,hair:0xdddddd,brows:1,s:.95,cane:true});
+// ---- world monsters
+function wmonPos(t){const a=rand(0,6.283),r=Math.sqrt(Math.random())*t.r;return[t.c[0]+Math.cos(a)*r,t.c[1]+Math.sin(a)*r]}
+function spawnWM(t){const g=new THREE.Group(),b=builders[t.i](g);g.scale.setScalar(t.s);const[x,z]=wmonPos(t);g.position.set(x,hgt(x,z),z);
+ const s=sprite(textTex(ENEMIES[t.i].n,{font:'bold 52px Jua',color:t.boss?'#ffb0f0':'#fff',bg:'rgba(30,10,40,.8)',w:420,h:100}),1);const k=3/t.s;s.scale.set(k,k*100/420,1);s.position.set(0,b.hy/1+.8/t.s,0);g.add(s);
+ g.traverse(o=>{if(o.isMesh)o.userData.keep=1});worldG.add(g);
+ wmons.push({g,b,t,tx:x,tz:z,alive:true,ph:rand(0,6),dead:0,wait:rand(0,3),yaw:0})}
+for(const t of TERR)for(let i=0;i<t.n;i++)spawnWM(t);
+function respawnWM(m){const[x,z]=wmonPos(m.t);m.g.position.set(x,hgt(x,z),z);m.tx=x;m.tz=z;m.g.visible=true;m.alive=true}
+function collide(p){for(const c of colliders){const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz),m=c.r+.45;if(d<m&&d>1e-4){p.x=c.x+dx/d*m;p.z=c.z+dz/d*m}}
+ const cx=Math.floor(p.x/4),cz=Math.floor(p.z/4);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const l=treeGrid.get((cx+i)+','+(cz+j));if(l)for(const c of l){const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz),m=c.r+.4;if(d<m&&d>1e-4){p.x=c.x+dx/d*m;p.z=c.z+dz/d*m}}}}
+const angDiff=(a,b)=>{let d=b-a;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return d};
+let graceT=0,groundY=0,stepT=0,mmT=0,nearNpc=null,engaging=false,hintCool=0;
+function updateWorld(dt,real){
+ const p=hero.position;let moving=false;
+ if(mode==='world'){
+  let ix=(keys.d||keys.ArrowRight?1:0)-(keys.a||keys.ArrowLeft?1:0),iz=(keys.s||keys.ArrowDown?1:0)-(keys.w||keys.ArrowUp?1:0);
+  if(Math.hypot(joy.x,joy.y)>.15){ix+=joy.x;iz+=joy.y}
+  const len=Math.hypot(ix,iz);
+  if(len>.1){moving=true;ix/=Math.max(1,len);iz/=Math.max(1,len);const sp=(keys.shift?10:6.4)*Math.min(1,len);
+   p.x+=ix*sp*real;p.z+=iz*sp*real;collide(p);const d=Math.hypot(p.x,p.z);if(d>96){p.x*=96/d;p.z*=96/d}
+   hero.rotation.y+=angDiff(hero.rotation.y,Math.atan2(ix,iz))*Math.min(1,real*14);
+   stepT+=real;if(stepT>.2){stepT=0;burst(new THREE.Vector3(p.x,groundY+.1,p.z),{color:0xd9c9a8,n:3,speed:.8,life:.5,size:.35,grav:-.5})}}
+ }
+ groundY=hgt(p.x,p.z);
+ const sw=moving?Math.sin(T*12)*.75:0;H.legs[0].rotation.x=lerp(H.legs[0].rotation.x,sw,.35);H.legs[1].rotation.x=lerp(H.legs[1].rotation.x,-sw,.35);
+ if(!heroBusy){H.armR.rotation.x=-.2-(moving?sw*.6:0);H.armL.rotation.x=moving?sw*.6:0}
+ if(moving)H.torso.position.y+=Math.abs(Math.sin(T*12))*.06;
+ // npcs
+ nearNpc=null;let nd=3.6;
+ for(const n of npcs){n.g.position.y=groundY*0+hgt(n.x,n.z)+Math.sin(T*2+n.ph)*.015;const dx=p.x-n.x,dz=p.z-n.z,d=Math.hypot(dx,dz);
+  if(d<9)n.g.rotation.y+=angDiff(n.g.rotation.y,Math.atan2(dx,dz))*Math.min(1,real*5);
+  if(n.marker.visible)n.marker.position.y=3.5*(n.o.s||1)+Math.sin(T*4)*.12;
+  if(d<nd&&mode==='world'){nd=d;nearNpc=n}}
+ const ab=$('#act');if(mode==='world'&&nearNpc){ab.style.display='';ab.textContent='💬 '+nearNpc.o.name+' (E)'}else ab.style.display='none';
+ // windmill, pollen
+ windmill.rotation.z+=real*.8;pollen.rotation.y+=real*.01;pollen.position.set(p.x,0,p.z);
+ // monsters
+ for(const m of wmons){
+  if(!m.alive){m.dead-=real;if(m.dead<=0&&!m.t.boss)respawnWM(m);continue}
+  const g=m.g,gp=g.position;m.b.tick(T+m.ph);
+  const dx=p.x-gp.x,dz=p.z-gp.z,d=Math.hypot(dx,dz);let sp=0,vx=0,vz=0;
+  if(!m.t.boss&&mode==='world'&&graceT<=0&&d<11&&Math.hypot(p.x,p.z)>18){vx=dx/d;vz=dz/d;sp=3.2}
+  else if(!m.t.boss){m.wait-=real;const tdx=m.tx-gp.x,tdz=m.tz-gp.z,td=Math.hypot(tdx,tdz);if(td<.6||m.wait<-6){[m.tx,m.tz]=wmonPos(m.t);m.wait=rand(0,2.5)}else if(m.wait<=0){vx=tdx/td;vz=tdz/td;sp=1.5}}
+  if(sp){gp.x+=vx*sp*real;gp.z+=vz*sp*real;m.yaw=Math.atan2(vx,vz)}
+  if(m.t.boss&&d<40)m.yaw=Math.atan2(dx,dz);
+  g.rotation.y+=angDiff(g.rotation.y,m.yaw)*Math.min(1,real*6);
+  const dd=Math.hypot(gp.x,gp.z);if(dd<17){gp.x*=17/dd;gp.z*=17/dd}
+  gp.y=hgt(gp.x,gp.z)+(m.t.i===0?Math.abs(Math.sin(T*5+m.ph))*.25:0);
+  const trig=m.t.boss?5.5:2.6;
+  if(mode==='world'&&!engaging&&graceT<=0&&d<trig){if(m.t.boss&&!(qi===5&&qstate==='active')){if(hintCool<=0){toast('뇌절성의 문이 굳게 닫혀 있다... 이장님의 퀘스트를 먼저 완료하자');hintCool=4}p.z+=3*real*3;}else engage(m)}}
+ hintCool-=real;graceT-=real;
+ // lighting / shadows follow hero
+ key.position.set(p.x-9,p.y+15,p.z+10);key.target.position.copy(p);key.target.updateMatrixWorld();
+ // hud
+ mmT-=real;if(mmT<=0){mmT=.06;drawMM();if(mode==='world')$('#stage').textContent=stageLabel()}
+}
+const stageLabel=()=>{const d=Math.hypot(hero.position.x,hero.position.z);return d<17?'🏡 뇌절마을':d>78?'🏰 뇌절성 앞':'🌲 들판 · '+Math.round(d)+'m'};
+const mmc=$('#mm').getContext('2d');
+function drawMM(){const c=mmc,W=112,h=W/2,S=.7;c.clearRect(0,0,W,W);c.save();c.beginPath();c.arc(h,h,h-1,0,7);c.clip();c.fillStyle='rgba(18,10,36,.82)';c.fillRect(0,0,W,W);
+ const px=x=>h+(x-hero.position.x)*S,pz=z=>h+(z-hero.position.z)*S;
+ c.fillStyle='rgba(110,200,120,.28)';c.beginPath();c.arc(px(0),pz(0),17*S,0,7);c.fill();c.strokeStyle='rgba(255,255,255,.12)';c.beginPath();c.arc(h,h,h-2,0,7);c.stroke();
+ c.fillStyle='#d8b070';for(const k of colliders)if(k.r>2.5)c.fillRect(px(k.x)-3,pz(k.z)-3,6,6);
+ for(const m of wmons){if(!m.alive)continue;c.fillStyle=m.t.boss?'#ff49d8':'#ff6b6b';const x=px(m.g.position.x),y=pz(m.g.position.z);c.beginPath();c.arc(x,y,m.t.boss?4:2.6,0,7);c.fill()}
+ for(const n of npcs){c.fillStyle=n.marker.visible?(n.marker.material.map===markerTex.r?'#7cf0ff':'#ffd84d'):'#9fd6ff';c.beginPath();c.arc(px(n.x),pz(n.z),n.chief?4:2.5,0,7);c.fill()}
+ c.translate(h,h);c.rotate(Math.PI-hero.rotation.y);c.fillStyle='#fff';c.beginPath();c.moveTo(0,-6);c.lineTo(4.5,5);c.lineTo(0,3);c.lineTo(-4.5,5);c.closePath();c.fill();c.restore()}
+
+/* ---- quests ---- */
+const QUESTS=[
+ {t:'슬라임 퇴치',en:0,need:2,ask:['오! 용사님이 오셨구먼! 반갑네, 반갑네!','난 이 마을 이장인데 말이야... 이장인데 말이야... 이장인데 말이야...','아, 미안하네. 내가 같은 말을 자꾸 하지. 이게 다 뇌절왕 때문이야.','요즘 마을 밖에 몬스터가 득실거려. 먼저 서쪽 들판의 초보 슬라임 2마리만 잡아 주겠나? 잡아 주겠나? 잡아 주겠나?'],hint:'슬라임은 서쪽 들판에 있네. 서쪽... 서쪽... 서쪽! (지도의 빨간 점을 보게)',done:['오오! 해냈구먼! 해냈구먼! 해냈구먼!','약속한 보상일세. 보상... 보상... 보상! 마음껏 골라 보게나.']},
+ {t:'짤방 고블린 소탕',en:1,need:2,ask:['다음은 북동쪽 숲의 짤방 고블린일세.','그놈들이 우리 마을 사진을 몰래 찍어서 짤로 만든다네. 짤로... 짤로... 짤로!','벌써 마을 사람 얼굴이 "ㅋㅋㅋ" 짤이 돼버렸어. 2마리만 혼내 주게.'],hint:'북동쪽이야, 북동쪽. 아까 말했는데... 아까 말했는데... 아까 말했는데...',done:['짤방 고블린을 잡다니, 자네 진짜 대단하구먼!','이 은혜는 평생... 평생... 평생 잊지 않겠네.']},
+ {t:'야근 오크 구출',en:2,need:1,ask:['북서쪽 멀리 야근 오크가 있네. 그놈은 아직도 퇴근을 못 했어.','우리 마을 청년들이 끌려가서 회의만 하고 있다네. 회의 끝나고 회의, 그 회의 끝나고 또 회의...','제발 퇴근시켜 주게나. 퇴근... 퇴근... 퇴근!'],hint:'오크는 북서쪽 깊은 곳이야. 퇴근 시간 전에 가야 하네!',done:['청년들이 드디어 퇴근했네! 퇴근!! 퇴근!!! 퇴근!!!!','자네는 우리 마을의 영웅일세. 영웅... 영웅... 영웅!']},
+ {t:'아재개그 드래곤',en:3,need:1,ask:['북동쪽 끝에 드래곤이 산다네. 그놈이 계속 아재개그를 한다네.','"이불이 방긋" 이딴 걸 하루 종일 듣다 보면 마을 사람들 마음이 얼어붙는다네.','제발 그 입 좀 닫게 해 주게나.'],hint:'드래곤은 북동쪽 끝이네. 개그에 웃어주면 안 돼, 절대로!',done:['드래곤이 조용해졌네! 마을이 한결 따뜻해졌어.','근데 자네도 방금 드립 쳤지? 쳤지? 쳤지?']},
+ {t:'알림 악마 퇴치',en:4,need:1,ask:['북서쪽 끝 알림 악마가 99+ 알림을 계속 보내고 있네.','"띠링!" "띠링!" "띠링!" 밤새 잠을 못 잔다네. 제발 방해금지 모드로 만들어 주게.'],hint:'악마는 북서쪽 끝이야. 띠링 소리가 들리면 가까운 걸세.',done:['드디어 조용하구먼. 푹... 푹... 푹 자겠네.','이제 길이 열렸네. 마지막 부탁이 있네...']},
+ {t:'뇌절왕 토벌',en:5,need:1,ask:['이제 북쪽 뇌절성의 문이 열릴 걸세. 거기에 뇌절왕이 있네.','모든 개그를 우려먹고, 모든 이야기를 반복시키는 놈이지.','자네는 지금까지 나를 보며 충분히 배웠을 걸세. 반복이 얼마나 위험한지... 위험한지... 위험한지!','부디 무사히 돌아오게. 이 마을의 운명이 자네 손에 달렸네. 달렸네... 달렸네... 아니 이제 진짜 끝!'],hint:'뇌절성은 마을에서 쭉 북쪽이네. 큰 보라색 빛기둥이 보일 걸세.',done:['해냈구먼...! 정말 해냈구먼!','이제 이 마을도 같은 얘기를 덜 하게 될 걸세. 아마도... 아마도... 아마도.']}
+];
+let qi=0,qstate='none',qprog=0;
+function updateQuestUI(){const el=$('#quest');
+ if(qi>=QUESTS.length){el.innerHTML='📜 <b>모든 퀘스트 완료!</b><br>자유롭게 탐험하세요';chief.marker.visible=false;return}
+ const q=QUESTS[qi];
+ if(qstate==='none'){el.innerHTML=`📜 <b>${q.t}</b><br>이장님에게 말을 걸자 (<span style="color:#ffd84d">!</span>)`;chief.marker.material.map=markerTex.q;chief.marker.visible=true}
+ else if(qstate==='active'){el.innerHTML=`📜 <b>${q.t}</b><br>${ENEMIES[q.en].n} 처치 <span style="color:#ffd84d">${qprog}/${q.need}</span>`;chief.marker.visible=false}
+ else{el.innerHTML=`📜 <b>${q.t}</b><br>이장님에게 보고하자 (<span style="color:#7cf0ff">?</span>)`;chief.marker.material.map=markerTex.r;chief.marker.visible=true}
+ chief.marker.material.needsUpdate=true}
+/* ---- dialogue ---- */
+let dlgNext=null;
+function typeLine(t){return new Promise(res=>{const el=$('#dtext');el.textContent='';let i=0,full=false;const nx=$('#dnext');nx.style.opacity=0;
+ const iv=setInterval(()=>{if(i<t.length){el.textContent+=t[i++];if(i%3===0)tone(420+Math.random()*120,.03,'square',.02)}else{clearInterval(iv);full=true;nx.style.opacity=1}},30);
+ dlgNext=()=>{if(!full){clearInterval(iv);el.textContent=t;full=true;i=t.length;nx.style.opacity=1}else{dlgNext=null;res()}}})}
+async function dialogue(name,lines){mode='dialog';$('#act').style.display='none';$('#dlg').className='on';$('#dname').textContent=name;for(const l of lines)await typeLine(l);$('#dlg').className='';mode='world'}
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;$('#fx').appendChild(d);setTimeout(()=>d.remove(),3200)}
+function rewardPick(){return new Promise(res=>{mode='dialog';const pool=UPS.filter(u=>!u.ok||u.ok(G));const picks=[...pool].sort(()=>Math.random()-.5).slice(0,3);
+ const s=$('#scr');s.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,56px)">보상 선택</h2><div class="desc">HP 30% 회복! 강화 하나를 고르세요.</div><div class="cards">${picks.map((u,i)=>`<button class="card" data-i="${i}"><div class="ic">${u.i}</div><div>${u.t}</div></button>`).join('')}</div>`;s.className='on';
+ s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{SFX.ui();SFX.heal();picks[b.dataset.i].f(G);G.hp=Math.min(G.max,G.hp+Math.round(G.max*.3));s.className='';mode='world';ui();res()})})}
+async function talk(n){
+ if(n.chief){
+  if(qi>=QUESTS.length){await dialogue('이장님',['자네 덕분에 마을이 평화롭네.','평화... 평화... 평화... 아, 또 말이 길어졌군.']);return}
+  const q=QUESTS[qi];
+  if(qstate==='none'){await dialogue('이장님',q.ask);qstate='active';qprog=0;SFX.win();toast('퀘스트 수락: '+q.t);updateQuestUI()}
+  else if(qstate==='active')await dialogue('이장님',[q.hint,`(${ENEMIES[q.en].n} ${qprog}/${q.need})`]);
+  else{await dialogue('이장님',q.done);qi++;qstate='none';qprog=0;await rewardPick();updateQuestUI();if(qi<QUESTS.length)toast('새 퀘스트가 있습니다! 이장님에게 말을 걸어보세요')}
+ }else if(n===innkeeper){await dialogue('여관 주인',['어서 오세요! 푹 쉬고 가세요.','푹... 푹... 푹 쉬세요!']);G.hp=G.max;SFX.heal();burst(new THREE.Vector3(hero.position.x,1,hero.position.z),{color:0x66ffb2,n:60,speed:2,up:3,grav:-1,life:1});toast('HP가 모두 회복되었습니다!');ui()}
+ else if(n===kid)await dialogue('철수',pick([['아저씨 아저씨 아저씨 아저씨!','이 마을 이장님은 한 번 말 시작하면 안 끝나요. 안 끝나요. 안 끝나요.'],['제 점심은 김치찌개예요. 어제도 김치찌개, 그제도 김치찌개...','근데 저는 안 질려요! 안 질려요! 안 질려요!'],['슬라임은 건드리면 끈적해요. 끈적... 끈적... 끈적...','아저씨도 빨리 처치하세요!']]));
+ else if(n===granny)await dialogue('순자 할머니',pick([['예전엔 뇌절왕도 착한 애였지... 착한 애였지... 착한 애였지...','처음엔 농담 한 번만 했는데 말이야. 근데 그걸 백 번을 한 거야.'],['같은 행동을 연속으로 하면 점점 세진다네. 5번째엔 폭발한다더군.','다만 폭발하고 나면 민망해서 한 턴을 쉬지. 쉬지... 쉬지... 쉬지...']]))}
+function interact(){if(mode!=='world'||!nearNpc)return;ac();SFX.ui();talk(nearNpc)}
+/* ---- mode switches ---- */
+function setEnv(m){const day=m==='world';envTarget=day?1:0;hemi.color.set(day?0xcfe0ff:0x8a7cff);hemi.groundColor.set(day?0x6a8a3a:0x1a0a2e);hemi.intensity=day?.7:.55;
+ key.color.set(day?0xfff0d0:0xffe6ff);key.intensity=day?2.1:2.4;rim.intensity=day?.7:2.2;scene.fog.color.set(day?0xe8bfdc:0x160b2e);scene.fog.density=day?.0075:.03;renderer.toneMappingExposure=day?.85:1.15;
+ if(day){Object.assign(key.shadow.camera,{left:-18,right:18,top:18,bottom:-18,near:1,far:60});key.shadow.camera.updateProjectionMatrix()}
+ else{key.position.set(-6,11,8);key.target.position.set(0,0,0);key.target.updateMatrixWorld();Object.assign(key.shadow.camera,{left:-10,right:10,top:10,bottom:-10,near:1,far:40});key.shadow.camera.updateProjectionMatrix()}}
+function snapCam(){const d=camDist(),S=(SHOTS[shot]||SHOTS.wide)(d);camPos.set(...S.p);camLook.set(...S.l)}
+function showUI(m){$('#ebar').style.display=m==='battle'?'':'none';$('#bottom').style.display=m==='battle'?'':'none';$('#wui').style.display=m==='world'?'':'none';$('#gpill').style.display=m==='battle'?'':'none'}
+async function engage(m){
+ engaging=true;mode='transition';curMon=m;savedPos=hero.position.clone();savedRot=hero.rotation.y;
+ bigText('전투!',1,false);SFX.boom();screenFlash(.9,600);fxPass.uniforms.warp.value=3;fxPass.uniforms.amt.value=2;addShake(.6);$('#act').style.display='none';
+ await sleep(500);
+ worldG.visible=false;arenaG.visible=true;setEnv('arena');hero.position.copy(HERO_POS);hero.rotation.set(0,Math.PI/2*.92,0);groundY=0;heroY=0;H.legs.forEach(l=>l.rotation.x=0);H.armL.rotation.x=0;
+ mode='battle';showUI('battle');setShot('wide');snapCam();engaging=false;startBattle(m.t.i)}
+async function enterWorld(spawn){
+ screenFlash(1,700);mode='world';arenaG.visible=false;worldG.visible=true;setEnv('world');
+ const sp=spawn||savedPos;hero.position.copy(sp);hero.rotation.set(0,spawn?0:savedRot,0);groundY=hgt(sp.x,sp.z);heroY=0;over=false;busy=false;heroBusy=false;
+ dizzy.visible=false;shieldMesh.visible=false;ice.visible=false;if(enemyObj)enemyObj.g.visible=false;bubble.style.opacity=0;$('#scr').className='';fxPass.uniforms.tint.value.set(0,0,0);
+ showUI('world');setShot('follow');snapCam();updateQuestUI();ui();graceT=3.5}
+async function onBattleWon(){
+ const idx=curE;if(curMon){curMon.alive=false;curMon.g.visible=false;curMon.dead=idx===5?1e9:25}
+ if(qstate==='active'&&QUESTS[qi].en===idx){qprog++;if(qprog>=QUESTS[qi].need){qstate='ready';setTimeout(()=>toast('퀘스트 목표 달성! 이장님에게 보고하세요'),900)}}
+ G.hp=Math.min(G.max,G.hp+Math.round(G.max*.15));
+ if(idx===5){victory();return}
+ await enterWorld()}
 
 /* ================= GAME ================= */
 const G={max:100,hp:100,atk:12,thr:5,joke:.3,guardPow:.5,boom:0,stun:0,last:null,count:0,guard:0};
@@ -483,7 +729,7 @@ let stage=0,E_,turn=1,busy=false,over=false,lagTimer=0;
 function say(t,c=''){const l=$('#log');const d=document.createElement('div');d.className=c;d.textContent=t;l.appendChild(d);while(l.children.length>6)l.firstChild.remove()}
 function hitsNow(){return Math.min(1+Math.floor((turn-1)/2),6)}
 function ui(){
- $('#stage').textContent=`STAGE ${stage+1} / ${ENEMIES.length}`;
+ $('#stage').textContent=mode==='battle'?'⚔️ '+(E_?E_.n:''):stageLabel();
  const pips=$('#pips');if(pips.children.length!==G.thr){pips.innerHTML='';for(let i=0;i<G.thr;i++){const d=document.createElement('div');d.className='pip';pips.appendChild(d)}}
  [...pips.children].forEach((p,i)=>p.classList.toggle('on',i<G.count));
  gaugeVal=G.count;
@@ -499,11 +745,11 @@ function screenFlash(o=.8,ms=500){const f=$('#flash');f.style.transition='none';
 function enemyBubble(t,ms=2000){bubble.textContent=t;bubble.style.opacity=1;bubbleUntil=performance.now()+ms}
 const hp3=()=>worldOf(hero,1.4),ep3=()=>{const p=enemyObj.g.position.clone();p.y+=enemyObj.hy*.5;return p};
 
-async function startBattle(){
- const b=ENEMIES[stage];E_={...b,max:b.hp,skip:false,li:0};G.last=null;G.count=0;G.stun=0;G.guard=0;turn=1;over=false;busy=true;
+async function startBattle(ei){curE=ei;
+ const b=ENEMIES[ei];E_={...b,max:b.hp,skip:false,li:0};G.last=null;G.count=0;G.stun=0;G.guard=0;turn=1;over=false;busy=true;
  dizzy.visible=false;shieldMesh.visible=false;ice.visible=false;$('#log').innerHTML='';$('#scr').className='';
  $('#ebar').style.display='';$('#bottom').style.display='';
- spawnEnemy(stage);enemyObj.g.visible=false;ui();setShot('wide');
+ spawnEnemy(ei);enemyObj.g.visible=false;ui();setShot('wide');
  await sleep(300);SFX.spawn();enemyObj.g.visible=true;
  // drop-in
  const e=enemyObj,sc=e.sc;ring(ENEMY_POS,{color:0xff6bd6,max:9,life:1});burst(worldOf(e.g,1.5),{color:0xff77ee,n:60,speed:5,life:1});addShake(.5);lightPulse(0xff66ee,30,.6,new THREE.Vector3(ENEMY_POS.x,2,ENEMY_POS.z));
@@ -621,37 +867,46 @@ async function win(){
  // victory pose
  setShot('hero');heroBusy=true;tween(.5,t=>{H.armR.rotation.x=lerp(-.2,-3.0,t)},easeOut);await tween(.6,t=>{heroY=Math.sin(t*Math.PI)*.6;hero.rotation.y=Math.PI/2*.92+t*Math.PI*2},easeIO);heroY=0;hero.rotation.y=Math.PI/2*.92;
  burst(worldOf(hero,2.4),{color:0xffd84d,n:80,speed:5,life:1.4,up:3});bigText('승리!',1,false);await sleep(900);
- heroBusy=false;stage++;
- if(stage>=ENEMIES.length)return victory();
- G.hp=Math.min(G.max,G.hp+Math.round(G.max*.3));ui();showReward()}
-function showReward(){
- setShot('menu');const pool=UPS.filter(u=>!u.ok||u.ok(G));const picks=[...pool].sort(()=>Math.random()-.5).slice(0,3);
- const s=$('#scr');s.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,56px)">보상 선택</h2><div class="desc">HP 30% 회복! 강화 하나를 고르세요.</div><div class="cards">${picks.map((u,i)=>`<button class="card" data-i="${i}"><div class="ic">${u.i}</div><div>${u.t}</div></button>`).join('')}</div>`;
- s.className='on';s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{SFX.ui();picks[b.dataset.i].f(G);G.count=0;ui();startBattle()});
-}
+ heroBusy=false;onBattleWon()}
 async function lose(){
  over=true;busy=true;ui();SFX.lose();setShot('hero');addShake(.8);fxPass.uniforms.tint.value.set(.2,0,0);
- await tween(1,t=>{hero.rotation.z=-t*1.5;hero.position.y=-t*.15},easeIn);
- const s=$('#scr');s.innerHTML=`<h2 class="ttl" style="font-size:clamp(40px,11vw,72px)">GAME OVER</h2><div class="desc">STAGE ${stage+1} · ${E_.n}에게 패배...<br>"사실 너도 뇌절하고 있었어."</div><button class="go">다시 도전</button>`;s.className='on';s.querySelector('.go').onclick=()=>{SFX.ui();resetGame()}}
+ await tween(1,t=>{hero.rotation.z=-t*1.5},easeIn);
+ const s=$('#scr');s.innerHTML=`<h2 class="ttl" style="font-size:clamp(40px,11vw,72px)">쓰러졌다...</h2><div class="desc">${E_.n}에게 패배...<br>"사실 너도 뇌절하고 있었어."<br>마을 사람들이 당신을 업어 왔습니다.</div><button class="go">마을에서 깨어나기</button>`;s.className='on';
+ s.querySelector('.go').onclick=()=>{SFX.ui();G.hp=Math.round(G.max*.6);G.stun=0;G.count=0;enterWorld(new THREE.Vector3(-4,0,2))}}
 function victory(){
- setShot('top');SFX.win();bigText('CLEAR!!',6);
- const s=$('#scr');s.innerHTML=`<h2 class="ttl">🏆 CLEAR!</h2><div class="desc">뇌절왕을 쓰러뜨렸다!<br>세계는 평화를 되찾았다.<br><b>...정말? 한 번 더 해볼까?</b></div><button class="go">한번 더!</button>`;s.className='on';
- s.querySelector('.go').onclick=()=>{SFX.ui();resetGame()}}
-function resetGame(){hero.rotation.z=0;hero.position.copy(HERO_POS);heroY=0;Object.assign(G,{max:100,hp:100,atk:12,thr:5,joke:.3,guardPow:.5,boom:0,stun:0,last:null,count:0,guard:0});stage=0;fxPass.uniforms.tint.value.set(0,0,0);$('#pips').innerHTML='';startBattle()}
+ mode='dialog';setShot('top');SFX.win();bigText('CLEAR!!',6);
+ const s=$('#scr');s.innerHTML=`<h2 class="ttl">🏆 CLEAR!</h2><div class="desc">뇌절왕을 쓰러뜨렸다!<br>세계는 평화를 되찾았다.<br><b>...정말? 이장님께 보고하러 가자.</b></div><button class="go" id="vback">마을로 돌아가기</button><button id="vre" style="pointer-events:auto">처음부터 다시</button>`;s.className='on';
+ $('#vback').onclick=()=>{SFX.ui();G.stun=0;enterWorld(new THREE.Vector3(-4,0,2))};$('#vre').onclick=()=>{SFX.ui();resetGame()}}
+function resetGame(){Object.assign(G,{max:100,hp:100,atk:12,thr:5,joke:.3,guardPow:.5,boom:0,stun:0,last:null,count:0,guard:0});qi=0;qstate='none';qprog=0;wmons.forEach(m=>respawnWM(m));$('#pips').innerHTML='';
+ enterWorld(new THREE.Vector3(-4,0,2)).then(()=>talk(chief))}
 function title(){
- setShot('title');$('#ebar').style.display='none';$('#bottom').style.display='none';
- const s=$('#scr');s.innerHTML=`<h1 class="ttl">뇌절<br>RPG</h1><div class="desc"><b>같은 행동을 연속으로</b> 하면 점점 강해지고,<br>게이지가 차면 <b style="color:#ff9bf0">뇌절 폭발!</b><br>단, 폭발 후엔 민망해서 한 턴 쉽니다.<br>적도 턴이 갈수록 <b style="color:#ff7a93">연타 횟수</b>가 늘어납니다.</div><button class="go" id="start">모험 시작</button><div class="desc" style="font-size:13px;opacity:.7">키보드 1~4로도 조작 가능</div>`;s.className='on';
- $('#start').onclick=()=>{ac();startMusic();SFX.ui();s.className='';setShot('wide');startBattle()}}
+ mode='title';setShot('title');showUI('title');
+ const s=$('#scr');s.innerHTML=`<h1 class="ttl">뇌절<br>RPG</h1><div class="desc"><b>오픈월드 마을</b>을 돌아다니며 이장님의 <b>퀘스트</b>를 받고,<br>몬스터와 닿으면 3D 전투!<br><b>같은 행동을 연속으로</b> 하면 점점 강해지고 게이지가 차면 <b style="color:#ff9bf0">뇌절 폭발!</b><br>(폭발 후엔 민망해서 한 턴 쉽니다)</div><button class="go" id="start">모험 시작</button><div class="desc" style="font-size:13px;opacity:.7">PC: WASD 이동 · E 대화 · 전투 1~4 / 모바일: 화면 왼쪽 드래그로 이동</div>`;s.className='on';
+ $('#start').onclick=async()=>{ac();startMusic();SFX.ui();s.className='';mode='world';showUI('world');setShot('follow');updateQuestUI();await sleep(500);talk(chief)}}
 document.querySelectorAll('#cmds button').forEach(b=>b.onclick=()=>{SFX.ui();act(b.dataset.c)});
-addEventListener('keydown',e=>{const m={1:'atk',2:'joke',3:'guard',4:'again'};if(m[e.key]&&$('#bottom').style.display!=='none')act(m[e.key])});
-document.addEventListener('visibilitychange',()=>{});
+$('#act').onclick=interact;$('#dlg').onclick=()=>{dlgNext&&dlgNext()};
+const jz=$('#joyzone'),jb=$('#joy'),jk=$('#knob');let jid=null,jo=null;
+jz.addEventListener('pointerdown',e=>{jid=e.pointerId;jo={x:e.clientX,y:e.clientY};jb.style.display='block';jb.style.left=(jo.x-55)+'px';jb.style.top=(jo.y-55)+'px';jz.setPointerCapture(e.pointerId)});
+jz.addEventListener('pointermove',e=>{if(e.pointerId!==jid)return;let dx=e.clientX-jo.x,dy=e.clientY-jo.y;const l=Math.hypot(dx,dy),m=50;if(l>m){dx*=m/l;dy*=m/l}joy.x=dx/m;joy.y=dy/m;jk.style.left=(30+dx)+'px';jk.style.top=(30+dy)+'px'});
+const jend=e=>{if(e.pointerId!==jid)return;jid=null;joy.x=joy.y=0;jb.style.display='none';jk.style.left='30px';jk.style.top='30px'};
+jz.addEventListener('pointerup',jend);jz.addEventListener('pointercancel',jend);
+const kn=e=>e.key.length===1?e.key.toLowerCase():e.key;
+addEventListener('keydown',e=>{const k=kn(e);keys[k]=true;
+ if(mode==='dialog'&&dlgNext&&(k==='e'||k===' '||k==='Enter')){dlgNext();e.preventDefault();return}
+ if(mode==='world'&&(k==='e'||k===' '||k==='Enter')){interact();e.preventDefault();return}
+ const m={1:'atk',2:'joke',3:'guard',4:'again'};if(mode==='battle'&&m[k])act(m[k]);
+ if(k===' '||k.startsWith('Arrow'))e.preventDefault()});
+addEventListener('keyup',e=>{keys[kn(e)]=false});
+addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 
 /* boot */
 spawnEnemy(0);enemyObj.g.visible=false;
-camPos.set(-3.6,2.1,6);camLook.set(-2.7,1.5,.2);
+hero.position.set(-4,0,2);hero.rotation.set(0,-2.6,0);groundY=hgt(-4,2);
+arenaG.visible=false;worldG.visible=true;setEnv('world');sky.material.uniforms.day.value=1;
+setShot('title');snapCam();updateQuestUI();$('#stage').textContent=stageLabel();
 frame();title();
 const ld=$('#load');ld.style.opacity=0;setTimeout(()=>ld.remove(),700);
-window.__game={snap(){const d=camDist(),S=(SHOTS[shot]||SHOTS.wide)(d);camPos.set(...S.p);camLook.set(...S.l)},spawnEnemy,setShot,act,G,get stage(){return stage},get over(){return over},get busy(){return busy}};
+window.__game={hero,camera,snap:snapCam,spawnEnemy,setShot,act,G,tp(x,z){hero.position.set(x,0,z)},talk,chief,get mode(){return mode},get stage(){return stage},get over(){return over},get busy(){return busy},get qi(){return qi},get qprog(){return qprog},get qstate(){return qstate},get wmons(){return wmons}};
 </script>
 </body>
 </html>
