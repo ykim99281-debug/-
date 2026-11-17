@@ -57,6 +57,9 @@ button:hover:not(:disabled){filter:brightness(1.25)}button:active:not(:disabled)
 .sk.atk{width:86px;height:86px;background:radial-gradient(circle at 35% 30%,#ff9be8,#7b4dff);border:2px solid #ffd1f6;box-shadow:0 0 26px rgba(255,100,225,.5)}.sk.atk i{font-size:36px}
 .sk.again{background:linear-gradient(180deg,#ff6bd6,#8a3dff);border-color:#ffb3ef}
 @media(max-width:520px){.sk kbd{display:none}}
+#tut{position:absolute;left:50%;top:calc(max(10px,env(safe-area-inset-top)) + 92px);transform:translateX(-50%);width:min(460px,92vw);padding:10px 14px;border-color:#ffd84d;box-shadow:0 0 24px rgba(255,216,77,.35);pointer-events:none}
+#tut #tutS{color:var(--yel);font-size:12px;margin-bottom:3px}#tut #tutT{font-size:16px;line-height:1.45}
+#tutSkip{pointer-events:auto;position:absolute;right:8px;top:6px;padding:3px 9px;font-size:11px;border-radius:10px}
 #act{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:calc(max(14px,env(safe-area-inset-bottom)) + 178px);pointer-events:auto;font-size:18px;padding:13px 20px;border-radius:40px;background:linear-gradient(180deg,#ffd84d,#ff9a3d);color:#3a2008;border:2px solid #fff3b0;box-shadow:0 0 26px rgba(255,200,80,.6);animation:pu .6s infinite alternate;display:none}
 @keyframes pu{to{transform:scale(1.07)}}
 #joyzone{position:absolute;left:0;bottom:0;width:48%;height:52%;pointer-events:auto;touch-action:none}
@@ -78,7 +81,7 @@ button:hover:not(:disabled){filter:brightness(1.25)}button:active:not(:disabled)
 .big{position:absolute;font-family:"Black Han Sans","Jua",sans-serif;color:#fff;white-space:nowrap;text-shadow:0 0 18px #c070ff,0 0 40px #ff49d8,0 4px 0 #3a0a6a;-webkit-text-stroke:2px #5a1fb0;animation:bg 1.3s cubic-bezier(.2,.9,.2,1) forwards}
 @keyframes bg{0%{transform:translate(-50%,-50%) rotate(var(--r)) scale(.1);opacity:0}12%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1.3);opacity:1}25%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1)}100%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1.25);opacity:0}}
 #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:7}
-#scr{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:20;padding:20px;background:radial-gradient(ellipse at center,rgba(10,5,25,.3),rgba(5,2,14,.85));text-align:center;overflow:auto}
+#scr{position:fixed;inset:0;display:none;align-items:center;justify-content:safe center;flex-direction:column;gap:14px;z-index:20;padding:20px;background:radial-gradient(ellipse at center,rgba(10,5,25,.3),rgba(5,2,14,.85));text-align:center;overflow:auto}
 #scr.on{display:flex;animation:fadein .5s}@keyframes fadein{from{opacity:0}}
 .ttl{font-family:"Black Han Sans","Jua",sans-serif;font-size:clamp(46px,13vw,92px);line-height:1;margin:0;background:linear-gradient(180deg,#fff,#ffb6f3 40%,#8b5bff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px rgba(190,110,255,.75)) drop-shadow(0 6px 0 rgba(40,10,90,.9));animation:tt 1.6s ease-in-out infinite alternate}
 @keyframes tt{from{transform:scale(1) rotate(-1deg)}to{transform:scale(1.05) rotate(1deg)}}
@@ -106,9 +109,10 @@ button:hover:not(:disabled){filter:brightness(1.25)}button:active:not(:disabled)
     <div class="bar thin"><i class="xp" id="xpb" style="width:0%"></i></div>
     <div class="gauge"><span>뇌절</span><div class="pips" id="pips"></div></div>
   </div>
-  <div id="tr"><div style="display:flex;gap:6px"><div class="glass" id="qbtn" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">화질</div><div class="glass" id="mute" style="pointer-events:auto">🔊</div></div><canvas id="mm" class="glass" width="112" height="112"></canvas><div class="glass pill" id="clock" style="font-size:12px"></div></div>
+  <div id="tr"><div style="display:flex;gap:6px"><div class="glass" id="qbtn" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">화질</div><div class="glass" id="who" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px;white-space:nowrap;max-width:110px;overflow:hidden">🚪</div><div class="glass" id="mute" style="pointer-events:auto">🔊</div></div><canvas id="mm" class="glass" width="112" height="112"></canvas><div class="glass pill" id="clock" style="font-size:12px"></div></div>
   <div class="glass" id="boss"><div class="nm"><b id="bn">-</b><i id="bt" style="font-style:normal;color:var(--yel);font-size:12px"></i></div><div class="bar"><i class="he" id="bh" style="width:100%"></i></div></div>
   <button id="act"></button>
+  <div class="glass" id="tut" style="display:none"><div id="tutS"></div><div id="tutT"></div><button id="tutSkip">건너뛰기</button></div>
   <div id="acts">
     <button class="sk" data-a="roll" style="grid-area:roll"><i>💨</i><kbd>Space</kbd><s class="cd"></s></button>
     <button class="sk" data-a="guard" style="grid-area:guard"><i>🛡️</i><kbd>K</kbd><s class="cd"></s></button>
@@ -349,7 +353,13 @@ const ENEMIES=[
  {n:'이별 드래곤',sc:.68,lines:['이별이 별로야? 이별이 별로야!','우리가 헤어진 게 아니라 이 별에 혼자 남은 거야','마음에 얼음 한 조각... 얼음땡!'],after:['으윽... 공주님은 사실 매일 밤 울고 계셨어...','그 원흉은 동쪽 호수 건너편에 숨어 있다. 잠수 마왕... 그놈을 찾아가라...']},
  {n:'잠수 마왕',sc:.85,lines:['미안... 폰 꺼놨었어...','나 바빴어... 진짜 바빴어... 바빴어...','고백은 내가 했는데... 왜 내가 도망치지...'],after:['으으... 읽씹한 건... 사랑이 너무 커서 무서웠기 때문이야...','공주에게 전해줘. 미안하다고... 그리고 나 호수 밑으로 다시 잠수할게. (진짜 잠수)']},
  {n:'타락공주',sc:.68,lines:['남자는 다 똑같아...','남자는 다 똑같아 남자는 다 똑같아','답장 하나가 그렇게 어려웠니?','프라이팬 맛 좀 볼래?']}
+,{n:'허수아비',sc:1,lines:['...']}
 ];
+builders.push(function dummy(g){const wood=M(0x8a5a2a,{roughness:.8}),straw=M(0xe0c060,{roughness:.9});
+ mk(new THREE.CylinderGeometry(.12,.14,2.2,8),wood,0,1.1,0,g);const arm=mk(new THREE.BoxGeometry(1.6,.14,.14),wood,0,1.75,0,g);
+ const body=mk(new THREE.CylinderGeometry(.5,.62,1.1,10),straw,0,1.35,0,g);mk(new THREE.SphereGeometry(.34,12,10),straw,0,2.4,0,g);mk(new THREE.ConeGeometry(.4,.4,10),M(0x6a4a2a),0,2.78,0,g);
+ for(const sx of[-1,1])mk(new THREE.SphereGeometry(.05,6,6),M(0x111),sx*.12,2.45,.31,g,false);mk(new THREE.TorusGeometry(.32,.05,8,20),E(0xff3b3b,1),0,1.4,.55,g,false);mk(new THREE.TorusGeometry(.17,.05,8,20),E(0xffffff,1),0,1.4,.56,g,false);
+ return{tick:(t)=>{const w=g.userData.wob||0;g.rotation.z=Math.sin(t*22)*w*.25;g.userData.wob=w*.95},hy:3.3}});
 function flashMats(obj,color=0xffffff,intensity=2.5,dur=.25){const mats=obj.mats;mats.forEach(m=>{m.emissive.set(color);m.emissiveIntensity=intensity});tween(dur,t=>{mats.forEach(m=>{m.emissive.copy(m.userData.e0).lerp(new THREE.Color(color),1-t);m.emissiveIntensity=lerp(intensity,m.userData.i0,t)})},easeOut)}
 const heroMats=[];hero.traverse(o=>{if(o.isMesh&&o.material.emissive){if(!heroMats.includes(o.material)){o.material.userData.e0=o.material.emissive.clone();o.material.userData.i0=o.material.emissiveIntensity;heroMats.push(o.material)}}});
 const heroObj={g:hero,mats:heroMats};
@@ -448,7 +458,7 @@ for(const [x,z] of[[-2,7],[4,-5],[-9,-2],[10,0],[2,9],[-3,-12]]){const g=grp(wor
 const windmill=(()=>{const g=grp(worldG,17,hgt(17,-14),-14);mk(new THREE.CylinderGeometry(1,1.6,5,14),M(0xf1e6d2),0,2.5,0,g);mk(new THREE.ConeGeometry(1.5,1.6,14),M(0xc2492f),0,5.8,0,g);const b=grp(g,0,5,1.3);for(let i=0;i<4;i++){const bl=mk(new THREE.BoxGeometry(.45,3.2,.06),M(0xf1e6d2),0,1.7,0,b);const p=grp(b);p.rotation.z=i*Math.PI/2;p.add(bl)}b.children.filter(c=>c.isMesh).forEach(m=>b.remove(m));colliders.push({x:17,z:-14,r:1.8});return b})();
 // trees / rocks / flowers (instanced)
 const treeGrid=new Map();const tk=(x,z)=>Math.floor(x/4)+','+Math.floor(z/4);
-const TERR=[{i:0,c:[-24,-14],r:8,n:4,s:.8},{i:1,c:[28,-26],r:9,n:4,s:.62},{i:2,c:[-32,-46],r:9,n:2,s:.55},{i:2,c:[-26,-72],r:9,n:2,s:.55},{i:3,c:[34,-60],r:2,n:1,s:.5,boss:1},{i:4,c:[48,8],r:2,n:1,s:.8,boss:1},{i:5,c:[0,-83],r:0,n:1,s:.55,boss:1}];
+const TERR=[{i:0,c:[-24,-14],r:8,n:4,s:.8},{i:1,c:[28,-26],r:9,n:4,s:.62},{i:2,c:[-32,-46],r:9,n:2,s:.55},{i:2,c:[-26,-72],r:9,n:2,s:.55},{i:3,c:[34,-60],r:2,n:1,s:.5,boss:1},{i:4,c:[48,8],r:2,n:1,s:.8,boss:1},{i:5,c:[0,-83],r:0,n:1,s:.55,boss:1},{i:6,c:[-6,-1],r:0,n:1,s:1}];
 function freeSpot(x,z,pad=0){const d=Math.hypot(x,z);if(d<19||d>100)return false;if(Math.hypot(x-26,z-20)<14)return false;for(const t of TERR){if(Math.hypot(x-t.c[0],z-t.c[1])<t.r+3+pad)return false}if(Math.abs(x)<7&&z<-18&&z>-90)return false;return true}
 {const N=1500,f1=new THREE.InstancedMesh(new THREE.ConeGeometry(1.5,3,7),M(0xffffff,{roughness:.8}),N),f2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.1,2.4,7),M(0xffffff,{roughness:.8}),N),tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.2,.3,2,6),M(0x5a3a22),N);
  const m4=new THREE.Matrix4(),col=new THREE.Color();let n=0;
@@ -500,7 +510,8 @@ const ES=[
  {lv:5,hp:140,atk:15,spd:2.5,aggro:12,type:'slam',range:3.4,cd:2.2,xp:55,gold:[15,30],r:1,armor:1},
  {lv:8,hp:420,atk:20,spd:2.6,aggro:16,type:'cone',range:7,cd:2,xp:220,gold:[60,90],r:1.3,armor:1,boss:1},
  {lv:10,hp:560,atk:23,spd:2.8,aggro:18,type:'king',range:9,cd:1.5,xp:380,gold:[100,140],r:1.2,armor:1,boss:1},
- {lv:14,hp:1100,atk:28,spd:2.5,aggro:24,type:'king',range:9,cd:1.3,xp:900,gold:[300,300],r:1.4,armor:1,boss:1,final:1}
+ {lv:14,hp:1100,atk:28,spd:2.5,aggro:24,type:'king',range:9,cd:1.3,xp:900,gold:[300,300],r:1.4,armor:1,boss:1,final:1},
+ {lv:0,hp:999,atk:0,spd:0,aggro:0,type:'none',range:0,cd:9,xp:0,gold:[0,0],r:1,dummy:1}
 ];
 
 // ---- hidden class hall + cairns
@@ -530,7 +541,7 @@ function drawMM(){const c=mmc,W=112,h=W/2,S=.7;c.clearRect(0,0,W,W);c.save();c.b
  c.strokeStyle='rgba(225,185,125,.9)';c.lineWidth=2;for(const r of ROADS){c.beginPath();r.forEach(([x,z],i)=>i?c.lineTo(px(x),pz(z)):c.moveTo(px(x),pz(z)));c.stroke()}
  if(hallFound){c.strokeStyle='rgba(120,230,255,.7)';c.beginPath();TRAIL.forEach(([x,z],i)=>i?c.lineTo(px(x),pz(z)):c.moveTo(px(x),pz(z)));c.stroke();c.fillStyle='#7cf0ff';c.beginPath();c.arc(px(HALL[0]),pz(HALL[1]),4,0,7);c.fill()}
  c.fillStyle='#d8b070';for(const k of colliders)if(k.r>2.5)c.fillRect(px(k.x)-3,pz(k.z)-3,6,6);
- for(const m of wmons){if(!m.alive)continue;c.fillStyle=m.t.boss?'#ff49d8':'#ff6b6b';const x=px(m.g.position.x),y=pz(m.g.position.z);c.beginPath();c.arc(x,y,m.t.boss?4:2.6,0,7);c.fill()}
+ for(const m of wmons){if(!m.alive||m.S.dummy)continue;c.fillStyle=m.t.boss?'#ff49d8':'#ff6b6b';const x=px(m.g.position.x),y=pz(m.g.position.z);c.beginPath();c.arc(x,y,m.t.boss?4:2.6,0,7);c.fill()}
  for(const n of npcs){c.fillStyle=n.marker.visible?(n.marker.material.map===markerTex.r?'#7cf0ff':'#ffd84d'):'#9fd6ff';c.beginPath();c.arc(px(n.x),pz(n.z),n.chief?4:2.5,0,7);c.fill()}
  c.translate(h,h);c.rotate(Math.PI-hero.rotation.y);c.fillStyle='#fff';c.beginPath();c.moveTo(0,-6);c.lineTo(4.5,5);c.lineTo(0,3);c.lineTo(-4.5,5);c.closePath();c.fill();c.restore()}
 
@@ -540,7 +551,11 @@ const WP={club:[{n:'나무몽둥이',a:2,c:0},{n:'쇠몽둥이',a:9,c:100},{n:'�
  sword:[{n:'연습용 철검',a:8,c:0},{n:'강철검',a:20,c:500},{n:'기사의 검',a:36,c:1500},{n:'용사의 검',a:60,c:4000}],
  staff:[{n:'낡은 지팡이',a:8,c:0},{n:'마법 지팡이',a:20,c:500},{n:'수정 지팡이',a:36,c:1500},{n:'대마법사의 지팡이',a:60,c:4000}],
  bow:[{n:'사냥꾼의 활',a:8,c:0},{n:'장궁',a:20,c:500},{n:'엘프의 활',a:36,c:1500},{n:'신궁',a:60,c:4000}],
- mic:[{n:'노래방 마이크',a:8,c:0},{n:'무선 마이크',a:20,c:500},{n:'황금 마이크',a:36,c:1500},{n:'뇌절 마이크',a:60,c:4000}]};
+ mic:[{n:'노래방 마이크',a:8,c:0},{n:'무선 마이크',a:20,c:500},{n:'황금 마이크',a:36,c:1500},{n:'뇌절 마이크',a:60,c:4000}],
+ dagger:[{n:'낡은 단검',a:7,c:0},{n:'쌍날 단검',a:19,c:500},{n:'그림자 단검',a:35,c:1500},{n:'암살자의 단검',a:58,c:4000}],
+ mace:[{n:'성직자의 철퇴',a:8,c:0},{n:'은빛 철퇴',a:20,c:500},{n:'성스러운 철퇴',a:36,c:1500},{n:'대천사의 철퇴',a:60,c:4000}],
+ fist:[{n:'붕대 주먹',a:7,c:0},{n:'가죽 장갑',a:19,c:500},{n:'강철 너클',a:35,c:1500},{n:'용권 너클',a:58,c:4000}],
+ axe:[{n:'손도끼',a:9,c:0},{n:'전투 도끼',a:22,c:500},{n:'광전사의 도끼',a:38,c:1500},{n:'학살자의 도끼',a:62,c:4000}]};
 
 // ---- class outfits
 const OUT={
@@ -548,26 +563,40 @@ const OUT={
  warrior:{steel:[0x9fb0e8,.85,.38],blue:[0x3a56c8,.5,.35],gold:[0xffcc55,1,.25],red:0xd62848,helm:1,pauld:1,shield:1,tabard:1},
  mage:{steel:[0x4a2a8a,.1,.6],blue:[0x2a1a5a,.1,.7],gold:[0xb78cff,.8,.3],red:0x2a2a7a,helm:0,pauld:0,shield:0,tabard:0},
  archer:{steel:[0x3a7a4a,.05,.8],blue:[0x5a4a30,.05,.8],gold:[0xc9a050,.6,.4],red:0x2a5a3a,helm:0,pauld:0,shield:0,tabard:0},
- comic:{steel:[0xff4aa0,.3,.45],blue:[0xffd04d,.2,.5],gold:[0xffffff,.8,.3],red:0x7b4dff,helm:0,pauld:0,shield:0,tabard:0}};
+ comic:{steel:[0xff4aa0,.3,.45],blue:[0xffd04d,.2,.5],gold:[0xffffff,.8,.3],red:0x7b4dff,helm:0,pauld:0,shield:0,tabard:0},
+ rogue:{steel:[0x2a2a3a,.2,.7],blue:[0x1a1a28,.1,.8],gold:[0x8a8aa0,.8,.35],red:0x4a2a6a,helm:0,pauld:0,shield:0,tabard:0},
+ cleric:{steel:[0xf5f0e8,.1,.6],blue:[0xe8e0c8,.1,.7],gold:[0xffd04d,1,.25],red:0xffffff,helm:0,pauld:0,shield:0,tabard:1,robe:0xf5f0e8},
+ monk:{steel:[0xff8a2a,.05,.8],blue:[0xe8e0d0,.05,.8],gold:[0x222222,.3,.6],red:0x222222,helm:0,pauld:0,shield:0,tabard:0,band:0xffffff},
+ berserker:{steel:[0x7a2a1a,.35,.55],blue:[0x3a2a1a,.1,.8],gold:[0x9a9aa0,.9,.35],red:0x5a1a1a,helm:0,pauld:1,shield:0,tabard:0}};
 const OP={helm:[],pauld:[],shield:[],tabard:[]};hero.traverse(o=>{const k=o.userData.part;if(k&&OP[k])OP[k].push(o)});
 const ACC={};
 {const hd=H.head,g=H.g,pur=M(0x4a2a8a,{roughness:.6}),grn=M(0x2a5a3a,{roughness:.8}),pink=M(0xff7be5,{roughness:.9});
- ACC.band=grp(hd);{const b=mk(new THREE.TorusGeometry(.27,.035,6,20),M(0xd62848),0,.1,0,ACC.band,false);b.rotation.x=Math.PI/2}
+ ACC.band=grp(hd);ACC.bandMat=M(0xd62848);{const b=mk(new THREE.TorusGeometry(.27,.035,6,20),ACC.bandMat,0,.1,0,ACC.band,false);b.rotation.x=Math.PI/2}
  ACC.wiz=grp(hd);mk(new THREE.ConeGeometry(.36,.95,16),pur,0,.72,-.04,ACC.wiz).rotation.x=-.12;mk(new THREE.CylinderGeometry(.58,.58,.05,24),pur,0,.2,0,ACC.wiz);mk(new THREE.TorusGeometry(.33,.04,6,20),E(0xffd04d,1.5),0,.26,0,ACC.wiz,false).rotation.x=Math.PI/2;mk(new THREE.SphereGeometry(.08,8,6),E(0xffd04d,3),0,1.2,-.12,ACC.wiz,false);
- ACC.robe=grp(g);mk(new THREE.ConeGeometry(.72,1.15,20,1,true),new THREE.MeshStandardMaterial({color:0x4a2a8a,roughness:.6,side:THREE.DoubleSide}),0,.7,0,ACC.robe);mk(new THREE.TorusGeometry(.55,.04,6,24),E(0xb78cff,1.5),0,.2,0,ACC.robe,false).rotation.x=Math.PI/2;
+ ACC.robe=grp(g);ACC.robeMat=new THREE.MeshStandardMaterial({color:0x4a2a8a,roughness:.6,side:THREE.DoubleSide});mk(new THREE.ConeGeometry(.72,1.15,20,1,true),ACC.robeMat,0,.7,0,ACC.robe);mk(new THREE.TorusGeometry(.55,.04,6,24),E(0xb78cff,1.5),0,.2,0,ACC.robe,false).rotation.x=Math.PI/2;
  ACC.hood=grp(hd);mk(new THREE.SphereGeometry(.37,20,14,0,Math.PI*2,0,Math.PI*.52),grn,0,.05,-.07,ACC.hood);const fe=mk(new THREE.CapsuleGeometry(.025,.5,4,6),M(0xff4d4d),.3,.3,0,ACC.hood);fe.rotation.z=-.7;
  ACC.quiver=grp(g);{const q=mk(new THREE.CylinderGeometry(.11,.1,.75,10),M(0x6a4a2a,{roughness:.8}),.22,1.55,-.5,ACC.quiver);q.rotation.z=.35;for(let i=0;i<3;i++){const a=mk(new THREE.CylinderGeometry(.012,.012,.35,4),M(0xcaa86a),.2+i*.05,1.98,-.5+(i-1)*.04,ACC.quiver,false);a.rotation.z=.35}}
  ACC.wig=grp(hd);mk(new THREE.SphereGeometry(.42,16,12,0,Math.PI*2,0,Math.PI*.58),pink,0,.1,-.06,ACC.wig);for(const sx of[-1,1])mk(new THREE.SphereGeometry(.22,12,10),M(0x7bd7ff,{roughness:.9}),sx*.38,.05,-.05,ACC.wig);
  ACC.nose=grp(hd);mk(new THREE.SphereGeometry(.075,10,8),E(0xff2a4a,1.2),0,-.02,.3,ACC.nose,false);
  ACC.bow=grp(H.torso);for(const sx of[-1,1])mk(new THREE.ConeGeometry(.14,.28,3),M(0x7b4dff),sx*.15,.32,.38,ACC.bow,false).rotation.z=sx*-Math.PI/2;
- for(const k in ACC)ACC[k].visible=false}
-const OUTACC={none:['band'],warrior:[],mage:['wiz','robe'],archer:['hood','quiver'],comic:['wig','nose','bow']};
+ ACC.hoodD=grp(hd);mk(new THREE.SphereGeometry(.37,20,14,0,Math.PI*2,0,Math.PI*.52),M(0x1a1a2a,{roughness:.8}),0,.05,-.07,ACC.hoodD);
+ ACC.mask=grp(hd);mk(new THREE.BoxGeometry(.4,.2,.1),M(0x14141c),0,-.11,.24,ACC.mask,false);
+ ACC.halo=grp(hd);mk(new THREE.TorusGeometry(.32,.035,8,30),E(0xffe27a,3),0,.62,0,ACC.halo,false).rotation.x=Math.PI/2;
+ ACC.horns=grp(hd);for(const sx of[-1,1]){const hn=mk(new THREE.ConeGeometry(.09,.5,6),M(0xe8e0c8,{roughness:.6}),sx*.3,.35,0,ACC.horns);hn.rotation.z=-sx*.5}
+ for(const k in ACC)if(ACC[k].isObject3D)ACC[k].visible=false}
+const OUTACC={none:['band'],warrior:[],mage:['wiz','robe'],archer:['hood','quiver'],comic:['wig','nose','bow'],rogue:['hoodD','mask'],cleric:['halo','robe'],monk:['band'],berserker:['horns']};
 function setOutfit(job){const o=OUT[job],m=H.g.userData.mats;
  for(const k of['steel','blue','gold']){m[k].color.set(o[k][0]);m[k].metalness=o[k][1];m[k].roughness=o[k][2]}m.red.color.set(o.red);
  for(const k of['helm','pauld','shield','tabard'])OP[k].forEach(x=>x.visible=!!o[k]);
- for(const k in ACC)ACC[k].visible=OUTACC[job].includes(k)}
-const JOBKIND={none:'club',warrior:'sword',mage:'staff',archer:'bow',comic:'mic'},JOBNAME={none:'초보자',warrior:'전사',mage:'마법사',archer:'궁수',comic:'개그맨'},WICON={club:'🏏',sword:'🗡️',staff:'🪄',bow:'🏹',mic:'🎤'};
-const JOBS=[{k:'warrior',i:'🗡️',n:'전사',d:'HP +40, 방어 +2<br>넓은 근접 공격',b:{max:40,def:2}},{k:'mage',i:'🪄',n:'마법사',d:'공격력 +4<br>마법 구슬 원거리 공격',b:{atk:4}},{k:'archer',i:'🏹',n:'궁수',d:'HP +10, 공격 +2<br>빠른 화살 원거리',b:{max:10,atk:2}},{k:'comic',i:'🎤',n:'개그맨',d:'뇌절 필요 횟수 -1<br>드립 피해 x1.5, 썰렁 +25%',b:{max:10,thr:-1,joke:.25}}];
+ if(o.robe)ACC.robeMat.color.set(o.robe);else ACC.robeMat.color.set(0x4a2a8a);ACC.bandMat.color.set(o.band||0xd62848);
+ for(const k in ACC)if(ACC[k].isObject3D)ACC[k].visible=OUTACC[job].includes(k)}
+const JOBKIND={none:'club',warrior:'sword',mage:'staff',archer:'bow',comic:'mic',rogue:'dagger',cleric:'mace',monk:'fist',berserker:'axe'},JOBNAME={none:'초보자',warrior:'전사',mage:'마법사',archer:'궁수',comic:'개그맨',rogue:'도적',cleric:'성직자',monk:'격투가',berserker:'광전사'},WICON={club:'🏏',sword:'🗡️',staff:'🪄',bow:'🏹',mic:'🎤',dagger:'🔪',mace:'🔨',fist:'🥊',axe:'🪓'};
+const JATK={none:{lock:.34,cd:.28,range:3.2,half:1.3,mult:1,lunge:.16},warrior:{lock:.34,cd:.28,range:4.1,half:1.7,mult:1.15,lunge:.16},comic:{lock:.34,cd:.28,range:3.1,half:1.4,mult:1,lunge:.16},rogue:{lock:.24,cd:.16,range:2.7,half:1.1,mult:.85,lunge:.22,crit:.28},cleric:{lock:.36,cd:.3,range:3.2,half:1.3,mult:1,lunge:.12},monk:{lock:.26,cd:.18,range:2.9,half:1.5,mult:.7,lunge:.24,twice:1},berserker:{lock:.5,cd:.4,range:4,half:1.8,mult:1.55,lunge:.1}};
+const JOBS=[{k:'warrior',i:'🗡️',n:'전사',d:'HP +40, 방어 +2<br>넓은 근접 공격',b:{max:40,def:2}},{k:'mage',i:'🪄',n:'마법사',d:'공격력 +4<br>마법 구슬 원거리 공격',b:{atk:4}},{k:'archer',i:'🏹',n:'궁수',d:'HP +10, 공격 +2<br>빠른 화살 원거리',b:{max:10,atk:2}},{k:'comic',i:'🎤',n:'개그맨',d:'뇌절 필요 횟수 -1<br>드립 피해 x1.5, 썰렁 +25%',b:{max:10,thr:-1,joke:.25}},
+ {k:'rogue',i:'🔪',n:'도적',d:'빠른 연타, 치명타 28%<br>구르기 쿨타임 짧음',b:{atk:2}},
+ {k:'cleric',i:'🔨',n:'성직자',d:'HP +25, 타격 시 회복<br>방어 회복 2.5배, 물약 강화',b:{max:25}},
+ {k:'monk',i:'🥊',n:'격투가',d:'HP +20, 방어 +1<br>양손 2연타, 흡혈',b:{max:20,def:1}},
+ {k:'berserker',i:'🪓',n:'광전사',d:'공격력 +5, HP +20<br>느리지만 강타, 체력 낮을수록 강함',b:{atk:5,max:20}}];
 const curWeapon=()=>{const k=JOBKIND[G.job];return WP[k][G.wt[k]]};
 const ATK=()=>G.atk+curWeapon().a;
 function applyJob(k){const o=G.jb;G.max-=o.max;G.atk-=o.atk;G.def-=o.def;G.thr-=o.thr;G.joke-=o.joke;const j=JOBS.find(x=>x.k===k),b=Object.assign({max:0,atk:0,def:0,thr:0,joke:0},j.b);
@@ -578,7 +607,11 @@ function setWeapon(kind,tier){const sw=H.sword;while(sw.children.length)sw.remov
  else if(kind==='sword'){mk(new THREE.CylinderGeometry(.04,.04,.28,8),M(0x442211),0,.12,0,sw);mk(new THREE.BoxGeometry(.4,.07,.1),P(0xffcc55,{metalness:1,roughness:.25}),0,.28,0,sw);mk(new THREE.BoxGeometry(.11,1.35,.035),P(0xeaf6ff,{metalness:1,roughness:.1,clearcoat:1,emissive:tc,emissiveIntensity:.25}),0,1,0,sw);mk(new THREE.BoxGeometry(.03,1.3,.045),E(tier?tc:0x7ae8ff,2.2),0,1,0,sw,false);mk(new THREE.ConeGeometry(.055,.2,4),E(tier?tc:0x7ae8ff,2.2),0,1.76,0,sw,false)}
  else if(kind==='staff'){mk(new THREE.CylinderGeometry(.045,.06,1.7,8),wood,0,.8,0,sw);mk(new THREE.TorusGeometry(.16,.03,6,16),P(0xffd04d,{metalness:1,roughness:.3}),0,1.7,0,sw);mk(new THREE.SphereGeometry(.13+tier*.02,12,10),E(tier?tc:0xb78cff,3),0,1.7,0,sw,false)}
  else if(kind==='bow'){const a=mk(new THREE.TorusGeometry(.75,.045,6,24,Math.PI),tier?P(tc,{metalness:.8,roughness:.3}):wood,0,.6,0,sw);a.rotation.z=-Math.PI/2;mk(new THREE.CylinderGeometry(.01,.01,1.5,4),M(0xeeeeee),0,.6,0,sw,false)}
- else{mk(new THREE.CylinderGeometry(.05,.06,.8,10),M(0x222233),0,.4,0,sw);mk(new THREE.SphereGeometry(.2,14,10),tier?P(tc,{metalness:1,roughness:.2}):iron,0,.95,0,sw);mk(new THREE.TorusGeometry(.2,.03,6,16),E(0xff7be5,1.5),0,.95,0,sw,false).rotation.x=Math.PI/2}}
+ else if(kind==='mic'){mk(new THREE.CylinderGeometry(.05,.06,.8,10),M(0x222233),0,.4,0,sw);mk(new THREE.SphereGeometry(.2,14,10),tier?P(tc,{metalness:1,roughness:.2}):iron,0,.95,0,sw);mk(new THREE.TorusGeometry(.2,.03,6,16),E(0xff7be5,1.5),0,.95,0,sw,false).rotation.x=Math.PI/2}
+ else if(kind==='dagger'){mk(new THREE.CylinderGeometry(.035,.035,.26,6),M(0x222233),0,.12,0,sw);mk(new THREE.BoxGeometry(.26,.05,.08),iron,0,.27,0,sw);mk(new THREE.BoxGeometry(.08,.7,.025),P(0xdfe6f5,{metalness:1,roughness:.15,emissive:tier?tc:0x000000,emissiveIntensity:.3}),0,.65,0,sw);mk(new THREE.ConeGeometry(.04,.15,4),iron,0,1.05,0,sw);if(tier>1)mk(new THREE.BoxGeometry(.02,.65,.03),E(tc,2),0,.65,0,sw,false)}
+ else if(kind==='mace'){mk(new THREE.CylinderGeometry(.04,.05,.95,8),wood,0,.45,0,sw);const h=mk(new THREE.SphereGeometry(.24,14,10),P(tier?0xf0e8d0:0xaaaaaa,{metalness:.9,roughness:.3}),0,1.05,0,sw);for(let i=0;i<8;i++){const a=i*.8;mk(new THREE.ConeGeometry(.05,.14,5),iron,Math.cos(a)*.24,1.05+Math.sin(i*2)*.1,Math.sin(a)*.24,sw).rotation.z=-Math.cos(a)*1.3}mk(new THREE.TorusGeometry(.17,.025,6,14),E(tc,2),0,1.05,0,sw,false)}
+ else if(kind==='fist'){mk(new THREE.SphereGeometry(.2,12,10),tier?iron:M(0xe8e0d0,{roughness:.9}),0,.3,.08,sw);for(let i=0;i<4;i++)mk(new THREE.SphereGeometry(.055,8,6),tier>1?E(tc,1.5):iron,-.12+i*.08,.42,.2,sw)}
+ else if(kind==='axe'){mk(new THREE.CylinderGeometry(.04,.05,1.3,8),wood,0,.6,0,sw);mk(new THREE.BoxGeometry(.75,.5,.07),iron,.32,1.15,0,sw);mk(new THREE.BoxGeometry(.06,.5,.09),E(tier?tc:0xdddddd,tier?2:.6),.7,1.15,0,sw,false);mk(new THREE.ConeGeometry(.08,.2,5),iron,0,1.38,0,sw)}}
 
 const need=lv=>Math.round(30*Math.pow(lv,1.45));
 const UPS=[
@@ -644,7 +677,7 @@ colliders.push({x:26,z:20,r:7});
 function stepMove(dx,dz,sp,dt){const p=hero.position;const ox=p.x,oz=p.z;p.x+=dx*sp*dt;p.z+=dz*sp*dt;if(!walkable(p.x,p.z)){if(walkable(p.x,oz))p.z=oz;else if(walkable(ox,p.z))p.x=ox;else{p.x=ox;p.z=oz}}collide(p);const d=Math.hypot(p.x,p.z);if(d>96){p.x*=96/d;p.z*=96/d}
  if(!bossOpen()&&p.z<-76&&Math.abs(p.x)<12){p.z=-76;if(hintCool<=0){toast('타락성의 문이 굳게 닫혀 있다... 이장님의 퀘스트를 먼저 완료하자');hintCool=4}}}
 function updateWorld(dt){
- const p=hero.position;let moving=false;hintCool-=dt;
+ const p=hero.position;const px0=p.x,pz0=p.z;let moving=false;hintCool-=dt;
  const free=mode==='world'&&PA.stun<=0&&G.hp>0&&PA.rollT<=0;
  let ix=(keys.d||keys.ArrowRight?1:0)-(keys.a||keys.ArrowLeft?1:0),iz=(keys.s||keys.ArrowDown?1:0)-(keys.w||keys.ArrowUp?1:0);
  if(Math.hypot(joy.x,joy.y)>.15){ix+=joy.x;iz+=joy.y}
@@ -657,7 +690,7 @@ function updateWorld(dt){
  if(PA.rollT>0){PA.rollT-=dt;stepMove(PA.rollV.x,PA.rollV.z,1,dt)}
  if(PA.lungeT>0){PA.lungeT-=dt;const f=fwdOf(hero.rotation.y);stepMove(f.x,f.z,6,dt)}
  if(PA.kb.lengthSq()>.01){stepMove(PA.kb.x,PA.kb.z,1,dt);PA.kb.multiplyScalar(Math.pow(.01,dt))}
- groundY=hgt(p.x,p.z);
+ {const dd=Math.hypot(p.x-px0,p.z-pz0);if(dd>0&&dd<3&&mode==='world')tutEvent('move',dd)}groundY=hgt(p.x,p.z);
  // leg anim
  const sw=moving?Math.sin(T*12)*.75:0;H.legs[0].rotation.x=lerp(H.legs[0].rotation.x,sw,.35);H.legs[1].rotation.x=lerp(H.legs[1].rotation.x,-sw,.35);
  if(moving)H.torso.position.y+=Math.abs(Math.sin(T*12))*.06;
@@ -687,15 +720,16 @@ function registerAction(c,again){
 function doAction(a,again=false){
  ac();if(mode!=='world'||G.hp<=0||PA.stun>0)return;
  if(a==='pot')return usePotion();if(a==='roll')return doRoll();
- if(a==='again'){if(!PA.last)return;a=PA.last;again=true}
+ if(a==='again'){if(!PA.last)return;a=PA.last;again=true;tutEvent('again')}
  if(PA.lock>0||PA.rollT>0)return;if(!again&&PA.cd[a]>0)return;
  const r=registerAction(a,again);if(r.boom)return doBoom(a);
  if(a==='atk')doAttack(r.mult,again);else if(a==='joke')doJoke(r.mult);else doGuard(r.mult,again)}
 function doAttack(mult,again){
- const rg=G.job==='mage'||G.job==='archer';PA.lock=.34;PA.cd.atk=.28;const e=nearestEnemy(rg?20:6.5);if(e)faceTo(e.g.position);
- PA.combo=PA.comboT>0?(PA.combo+1)%3:0;PA.comboT=1;PA.swingT=0;PA.swingHit=false;PA.swingK=PA.combo;PA.swingMult=mult*[1,1.1,1.6][PA.combo];PA.lungeT=rg?0:.16;SFX.slash();if(again)burst(heroHead(),{color:0xff8ae8,n:30,speed:4,life:.5})}
+ const rg=G.job==='mage'||G.job==='archer',JA=JATK[G.job]||JATK.none;PA.lock=JA.lock;PA.cd.atk=JA.cd;const e=nearestEnemy(rg?20:6.5);if(e)faceTo(e.g.position);
+ PA.combo=PA.comboT>0?(PA.combo+1)%3:0;PA.comboT=1;PA.swingT=0;PA.swingHit=false;PA.swingK=PA.combo;PA.swingMult=mult*[1,1.1,1.6][PA.combo];PA.lungeT=rg?0:JA.lunge;SFX.slash();if(again)burst(heroHead(),{color:0xff8ae8,n:30,speed:4,life:.5})}
 const hprojs=[];
-function attackEffect(){const J=G.job,m=PA.swingMult,big=PA.swingK===2;if(J==='mage'||J==='archer')fireRanged(J,m,big);else if(J==='warrior')meleeHit(4.1,1.7,m*1.15,big);else if(J==='comic')meleeHit(3.1,1.4,m,big);else meleeHit(3.2,1.3,m,big)}
+function attackEffect(){const J=G.job,big=PA.swingK===2,JA=JATK[J]||JATK.none;let m=PA.swingMult;if(J==='mage'||J==='archer')return fireRanged(J,m,big);if(J==='berserker')m*=1+(1-G.hp/G.max)*.6;
+ meleeHit(JA.range,JA.half,m*(J==='warrior'?JA.mult:J==='rogue'||J==='monk'||J==='berserker'?JA.mult:1),big,JA.crit||0);if(JA.twice)setTimeout(()=>{if(mode==='world')meleeHit(JA.range,JA.half,m*JA.mult,false,0)},90)}
 function fireRanged(J,m,big){const p=hero.position,f=fwdOf(hero.rotation.y);let s;
  if(J==='mage'){s=sprite(glowTex,big?2.4:1.6,{blending:THREE.AdditiveBlending,color:big?0xff7be5:0xb78cff})}
  else{s=new THREE.Group();const sh=mk(new THREE.CylinderGeometry(.03,.03,1.3,5),M(0xcaa86a),0,0,0,s,false);sh.rotation.x=Math.PI/2;const tip=mk(new THREE.ConeGeometry(.07,.2,5),P(0xcfd6e0,{metalness:1}),0,0,.7,s,false);tip.rotation.x=Math.PI/2;s.rotation.y=Math.atan2(f.x,f.z)}
@@ -705,18 +739,18 @@ function updateHProjs(dt){for(let i=hprojs.length-1;i>=0;i--){const o=hprojs[i];
   for(const m of wmons){if(!m.alive)continue;if(Math.hypot(m.g.position.x-o.s.position.x,m.g.position.z-o.s.position.z)<m.S.r+.7){hit=m;break}}
   if(hit){hurtEnemy(hit,o.dmg,{crit:o.big,kb:o.J==='mage'?2:3});if(o.J==='mage'){ring(hit.g.position,{color:0xb78cff,max:3,life:.4,y:.2});for(const m of wmons){if(m!==hit&&m.alive&&Math.hypot(m.g.position.x-hit.g.position.x,m.g.position.z-hit.g.position.z)<2.6)hurtEnemy(m,Math.round(o.dmg*.5),{kb:1})}}burst(o.s.position,{color:o.J==='mage'?0xb78cff:0xffe9b0,n:16,speed:4,life:.4})}
   if(hit||o.life<=0){scene.remove(o.s);if(o.s.material)o.s.material.dispose();hprojs.splice(i,1)}}}
-function meleeHit(range,half,mult,big){
+function meleeHit(range,half,mult,big,cc=0){
  const f=fwdOf(hero.rotation.y),p=hero.position;let any=false;
  const pos=new THREE.Vector3(p.x,p.y+1.5,p.z).addScaledVector(f,1.6);
  slashAt(pos,hero.rotation.y,PA.swingK===1?.9:-.5,big?0xffa8f2:0xbff4ff,big?3:2.2,PA.swingK===1?-1:1);
  if(big){ring(p,{color:0xff9af0,max:5,life:.5,y:.1});addShake(.3)}
  for(const m of wmons){if(!m.alive)continue;const dx=m.g.position.x-p.x,dz=m.g.position.z-p.z,d=Math.hypot(dx,dz);if(d>range+m.S.r)continue;
   if(Math.abs(angDiff(hero.rotation.y,Math.atan2(dx,dz)))>half&&d>m.S.r+1)continue;
-  hurtEnemy(m,Math.round(ATK()*mult*rand(.9,1.1)),{crit:big||mult>=2.5,kb:big?6:3});any=true}
+  {const rc=cc&&Math.random()<cc;hurtEnemy(m,Math.round(ATK()*mult*(rc?1.8:1)*rand(.9,1.1)),{crit:big||mult>=2.5||rc,kb:big?6:3});if(G.job==='cleric')heal(Math.max(1,Math.round(G.max*.012)));if(G.job==='monk'&&Math.random()<.5)heal(2)}any=true}
  return any}
 function slashAt(pos,yaw,rotZ,color,size,flip){slashFx(pos,rotZ,color,size,flip,yaw)}
 function doJoke(mult){
- PA.lock=.55;PA.cd.joke=PA.cdMax.joke;const e=nearestEnemy(9);if(e)faceTo(e.g.position);SFX.joke();
+ PA.lock=.55;PA.cd.joke=PA.cdMax.joke;tutEvent('joke');const e=nearestEnemy(9);if(e)faceTo(e.g.position);SFX.joke();
  const yaw0=hero.rotation.y;tween(.45,t=>{heroY=Math.sin(t*Math.PI)*.8;hero.rotation.y=yaw0+t*Math.PI*2},easeIO).then(()=>{heroY=0;hero.rotation.y=yaw0});
  const base=heroHead().add(new THREE.Vector3(0,.4,0));for(let i=0;i<4;i++)setTimeout(()=>floatSprite(pick(['ㅋㅋㅋ','드립!','ㅎㅎ','아재!','ㅋ']),base.clone().add(new THREE.Vector3(rand(-1,1),rand(0,.6),rand(-1,1))),{size:rand(1,1.4),rise:rand(1,2)}),i*60);
  // visual wave cone
@@ -725,16 +759,16 @@ function doJoke(mult){
    hurtEnemy(mo,Math.round(ATK()*.7*mult*(G.job==='comic'?1.5:1)*rand(.9,1.1)),{kb:2});if(Math.random()<G.joke+.08*(PA.streak-1))freezeEnemy(mo,2.8)}})}
 function doGuard(mult,again){
  PA.lock=.25;PA.cd.guard=PA.cdMax.guard;PA.guard=1.5+.2*PA.streak;PA.guardPow=Math.min(.92,G.guardPow+.1*(PA.streak-1));SFX.guard();
- const h=Math.round(3*PA.streak*(again?1.5:1));heal(h);ring(hero.position,{color:0x66ddff,max:5,life:.8,y:.1})}
+ const h=Math.round(3*PA.streak*(again?1.5:1)*(G.job==='cleric'?2.5:1));tutEvent('guard');heal(h);ring(hero.position,{color:0x66ddff,max:5,life:.8,y:.1})}
 function heal(n){if(n<=0)return;G.hp=Math.min(G.max,G.hp+n);fxFloat('+'+n,heroHead(),'#4ef0a0');burst(hero.position.clone().add(new THREE.Vector3(0,.3,0)),{color:0x66ffb2,n:26,speed:1.4,up:3,grav:-1,life:1});SFX.heal()}
 function doRoll(){
- if(PA.cd.roll>0||PA.rollT>0||PA.stun>0)return;PA.cd.roll=PA.cdMax.roll;PA.swingT=9;PA.lock=0;
+ if(PA.cd.roll>0||PA.rollT>0||PA.stun>0)return;PA.cd.roll=G.job==='rogue'?.5:PA.cdMax.roll;PA.swingT=9;PA.lock=0;tutEvent('roll');
  const d=PA.moveDir||fwdOf(hero.rotation.y);PA.rollV.set(d.x*13,0,d.z*13);PA.rollT=.3;PA.iframes=.38;hero.rotation.y=Math.atan2(d.x,d.z);
  burst(new THREE.Vector3(hero.position.x,groundY+.2,hero.position.z),{color:0xd9c9a8,n:14,speed:2,life:.6,size:.5,grav:-.5});SFX.slash();
  const r0=hero.rotation.y;tween(.3,t=>{H.g.rotation.x=t*Math.PI*2},easeIO).then(()=>H.g.rotation.x=0)}
 function usePotion(){if(PA.cd.pot>0)return;if(G.pots<=0){toast('물약이 없습니다! 여관에서 구매하세요');return}if(G.hp>=G.max){toast('HP가 가득 찼습니다');return}
- G.pots--;PA.cd.pot=PA.cdMax.pot;heal(Math.round(G.max*.5));hud()}
-async function doBoom(c){
+ G.pots--;PA.cd.pot=PA.cdMax.pot;heal(Math.round(G.max*(G.job==='cleric'?.65:.5)));tutEvent('pot');hud()}
+async function doBoom(c){tutEvent('boom');
  PA.lock=5;bigText('뇌절!!!',1,false);SFX.boom();screenFlash(.6,400);boomBoost=2;addShake(.7);hitstop(120,.08);
  const p=hero.position.clone(),ghosts=[];
  if(c==='guard'){
@@ -844,7 +878,7 @@ function updateEnemies(dt){
  const hp=hero.position;
  for(const m of wmons){
   if(!m.alive){m.dead-=dt;if(m.dead<=0&&!m.t.boss)respawnWM(m);continue}
-  const g=m.g,gp=g.position,S=m.S;{const fx=hp.x-gp.x,fz=hp.z-gp.z;if(fx*fx+fz*fz>4900){g.visible=false;if(m.state!=='idle')m.state='idle';continue}g.visible=true}
+  const g=m.g,gp=g.position,S=m.S;if(S.dummy){m.b.tick(T+m.ph);continue}{const fx=hp.x-gp.x,fz=hp.z-gp.z;if(fx*fx+fz*fz>4900){g.visible=false;if(m.state!=='idle')m.state='idle';continue}g.visible=true}
   const lx0=gp.x,lz0=gp.z;m.b.tick(T+m.ph);
   const dx=hp.x-gp.x,dz=hp.z-gp.z,d=Math.hypot(dx,dz);m.combatT=Math.max(0,m.combatT-dt);m.sayT-=dt;
   if(m.sayT<=0&&m.bar)m.bar.querySelector('.sp').style.display='none';
@@ -886,7 +920,8 @@ function updateBars(){let boss=null;
   m.bar.style.display='block';m.bar.style.left=((v.x*.5+.5)*innerWidth)+'px';m.bar.style.top=((-v.y*.5+.5)*innerHeight)+'px';m.bar.querySelector('i').style.width=clamp(m.hp/m.max*100,0,100)+'%'}
  const b=$('#boss');if(boss&&mode==='world'){b.style.display='block';$('#bn').textContent=(boss.S.final?'💔 ':'⚔️ ')+ENEMIES[boss.t.i].n;$('#bh').style.width=clamp(boss.hp/boss.max*100,0,100)+'%';$('#bt').textContent=boss.frozen>0?'🥶 썰렁':''}else b.style.display='none'}
 function hurtEnemy(m,d,{crit=false,kb=2}={}){
- if(!m.alive)return;m.hp-=d;m.combatT=6;if(m.state==='idle'){m.state='chase';m.fightT=0}showBar(m);
+ if(!m.alive)return;if(m.S.dummy){m.combatT=3;showBar(m);fxFloat(crit?d+'!':''+d,enemyHead(m),crit?'#ffd84d':'#fff');burst(enemyHead(m).add(new THREE.Vector3(0,-.6,0)),{color:0xffe9a0,n:14,speed:4,life:.5});SFX.hit();m.g.userData.wob=1;addShake(.15);tutEvent('hit',1);return}
+ m.hp-=d;m.combatT=6;if(m.state==='idle'){m.state='chase';m.fightT=0}showBar(m);
  fxFloat(crit?d+'!':''+d,enemyHead(m),crit?'#ffd84d':'#fff');burst(enemyHead(m).add(new THREE.Vector3(0,-.5,0)),{color:crit?0xffd84d:0xffffff,n:crit?50:22,speed:crit?8:5,life:.6});
  SFX.hit();flashMats(m,0xffffff,crit?4:2.4,.25);addShake(crit?.7:.28);hitstop(crit?110:55,.1);fxPass.uniforms.amt.value=crit?1.4:.7;bloomKick=crit?.4:.1;
  const dx=m.g.position.x-hero.position.x,dz=m.g.position.z-hero.position.z,l=Math.hypot(dx,dz)||1,k=(m.S.armor?.45:1)*(m.t.boss?.25:1)*kb*2.2;m.kv.set(dx/l*k,0,dz/l*k);m.kbT=.2;
@@ -972,7 +1007,7 @@ function openJobs(){return new Promise(res=>{mode='dialog';const s=$('#scr');con
  s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{const j=JOBS[b.dataset.i];if(j.k===G.job){toast('이미 그 직업입니다');return}if(G.gold<cost){toast('골드가 부족합니다');return}G.gold-=cost;applyJob(j.k);SFX.win();bigText('전직 완료!',1,false);burst(heroHead(),{color:0xb78cff,n:100,speed:6,life:1.3,up:3});ring(hero.position,{color:0x66ddff,max:8,life:1,y:.1});toast(`${j.n}(으)로 전직! ${curWeapon().n} 장착`);hud();s.className='';mode='world';res()});
  $('#shopx').onclick=()=>{SFX.ui();s.className='';mode='world';res()}})}
 async function talk(n){
- if(n.chief){
+ if(n.chief){tutEvent('talk');
   if(qi>=QUESTS.length){await dialogue('이장님',['자네 덕분에 마을이 평화롭네.','평화... 평화... 평화... 아, 또 말이 길어졌군.']);return}
   const q=QUESTS[qi];
   if(qstate==='none'){await dialogue('이장님',q.ask);qstate='active';qprog=0;SFX.win();toast('퀘스트 수락: '+q.t);updateQuestUI()}
@@ -999,10 +1034,53 @@ function interact(){if(mode!=='world'||!nearTarget)return;ac();SFX.ui();
 function victory(){if(cleared)return;cleared=true;SFX.win();bigText('CLEAR!!',6);mode='dialog';const s=$('#scr');
  s.innerHTML=`<h2 class="ttl">CLEAR!</h2><div class="desc">타락공주를 쓰러뜨렸다!<br>정신을 차린 공주는 눈물을 닦으며 말했다.<br><b>"나... 그냥 답장이 받고 싶었어."</b><br>세계는 평화를 되찾았다.<br>(잠수 마왕은 아직 호수 밑에서 나오지 않았다고 한다.)</div><button class="go" id="vback">계속 탐험하기</button>`;s.className='on';
  $('#vback').onclick=()=>{SFX.ui();s.className='';mode='world';updateQuestUI()}}
+
+/* ================= TUTORIAL ================= */
+const TUT={on:false,done:false,step:0,n:0};let tutArrow=null;
+const TSTEPS=[
+ {t:()=>mobile?'📱 화면 왼쪽을 드래그해서 걸어보세요':'⌨️ WASD(또는 방향키)로 걸어보세요. Shift는 달리기!',ev:'move',need:8},
+ {t:()=>mobile?'👆 화면 오른쪽(빈 곳)을 드래그해서 시점을 돌려보세요':'🖱️ 마우스를 드래그해서 시점을 돌려보세요 (휠: 확대/축소)',ev:'cam',need:1},
+ {t:()=>`⚔️ 허수아비(▼)에게 다가가 ${mobile?'오른쪽 아래 ⚔️ 버튼':'J 키 또는 클릭'}으로 3번 공격해보세요. 지금 무기는 나무몽둥이!`,ev:'hit',need:3,beacon:1},
+ {t:()=>'💥 같은 행동을 연속으로 하면 위쪽 "뇌절 게이지"가 차요! 쉬지 말고 허수아비를 계속 때려서 게이지를 가득 채워 "뇌절 폭발"을 터뜨려 보세요! (폭발 후엔 민망해서 잠깐 못 움직여요)',ev:'boom',need:1,beacon:1},
+ {t:()=>`💨 ${mobile?'💨 버튼':'Space 키'}으로 구르기! 구르는 동안은 무적이에요. 바닥의 붉은 범위가 보이면 구르세요!`,ev:'roll',need:1},
+ {t:()=>`🎭 ${mobile?'🎭 버튼':'L 키'}으로 "드립"! 적을 얼려서 "썰렁" 상태로 만들 수 있어요`,ev:'joke',need:1},
+ {t:()=>'🛡️ 방어(K): 피해 감소+회복 · 🧪 물약(Q): HP 회복 · 🔁 한번 더(R): 직전 행동 강화 반복 — 아무거나 하나 써보세요',ev:'skill',need:1},
+ {t:()=>`💬 이장님(머리 위 ❗)에게 가서 ${mobile?'💬 버튼':'E 키'}로 말을 걸어 모험을 시작하세요! (💰 무기는 "무기상점"에서 살 수 있어요)`,ev:'talk',need:1}
+];
+function tutUI(){const st=TSTEPS[TUT.step];$('#tut').style.display=TUT.on?'':'none';if(!TUT.on)return;$('#tutS').textContent=`튜토리얼 ${TUT.step+1}/${TSTEPS.length}`+(st.need>1&&st.ev!=='move'&&st.ev!=='cam'?` · ${Math.min(st.need,Math.floor(TUT.n))}/${st.need}`:'');$('#tutT').textContent=st.t();
+ if(tutArrow)tutArrow.visible=!!st.beacon}
+function startTutorial(){TUT.on=true;TUT.step=0;TUT.n=0;const d=wmons.find(m=>m.S.dummy);if(d&&!tutArrow){tutArrow=sprite(textTex('▼',{font:'bold 120px sans-serif',color:'#ffd84d',stroke:'#7a4a00',w:140,h:140}),1.6,{depthTest:false});tutArrow.position.set(0,d.b.hy+1.2,0);d.g.add(tutArrow)}tutUI()}
+function tutEvent(ev,val=1){if(!TUT.on)return;const st=TSTEPS[TUT.step];const ok=st.ev===ev||(st.ev==='skill'&&(ev==='guard'||ev==='pot'||ev==='again'));if(!ok)return;TUT.n+=val;if(TUT.n>=st.need){TUT.step++;TUT.n=0;SFX.win();if(TUT.step>=TSTEPS.length)endTutorial(true);else{toast('✅ 잘했어요!');tutUI()}}else tutUI()}
+function endTutorial(reward){TUT.on=false;TUT.done=true;if(tutArrow)tutArrow.visible=false;tutUI();if(reward){G.gold+=50;G.pots+=2;toast('🎓 튜토리얼 완료! 보상 💰50 + 🧪물약 2');hud()}saveGame()}
+$('#tutSkip').onclick=()=>{SFX.ui();endTutorial(false)};
+
+/* ================= LOGIN / SAVE (local only) ================= */
+const SAVEK='brainRpg:';let who=null,pinHash=0;
+const hashS=t=>{let h=5381;for(const c of t)h=((h<<5)+h+c.charCodeAt(0))>>>0;return h};
+function listProfiles(){const o=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(SAVEK))o.push(k.slice(SAVEK.length))}}catch(e){}return o}
+function loadProfile(n){try{return JSON.parse(localStorage.getItem(SAVEK+n))}catch(e){return null}}
+function saveGame(){if(!who||mode==='title')return;const d={v:1,name:who,pin:pinHash,G,qi,qstate,qprog,SQ,hallFound,cleared,pos:[hero.position.x,hero.position.z],tod,tutDone:TUT.done,boss:wmons.filter(m=>m.t.boss&&!m.alive).map(m=>m.t.i),chests:props.map(q=>q.kind==='chest'&&!q.alive?1:0),t:Date.now()};try{localStorage.setItem(SAVEK+who,JSON.stringify(d));localStorage.setItem(SAVEK+'__last','1')}catch(e){}}
+function applySave(d){for(const k in d.G)G[k]=d.G[k];qi=d.qi;qstate=d.qstate;qprog=d.qprog;Object.assign(SQ,d.SQ);hallFound=!!d.hallFound;cleared=!!d.cleared;tod=d.tod??tod;TUT.done=!!d.tutDone;
+ (d.boss||[]).forEach(i=>wmons.filter(m=>m.t.i===i).forEach(m=>{m.alive=false;m.g.visible=false;m.dead=1e9}));
+ (d.chests||[]).forEach((v,i)=>{const q=props[i];if(v&&q){q.alive=false;q.g.traverse(o=>{if(o.isSprite)o.visible=false})}});
+ let[x,z]=d.pos||[-4,2];if(!walkable(x,z)||Math.hypot(x,z)>95){x=-4;z=2}hero.position.set(x,hgt(x,z),z);groundY=hgt(x,z);hero.rotation.set(0,0,0);
+ const k=JOBKIND[G.job];setWeapon(k,G.wt[k]);setOutfit(G.job);G.hp=Math.max(1,Math.min(G.hp,G.max));camSmooth.set(x,hero.position.y+4,z+8);camLook.set(x,hero.position.y+1.6,z)}
+setInterval(saveGame,8000);addEventListener('pagehide',saveGame);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveGame()});
+$('#who').onclick=()=>{if(mode!=='world')return;if(confirm('저장하고 처음 화면(로그인)으로 돌아갈까요?')){saveGame();location.reload()}};
+function begin(isNew){const s=$('#scr');ac();startMusic();SFX.ui();s.className='';mode='world';camDistT=11;camPitch=.55;camYaw=0;showUI('world');$('#who').textContent='🚪 '+who;updateQuestUI();hud();
+ if(isNew){TUT.done=false;startTutorial();toast(`환영합니다, ${who}님!`)}else{if(!TUT.done&&false)startTutorial();toast(`${who}님, 다시 오셨군요! 이어서 모험을 계속합니다`)}saveGame()}
 function title(){
  mode='title';showUI('title');
- const s=$('#scr');s.innerHTML=`<h1 class="ttl">뇌절<br>RPG</h1><div class="desc">마왕이 공주에게 고백했다. 사귀었다. 그리고 <b>잠수이별</b>했다.<br>분노한 공주는 마왕을 프라이팬으로 때려잡고 <b style="color:#ff7a93">타락</b>했다...<br>이제 용사가 <b>타락공주를 잡으러</b> 간다!<br><b>실시간 액션</b> · 길을 따라 모험 · 나무몽둥이로 시작 · 5렙에 숨겨진 전직관에서 전직 · 중간보스 2명 + 최종보스<br>이장님의 <b>퀘스트</b>, 레벨업, 전리품, 상점, 낮과 밤이 있습니다.<br><b>같은 행동을 연속으로</b> 하면 점점 강해지고 게이지가 차면 <b style="color:#ff9bf0">뇌절 폭발!</b><br>(폭발 후엔 민망해서 잠시 움직일 수 없어요)</div><button class="go" id="start">모험 시작</button><div class="desc" style="font-size:13px;opacity:.75">PC: WASD 이동 · 마우스 드래그 시점 · J/클릭 공격 · L 드립 · K 방어 · Space 구르기 · R 한번 더 · Q 물약 · E 대화<br>모바일: 왼쪽 드래그 이동, 오른쪽 화면 드래그 시점, 오른쪽 아래 버튼으로 전투</div>`;s.className='on';
- $('#start').onclick=async()=>{ac();startMusic();SFX.ui();s.className='';mode='world';camDistT=11;camPitch=.55;camYaw=0;showUI('world');updateQuestUI();hud();await sleep(500);talk(chief)}}
+ const s=$('#scr'),profs=listProfiles().filter(n=>n!=='__last'),ip='font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.45);color:#fff;text-align:center;outline:none';
+ s.innerHTML=`<h1 class="ttl">뇌절<br>RPG</h1><div class="desc">마왕이 공주에게 고백했다. 사귀었다. 그리고 <b>잠수이별</b>했다.<br>분노한 공주는 마왕을 프라이팬으로 때려잡고 <b style="color:#ff7a93">타락</b>했다...<br>이제 용사가 <b>타락공주를 잡으러</b> 간다!</div>
+ <div class="glass" style="padding:14px;display:flex;flex-direction:column;gap:8px;width:min(330px,90vw)"><input id="nick" maxlength="10" placeholder="닉네임 (처음이면 새로 만들어요)" autocomplete="off" style="${ip}"><input id="pin" maxlength="4" inputmode="numeric" type="password" placeholder="비밀번호 4자리 (선택)" autocomplete="off" style="${ip}"><button class="go" id="start" style="font-size:20px;padding:10px 20px">시작 / 이어하기</button>
+ ${profs.length?`<div style="font-size:12px;color:#cdbdf5">저장된 캐릭터 (누르면 불러와요)</div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">${profs.map(n=>{const d=loadProfile(n);return `<button class="pf" data-n="${n.replace(/"/g,'')}" style="font-size:13px;padding:6px 10px">${n} · Lv.${d&&d.G?d.G.lv:1} ${d&&d.G?JOBNAME[d.G.job]||'':''}</button>`}).join('')}</div>`:''}</div>
+ <div class="desc" style="font-size:12px;opacity:.75">※ 서버·계정 없이 <b>이 기기의 브라우저</b>에만 저장됩니다.<br>PC: WASD 이동 · 마우스 시점 · J/클릭 공격 · L 드립 · K 방어 · Space 구르기 · R 한번 더 · Q 물약 · E 대화<br>모바일: 왼쪽 드래그 이동 · 오른쪽 드래그 시점 · 오른쪽 아래 버튼</div>`;s.className='on';
+ const go=()=>{const name=$('#nick').value.trim();if(!name){toast('닉네임을 입력해 주세요');return}const pin=$('#pin').value.trim(),ex=loadProfile(name);
+  if(ex&&ex.G){if(ex.pin&&hashS(pin)!==ex.pin){toast('비밀번호가 달라요');return}who=name;pinHash=ex.pin||0;applySave(ex);begin(false)}else{who=name;pinHash=pin?hashS(pin):0;begin(true)}};
+ $('#start').onclick=go;$('#nick').addEventListener('keydown',e=>{if(e.key==='Enter')$('#pin').focus()});$('#pin').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+ s.querySelectorAll('.pf').forEach(b=>b.onclick=()=>{$('#nick').value=b.dataset.n;const d=loadProfile(b.dataset.n);if(d&&!d.pin)go();else $('#pin').focus()});
+ try{const l=profs[0];if(l)$('#nick').value=l}catch(e){}}
 
 /* ================= INPUT ================= */
 document.querySelectorAll('.sk').forEach(b=>{const f=e=>{e.preventDefault();doAction(b.dataset.a)};b.addEventListener('pointerdown',f)});
@@ -1015,12 +1093,12 @@ jz.addEventListener('pointerup',jend);jz.addEventListener('pointercancel',jend);
 // camera drag on canvas
 let cd=null;
 canvas.addEventListener('pointerdown',e=>{cd={id:e.pointerId,x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,t:performance.now()};canvas.setPointerCapture(e.pointerId);canvas.style.cursor='grabbing'});
-canvas.addEventListener('pointermove',e=>{if(!cd||e.pointerId!==cd.id)return;camYaw-=(e.clientX-cd.x)*.006;camPitch=clamp(camPitch+(e.clientY-cd.y)*.004,.15,1.3);cd.x=e.clientX;cd.y=e.clientY});
+canvas.addEventListener('pointermove',e=>{if(!cd||e.pointerId!==cd.id)return;tutEvent('cam',Math.abs(e.clientX-cd.x)*.006+Math.abs(e.clientY-cd.y)*.004);camYaw-=(e.clientX-cd.x)*.006;camPitch=clamp(camPitch+(e.clientY-cd.y)*.004,.15,1.3);cd.x=e.clientX;cd.y=e.clientY});
 const cend=e=>{if(!cd||e.pointerId!==cd.id)return;const moved=Math.hypot(e.clientX-cd.sx,e.clientY-cd.sy);if(moved<6&&performance.now()-cd.t<350&&e.pointerType==='mouse'&&e.button===0&&mode==='world')doAction('atk');cd=null;canvas.style.cursor='grab'};
 canvas.addEventListener('pointerup',cend);canvas.addEventListener('pointercancel',cend);
 canvas.addEventListener('wheel',e=>{camDistT=clamp(camDistT+e.deltaY*.01,6,20);e.preventDefault()},{passive:false});
 const kn=e=>{const c=e.code||'';if(c.startsWith('Key'))return c.slice(3).toLowerCase();if(c==='Space')return ' ';if(c.startsWith('Shift'))return 'shift';if(c==='Enter'||c==='NumpadEnter')return 'Enter';if(c.startsWith('Arrow'))return c;return e.key.length===1?e.key.toLowerCase():e.key};
-addEventListener('keydown',e=>{const k=kn(e);if(e.repeat&&k!=='j')return keys[k]=true;keys[k]=true;
+addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;const k=kn(e);if(e.repeat&&k!=='j')return keys[k]=true;keys[k]=true;
  if(mode==='dialog'&&dlgNext&&(k==='e'||k===' '||k==='Enter')){dlgNext();e.preventDefault();return}
  if(mode==='world'){if(k==='e'||k==='Enter'){interact();e.preventDefault();return}
   const m={j:'atk',l:'joke',k:'guard',' ':'roll',r:'again',q:'pot'};if(m[k]){doAction(m[k]);e.preventDefault()}}
