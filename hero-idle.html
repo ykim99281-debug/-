@@ -17,11 +17,17 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 #ground{position:absolute;left:0;right:0;bottom:0;height:60px;background:#0003;border-top:3px solid #0004}
 .unit{position:absolute;bottom:50px;text-align:center;width:90px}
 #heroBox{left:12%}
+#heroBox .bar,#monBox .bar{width:90px}
 #monBox{right:12%}
-.emo{font-size:62px;line-height:1;display:block;filter:drop-shadow(0 4px 2px #0006)}
+.emo{display:block;filter:drop-shadow(0 4px 2px #0006)}
+.emo svg{width:100%;height:100%;display:block;overflow:visible}
+#hero{width:90px;height:108px}
+#mon{width:90px;height:90px}
+#scene{position:absolute;inset:0}
+#scene svg{width:100%;height:100%;display:block}
 #hero{animation:bob 1s ease-in-out infinite}
 #mon{animation:bob 1.3s ease-in-out infinite;transform-origin:bottom}
-#mon.boss{font-size:84px}
+#mon.boss{width:132px;height:132px;margin-left:-42px}
 @keyframes bob{50%{transform:translateY(-6px)}}
 .atk-h{animation:lunge .18s}
 @keyframes lunge{40%{transform:translateX(34px) rotate(8deg)}}
@@ -84,6 +90,20 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 .pull .btn{flex:1;padding:14px 6px;font-size:15px}
 #gachaRes{min-height:60px;background:#0003;border-radius:14px;padding:10px;text-align:center;font-size:30px;margin-bottom:6px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-items:center}
 #gachaRes small{font-size:13px;color:#b8b3dd}
+/* 직업 선택 */
+#clsModal{position:fixed;inset:0;background:#000c;display:none;align-items:center;justify-content:center;z-index:60;padding:14px}
+#clsModal.show{display:flex}
+#cbox{background:#272250;border:2px solid #fdcb6e;border-radius:20px;padding:18px 12px;max-width:440px;width:100%}
+#cbox h2{margin:0 0 4px;text-align:center;color:#fdcb6e;font-size:22px}
+#cbox p{margin:0 0 12px;text-align:center;font-size:13px;color:#b8b3dd}
+#cards{display:flex;gap:8px}
+.card{flex:1;background:#1a1730;border:2px solid #fff3;border-radius:14px;padding:8px 4px 10px;text-align:center;color:#fff;font-family:inherit}
+.card:active{transform:scale(.96);border-color:#fdcb6e}
+.card .pic{width:70px;height:84px;margin:0 auto}
+.card .pic svg{width:100%;height:100%}
+.card b{display:block;font-size:16px;margin:4px 0 2px}
+.card small{display:block;font-size:11.5px;color:#cfcbe8;line-height:1.5;word-break:keep-all}
+.card em{display:block;font-style:normal;font-size:11.5px;color:#fdcb6e;font-weight:800;margin-top:4px;word-break:keep-all}
 /* 모달 */
 #modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
 #modal.show{display:flex}
@@ -101,23 +121,24 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
   </div>
 
   <div id="battle">
+    <div id="scene"></div>
     <div id="progress"></div>
     <div id="bolt"></div>
     <div id="toast"></div>
     <div id="ground"></div>
     <div class="unit" id="heroBox">
       <div class="bar"><i id="hpH"></i></div>
-      <span class="emo" id="hero">🦸</span>
+      <div class="emo" id="hero"></div>
       <div id="pets"></div>
     </div>
     <div class="unit" id="monBox">
       <div class="bar"><i id="hpM"></i></div>
-      <span class="emo" id="mon">🐌</span>
+      <div class="emo" id="mon"></div>
     </div>
   </div>
 
   <div id="skillBar">
-    <button id="skillBtn"><div class="cd" id="cd"></div><span>⚡ 번개 필살기!</span></button>
+    <button id="skillBtn"><div class="cd" id="cd"></div><span id="skillTxt">⚡ 번개 필살기!</span></button>
     <button id="autoBtn" class="on">자동 ON</button>
   </div>
   <div id="stats">
@@ -160,13 +181,14 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
     </div>
     <!-- 환생 -->
     <div class="pg" id="pg3">
+      <div class="row"><div class="ic" id="clsIc"></div><div class="tx"><b>내 직업: <span id="clsName"></span></b><small id="clsDesc"></small></div></div>
       <div class="row"><div class="ic">👻</div><div class="tx"><b>영혼 <span id="soul">0</span>개</b><small>영혼 1개당 공격력·골드 +10% (영구!)</small></div></div>
       <div class="row">
         <div class="ic">🔥</div>
         <div class="tx"><b>환생하기</b><small id="rebInfo"></small></div>
         <button class="btn gold" id="rebBtn">환생</button>
       </div>
-      <div class="note">환생하면 스테이지·골드·강화 레벨이 처음으로 돌아가지만, 💎 보석·장비·펫·영혼은 그대로 남아요. 영혼 덕분에 다음엔 훨씬 빨리 강해져요!</div>
+      <div class="note">환생하면 스테이지·골드·강화 레벨이 처음으로 돌아가고 직업을 다시 고를 수 있어요. 하지만 💎 보석·장비·펫·영혼은 그대로 남아요. 영혼 덕분에 다음엔 훨씬 빨리 강해져요!</div>
       <div class="row">
         <div class="ic">📊</div>
         <div class="tx"><b>기록</b><small>최고 스테이지 <b id="bestS">1</b> · 처치한 몬스터 <b id="kills">0</b></small></div>
@@ -179,6 +201,8 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
     </div>
   </div>
 </div>
+
+<div id="clsModal"><div id="cbox"><h2>직업을 골라요!</h2><p>직업마다 능력과 필살기가 달라요</p><div id="cards"></div></div></div>
 
 <div id="modal"><div id="mbox"><h2 id="mt"></h2><p id="mp"></p><button class="btn" id="mok" style="width:100%;padding:14px">확인</button></div></div>
 
@@ -213,16 +237,18 @@ const PETS=[
   {n:"드래곤",e:"🐲",cost:500, t:"atk", v:1.00},
   {n:"유니콘",e:"🦄",cost:1000,t:"gold",v:1.00},
 ];
-const MONSTERS=["🐌","🐛","🐸","🐺","🦇","🕷️","🐗","🧟","👹","🦂","🐊","🧌"];
-const BOSSES=["🦖","🐉","👿","💀","🤖","👽","🦑","🐙"];
-const SKILL_CD=8, SKILL_MUL=6;
-const BGS=["#4a8c3f,#a3d977","#3a6f9a,#8ad0e8","#8a5a3a,#e0b070","#4b3a7a,#9a7ad0","#7a2a2a,#e07a5a","#2a2a3a,#6a6a8a"];
+const CLS={
+  war :{n:"전사",  d:"체력 +50%",           skill:"⚔️ 대폭격",  cd:8, color:"#ff7675",info:"필살기: 5배 강타 + 체력 20% 회복"},
+  mage:{n:"마법사",d:"공격력 +30%, 체력 -20%",skill:"⚡ 번개",    cd:10,color:"#a29bfe",info:"필살기: 8배 번개 데미지"},
+  arc :{n:"궁수",  d:"공격속도 +25%, 치명타 +10%",skill:"🏹 화살비",cd:8, color:"#55efc4",info:"필살기: 화살 4발 (각 2배)"},
+};
 
 /* ================= 상태 ================= */
-const def=()=>({gold:0,gems:30,stage:1,kill:0,lv:{atk:1,hp:1,spd:1,crit:1},weapons:{},pets:{},soul:0,best:1,totalKills:0,gps:0,auto:true,last:Date.now()});
+const def=()=>({gold:0,gems:30,stage:1,kill:0,lv:{atk:1,hp:1,spd:1,crit:1},weapons:{},pets:{},cls:null,soul:0,best:1,totalKills:0,gps:0,auto:true,last:Date.now()});
 let S=load();
 let C=null,dirty=true;
 let hp=1,monHp=1,monMax=1,monAtk=1,isBoss=false;
+let paused=false,monId=0,sceneZone=-1;
 let heroT=0,monT=0,skillT=0,saveT=0,gpsT=0,gpsAcc=0;
 let buyAmt=1;
 
@@ -246,10 +272,10 @@ function calc(){
   const soul=1+S.soul*0.1;
   return{
     wb,
-    atk:10*(1+(S.lv.atk-1)*0.6)*(1+wb)*(1+pa)*soul,
-    maxHp:100*(1+(S.lv.hp-1)*0.5)*soul,
-    aspd:Math.min(4,1+(S.lv.spd-1)*0.03),
-    crit:Math.min(0.75,0.05+(S.lv.crit-1)*0.01),
+    atk:10*(1+(S.lv.atk-1)*0.6)*(1+wb)*(1+pa)*soul*(S.cls==="mage"?1.3:1),
+    maxHp:100*(1+(S.lv.hp-1)*0.5)*soul*(S.cls==="war"?1.5:S.cls==="mage"?0.8:1),
+    aspd:Math.min(5,(1+(S.lv.spd-1)*0.03)*(S.cls==="arc"?1.25:1)),
+    crit:Math.min(0.85,0.05+(S.lv.crit-1)*0.01+(S.cls==="arc"?0.1:0)),
     goldMul:(1+pg)*soul,
   };
 }
@@ -258,6 +284,76 @@ const upCost=(k,lv)=>Math.floor(UP[k].base*Math.pow(UP[k].g,lv-1));
 const monHpFor=s=>40*Math.pow(1.14,s-1);
 const monAtkFor=s=>6*Math.pow(1.12,s-1);
 const goldFor=s=>5*Math.pow(1.13,s-1);
+
+/* ================= 그림 (SVG) ================= */
+const E=(x,y,r,c="#2d3436")=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${c}"/><circle cx="${x+r*.3}" cy="${y-r*.3}" r="${r*.35}" fill="#fff"/>`;
+const SHD='<ellipse cx="50" cy="104" rx="27" ry="5" fill="#0004"/>';
+const FACE='<circle cx="50" cy="44" r="22" fill="#ffd9b3" stroke="#e0b48a" stroke-width="1.5"/>'+E(41,46,4)+E(59,46,4)+
+  '<path d="M45 55 q5 4 10 0" stroke="#c0392b" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="35" cy="53" r="3.5" fill="#ff9aa2" opacity=".6"/><circle cx="65" cy="53" r="3.5" fill="#ff9aa2" opacity=".6"/>';
+const svg=(vb,b)=>`<svg viewBox="${vb}" xmlns="http://www.w3.org/2000/svg">${b}</svg>`;
+const HERO_VB="0 -12 100 122";
+const HEROES={
+  war:()=>svg(HERO_VB,SHD+
+    '<rect x="36" y="84" width="11" height="17" rx="4" fill="#4b5d7a"/><rect x="53" y="84" width="11" height="17" rx="4" fill="#4b5d7a"/><rect x="33" y="96" width="16" height="8" rx="4" fill="#2d3436"/><rect x="51" y="96" width="16" height="8" rx="4" fill="#2d3436"/>'+
+    '<rect x="30" y="62" width="40" height="30" rx="10" fill="#b2bec3" stroke="#636e72" stroke-width="2"/><rect x="30" y="78" width="40" height="7" fill="#c0392b"/><circle cx="50" cy="81" r="4" fill="#fdcb6e"/>'+
+    '<path d="M10 60 h24 v20 q0 13 -12 18 q-12 -5 -12 -18z" fill="#0984e3" stroke="#2d3436" stroke-width="2.5"/><path d="M22 66 v26 M13 76 h18" stroke="#fdcb6e" stroke-width="4"/>'+
+    '<rect x="77" y="10" width="8" height="58" rx="3" fill="#dfe6e9" stroke="#636e72" stroke-width="2"/><path d="M77 10 L81 0 L85 10z" fill="#dfe6e9" stroke="#636e72" stroke-width="2"/><rect x="70" y="66" width="22" height="6" rx="2" fill="#fdcb6e" stroke="#b7791f"/><rect x="78" y="72" width="6" height="14" fill="#6d4c41"/>'+
+    FACE+'<path d="M28 44 a22 22 0 0 1 44 0 q-22 -8 -44 0z" fill="#b2bec3" stroke="#636e72" stroke-width="2"/><path d="M50 22 q-8 -14 10 -16 q-3 8 5 16z" fill="#d63031"/><rect x="47" y="28" width="6" height="14" rx="2" fill="#b2bec3" stroke="#636e72"/>'),
+  mage:()=>svg(HERO_VB,SHD+
+    '<path d="M33 62 h34 l10 41 h-54z" fill="#a29bfe" stroke="#6c5ce7" stroke-width="2"/><path d="M50 64 v38" stroke="#6c5ce7" stroke-width="2"/><rect x="33" y="76" width="34" height="6" fill="#fdcb6e"/>'+
+    '<rect x="80" y="26" width="6" height="76" rx="3" fill="#6d4c41"/><circle cx="83" cy="22" r="12" fill="#74b9ff" opacity=".35"/><circle cx="83" cy="22" r="8" fill="#0984e3" stroke="#dff9fb" stroke-width="2"/><circle cx="80" cy="19" r="2.5" fill="#fff"/>'+
+    FACE+'<path d="M24 30 Q50 22 76 30 Q50 38 24 30z" fill="#5541d1" stroke="#3c2ea6" stroke-width="2"/><path d="M30 29 Q50 24 70 29 L58 -4 Q52 -12 44 -4z" fill="#6c5ce7" stroke="#3c2ea6" stroke-width="2"/><path d="M52 6 l2.5 5 5.5 .8 -4 4 1 5.5 -5 -2.7 -5 2.7 1 -5.5 -4 -4 5.5 -.8z" fill="#fdcb6e"/>'),
+  arc:()=>svg(HERO_VB,SHD+
+    '<rect x="36" y="84" width="11" height="17" rx="4" fill="#6d4c41"/><rect x="53" y="84" width="11" height="17" rx="4" fill="#6d4c41"/><rect x="33" y="96" width="16" height="8" rx="4" fill="#3d2b1f"/><rect x="51" y="96" width="16" height="8" rx="4" fill="#3d2b1f"/>'+
+    '<rect x="62" y="52" width="12" height="34" rx="4" transform="rotate(14 68 68)" fill="#8d6e63" stroke="#5d4037" stroke-width="2"/><path d="M66 54 l-3 -10 M70 55 l0 -11 M74 56 l3 -10" stroke="#e17055" stroke-width="3" stroke-linecap="round"/>'+
+    '<circle cx="50" cy="42" r="28" fill="#00a383" stroke="#007a63" stroke-width="2"/>'+
+    '<rect x="30" y="62" width="40" height="30" rx="10" fill="#00b894" stroke="#007a63" stroke-width="2"/><rect x="30" y="78" width="40" height="6" fill="#6d4c41"/><circle cx="50" cy="81" r="3.5" fill="#fdcb6e"/>'+
+    '<path d="M84 30 Q108 66 84 100" stroke="#6d4c41" stroke-width="5" fill="none" stroke-linecap="round"/><path d="M84 30 V100" stroke="#fff" stroke-width="1.5"/><path d="M60 66 L96 52" stroke="#b2bec3" stroke-width="3"/><path d="M96 52 l-7 -1 4 6z" fill="#b2bec3"/>'+
+    FACE+'<path d="M26 40 Q50 8 74 40 Q50 24 26 40z" fill="#00b894" stroke="#007a63" stroke-width="2"/><path d="M62 20 q14 -20 22 -14 q-6 8 -10 20z" fill="#ff7675" stroke="#d63031" stroke-width="1.5"/>'),
+};
+const MON_VB="0 0 100 100";
+const MS='<ellipse cx="50" cy="93" rx="30" ry="5" fill="#0004"/>';
+const SLIME=MS+'<path d="M12 90 Q6 42 50 38 Q94 42 88 90 Q50 98 12 90z" fill="#55efc4" stroke="#00b894" stroke-width="3"/><ellipse cx="32" cy="54" rx="9" ry="5" fill="#fff" opacity=".55"/>'+E(38,68,5.5)+E(62,68,5.5)+'<path d="M43 79 q7 7 14 0" stroke="#00805f" stroke-width="3" fill="none" stroke-linecap="round"/>';
+const SKULL=MS+'<path d="M20 54 Q20 14 50 14 Q80 14 80 54 Q80 66 70 68 V86 H30 V68 Q20 66 20 54z" fill="#f5f6fa" stroke="#b2bec3" stroke-width="3"/><ellipse cx="37" cy="50" rx="9" ry="11" fill="#2d3436"/><ellipse cx="63" cy="50" rx="9" ry="11" fill="#2d3436"/><circle cx="37" cy="52" r="3" fill="#ff4757"/><circle cx="63" cy="52" r="3" fill="#ff4757"/><path d="M50 60 l-5 9 h10z" fill="#2d3436"/><path d="M38 76 v10 M46 76 v10 M54 76 v10 M62 76 v10" stroke="#b2bec3" stroke-width="3"/>';
+const MONS=[
+  ()=>svg(MON_VB,SLIME),
+  ()=>svg(MON_VB,MS+'<path d="M34 58 h32 v28 q-16 9 -32 0z" fill="#ffeaa7" stroke="#e1b12c" stroke-width="2.5"/><path d="M8 62 Q8 12 50 12 Q92 12 92 62 Q50 72 8 62z" fill="#e74c3c" stroke="#a93226" stroke-width="3"/><circle cx="28" cy="38" r="9" fill="#fff"/><circle cx="56" cy="27" r="7" fill="#fff"/><circle cx="74" cy="48" r="7" fill="#fff"/>'+E(43,74,4)+E(58,74,4)+'<path d="M45 81 q6 5 12 0" stroke="#a93226" stroke-width="2.5" fill="none" stroke-linecap="round"/>'),
+  ()=>svg(MON_VB,'<path d="M50 52 Q22 14 3 38 Q16 42 13 56 Q26 52 28 66 Q42 60 50 66z" fill="#6c5ce7" stroke="#4834d4" stroke-width="2.5"/><path d="M50 52 Q78 14 97 38 Q84 42 87 56 Q74 52 72 66 Q58 60 50 66z" fill="#6c5ce7" stroke="#4834d4" stroke-width="2.5"/><path d="M34 40 L30 18 L46 34z M66 40 L70 18 L54 34z" fill="#4a3f8a"/><circle cx="50" cy="56" r="21" fill="#4a3f8a" stroke="#2d2566" stroke-width="2.5"/>'+E(42,53,5,"#ff4757")+E(58,53,5,"#ff4757")+'<path d="M43 64 l3 7 3 -7z M51 64 l3 7 3 -7z" fill="#fff"/>'),
+  ()=>svg(MON_VB,MS+'<path d="M26 52 L1 32 L24 66z M74 52 L99 32 L76 66z" fill="#8bc34a" stroke="#558b2f" stroke-width="2.5"/><ellipse cx="50" cy="56" rx="28" ry="28" fill="#a3cb38" stroke="#6ab04c" stroke-width="3"/><path d="M30 42 L45 50 M70 42 L55 50" stroke="#2d3436" stroke-width="4" stroke-linecap="round"/>'+E(39,54,5,"#f9ca24")+E(61,54,5,"#f9ca24")+'<ellipse cx="50" cy="63" rx="5" ry="4" fill="#6ab04c"/><path d="M34 72 Q50 84 66 72z" fill="#2d3436"/><path d="M40 73 v5 M60 73 v5" stroke="#fff" stroke-width="4"/>'),
+  ()=>svg(MON_VB,SKULL),
+  ()=>svg(MON_VB,'<path d="M22 92 V46 Q22 10 50 10 Q78 10 78 46 V92 L68 82 L59 92 L50 82 L41 92 L32 82z" fill="#f1f2f6" stroke="#ced6e0" stroke-width="3" opacity=".96"/>'+E(40,44,6,"#0984e3")+E(60,44,6,"#0984e3")+'<ellipse cx="50" cy="62" rx="6" ry="8" fill="#2d3436"/><circle cx="32" cy="56" r="4" fill="#ff9aa2" opacity=".6"/><circle cx="68" cy="56" r="4" fill="#ff9aa2" opacity=".6"/>'),
+  ()=>svg(MON_VB,MS+'<path d="M28 42 L20 10 L44 32z M72 42 L80 10 L56 32z" fill="#fdcb6e" stroke="#b7791f" stroke-width="2.5"/><circle cx="50" cy="60" r="30" fill="#ff7675" stroke="#d63031" stroke-width="3"/><circle cx="38" cy="54" r="8" fill="#fff"/><circle cx="62" cy="54" r="8" fill="#fff"/><circle cx="40" cy="56" r="4" fill="#2d3436"/><circle cx="60" cy="56" r="4" fill="#2d3436"/><path d="M28 42 L46 50 M72 42 L54 50" stroke="#2d3436" stroke-width="4" stroke-linecap="round"/><path d="M34 70 Q50 86 66 70z" fill="#2d3436"/><path d="M40 71 l3 6 3 -5 M54 71 l3 5 3 -6" fill="#fff" stroke="#fff" stroke-width="2"/>'),
+  ()=>svg(MON_VB,MS+'<rect x="4" y="38" width="20" height="34" rx="9" fill="#8395a7" stroke="#576574" stroke-width="2.5"/><rect x="76" y="38" width="20" height="34" rx="9" fill="#8395a7" stroke="#576574" stroke-width="2.5"/><rect x="22" y="36" width="56" height="52" rx="10" fill="#95a5b5" stroke="#576574" stroke-width="3"/><rect x="31" y="8" width="38" height="30" rx="9" fill="#a5b4c3" stroke="#576574" stroke-width="3"/><rect x="38" y="19" width="8" height="7" rx="2" fill="#ff9f43"/><rect x="54" y="19" width="8" height="7" rx="2" fill="#ff9f43"/><path d="M42 30 h16" stroke="#576574" stroke-width="3"/><path d="M30 50 l8 10 -4 8 M70 48 l-6 12" stroke="#576574" stroke-width="2.5" fill="none"/><path d="M24 80 Q36 72 44 82 L30 88z" fill="#6ab04c"/>'),
+  ()=>svg(MON_VB,MS+'<path d="M24 60 Q8 40 18 22 Q26 40 38 44z M76 60 Q92 40 82 22 Q74 40 62 44z" fill="#e17055" stroke="#b33939" stroke-width="2"/><ellipse cx="50" cy="60" rx="30" ry="28" fill="#fab1a0" stroke="#e17055" stroke-width="3"/><path d="M36 22 q4 -12 14 -4 q10 -8 14 4 q-14 -4 -28 0z" fill="#e17055"/>'+E(38,56,5.5)+E(62,56,5.5)+'<path d="M32 46 l12 3 M68 46 l-12 3" stroke="#2d3436" stroke-width="3.5" stroke-linecap="round"/><path d="M40 72 Q50 66 60 72" stroke="#b33939" stroke-width="3" fill="none" stroke-linecap="round"/>'),
+];
+const CROWN='<path d="M32 22 L36 4 L44 16 L50 0 L56 16 L64 4 L68 22z" fill="#fdcb6e" stroke="#b7791f" stroke-width="2.5"/><circle cx="50" cy="12" r="2.5" fill="#e84393"/>';
+const BOSSES=[
+  ()=>svg("0 -6 100 106",MS+SLIME.replace(MS,"").replace(/M12 90/,"M12 90")+'<g transform="translate(0 22)">'+CROWN+'</g>'),
+  ()=>svg(MON_VB,MS+'<path d="M30 58 L2 24 L14 62z M70 58 L98 24 L86 62z" fill="#c0392b" stroke="#7f1d1d" stroke-width="2.5"/><ellipse cx="50" cy="68" rx="28" ry="24" fill="#e17055" stroke="#b33939" stroke-width="3"/><ellipse cx="50" cy="74" rx="16" ry="16" fill="#ffeaa7"/><path d="M38 70 h24 M38 77 h24 M40 84 h20" stroke="#fdcb6e" stroke-width="2"/><circle cx="50" cy="36" r="22" fill="#e17055" stroke="#b33939" stroke-width="3"/><path d="M34 22 L26 2 L44 16z M66 22 L74 2 L56 16z" fill="#fdcb6e" stroke="#b7791f" stroke-width="2.5"/><ellipse cx="50" cy="46" rx="13" ry="9" fill="#fab1a0" stroke="#b33939" stroke-width="2"/><circle cx="45" cy="45" r="2" fill="#7f1d1d"/><circle cx="55" cy="45" r="2" fill="#7f1d1d"/><ellipse cx="40" cy="32" rx="5" ry="6" fill="#fff"/><ellipse cx="60" cy="32" rx="5" ry="6" fill="#fff"/><ellipse cx="41" cy="33" rx="2" ry="5" fill="#2d3436"/><ellipse cx="59" cy="33" rx="2" ry="5" fill="#2d3436"/><path d="M40 52 l3 6 3 -5 M54 52 l3 5 3 -6" fill="#fff"/>'),
+  ()=>svg(MON_VB,MS+'<path d="M24 46 Q4 30 18 4 Q18 24 34 34z M76 46 Q96 30 82 4 Q82 24 66 34z" fill="#fdcb6e" stroke="#b7791f" stroke-width="2.5"/><circle cx="50" cy="56" r="34" fill="#5f27cd" stroke="#341f97" stroke-width="3"/><path d="M26 44 L46 54 M74 44 L54 54" stroke="#1e1252" stroke-width="5" stroke-linecap="round"/><ellipse cx="38" cy="56" rx="7" ry="6" fill="#ff4757"/><ellipse cx="62" cy="56" rx="7" ry="6" fill="#ff4757"/><circle cx="38" cy="56" r="2.5" fill="#1e1252"/><circle cx="62" cy="56" r="2.5" fill="#1e1252"/><path d="M28 72 Q50 94 72 72 Q50 78 28 72z" fill="#1e1252"/><path d="M36 74 l4 9 4 -8 M56 74 l4 8 4 -9" fill="#fff"/><circle cx="50" cy="66" r="3" fill="#341f97"/>'),
+  ()=>svg("0 -6 100 106",MS+SKULL.replace(MS,"").replace(/#ff4757/g,"#ff9f1a")+'<g transform="translate(0 -2) scale(1)">'+CROWN.replace(/fill="#e84393"/,'fill="#ff4757"')+'</g>'),
+];
+const THEMES=[
+  {a:"#74b9ff",b:"#dff9fb",h1:"#7bed9f",h2:"#2ed573",d:"sun",t:"#218c53"},
+  {a:"#81ecec",b:"#f1f9ff",h1:"#dff9fb",h2:"#b8e6f5",d:"snow",t:"#7aa6b8"},
+  {a:"#fab1a0",b:"#ffeaa7",h1:"#f9ca24",h2:"#e1a53a",d:"sun",t:"#6ab04c"},
+  {a:"#273c75",b:"#6c5ce7",h1:"#34495e",h2:"#2c3e50",d:"moon",t:"#1e6f4f"},
+  {a:"#341f97",b:"#a29bfe",h1:"#5f4bb6",h2:"#3c2ea6",d:"crystal",t:"#0abde3"},
+  {a:"#2d0a0a",b:"#e55039",h1:"#4a2020",h2:"#2b1212",d:"lava",t:"#ff9f1a"},
+];
+function sceneSVG(z){
+  const T=THEMES[z%THEMES.length];let d="";
+  const cloud=(x,y,s)=>`<g opacity=".85" transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="0" rx="26" ry="9" fill="#fff"/><ellipse cx="-12" cy="-6" rx="13" ry="10" fill="#fff"/><ellipse cx="10" cy="-8" rx="15" ry="11" fill="#fff"/></g>`;
+  const tree=(x,y,s,c)=>`<g transform="translate(${x} ${y}) scale(${s})"><rect x="-3" y="0" width="6" height="12" fill="#6d4c41"/><path d="M0 -34 L16 -6 H-16z M0 -20 L20 6 H-20z" fill="${c}"/></g>`;
+  if(T.d==="sun")d=`<circle cx="330" cy="46" r="24" fill="#ffeaa7"/>${cloud(80,50,1)}${cloud(220,34,.8)}${tree(40,172,1.1,T.t)}${tree(360,176,1,T.t)}`;
+  if(T.d==="snow"){d=cloud(90,44,1)+cloud(260,56,.8)+tree(50,172,1.1,T.t)+tree(350,174,1,T.t);for(let i=0;i<30;i++)d+=`<circle cx="${(i*83)%400}" cy="${(i*47)%200}" r="${1+i%3}" fill="#fff" opacity=".8"/>`}
+  if(T.d==="moon"){d='<circle cx="320" cy="46" r="22" fill="#fff9c4"/><circle cx="330" cy="40" r="20" fill="#273c75" opacity=".35"/>';for(let i=0;i<22;i++)d+=`<circle cx="${(i*67)%400}" cy="${(i*31)%110}" r="1.5" fill="#fff"/>`;d+=tree(50,174,1.1,T.t)+tree(340,176,1.2,T.t)}
+  if(T.d==="crystal"){for(let i=0;i<6;i++){const x=30+i*68,h=26+(i*17)%30;d+=`<path d="M${x} 190 L${x+10} ${190-h} L${x+20} 190z" fill="${T.t}" opacity=".75"/>`}d+='<circle cx="320" cy="48" r="20" fill="#fff" opacity=".25"/>'}
+  if(T.d==="lava"){d='<ellipse cx="200" cy="230" rx="260" ry="60" fill="#ff6b35" opacity=".55"/><path d="M0 210 Q60 200 120 214 T260 210 T400 214 V250 H0z" fill="#ff4d00" opacity=".6"/>';for(let i=0;i<14;i++)d+=`<circle cx="${(i*59)%400}" cy="${(i*37)%170}" r="2" fill="#ff9f1a" opacity=".8"/>`}
+  return `<svg viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${T.a}"/><stop offset="1" stop-color="${T.b}"/></linearGradient></defs><rect width="400" height="250" fill="url(#sk)"/>${d}<path d="M0 172 Q80 118 170 164 T400 150 V250 H0z" fill="${T.h1}"/><path d="M0 202 Q100 162 220 198 T400 192 V250 H0z" fill="${T.h2}"/></svg>`;
+}
+function renderScene(z){if(z===sceneZone)return;sceneZone=z;$("scene").innerHTML=sceneSVG(z)}
+function setHeroArt(){$("hero").innerHTML=HEROES[S.cls||"war"]()}
 
 /* ================= 전투 ================= */
 const $=id=>document.getElementById(id);
@@ -268,11 +364,10 @@ function spawn(){
   monAtk=monAtkFor(s)*(isBoss?1.5:1);
   const zone=Math.floor((s-1)/5);
   const mon=$("mon");
-  mon.textContent=isBoss?BOSSES[Math.floor((s-1)/10)%BOSSES.length]:MONSTERS[(zone+S.kill%2)%MONSTERS.length];
+  mon.innerHTML=isBoss?BOSSES[Math.floor((s-1)/10)%BOSSES.length]():MONS[(zone*3+S.kill%3)%MONS.length]();
   mon.className="emo"+(isBoss?" boss":"");
-  monT=0;
-  const bg=BGS[Math.floor((s-1)/10)%BGS.length].split(",");
-  $("battle").style.background=`linear-gradient(${bg[0]},${bg[1]})`;
+  monT=0;monId++;
+  renderScene(Math.floor((s-1)/10));
   renderProgress();
 }
 function renderProgress(){
@@ -325,11 +420,17 @@ function heroDie(){
   S.stage=Math.max(1,S.stage-1);S.kill=0;hp=c.maxHp;spawn();
 }
 function useSkill(quiet){
-  if(skillT>0)return;
-  skillT=SKILL_CD;
-  const c=gc();
-  if(!quiet){const b=$("bolt");b.classList.remove("go");void b.offsetWidth;b.classList.add("go")}
-  dealDamage(c.atk*SKILL_MUL,true,quiet);
+  if(skillT>0||!S.cls)return;
+  const c=gc(),k=CLS[S.cls];
+  skillT=k.cd;
+  if(!quiet){const b=$("bolt");b.style.background=k.color;b.classList.remove("go");void b.offsetWidth;b.classList.add("go")}
+  const id=monId;
+  if(S.cls==="war"){
+    const h=c.maxHp*0.2;hp=Math.min(c.maxHp,hp+h);
+    if(!quiet)float("+"+fmt(h),"heal","heroBox");
+    dealDamage(c.atk*5,true,quiet);
+  }else if(S.cls==="mage")dealDamage(c.atk*8,true,quiet);
+  else for(let i=0;i<4&&monId===id;i++)dealDamage(c.atk*2,true,quiet);
 }
 function step(dt,quiet){
   const c=gc();
@@ -375,7 +476,8 @@ function refreshUI(){
   $("hpH").style.width=Math.max(0,hp/c.maxHp*100)+"%";
   $("sAtk").textContent=fmt(c.atk);$("sHp").textContent=fmt(c.maxHp);
   $("sSpd").textContent=c.aspd.toFixed(2);$("sGps").textContent=fmt(S.gps);
-  $("cd").style.width=(skillT/SKILL_CD*100)+"%";
+  const K=CLS[S.cls||"war"];$("cd").style.width=(skillT/K.cd*100)+"%";$("skillTxt").textContent=K.skill+" ("+K.cd+"초)";
+  $("clsName").textContent=K.n;$("clsDesc").textContent=K.d+" · "+K.info;
   // 강화
   for(const k in UP){
     const lv=S.lv[k];
@@ -441,6 +543,18 @@ function modal(t,p,cb){
   $("mt").textContent=t;$("mp").innerHTML=p;$("modal").classList.add("show");
   $("mok").onclick=()=>{$("modal").classList.remove("show");cb&&cb()};
 }
+function chooseClass(cb){
+  paused=true;
+  $("cards").innerHTML=Object.keys(CLS).map(k=>`<button class="card" data-c="${k}"><div class="pic">${HEROES[k]()}</div><b>${CLS[k].n}</b><small>${CLS[k].d}</small><em>${CLS[k].info}</em></button>`).join("");
+  $("clsModal").classList.add("show");
+  $("cards").onclick=e=>{
+    const b=e.target.closest("[data-c]");if(!b)return;
+    S.cls=b.dataset.c;dirty=true;
+    $("clsModal").classList.remove("show");paused=false;
+    hp=gc().maxHp;setHeroArt();$("clsIc").innerHTML=HEROES[S.cls]();skillT=0;refreshUI();save();
+    toast(`${CLS[S.cls].n} 선택!`);cb&&cb();
+  };
+}
 function rebirth(){
   const g=soulGain();if(g<=0)return;
   modal("🔥 환생할까요?",`스테이지·골드·강화가 처음으로 돌아가요.<br>👻 영혼 <b>+${g}</b> 을 받아요!<br><small>(취소하려면 화면 밖을 누르세요)</small>`,()=>{
@@ -448,12 +562,13 @@ function rebirth(){
     S.soul+=g;
     Object.assign(S,{gold:0,stage:1,kill:0,lv:d.lv,gps:0});
     dirty=true;hp=gc().maxHp;spawn();refreshUI();save();toast("👻 환생 완료!");
+    chooseClass();
   });
 }
 function reset(){
   if(!confirm("정말 모든 데이터를 지울까요?"))return;
   try{localStorage.removeItem(SAVE_KEY)}catch(e){}
-  S=def();dirty=true;hp=gc().maxHp;spawn();refreshUI();
+  S=def();dirty=true;hp=gc().maxHp;spawn();setHeroArt();refreshUI();chooseClass();
 }
 
 /* ================= 이벤트 ================= */
@@ -488,19 +603,21 @@ function offline(){
 
 /* ================= 시작 ================= */
 buildUp();buildWeapons();buildPets();
-hp=gc().maxHp;spawn();
+hp=gc().maxHp;setHeroArt();spawn();
 offline();refreshUI();
+if(S.cls)$("clsIc").innerHTML=HEROES[S.cls]();
+else chooseClass();
 let prev=performance.now(),uiT=0;
 function loop(t){
   let dt=Math.min((t-prev)/1000,0.5);prev=t;
-  step(dt,false);
+  if(!paused)step(dt,false);
   uiT+=dt;if(uiT>=0.1){uiT=0;refreshUI()}
   saveT+=dt;if(saveT>=5){saveT=0;save()}
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 // 테스트/디버그용: 화면 없이 시간 빨리 감기
-window.__fast=(sec,auto)=>{for(let i=0;i<sec*10;i++){step(0.1,true);if(auto)autoBuy()}refreshUI()};
+window.__fast=(sec,auto)=>{if(!S.cls)S.cls='war';for(let i=0;i<sec*10;i++){step(0.1,true);if(auto)autoBuy()}refreshUI()};
 function autoBuy(){for(const k of["atk","hp","spd","crit"]){let g=0;while(g++<50&&buyAmtOne(k));}}
 function buyAmtOne(k){if(S.lv[k]>=UP[k].max)return false;const c=upCost(k,S.lv[k]);if(S.gold<c)return false;S.gold-=c;S.lv[k]++;dirty=true;return true}
 window.__S=()=>S;
