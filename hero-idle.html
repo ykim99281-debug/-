@@ -301,7 +301,8 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 "use strict";
 /* ================= 설정 ================= */
 const SAVE_KEY="hero_idle_v1";
-const KILLS_PER_STAGE=10;
+const stageCount=s=>Math.min(s,10);      // 1스테이지=1마리, 2스테이지=2마리 … 최대 10마리
+const isBossStage=s=>s%10===0;           // 10스테이지마다 보스
 const UP={
   atk :{name:"공격력",  icon:"⚔️",base:10,g:1.15,max:9999},
   hp  :{name:"체력",    icon:"❤️",base:10,g:1.15,max:9999},
@@ -651,7 +652,7 @@ const $=id=>document.getElementById(id);
 let quiet0=true;
 let auraAnim=null;
 function spawn(){
-  isBoss=S.kill===KILLS_PER_STAGE-1;
+  isBoss=isBossStage(S.stage)&&S.kill===stageCount(S.stage)-1;
   const s=S.stage;
   monMax=monHpFor(s)*(isBoss?6:1);monHp=monMax;
   monAtk=monAtkFor(s)*(isBoss?1.5:1);
@@ -674,7 +675,7 @@ function spawn(){
   renderProgress();
 }
 function renderProgress(){
-  let h="";for(let i=0;i<KILLS_PER_STAGE;i++)h+=`<b class="${i<S.kill?"on":""} ${i===KILLS_PER_STAGE-1?"boss":""}"></b>`;
+  const n=stageCount(S.stage),bs=isBossStage(S.stage);let h="";for(let i=0;i<n;i++)h+=`<b class="${i<S.kill?"on":""} ${bs&&i===n-1?"boss":""}"></b>`;
   $("progress").innerHTML=h;
 }
 function float(txt,cls,box){
@@ -708,14 +709,15 @@ function killMonster(quiet){
   if(!quiet){float("+"+fmt(g),"gold","monBox");deathFx()}
   hp=Math.min(c.maxHp,hp+c.maxHp*0.15);
   if(Math.random()<0.05){S.gems++;if(!quiet)toast("💎 보석 발견!")}
-  if(isBoss){
-    const first=S.stage>=S.best;
-    const gem=first?3+Math.floor(S.stage/10):1;
+  S.kill++;
+  if(S.kill>=stageCount(S.stage)){
+    const first=S.stage>=S.best,bs=isBossStage(S.stage);
+    const gem=bs?(first?5+Math.floor(S.stage/10):2):(first?2:1);
     S.gems+=gem;
-    if(!quiet)toast(`🏆 보스 클리어! 💎+${gem}`);
+    if(!quiet)toast(bs?`🏆 보스 클리어! 💎+${gem}`:`✅ 스테이지 ${S.stage} 클리어! 💎+${gem}`);
     S.stage++;S.kill=0;if(S.stage>S.best)S.best=S.stage;
     hp=c.maxHp;
-  }else S.kill++;
+  }
   spawn();
 }
 function heroDie(){
