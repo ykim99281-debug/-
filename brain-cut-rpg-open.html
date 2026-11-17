@@ -35,7 +35,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0a0614;color:#fff;fon
 .pip{width:18px;height:8px;border-radius:5px;background:rgba(255,255,255,.14);transition:.2s}
 .pip.on{background:linear-gradient(90deg,#ff7be5,#9d6bff);box-shadow:0 0 12px #c58bff,0 0 4px #fff}
 #tr{position:absolute;right:12px;top:max(10px,env(safe-area-inset-top));display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-#mm{width:112px;height:112px;border-radius:50%;border:2px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+#mm{pointer-events:auto;cursor:pointer;width:112px;height:112px;border-radius:50%;border:2px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+#mm.xl{width:260px;height:260px}
 #mute{pointer-events:auto;cursor:pointer;width:38px;height:34px;display:grid;place-items:center;font-size:16px}
 #boss{position:absolute;left:50%;top:calc(max(10px,env(safe-area-inset-top)) + 84px);transform:translateX(-50%);width:min(460px,70vw);padding:8px 12px;display:none}
 #boss .nm{display:flex;justify-content:space-between;font-size:16px;margin-bottom:5px}
@@ -402,6 +403,7 @@ const keys={},joy={x:0,y:0},colliders=[],npcs=[],wmons=[];
 const smooth=(x,a,b)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 function hgt(x,z){const d=Math.hypot(x,z);return smooth(d,16,40)*(Math.sin(x*.07+1)*Math.cos(z*.06)*2.6+Math.sin(x*.21+z*.15)*.7)-2.6*smooth(11-Math.hypot(x-26,z-20),0,6)}
 
+function biome(x,z){return{n:smooth(-z,50,80),e:smooth(x,75,100),w:smooth(-x,75,100),s:smooth(z,70,95)}}
 // ---- roads / walkable area
 const ROADS=[
  [[0,-3],[0,-30],[0,-60],[0,-90]],
@@ -409,21 +411,25 @@ const ROADS=[
  [[0,-22],[12,-24],[24,-26],[28,-26],[32,-42],[34,-60]],
  [[3,-3],[14,-3],[24,-1],[36,4],[48,8]],
  [[0,5],[2,16],[4,28],[-6,38]],
- [[-18,6],[-22,14],[-28,19],[-34,24]]
+ [[-18,6],[-22,14],[-28,19],[-34,24]],
+ [[48,8],[72,10],[100,12],[125,8]],[[100,12],[94,-16]],[[100,12],[110,26],[112,34]],
+ [[-18,6],[-40,8],[-70,6],[-100,10],[-128,8]],[[-70,6],[-72,-12]],[[-100,10],[-100,20]],
+ [[4,28],[6,45],[8,70],[8,84],[20,100],[32,118],[26,135],[22,150]]
 ];
+const HUBS=[[100,12],[-100,10],[22,100]];
 const TRAIL=[[-14.5,-6.5],[-14.5,-6.7]],HALL=[-14.5,-6.5];let hallFound=true;
 function segD(px,pz,ax,az,bx,bz){const dx=bx-ax,dz=bz-az,l=dx*dx+dz*dz;let t=l?((px-ax)*dx+(pz-az)*dz)/l:0;t=t<0?0:t>1?1:t;return Math.hypot(px-(ax+dx*t),pz-(az+dz*t))}
 function roadDist(x,z){let m=99;for(const r of ROADS)for(let i=0;i<r.length-1;i++){const d=segD(x,z,r[i][0],r[i][1],r[i+1][0],r[i+1][1]);if(d<m)m=d}return m}
 function trailDist(x,z){let m=99;for(let i=0;i<TRAIL.length-1;i++){const d=segD(x,z,TRAIL[i][0],TRAIL[i][1],TRAIL[i+1][0],TRAIL[i+1][1]);if(d<m)m=d}return m}
 function walkable(x,z,pad=0){if(x*x+z*z<(19+pad)*(19+pad))return true;if(roadDist(x,z)<4.2+pad)return true;if(trailDist(x,z)<2.3+pad)return true;
- if(Math.hypot(x-HALL[0],z-HALL[1])<9+pad||Math.hypot(x+36,z-25)<6+pad)return true;
+ if(Math.hypot(x-HALL[0],z-HALL[1])<9+pad||Math.hypot(x+36,z-25)<6+pad)return true;for(const h of HUBS)if(Math.hypot(x-h[0],z-h[1])<7+pad)return true;
  for(const t of TERR){if(Math.hypot(x-t.c[0],z-t.c[1])<Math.max(t.r,6)+4+pad)return true}return false}
 // ---- terrain
-{const geo=new THREE.PlaneGeometry(240,240,130,130);geo.rotateX(-Math.PI/2);const pa=geo.attributes.position,col=new Float32Array(pa.count*3);
- const g1=new THREE.Color(),g2=new THREE.Color(),pu=new THREE.Color(),sand=new THREE.Color(),path=new THREE.Color(),c=new THREE.Color();
+{const geo=new THREE.PlaneGeometry(420,420,190,190);geo.rotateX(-Math.PI/2);const pa=geo.attributes.position,col=new Float32Array(pa.count*3);
+ const g1=new THREE.Color(),g2=new THREE.Color(),pu=new THREE.Color(),sand=new THREE.Color(),path=new THREE.Color(),sandB=new THREE.Color(),snowB=new THREE.Color(),lush=new THREE.Color(),c=new THREE.Color();
  for(let i=0;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i);pa.setY(i,hgt(x,z));const d=Math.hypot(x,z);const n=Math.sin(x*.5)*Math.cos(z*.43)*.5+.5;
   g1.setHSL(.29,.55,.3+n*.08);g2.setHSL(.2,.42,.27+n*.06);pu.setHSL(.76,.42,.17+n*.06);sand.setHSL(.1,.33,.56-n*.05);
-  c.copy(g1).lerp(g2,smooth(d,25,50)).lerp(pu,smooth(d,55,80));if(d<9.5)c.lerp(sand,smooth(9.5-d,0,2.5));{const ld=Math.hypot(x-26,z-20);if(ld<13)c.lerp(sand,smooth(13-ld,0,3)*.8)}{const rd=roadDist(x,z);if(rd<3.4){path.setHSL(.09,.38,.4+n*.05);c.lerp(path,smooth(3.4-rd,0,1.6))}const td=trailDist(x,z);if(td<1.6)c.lerp(path.setHSL(.09,.3,.36),smooth(1.6-td,0,.8)*.4)}
+  c.copy(g1).lerp(g2,smooth(d,25,50));{const b=biome(x,z);c.lerp(pu,b.n);c.lerp(sandB.setHSL(.12,.5,.55-n*.06),b.e);c.lerp(snowB.setHSL(.58,.15,.9-n*.05),b.w);c.lerp(lush.setHSL(.33,.6,.36+n*.06),b.s)}if(d<9.5)c.lerp(sand,smooth(9.5-d,0,2.5));{const ld=Math.hypot(x-26,z-20);if(ld<13)c.lerp(sand,smooth(13-ld,0,3)*.8)}{const rd=roadDist(x,z);if(rd<3.4){path.setHSL(.09,.38,.4+n*.05);c.lerp(path,smooth(3.4-rd,0,1.6))}const td=trailDist(x,z);if(td<1.6)c.lerp(path.setHSL(.09,.3,.36),smooth(1.6-td,0,.8)*.4)}
   col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
  geo.setAttribute('color',new THREE.BufferAttribute(col,3));geo.computeVertexNormals();
  const ter=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,metalness:0,envMapIntensity:.4}));ter.receiveShadow=true;worldG.add(ter)}
@@ -458,22 +464,25 @@ for(const [x,z] of[[-2,7],[4,-5],[-9,-2],[10,0],[2,9],[-3,-12]]){const g=grp(wor
 const windmill=(()=>{const g=grp(worldG,17,hgt(17,-14),-14);mk(new THREE.CylinderGeometry(1,1.6,5,14),M(0xf1e6d2),0,2.5,0,g);mk(new THREE.ConeGeometry(1.5,1.6,14),M(0xc2492f),0,5.8,0,g);const b=grp(g,0,5,1.3);for(let i=0;i<4;i++){const bl=mk(new THREE.BoxGeometry(.45,3.2,.06),M(0xf1e6d2),0,1.7,0,b);const p=grp(b);p.rotation.z=i*Math.PI/2;p.add(bl)}b.children.filter(c=>c.isMesh).forEach(m=>b.remove(m));colliders.push({x:17,z:-14,r:1.8});return b})();
 // trees / rocks / flowers (instanced)
 const treeGrid=new Map();const tk=(x,z)=>Math.floor(x/4)+','+Math.floor(z/4);
-const TERR=[{i:0,c:[-24,-14],r:8,n:4,s:.8},{i:1,c:[28,-26],r:9,n:4,s:.62},{i:2,c:[-32,-46],r:9,n:2,s:.55},{i:2,c:[-26,-72],r:9,n:2,s:.55},{i:3,c:[34,-60],r:2,n:1,s:.5,boss:1},{i:4,c:[48,8],r:2,n:1,s:.8,boss:1},{i:5,c:[0,-83],r:0,n:1,s:.55,boss:1},{i:6,c:[-6,-1],r:0,n:1,s:1}];
-function freeSpot(x,z,pad=0){const d=Math.hypot(x,z);if(d<19||d>100)return false;if(Math.hypot(x-26,z-20)<14)return false;for(const t of TERR){if(Math.hypot(x-t.c[0],z-t.c[1])<t.r+3+pad)return false}if(Math.abs(x)<7&&z<-18&&z>-90)return false;return true}
-{const N=1500,f1=new THREE.InstancedMesh(new THREE.ConeGeometry(1.5,3,7),M(0xffffff,{roughness:.8}),N),f2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.1,2.4,7),M(0xffffff,{roughness:.8}),N),tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.2,.3,2,6),M(0x5a3a22),N);
+const TERR=[{i:0,c:[-24,-14],r:8,n:4,s:.8},{i:1,c:[28,-26],r:9,n:4,s:.62},{i:2,c:[-32,-46],r:9,n:2,s:.55},{i:2,c:[-26,-72],r:9,n:2,s:.55},{i:3,c:[34,-60],r:2,n:1,s:.5,boss:1},{i:4,c:[48,8],r:2,n:1,s:.8,boss:1},{i:5,c:[0,-83],r:0,n:1,s:.55,boss:1},{i:6,c:[-6,-1],r:0,n:1,s:1},
+ {i:1,c:[94,-18],r:10,n:4,s:.62,k:1.8},{i:2,c:[127,6],r:9,n:3,s:.55,k:1.7},{i:1,c:[112,36],r:8,n:3,s:.62,k:2},
+ {i:0,c:[-72,-14],r:9,n:5,s:.8,k:2},{i:2,c:[-100,22],r:9,n:3,s:.55,k:1.9},{i:1,c:[-130,8],r:7,n:3,s:.62,k:2.2},
+ {i:0,c:[8,86],r:9,n:5,s:.8,k:2.2},{i:1,c:[32,120],r:9,n:4,s:.62,k:2.1},{i:2,c:[22,152],r:9,n:3,s:.55,k:2}];
+function freeSpot(x,z,pad=0){const d=Math.hypot(x,z);if(d<19||d>170)return false;if(Math.hypot(x-26,z-20)<14)return false;for(const t of TERR){if(Math.hypot(x-t.c[0],z-t.c[1])<t.r+3+pad)return false}if(Math.abs(x)<7&&z<-18&&z>-90)return false;return true}
+{const N=3400,f1=new THREE.InstancedMesh(new THREE.ConeGeometry(1.5,3,7),M(0xffffff,{roughness:.8}),N),f2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.1,2.4,7),M(0xffffff,{roughness:.8}),N),tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.2,.3,2,6),M(0x5a3a22),N);
  const m4=new THREE.Matrix4(),col=new THREE.Color();let n=0;
- for(let tries=0;tries<9000&&n<N;tries++){const a=rand(0,6.283),r=rand(19,100);const x=Math.cos(a)*r,z=Math.sin(a)*r;if(walkable(x,z,1.3)||Math.hypot(x-26,z-20)<14)continue;
+ for(let tries=0;tries<40000&&n<N;tries++){const a=rand(0,6.283),r=Math.sqrt(rand(361,28900));const x=Math.cos(a)*r,z=Math.sin(a)*r;if(walkable(x,z,1.3)||Math.hypot(x-26,z-20)<14)continue;
   const y=hgt(x,z),s=rand(.7,1.25);m4.makeTranslation(x,y+1*s,z).scale(new THREE.Vector3(s,s,s));tr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+s,z));
   f1.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+2.6*s,z));f2.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+4*s,z));
-  const d=Math.hypot(x,z);col.setHSL(lerp(.3,.78,smooth(d,45,85)),lerp(.5,.45,smooth(d,45,85)),lerp(.26,.2,smooth(d,45,85))+rand(0,.06));f1.setColorAt(n,col);col.offsetHSL(0,0,.04);f2.setColorAt(n,col);
+  const d=Math.hypot(x,z);{const b=biome(x,z);let h=lerp(.3,.78,b.n),sa=lerp(.5,.45,b.n),l=lerp(.26,.2,b.n);h=lerp(h,.12,b.e);sa=lerp(sa,.6,b.e);l=lerp(l,.4,b.e);h=lerp(h,.55,b.w);sa=lerp(sa,.1,b.w);l=lerp(l,.85,b.w);h=lerp(h,.34,b.s);l=lerp(l,.3,b.s);col.setHSL(h,sa,l+rand(0,.06))}f1.setColorAt(n,col);col.offsetHSL(0,0,.04);f2.setColorAt(n,col);
   const k=tk(x,z);if(!treeGrid.has(k))treeGrid.set(k,[]);treeGrid.get(k).push({x,z,r:.75*s});n++}
  [f1,f2,tr].forEach(m=>{m.count=n;m.castShadow=false;m.receiveShadow=false;m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;worldG.add(m)})}
-{const N=90,rk=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),M(0x8a8499,{roughness:.9,flatShading:true}),N);let n=0;
- for(let t=0;t<600&&n<N;t++){const a=rand(0,6.283),r=rand(16,100),x=Math.cos(a)*r,z=Math.sin(a)*r;if(!freeSpot(x,z))continue;const s=rand(.4,1.6);rk.setMatrixAt(n++,new THREE.Matrix4().compose(new THREE.Vector3(x,hgt(x,z)+s*.3,z),new THREE.Quaternion().setFromEuler(new THREE.Euler(rand(0,3),rand(0,3),0)),new THREE.Vector3(s,s*.7,s)))}
+{const N=220,rk=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1,0),M(0x8a8499,{roughness:.9,flatShading:true}),N);let n=0;
+ for(let t=0;t<2000&&n<N;t++){const a=rand(0,6.283),r=rand(16,165),x=Math.cos(a)*r,z=Math.sin(a)*r;if(!freeSpot(x,z))continue;const s=rand(.4,1.6);rk.setMatrixAt(n++,new THREE.Matrix4().compose(new THREE.Vector3(x,hgt(x,z)+s*.3,z),new THREE.Quaternion().setFromEuler(new THREE.Euler(rand(0,3),rand(0,3),0)),new THREE.Vector3(s,s*.7,s)))}
  rk.count=n;rk.castShadow=false;worldG.add(rk)}
-{const N=300,fl=new THREE.InstancedMesh(new THREE.SphereGeometry(.13,8,6),new THREE.MeshStandardMaterial({roughness:.5,emissive:0x444444}),N),gr=new THREE.InstancedMesh(new THREE.ConeGeometry(.1,.55,4),M(0x4aa04a,{roughness:.9}),1200);const c=new THREE.Color();let n=0;
- for(let t=0;t<N;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*70,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<10||roadDist(x,z)<2.6)continue;c.setHSL(pick([.0,.12,.15,.58,.85]),.9,.65);fl.setMatrixAt(n,new THREE.Matrix4().setPosition(x,hgt(x,z)+.3,z));fl.setColorAt(n++,c)}fl.count=n;worldG.add(fl);
- n=0;for(let t=0;t<500;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*80,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<9.5||roadDist(x,z)<2.8)continue;const s=rand(.7,1.6);gr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,hgt(x,z)+.25*s,z));c.setHSL(lerp(.3,.7,smooth(r,50,80)),.5,rand(.3,.45));gr.setColorAt(n++,c)}gr.count=n;worldG.add(gr)}
+{const N=700,fl=new THREE.InstancedMesh(new THREE.SphereGeometry(.13,8,6),new THREE.MeshStandardMaterial({roughness:.5,emissive:0x444444}),N),gr=new THREE.InstancedMesh(new THREE.ConeGeometry(.1,.55,4),M(0x4aa04a,{roughness:.9}),1200);const c=new THREE.Color();let n=0;
+ for(let t=0;t<N;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*150,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<10||roadDist(x,z)<2.6)continue;c.setHSL(pick([.0,.12,.15,.58,.85]),.9,.65);fl.setMatrixAt(n,new THREE.Matrix4().setPosition(x,hgt(x,z)+.3,z));fl.setColorAt(n++,c)}fl.count=n;worldG.add(fl);
+ n=0;for(let t=0;t<1100;t++){const a=rand(0,6.283),r=Math.sqrt(Math.random())*155,x=Math.cos(a)*r,z=Math.sin(a)*r;if(r<9.5||roadDist(x,z)<2.8)continue;const s=rand(.7,1.6);gr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,hgt(x,z)+.25*s,z));{const b=biome(x,z);c.setHSL(lerp(lerp(lerp(.3,.7,b.n),.13,b.e),.5,b.w),.5,rand(.3,.45)+b.w*.4)}gr.setColorAt(n++,c)}gr.count=n;worldG.add(gr)}
 // pollen
 const pollen=(()=>{const N=500,g=new THREE.BufferGeometry(),a=new Float32Array(N*3);for(let i=0;i<N;i++){a[i*3]=rand(-40,40);a[i*3+1]=rand(.3,7);a[i*3+2]=rand(-40,40)}g.setAttribute('position',new THREE.BufferAttribute(a,3));const p=new THREE.Points(g,new THREE.PointsMaterial({size:.14,map:glowTex,color:0xfff3c0,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false}));p.frustumCulled=false;worldG.add(p);return p})();
 // boss gate
@@ -526,26 +535,28 @@ const master=mkNPC(HALL[0]+1.3,HALL[1]+2.2,{name:'전직 스승',robe:0x2a1a4a,b
 function wmonPos(t){const a=rand(0,6.283),r=Math.sqrt(Math.random())*t.r;return[t.c[0]+Math.cos(a)*r,t.c[1]+Math.sin(a)*r]}
 function spawnWM(t){const g=new THREE.Group(),b=builders[t.i](g);g.scale.setScalar(t.s);const[x,z]=wmonPos(t);g.position.set(x,hgt(x,z),z);
  const mats=[];g.traverse(o=>{if(o.isMesh&&o.material.emissive&&!(o.material instanceof THREE.MeshBasicMaterial)&&!mats.includes(o.material)){o.material.userData.e0=o.material.emissive.clone();o.material.userData.i0=o.material.emissiveIntensity;mats.push(o.material)}});
- g.traverse(o=>{if(o.isMesh)o.castShadow=false});worldG.add(g);const S=ES[t.i];
+ g.traverse(o=>{if(o.isMesh)o.castShadow=false});worldG.add(g);const S=Object.assign({},ES[t.i]);if(t.k){S.hp=Math.round(S.hp*t.k);S.atk=Math.round(S.atk*t.k);S.xp=Math.round(S.xp*t.k*1.2);S.gold=[Math.round(S.gold[0]*t.k*1.5),Math.round(S.gold[1]*t.k*1.5)];S.lv+=Math.round((t.k-1)*6)}
  wmons.push({g,b,t,S,mats,hp:S.hp,max:S.hp,alive:true,state:'idle',tt:0,tDur:1,cd:rand(0,1),fightT:0,combatT:0,frozen:0,kv:new THREE.Vector3(),kbT:0,lungeT:0,tx:x,tz:z,wait:rand(0,3),yaw:rand(0,6),ph:rand(0,6),dead:0,repLeft:0,bar:null,sayT:0,tog:0,lockYaw:0,curType:S.type})}
 for(const t of TERR)for(let i=0;i<t.n;i++)spawnWM(t);
 function collide(p){for(const c of colliders){const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz),m=c.r+.45;if(d<m&&d>1e-4){p.x=c.x+dx/d*m;p.z=c.z+dz/d*m}}
  const cx=Math.floor(p.x/4),cz=Math.floor(p.z/4);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const l=treeGrid.get((cx+i)+','+(cz+j));if(l)for(const c of l){const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz),m=c.r+.4;if(d<m&&d>1e-4){p.x=c.x+dx/d*m;p.z=c.z+dz/d*m}}}}
 const angDiff=(a,b)=>{let d=b-a;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return d};
-const stageLabel=()=>{const d=Math.hypot(hero.position.x,hero.position.z);return d<17?'🏡 뇌절마을':d>78?'🏰 타락성 앞':'🌲 들판 · '+Math.round(d)+'m'};
-const mmc=$('#mm').getContext('2d');
-function drawMM(){const c=mmc,W=112,h=W/2,S=.7;c.clearRect(0,0,W,W);c.save();c.beginPath();c.arc(h,h,h-1,0,7);c.clip();c.fillStyle='rgba(18,10,36,.82)';c.fillRect(0,0,W,W);
+const stageLabel=()=>{const x=hero.position.x,z=hero.position.z,d=Math.hypot(x,z);return d<19?'🏡 뇌절마을':x>70?'🏜️ 동쪽 사막':x<-70?'❄️ 서쪽 설원':z>65?'🌿 남쪽 초원':z<-78?'🏰 타락성 앞':'🌲 들판 · '+Math.round(d)+'m'};
+let mmBig=false;
+const mmc=$('#mm').getContext('2d');$('#mm').onclick=()=>{mmBig=!mmBig;const m=$('#mm');m.width=m.height=mmBig?260:112;m.classList.toggle('xl',mmBig)};
+function drawMM(){const c=mmc,W=mmBig?260:112,h=W/2,S=.7;c.clearRect(0,0,W,W);c.save();c.beginPath();c.arc(h,h,h-1,0,7);c.clip();c.fillStyle='rgba(18,10,36,.82)';c.fillRect(0,0,W,W);
  const px=x=>h+(x-hero.position.x)*S,pz=z=>h+(z-hero.position.z)*S;
  c.fillStyle='rgba(110,200,120,.28)';c.beginPath();c.arc(px(0),pz(0),17*S,0,7);c.fill();c.strokeStyle='rgba(255,255,255,.12)';c.beginPath();c.arc(h,h,h-2,0,7);c.stroke();
  c.strokeStyle='rgba(225,185,125,.9)';c.lineWidth=2;for(const r of ROADS){c.beginPath();r.forEach(([x,z],i)=>i?c.lineTo(px(x),pz(z)):c.moveTo(px(x),pz(z)));c.stroke()}
  if(hallFound){c.strokeStyle='rgba(120,230,255,.7)';c.beginPath();TRAIL.forEach(([x,z],i)=>i?c.lineTo(px(x),pz(z)):c.moveTo(px(x),pz(z)));c.stroke();c.fillStyle='#7cf0ff';c.beginPath();c.arc(px(HALL[0]),pz(HALL[1]),4,0,7);c.fill()}
+ for(const q of props){if(q.kind==='wp'){c.fillStyle=G.wps[q.id]?'#7cf0ff':'rgba(124,240,255,.35)';c.save();c.translate(px(q.x),pz(q.z));c.rotate(.785);c.fillRect(-3,-3,6,6);c.restore()}}
  c.fillStyle='#d8b070';for(const k of colliders)if(k.r>2.5)c.fillRect(px(k.x)-3,pz(k.z)-3,6,6);
  for(const m of wmons){if(!m.alive||m.S.dummy)continue;c.fillStyle=m.t.boss?'#ff49d8':'#ff6b6b';const x=px(m.g.position.x),y=pz(m.g.position.z);c.beginPath();c.arc(x,y,m.t.boss?4:2.6,0,7);c.fill()}
  for(const n of npcs){c.fillStyle=n.marker.visible?(n.marker.material.map===markerTex.r?'#7cf0ff':'#ffd84d'):'#9fd6ff';c.beginPath();c.arc(px(n.x),pz(n.z),n.chief?4:2.5,0,7);c.fill()}
  c.translate(h,h);c.rotate(Math.PI-hero.rotation.y);c.fillStyle='#fff';c.beginPath();c.moveTo(0,-6);c.lineTo(4.5,5);c.lineTo(0,3);c.lineTo(-4.5,5);c.closePath();c.fill();c.restore()}
 
 /* ================= GAME STATE ================= */
-const G={lv:1,xp:0,gold:40,hp:100,max:100,atk:8,def:0,thr:5,joke:.3,guardPow:.5,boom:0,pots:2,jelly:0,herb:0,wl:0,al:0,job:'none',jb:{max:0,atk:0,def:0,thr:0,joke:0},wt:{club:0,sword:0,staff:0,bow:0,mic:0},hintHall:false};
+const G={lv:1,xp:0,gold:40,hp:100,max:100,atk:8,def:0,thr:5,joke:.3,guardPow:.5,boom:0,pots:2,jelly:0,herb:0,wl:0,al:0,job:'none',jb:{max:0,atk:0,def:0,thr:0,joke:0},wt:{club:0,sword:0,staff:0,bow:0,mic:0},hintHall:false,wps:{village:true}};
 const WP={club:[{n:'나무몽둥이',a:2,c:0},{n:'쇠몽둥이',a:9,c:100},{n:'대못 몽둥이',a:18,c:450}],
  sword:[{n:'연습용 철검',a:8,c:0},{n:'강철검',a:20,c:500},{n:'기사의 검',a:36,c:1500},{n:'용사의 검',a:60,c:4000}],
  staff:[{n:'낡은 지팡이',a:8,c:0},{n:'마법 지팡이',a:20,c:500},{n:'수정 지팡이',a:36,c:1500},{n:'대마법사의 지팡이',a:60,c:4000}],
@@ -669,11 +680,16 @@ function mkChest(x,z){const g=grp(worldG,x,hgt(x,z),z);g.rotation.y=rand(0,6);mk
  const gl=sprite(glowTex,3,{blending:THREE.AdditiveBlending,color:0xffd04d,opacity:.6});gl.position.y=1;g.add(gl);props.push({g,x,z,kind:'chest',alive:true,label:'🎁 상자 열기'})}
 [[3,26],[-7,36],[-21,15],[-27,19],[14,8],[-3,-22]].forEach(([x,z])=>mkHerb(x,z));
 [[-37,27],[48,12],[4,-60],[36,-64],[-30,-68]].forEach(([x,z])=>mkChest(x,z));
+[[60,12],[84,9],[108,28],[-54,10],[-84,8],[9,58]].forEach(([x,z])=>mkHerb(x,z));
+[[98,-22],[130,10],[-76,-18],[-104,26],[12,90],[36,124],[26,156]].forEach(([x,z])=>mkChest(x,z));
+const WPS=[{id:'village',name:'뇌절마을',x:5,z:-6},{id:'east',name:'동쪽 사막 오아시스',x:102,z:16},{id:'west',name:'서쪽 설원 야영지',x:-102,z:14},{id:'south',name:'남쪽 초원 야영지',x:24,z:103}];
+function mkWaypoint(w){const g=grp(worldG,w.x,hgt(w.x,w.z),w.z);mk(new THREE.CylinderGeometry(.9,1.1,.4,6),M(0x3a3a55,{roughness:.6}),0,.2,0,g);const o=mk(new THREE.OctahedronGeometry(.75),GM(0x66ddff,3),0,1.9,0,g,false);o.scale.y=1.8;mk(new THREE.TorusGeometry(1.1,.05,8,32),GM(0x66ddff,2.5),0,.45,0,g,false).rotation.x=Math.PI/2;const gl=sprite(glowTex,4,{blending:THREE.AdditiveBlending,color:0x66ddff,opacity:.5});gl.position.y=1.9;g.add(gl);props.push({g,x:w.x,z:w.z,kind:'wp',alive:true,id:w.id,name:w.name,label:'🌀 순간이동 지점',o})}
+WPS.forEach(mkWaypoint);
 colliders.push({x:26,z:20,r:7});
 // water
 {const w=new THREE.Mesh(new THREE.CircleGeometry(11.5,48),new THREE.MeshPhysicalMaterial({color:0x2a7fe0,transparent:true,opacity:.78,roughness:.05,metalness:.2,clearcoat:1,envMapIntensity:2}));w.rotation.x=-Math.PI/2;w.position.set(26,-.55,20);worldG.add(w);window.__water=w}
 
-function stepMove(dx,dz,sp,dt){const p=hero.position;const ox=p.x,oz=p.z;p.x+=dx*sp*dt;p.z+=dz*sp*dt;if(!walkable(p.x,p.z)){if(walkable(p.x,oz))p.z=oz;else if(walkable(ox,p.z))p.x=ox;else{p.x=ox;p.z=oz}}collide(p);const d=Math.hypot(p.x,p.z);if(d>96){p.x*=96/d;p.z*=96/d}
+function stepMove(dx,dz,sp,dt){const p=hero.position;const ox=p.x,oz=p.z;p.x+=dx*sp*dt;p.z+=dz*sp*dt;if(!walkable(p.x,p.z)){if(walkable(p.x,oz))p.z=oz;else if(walkable(ox,p.z))p.x=ox;else{p.x=ox;p.z=oz}}collide(p);const d=Math.hypot(p.x,p.z);if(d>165){p.x*=165/d;p.z*=165/d}
  if(!bossOpen()&&p.z<-76&&Math.abs(p.x)<12){p.z=-76;if(hintCool<=0){toast('타락성의 문이 굳게 닫혀 있다... 이장님의 퀘스트를 먼저 완료하자');hintCool=4}}}
 function updateWorld(dt){
  const p=hero.position;const px0=p.x,pz0=p.z;let moving=false;hintCool-=dt;
@@ -701,9 +717,9 @@ function updateWorld(dt){
   if(n.marker.visible)n.marker.position.y=3.5*(n.o.s||1)+Math.sin(T*4)*.12;
   if(d<nd&&mode==='world'){nd=d;nearTarget={type:'npc',n,label:'💬 '+n.o.name+' (E)'}}}
  for(const pr of props){if(!pr.alive){if(pr.kind==='herb'){pr.t-=dt;if(pr.t<=0){pr.alive=true;pr.g.visible=true}}continue}
-  const d=Math.hypot(p.x-pr.x,p.z-pr.z);pr.g.rotation.y+=pr.kind==='herb'?dt:0;if(d<Math.min(nd,2.8)&&mode==='world'){nd=d;nearTarget={type:'prop',pr,label:pr.label+' (E)'}}}
+  const d=Math.hypot(p.x-pr.x,p.z-pr.z);pr.g.rotation.y+=(pr.kind==='herb'||pr.kind==='wp')?dt:0;if(d<Math.min(nd,2.8)&&mode==='world'){nd=d;nearTarget={type:'prop',pr,label:pr.label+' (E)'}}}
  const ab=$('#act');if(nearTarget){ab.style.display='block';ab.textContent=nearTarget.label}else ab.style.display='none';
- if(!hallFound&&Math.hypot(p.x-HALL[0],p.z-HALL[1])<15){hallFound=true;toast('✨ 숨겨진 전직관을 발견했다!');SFX.win();bigText('전직관 발견!',1,false)}hallParts.forEach((h,i)=>{h.rotation.y=T*(.8+i*.1);h.position.y+=Math.sin(T*2+i)*.002});windmill.rotation.z+=dt*.8;pollen.rotation.y+=dt*.01;pollen.position.set(p.x,0,p.z);if(window.__water)window.__water.position.y=-.55+Math.sin(T*1.2)*.04;
+ if(!hallFound&&Math.hypot(p.x-HALL[0],p.z-HALL[1])<15){hallFound=true;toast('✨ 숨겨진 전직관을 발견했다!');SFX.win();bigText('전직관 발견!',1,false)}hallParts.forEach((h,i)=>{h.rotation.y=T*(.8+i*.1);h.position.y+=Math.sin(T*2+i)*.002});windmill.rotation.z+=dt*.8;pollen.rotation.y+=dt*.01;{const b=biome(p.x,p.z);pollen.material.color.setHSL(.13,.6,.75+b.w*.25);pollen.material.size=.14+b.w*.12}pollen.position.set(p.x,0,p.z);if(window.__water)window.__water.position.y=-.55+Math.sin(T*1.2)*.04;
  mmT-=dt;if(mmT<=0){mmT=.07;drawMM();if(mode==='world'||mode==='dialog')$('#stage').textContent=stageLabel()}
 }
 
@@ -1001,6 +1017,10 @@ function openWeaponShop(){return new Promise(res=>{mode='dialog';const s=$('#scr
   s.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,52px)">무기상점</h2><div class="desc">${JOBNAME[G.job]} · 보유 골드 <b>💰${G.gold}</b></div><div class="cards">${items.map((it,i)=>`<button class="card" data-i="${i}" ${it.c<0?'style="opacity:.7"':G.gold<it.c?'style="opacity:.5"':''}><div class="ic">${it.i}</div><div>${it.n}</div><small>${it.d}</small>${it.c>=0?`<small>💰 ${it.c}</small>`:''}</button>`).join('')}</div><button class="go" id="shopx" style="font-size:20px;padding:10px 30px;animation:none">나가기</button>`;s.className='on';
   s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{const it=items[b.dataset.i];if(it.c<0)return;if(G.gold<it.c){toast('골드가 부족합니다');return}G.gold-=it.c;it.f();SFX.heal();hud();render()});
   $('#shopx').onclick=()=>{SFX.ui();s.className='';mode='world';res()}};render()})}
+function openWaypoints(cur){mode='dialog';const s=$('#scr');const W=WPS.filter(w=>G.wps[w.id]&&w.id!==cur.id);
+ s.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,52px)">순간이동</h2><div class="desc">${W.length?'어디로 이동할까요?':'활성화된 다른 지점이 없어요.<br>멀리 있는 순간이동 지점을 찾아 활성화해 보세요!'}</div><div class="cards">${W.map((w,i)=>`<button class="card" data-i="${i}"><div class="ic">🌀</div><div>${w.name}</div></button>`).join('')}</div><button class="go" id="shopx" style="font-size:20px;padding:10px 30px;animation:none">닫기</button>`;s.className='on';
+ s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{const w=W[b.dataset.i];SFX.win();screenFlash(1,800);hero.position.set(w.x,hgt(w.x,w.z+3),w.z+3);groundY=hgt(w.x,w.z+3);camSmooth.set(w.x,groundY+5,w.z+11);camLook.set(w.x,groundY+1.6,w.z+3);ring(hero.position,{color:0x66ddff,max:8,life:1,y:.1});s.className='';mode='world'});
+ $('#shopx').onclick=()=>{SFX.ui();s.className='';mode='world'}}
 function openJobs(){return new Promise(res=>{mode='dialog';const s=$('#scr');const first=G.job==='none',cost=first?0:500;
  s.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,52px)">전직</h2><div class="desc">${first?'직업을 선택하세요. (처음 한 번은 무료)':'다른 직업으로 바꿀까요? 💰500'}</div><div class="cards">${JOBS.map((j,i)=>`<button class="card" data-i="${i}"><div class="ic">${j.i}</div><div><b>${j.n}</b></div><small>${j.d}</small></button>`).join('')}</div><button class="go" id="shopx" style="font-size:20px;padding:10px 30px;animation:none">나가기</button>`;s.className='on';
  s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{const j=JOBS[b.dataset.i];if(j.k===G.job){toast('이미 그 직업입니다');return}if(G.gold<cost){toast('골드가 부족합니다');return}G.gold-=cost;applyJob(j.k);SFX.win();bigText('전직 완료!',1,false);burst(heroHead(),{color:0xb78cff,n:100,speed:6,life:1.3,up:3});ring(hero.position,{color:0x66ddff,max:8,life:1,y:.1});toast(`${j.n}(으)로 전직! ${curWeapon().n} 장착`);hud();s.className='';mode='world';res()});
@@ -1029,6 +1049,7 @@ function interact(){if(mode!=='world'||!nearTarget)return;ac();SFX.ui();
  if(nearTarget.type==='npc')talk(nearTarget.n);
  else{const pr=nearTarget.pr;if(pr.kind==='herb'){pr.alive=false;pr.g.visible=false;pr.t=60;G.herb++;fxFloat('🌿 약초',heroHead(),'#7cf0ff');SFX.heal();updateQuestUI()}
   else if(pr.kind==='chest'){pr.alive=false;const g=Math.round(rand(80,200));G.gold+=g;if(Math.random()<.6)G.pots++;SFX.win();burst(new THREE.Vector3(pr.x,pr.g.position.y+1,pr.z),{color:0xffd04d,n:80,speed:5,life:1.2,up:3});ring(pr.g.position,{color:0xffd04d,max:5,life:.8,y:.1});toast(`상자에서 💰${g} 획득!`);pr.g.traverse(o=>{if(o.isSprite)o.visible=false})}
+  else if(pr.kind==='wp'){if(!G.wps[pr.id]){G.wps[pr.id]=true;SFX.win();toast('✨ 순간이동 지점 활성화: '+pr.name);bigText('지점 발견!',1,false);ring(pr.g.position,{color:0x66ddff,max:8,life:1,y:.1})}openWaypoints(pr)}
   hud()}}
 function victory(){if(cleared)return;cleared=true;SFX.win();bigText('CLEAR!!',6);mode='dialog';const s=$('#scr');
  s.innerHTML=`<h2 class="ttl">CLEAR!</h2><div class="desc">타락공주를 쓰러뜨렸다!<br>정신을 차린 공주는 눈물을 닦으며 말했다.<br><b>"나... 그냥 답장이 받고 싶었어."</b><br>세계는 평화를 되찾았다.<br>(잠수 마왕은 아직 호수 밑에서 나오지 않았다고 한다.)</div><button class="go" id="vback">계속 탐험하기</button>`;s.className='on';
@@ -1062,7 +1083,7 @@ function saveGame(){if(!who||mode==='title')return;const d={v:1,name:who,pin:pin
 function applySave(d){for(const k in d.G)G[k]=d.G[k];qi=d.qi;qstate=d.qstate;qprog=d.qprog;Object.assign(SQ,d.SQ);hallFound=true;cleared=!!d.cleared;tod=d.tod??tod;TUT.done=!!d.tutDone;
  (d.boss||[]).forEach(i=>wmons.filter(m=>m.t.i===i).forEach(m=>{m.alive=false;m.g.visible=false;m.dead=1e9}));
  (d.chests||[]).forEach((v,i)=>{const q=props[i];if(v&&q){q.alive=false;q.g.traverse(o=>{if(o.isSprite)o.visible=false})}});
- let[x,z]=d.pos||[-4,2];if(!walkable(x,z)||Math.hypot(x,z)>95){x=-4;z=2}hero.position.set(x,hgt(x,z),z);groundY=hgt(x,z);hero.rotation.set(0,0,0);
+ let[x,z]=d.pos||[-4,2];if(!walkable(x,z)||Math.hypot(x,z)>160){x=-4;z=2}hero.position.set(x,hgt(x,z),z);groundY=hgt(x,z);hero.rotation.set(0,0,0);
  const k=JOBKIND[G.job];setWeapon(k,G.wt[k]);setOutfit(G.job);G.hp=Math.max(1,Math.min(G.hp,G.max));camSmooth.set(x,hero.position.y+4,z+8);camLook.set(x,hero.position.y+1.6,z)}
 setInterval(saveGame,8000);addEventListener('pagehide',saveGame);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveGame()});
 $('#who').onclick=()=>{if(mode!=='world')return;if(confirm('저장하고 처음 화면(로그인)으로 돌아갈까요?')){saveGame();location.reload()}};
