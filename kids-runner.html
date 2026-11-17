@@ -198,7 +198,7 @@ function newGame(){
     shield:0, magnet:0,
     objs:[], side:[], parts:[],
     nextSpawn:30, t:0, shake:0, hurt:0,
-    lastStorm:0, world:undefined, combo:0, jumps:0, powersGot:0, rocket:0, dbl:0, toasts:[]
+    lastStorm:0, boss:null, lastBoss:0, bossFx:0, world:undefined, combo:0, jumps:0, powersGot:0, rocket:0, dbl:0, toasts:[]
   };
   G.missions = pickMissions();
   G.laneX = 1;
@@ -400,6 +400,35 @@ function update(dt){
   g.parts = g.parts.filter(p=>p.life>0);
 
   checkMissions();
+  // ----- 보스: 800m마다 거대 로봇 레이저 -----
+  const bi = Math.floor(g.dist/800);
+  if(!g.boss && bi > g.lastBoss){
+    g.lastBoss = bi; g.boss = {t:13, fireT:2, warn:null, fire:null};
+    toast('🤖 보스 등장! 빨간 길을 피해요!'); sfx.shield();
+  }
+  if(g.boss){
+    const B = g.boss;
+    g.nextSpawn = Math.max(g.nextSpawn, VIEW+6);      // 보스 중엔 새 장애물 없음
+    B.t -= dt; B.fireT -= dt;
+    if(!B.warn && !B.fire && B.fireT<=0){
+      const lane = Math.random()<.6 ? Math.round(g.laneX) : Math.floor(Math.random()*3);
+      B.warn = {lane, t:0.95}; beep(700,.12,'square',.05);
+    }
+    if(B.warn){ B.warn.t -= dt;
+      if(B.warn.t<=0){
+        B.fire = {lane:B.warn.lane, t:.3}; B.warn=null; B.fireT = 1.5; sfx.crash();
+        if(Math.abs(g.laneX - B.fire.lane) < 0.6 && g.rocket<=0){
+          if(g.shield>0){ g.shield=0; g.hurt=.6; g.shake=.25; sfx.shield(); }
+          else { die(); return; }
+        }
+      }
+    }
+    if(B.fire){ B.fire.t -= dt; if(B.fire.t<=0) B.fire=null; }
+    if(B.t<=0){
+      g.boss = null; g.coins += 50; sfx.power(); toast('🏆 보스 격퇴! +🪙50');
+      burst(W/2, H*.4, '#ffd93d', 30, 300);
+    }
+  }
   const wi = worldIdx();
   if(wi !== g.world){ if(g.world!==undefined) { toast('🌍 새 월드! '+WORLD_NAMES[wi]); sfx.power(); } g.world = wi; }
   const st = Math.floor(g.dist/500);
@@ -635,6 +664,27 @@ function drawPlayer(){
   }
 }
 
+function laneStrip(lane, color){
+  const lw=laneW(), d1=-1.4, d2=VIEW;
+  const l1=(lane-1-.5)*lw, r1=(lane-1+.5)*lw;
+  ctx.fillStyle=color; ctx.beginPath();
+  ctx.moveTo(W/2+l1*sc(d2), sy(d2)); ctx.lineTo(W/2+r1*sc(d2), sy(d2));
+  ctx.lineTo(W/2+r1*sc(d1), sy(d1)); ctx.lineTo(W/2+l1*sc(d1), sy(d1)); ctx.fill();
+}
+function drawBossRobot(){
+  const B=G.boss; if(!B) return;
+  const x=W/2, d=26, s=sc(d), u=U()*s*2.2, y=sy(d), bob=Math.sin(G.t*3)*u*.04;
+  ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(x,y,u*1.4,u*.18,0,0,7); ctx.fill();
+  ctx.fillStyle='#8a94a8'; rr(x-u*.9,y-u*2.6+bob,u*1.8,u*1.9,u*.2); ctx.fill();       // 몸통
+  ctx.fillStyle='#6d778c'; rr(x-u*.55,y-u*3.4+bob,u*1.1,u*.85,u*.18); ctx.fill();    // 머리
+  ctx.fillStyle = B.warn||B.fire ? '#ff2d2d' : '#ffe066';
+  ctx.beginPath(); ctx.arc(x-u*.22,y-u*3.0+bob,u*.13,0,7); ctx.arc(x+u*.22,y-u*3.0+bob,u*.13,0,7); ctx.fill();
+  ctx.strokeStyle='#555'; ctx.lineWidth=u*.06; ctx.beginPath(); ctx.moveTo(x,y-u*3.4+bob); ctx.lineTo(x,y-u*3.8+bob); ctx.stroke();
+  ctx.fillStyle='#ff5252'; ctx.beginPath(); ctx.arc(x,y-u*3.85+bob,u*.1,0,7); ctx.fill();
+  ctx.fillStyle='#6d778c'; ctx.fillRect(x-u*1.2,y-u*2.4+bob,u*.3,u*1.4); ctx.fillRect(x+u*.9,y-u*2.4+bob,u*.3,u*1.4);
+  ctx.fillStyle='#4a5266'; ctx.fillRect(x-u*.6,y-u*.7,u*.4,u*.7); ctx.fillRect(x+u*.2,y-u*.7,u*.4,u*.7);
+  ctx.fillStyle='#222'; ctx.fillRect(x-u*.5,y-u*2.0+bob,u*1.0,u*.14);
+}
 function render(){
   ctx.save();
   if(G && G.shake>0){ ctx.translate((Math.random()-.5)*10,(Math.random()-.5)*10); }
@@ -643,6 +693,10 @@ function render(){
     const items = [];
     for(const o of G.objs) if(o.d<VIEW) items.push({d:o.d, f:()=>drawObj(o)});
     for(const s of G.side) if(s.d<VIEW) items.push({d:s.d, f:()=>drawSide(s)});
+    if(G.boss) items.push({d:26, f:drawBossRobot});
+    if(G.boss){ const B=G.boss;
+      if(B.warn){ const a=.25+.25*Math.sin(G.t*30); laneStrip(B.warn.lane,`rgba(255,40,40,${a})`); }
+      if(B.fire){ laneStrip(B.fire.lane,'rgba(255,240,150,.85)'); laneStrip(B.fire.lane,'rgba(255,80,40,.5)'); } }
     items.push({d:0.001, f:drawPlayer});
     items.sort((a,b)=>b.d-a.d);
     for(const it of items){
