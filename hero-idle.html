@@ -85,6 +85,9 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 .it .eqb{position:absolute;top:-2px;right:-2px;background:#00b894;border-radius:8px;font-size:9px;padding:1px 4px;font-weight:900;font-style:normal;display:none}
 .it.on .eqb{display:block}
 .it.on{box-shadow:0 0 0 2px #00b894}
+.gb{width:30px;height:30px;border-radius:50%;background:#000a;border:2px solid #fff4;display:flex;align-items:center;justify-content:center;font-size:16px;line-height:1}
+.gb.empty{opacity:.4;border-style:dashed}
+#gear{position:absolute;left:5px;top:36px;display:flex;flex-direction:column;gap:4px;z-index:3}
 .gr{display:inline-block;border-radius:10px;padding:1px 6px;margin:2px}
 #autoBtn{border:2px solid #fff4;background:#0004;color:#fff;border-radius:12px;padding:6px 8px;font-weight:800;font-size:12px;line-height:1.2;min-width:46px}
 #autoBtn.on{background:#00b894;border-color:#55efc4}
@@ -176,6 +179,7 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
     <div id="bolt"></div>
     <div id="toast"></div>
     <div id="ground"></div>
+    <div id="gear"></div>
     <div class="unit" id="heroBox">
       <div class="bar"><i id="hpH"></i></div>
       <div class="mv" id="heroMv"><div class="emo" id="hero"></div></div>
@@ -477,7 +481,7 @@ function sceneSVG(z){
   return `<svg viewBox="0 0 400 250" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${T.a}"/><stop offset="1" stop-color="${T.b}"/></linearGradient></defs><rect width="400" height="250" fill="url(#sk)"/>${d}<path d="M0 172 Q80 118 170 164 T400 150 V250 H0z" fill="${T.h1}"/><path d="M0 202 Q100 162 220 198 T400 192 V250 H0z" fill="${T.h2}"/></svg>`;
 }
 function renderScene(z){if(z===sceneZone)return;sceneZone=z;$("scene").innerHTML=sceneSVG(z)}
-function setHeroArt(){$("hero").innerHTML=HEROES[S.cls||"war"]()}
+function setHeroArt(){$("hero").innerHTML=HEROES[S.cls||"war"]();if($("gear"))applyGear(true)}
 
 /* ================= 전투 ================= */
 const $=id=>document.getElementById(id);
@@ -786,7 +790,21 @@ function refreshSkills(){
     else{const t="💰 "+fmt(cost);setT(bt,t);bt.classList.toggle("off",S.gold<cost)}
   });
 }
+let gearKey="";
+function applyGear(force){
+  const parts=SLOT_KEYS.map(k=>{const i=S.eq[k];return(i>=0&&(S.items[k][i]||0)>0)?i:-1});
+  const key=parts.join(",")+"|"+S.cls;
+  if(!force&&key===gearKey)return;
+  gearKey=key;
+  $("gear").innerHTML=SLOT_KEYS.map((k,n)=>{const i=parts[n];
+    return i>=0?`<div class="gb" data-gear="${k}" style="border-color:${RAR[TIER_RAR[i]].c}">${SLOTS[k].items[i][0]}</div>`:`<div class="gb empty" data-gear="${k}">${SLOTS[k].ic}</div>`}).join("");
+  const top=Math.max(...parts),mv=$("heroMv");
+  mv.style.filter=top>=2?`drop-shadow(0 0 ${4+TIER_RAR[top]*2}px ${RAR[TIER_RAR[top]].c}) drop-shadow(0 0 2px ${RAR[TIER_RAR[top]].c})`:"";
+  const wp=$("hero").querySelector(".wp");
+  if(wp)wp.style.filter=parts[0]>=2?`drop-shadow(0 0 ${3+TIER_RAR[parts[0]]*2}px ${RAR[TIER_RAR[parts[0]]].c})`:"";
+}
 function refreshEquip(){
+  applyGear();
   SLOT_KEYS.forEach(k=>{
     const sl=SLOTS[k],idx=S.eq[k],card=$("es_"+k),own=idx>=0&&(S.items[k][idx]||0)>0;
     const e=card.querySelector(".e");
@@ -912,6 +930,7 @@ $("skList").addEventListener("click",e=>{const b=e.target.closest("[data-skup]")
 $("slots").addEventListener("click",e=>{const b=e.target.closest("[data-slot]");if(b){selSlot=b.dataset.slot;refreshUI()}});
 $("wGrid").addEventListener("click",e=>{const b=e.target.closest("[data-it]");if(b)equip(+b.dataset.it)});
 $("glBtn").onclick=enhanceSlot;
+$("gear").addEventListener("click",e=>{const b=e.target.closest("[data-gear]");if(b){selSlot=b.dataset.gear;document.querySelector('.tab[data-t="2"]').click();refreshUI()}});
 $("autoBtn").onclick=()=>{S.auto=!S.auto;refreshUI()};
 $("rebBtn").onclick=rebirth;$("resetBtn").onclick=reset;
 document.addEventListener("visibilitychange",()=>{if(document.hidden)save();else offline()});
