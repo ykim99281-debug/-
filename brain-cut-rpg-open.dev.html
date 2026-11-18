@@ -804,7 +804,7 @@ function setWeapon(kind,tier){const sw=H.sword;while(sw.children.length)sw.remov
  else if(kind==='fist'){mk(new THREE.SphereGeometry(.2,12,10),tier?iron:M(0xe8e0d0,{roughness:.9}),0,.3,.08,sw);for(let i=0;i<4;i++)mk(new THREE.SphereGeometry(.055,8,6),tier>1?E(tc,1.5):iron,-.12+i*.08,.42,.2,sw)}
  else if(kind==='axe'){mk(new THREE.CylinderGeometry(.04,.05,1.3,8),wood,0,.6,0,sw);mk(new THREE.BoxGeometry(.75,.5,.07),iron,.32,1.15,0,sw);mk(new THREE.BoxGeometry(.06,.5,.09),E(tier?tc:0xdddddd,tier?2:.6),.7,1.15,0,sw,false);mk(new THREE.ConeGeometry(.08,.2,5),iron,0,1.38,0,sw)}}
 
-const need=lv=>Math.round(30*Math.pow(lv,1.45));
+const need=lv=>Math.round(60*Math.pow(lv,1.7));
 const UPS=[
  {i:'🗡️',t:'공격력 +4',f:p=>p.atk+=4},
  {i:'❤️',t:'최대 HP +25<br>(그만큼 회복)',f:p=>{p.max+=25;p.hp+=25}},
@@ -1267,7 +1267,7 @@ function pickup(o){SFX.ui();const p=heroHead();
  if(o.kind==='gold'){G.gold+=o.val;fxFloat('+'+o.val+'G',p,'#ffd84d');tone(900+Math.random()*300,.08,'triangle',.05)}
  else if(o.kind==='jelly'){G.jelly++;fxFloat('눈물 젤리',p,'#7cffb0');updateQuestUI()}
  else{G.pots++;fxFloat('🧪 물약 +1',p,'#ff8aa0')}hud()}
-function gainXP(n){G.xp+=n;fxFloat('+'+n+' XP',heroHead().add(new THREE.Vector3(0,.6,0)),'#b78cff');while(G.xp>=need(G.lv)){G.xp-=need(G.lv);levelUp()}hud()}
+function gainXP(n){n=Math.max(1,Math.round(n*.6));G.xp+=n;fxFloat('+'+n+' XP',heroHead().add(new THREE.Vector3(0,.6,0)),'#b78cff');while(G.xp>=need(G.lv)){G.xp-=need(G.lv);levelUp()}hud()}
 function levelUp(){G.lv++;G.max+=5;G.atk+=1;G.hp=G.max;SFX.win();bigText('LEVEL UP!',1,false);ring(hero.position,{color:0xffd84d,max:10,life:1,y:.1});ring(hero.position,{color:0xffffff,max:6,life:.8,y:.2});burst(heroHead(),{color:0xffd84d,n:100,speed:6,life:1.4,up:3});pillar(hero.position.x,hero.position.z,0xffd84d,{w:1.5,life:.9});sparks(heroHead(),{n:80,color:0xffd84d,speed:9,life:1.4,size:.45});lightPulse(0xffd84d,30,.7,heroHead());toast(`레벨 ${G.lv}! 공격력 +1, 최대 HP +5, HP 전부 회복`);if(G.lv===3)setTimeout(()=>toast('🔓 스킬1 해금! (F 키 / 주황 버튼)'),2400);if(G.lv===6)setTimeout(()=>toast('🔓 스킬2 해금! (G 키 / 주황 버튼)'),2400);if(G.lv===5&&G.job==='none')setTimeout(()=>toast('✨ 5레벨! 이제 직업을 가질 수 있다! 마을 북서쪽 전직관으로 가보자'),2500)}
 
 /* ================= QUESTS / SHOP ================= */
