@@ -645,18 +645,18 @@ const CLS_NEED={war:0,mage:0,arc:0,asn:1,pal:1,ber:2,nec:3,dgn:4,beg:0,pir:2,bar
 const CM={war:{a:1,h:2.2,s:1,c:0},mage:{a:1.3,h:.8,s:1,c:0},arc:{a:1,h:1,s:1.6,c:.1},asn:{a:1.7,h:.3,s:1.35,c:.15},pal:{a:1,h:1.8,s:1,c:0},ber:{a:1.4,h:1.2,s:1.1,c:0},nec:{a:1.3,h:.9,s:1,c:0},dgn:{a:1.25,h:1.4,s:1.2,c:.05},beg:{a:.7,h:.8,s:1,c:0},pir:{a:1.3,h:1.1,s:1.15,c:.1},bard:{a:1,h:1,s:1.25,c:0},alch:{a:1.15,h:1,s:1,c:0}};
 const MELEE=["war","asn","pal","ber","dgn","beg","pir"];
 const CLS={
-  war :{n:"전사",  d:"체력 +120%",           skill:"⚔️ 대폭격",  cd:8, color:"#ff7675",info:"필살기: 5배 강타 + 체력 20% 회복"},
+  war :{n:"전사",  d:"체력 +120%",           skill:"⚔️ 대폭격",  cd:8, color:"#ff7675",info:"필살기: 5배 강타"},
   mage:{n:"마법사",d:"공격력 +30%, 체력 -20%",skill:"⚡ 번개",    cd:10,color:"#a29bfe",info:"필살기: 8배 번개 데미지"},
   asn :{n:"어쌔신",d:"공격력 +70%, 공속 +35%, 치명타 +15%·데미지 3.5배, 체력 -70%, 기본 흡혈 10%",skill:"🗡️ 연속 베기",cd:9,color:"#a55eea",info:"필살기: 8연속 베기 (각 2배)"},
   arc :{n:"궁수",  d:"공격속도 +60%, 치명타 +10%",skill:"🏹 화살비",cd:8, color:"#55efc4",info:"필살기: 화살 8발 (각 1배)"},
   beg :{n:"거지",d:"공격력 -30%, 체력 -20%, 골드 2배, 보석 드랍 3배 (패시브)",skill:"🥣 동냥하기",cd:10,color:"#d7b98a",info:"필살기: 전체 3배 + 즉시 골드 대량 획득"},
-  pal :{n:"성기사",d:"체력 +80%, 받는 피해 -25% (패시브)",skill:"✝️ 심판의 일격",cd:9,color:"#ffe27a",info:"필살기: 전체 5배 + 체력 15% 회복"},
+  pal :{n:"성기사",d:"체력 +80%, 받는 피해 -25% (패시브)",skill:"✝️ 심판의 일격",cd:9,color:"#ffe27a",info:"필살기: 전체 5배 강타"},
   ber :{n:"광전사",d:"공격력 +40%, 체력 +20%, 체력 절반 이하면 공격력 +60% (패시브)",skill:"🪓 분노의 회전",cd:8,color:"#ff7675",info:"필살기: 전체 6배 회전 베기"},
-  nec :{n:"네크로맨서",d:"공격력 +30%, 체력 -10%, 죽인 몬스터를 소환해요 (소환수는 공격력·체력 10%, 패시브)",skill:"💀 죽음의 손길",cd:10,color:"#7bed9f",info:"필살기: 전체 7배 + 체력 10% 회복"},
+  nec :{n:"네크로맨서",d:"공격력 +30%, 체력 -10%, 죽인 몬스터를 소환해요 (소환수는 공격력·체력 10%, 패시브)",skill:"💀 죽음의 손길",cd:10,color:"#7bed9f",info:"필살기: 전체 7배 공격"},
   dgn :{n:"용기사",d:"공격력 +25%, 체력 +40%, 공속 +20%, 치명타 +5%, 공격할 때마다 1% 확률로 용 소환 (패시브)",skill:"🐉 용의 숨결",cd:9,color:"#ff9f43",info:"필살기: 전체 6배 화염 브레스 · 용 소환: 전체 25배"},
   pir :{n:"해적",d:"공격력 +30%, 체력 +10%, 공속 +15%, 치명타 +10%, 골드 +50% (패시브)",skill:"🏴‍☠️ 대포 일제사격",cd:9,color:"#74b9ff",info:"필살기: 전체 6배 대포 사격"},
   bard:{n:"음유시인",d:"공속 +25%, 5번째 공격마다 3배 데미지 (박자, 패시브)",skill:"🎵 음표 폭풍",cd:9,color:"#ff9ff3",info:"필살기: 전체 5배 음표 폭풍"},
-  alch:{n:"연금술사",d:"공격력 +15%, 처치할 때 25% 확률로 물약을 얻어 체력 20% 회복 (패시브)",skill:"⚗️ 폭발 플라스크",cd:10,color:"#55efc4",info:"필살기: 전체 6배 + 체력 12% 회복"},
+  alch:{n:"연금술사",d:"공격력 +15%, 처치할 때 25% 확률로 물약을 얻어 체력 20% 회복 (패시브)",skill:"⚗️ 폭발 플라스크",cd:10,color:"#55efc4",info:"필살기: 전체 6배 폭발"},
 };
 
 /* ================= 상태 ================= */
@@ -730,7 +730,7 @@ function skInfo(id){
   const v=skVals(id);
   if(id==="cls"){const k=CLS[S.cls||"war"],p=k.skill.split(" ");
     return{ic:p[0],n:p.slice(1).join(" "),cd:k.cd,color:k.color,price:0,
-      desc:S.cls==="war"?`몬스터 전체 강타 (가장 가까운 적 ${n1(v.dmg)}배, 나머지 60%) + 체력 20% 회복`:S.cls==="mage"?`몬스터 전체에 ${n1(v.dmg)}배 번개 폭풍`:S.cls==="asn"?`8연속 베기 (각 ${n1(v.dmg)}배, 랜덤 대상)`:S.cls==="arc"?`화살 8발 (각 ${n1(v.dmg)}배, 랜덤 대상)`:S.cls==="pal"?`전체 ${n1(v.dmg)}배 + 체력 15% 회복`:S.cls==="nec"?`전체 ${n1(v.dmg)}배 + 체력 10% 회복`:`전체 ${n1(v.dmg)}배 공격`}}
+      desc:S.cls==="war"?`몬스터 전체 강타 (가장 가까운 적 ${n1(v.dmg)}배, 나머지 60%)`:S.cls==="mage"?`몬스터 전체에 ${n1(v.dmg)}배 번개 폭풍`:S.cls==="asn"?`8연속 베기 (각 ${n1(v.dmg)}배, 랜덤 대상)`:S.cls==="arc"?`화살 8발 (각 ${n1(v.dmg)}배, 랜덤 대상)`:S.cls==="pal"?`전체 ${n1(v.dmg)}배 강타`:S.cls==="nec"?`전체 ${n1(v.dmg)}배 공격`:`전체 ${n1(v.dmg)}배 공격`}}
   const d=DEF[id];
   const desc={snipe:`가장 가까운 적 하나에 ${n1(v.dmg)}배 강타`,heal:`체력 ${Math.round(v.heal*100)}% 즉시 회복`,
     shield:`${n1(v.dur)}초 동안 몬스터 공격을 모두 막아요`,aoe:`몬스터 전체에 ${n1(v.dmg)}배 공격`,
@@ -1209,16 +1209,12 @@ function useSkill(id,quiet){
   switch(d0.kind){
     case "core":
       if(S.cls==="war"){
-        const h=c.maxHp*0.2;hp=Math.min(c.maxHp,hp+h);
-        if(!quiet)float("+"+fmt(h),"heal","heroBox");
         all(v.dmg,false);
       }else if(S.cls==="mage")all(v.dmg,true);
       else if(S.cls==="asn")hits(8,v.dmg,90);
       else if(S.cls==="arc")hits(8,v.dmg,70);
       else{                                         // 성기사 · 광전사 · 네크로맨서 · 용기사
         if(S.cls==="beg"){const g=goldFor(S.stage)*c.goldMul*6;S.gold+=g;S.earned=(S.earned||0)+g;gpsAcc+=g;if(!quiet)float("+"+fmt(g),"gold","heroBox")}
-        const hl={pal:0.15,nec:0.10,alch:0.12}[S.cls];
-        if(hl){const h=c.maxHp*hl;hp=Math.min(c.maxHp,hp+h);if(!quiet)float("+"+fmt(h),"heal","heroBox")}
         all(v.dmg,true);
       }
       break;
