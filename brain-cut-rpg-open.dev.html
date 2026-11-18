@@ -212,7 +212,7 @@ function sprite(tex,s=1,o={}){const m=new THREE.Sprite(new THREE.SpriteMaterial(
 function textTex(txt,{font='bold 80px Jua, sans-serif',color='#fff',bg=null,w=256,h=128,stroke=null}={}){return canvasTex(w,h,(g,W,H)=>{if(bg){g.fillStyle=bg;g.beginPath();g.roundRect(4,4,W-8,H-8,24);g.fill()}g.font=font;g.textAlign='center';g.textBaseline='middle';if(stroke){g.lineWidth=8;g.strokeStyle=stroke;g.strokeText(txt,W/2,H/2+4)}g.fillStyle=color;g.fillText(txt,W/2,H/2+4)})}
 
 /* ===== shared state ===== */
-const flames=[],glowMats=[];const GM=(c,i)=>{const m=E(c,i);glowMats.push({m,base:i});return m};
+let SEASON=1;const flames=[],glowMats=[];const GM=(c,i)=>{const m=E(c,i);glowMats.push({m,base:i});return m};
 let shake=0,fovPunch=0,camT=0,camYaw=.6,camPitch=.4,camDistT=7,camDistC=7,aspect=1,bloomKick=0,boomBoost=0,heroY=0,heroBusy=false,groundY=0;
 const camLook=new THREE.Vector3(),camSmooth=new THREE.Vector3();
 function addShake(a){shake=Math.min(1.2,shake+a)}
@@ -259,8 +259,8 @@ function buildHero(parent,ghost=false){
  const head=grp(g,0,2.02,0);mk(new THREE.SphereGeometry(.27,24,18),M(0xffd9bf,{roughness:.6}),0,0,0,head);
  const hel=mk(new THREE.SphereGeometry(.33,24,18,0,Math.PI*2,0,Math.PI*.62),steel,0,.02,0,head);
  hel.userData.part='helm';mk(new THREE.BoxGeometry(.5,.07,.12),E(0x9fe8ff,3),0,.0,.27,head,false).userData.part='helm';mk(new THREE.BoxGeometry(.06,.3,.08),gold,0,.03,.3,head).userData.part='helm';
- const plume=mk(new THREE.CapsuleGeometry(.07,.55,4,10),red,0,.38,-.1,head);plume.rotation.x=-.9;plume.userData.part='helm';H.plume=plume;
- const cape=new THREE.Mesh(new THREE.PlaneGeometry(.95,1.5,10,16),red);cape.position.set(0,1.3,-.38);cape.castShadow=true;g.add(cape);cape.geometry.userData.base=cape.geometry.attributes.position.array.slice();H.cape=cape;
+ const plume=mk(new THREE.CapsuleGeometry(.07,.55,4,10),red,0,.38,-.1,head);plume.rotation.x=-.9;plume.userData.part='helm';if(parent===hero)H.plume=plume;
+ const cape=new THREE.Mesh(new THREE.PlaneGeometry(.95,1.5,10,16),red);cape.position.set(0,1.3,-.38);cape.castShadow=true;g.add(cape);cape.geometry.userData.base=cape.geometry.attributes.position.array.slice();if(parent===hero)H.cape=cape;
  const armL=grp(g,-.58,1.55,0);mk(new THREE.CapsuleGeometry(.1,.45,6,10),steel,0,-.3,0,armL);const sh=grp(armL,-.1,-.5,.15);sh.userData.part='shield';const shield=mk(new THREE.CylinderGeometry(.5,.5,.09,6),gold,0,0,0,sh);shield.rotation.z=Math.PI/2;
  const sf=mk(new THREE.CircleGeometry(.38,6),M(0xffffff,{map:textTex('뇌',{font:'bold 220px "Black Han Sans",Jua,sans-serif',color:'#ffe9a8',bg:'#2d3fa8',w:256,h:256}),metalness:.3}),-.05,0,0,sh);sf.rotation.y=-Math.PI/2;sf.castShadow=false;
  const armR=grp(g,.58,1.55,0);mk(new THREE.CapsuleGeometry(.1,.45,6,10),steel,0,-.3,0,armR);
@@ -387,6 +387,7 @@ const ENEMIES=[
 ,{n:'꼬마 악마',sc:1,lines:['띠링 띠링!','마왕님 대신 왔다!','읽씹 금지!']}
 ,{n:'불 정령',sc:1,lines:['타오른다... 타오른다...','번뜩번뜩!']}
 ,{n:'마그마 골렘',sc:1,lines:['용암... 용암... 용암...','화산이 폭발한다!']}
+,{n:'뇌절 마왕 (복제 용사)',sc:1,lines:['내가 진짜 용사다!','나는 너고, 너는 나다...','같은 기술... 한 번 더!','뇌절! 뇌절! 뇌절!']}
 ];
 builders.push(function dummy(g){const wood=M(0x8a5a2a,{roughness:.8}),straw=M(0xe0c060,{roughness:.9});
  mk(new THREE.CylinderGeometry(.12,.14,2.2,8),wood,0,1.1,0,g);const arm=mk(new THREE.BoxGeometry(1.6,.14,.14),wood,0,1.75,0,g);
@@ -428,6 +429,14 @@ function fireSpirit(g){const cs=[[0xff4a1a,1.1,2.6],[0xff8a2a,.8,2.1],[0xffd23a,
  for(const s of[-1,1])mk(new THREE.SphereGeometry(.1,8,6),M(0x2a0a00),s*.25,1.5,.55,g,false);mk(new THREE.TorusGeometry(.14,.03,6,12,Math.PI),M(0x2a0a00),0,1.25,.6,g,false).rotation.z=Math.PI;
  return{tick:t=>{cs.forEach((c,i)=>{const k=1+Math.sin(t*9+i*2)*.12;c.scale.set(k,1+Math.sin(t*7+i)*.15,k);c.rotation.y=t*(1+i*.5)});g.position.y=Math.sin(t*2)*.1},hy:3.2}}
 builders.push(wolf,golem,builders[0],wolf,builders[2],golem,penguin,builders[1],crab,octopus,jelly,ghost,builders[0],wolf,builders[4],fireSpirit,golem);
+function cloneBoss(g){const hb=buildHero(g,false),mt=hb.g.userData.mats;mt.steel.color.set(0x2a1a34);mt.steel.metalness=.85;mt.blue.color.set(0x3a0a20);mt.gold.color.set(0xff3a5a);mt.red.color.set(0x12061a);
+ hb.g.scale.setScalar(1.55);hb.sword.scale.setScalar(1.6);hb.g.traverse(o=>{if(o.isMesh&&o.material&&o.material.emissive&&o.material.emissiveIntensity>1){o.material=o.material.clone();o.material.color.set(0xff2a4a);o.material.emissive.set(0xff2a4a)}});
+ for(const sx of[-1,1]){const hn=mk(new THREE.ConeGeometry(.1,.6,6),M(0x1a0a14,{metalness:.6}),sx*.3,.35,0,hb.head);hn.rotation.z=-sx*.5}for(let i=0;i<7;i++){const a=i/7*6.28;mk(new THREE.ConeGeometry(.06,.3,5),E(0xff2a4a,3),Math.cos(a)*.3,.42,Math.sin(a)*.3,hb.head,false)}
+ const gh=[-1,1].map(sd=>{const q=buildHero(g,true);q.g.position.set(sd*2.2,0,-1.6);q.g.scale.setScalar(1.35);return q});
+ const rings=[0,1].map(i=>mk(new THREE.TorusGeometry(2.6+i*.6,.04,8,70),E(i?0xff7be5:0xff2a4a,2.5),0,2.6,0,g,false));
+ const kl=new THREE.PointLight(0xff2a4a,10,14,1.6);kl.position.set(0,4,2);g.add(kl);
+ return{tick:t=>{hb.g.position.y=Math.sin(t*1.6)*.14;hb.armR.rotation.x=-.2+Math.sin(t*2)*.1;hb.legs[0].rotation.x=Math.sin(t*3)*.08;gh.forEach((q,i)=>{q.g.position.y=Math.sin(t*1.8+i*2)*.18;q.armR.rotation.x=-.4+Math.sin(t*2.4+i)*.2});rings.forEach((r,i)=>{r.rotation.x=Math.PI/2+Math.sin(t*.8+i)*.5;r.rotation.y=t*(.5+i*.3)*(i?-1:1)})},hy:5.6}}
+builders.push(cloneBoss);
 function flashMats(obj,color=0xffffff,intensity=2.5,dur=.25){const mats=obj.mats;mats.forEach(m=>{m.emissive.set(color);m.emissiveIntensity=intensity});tween(dur,t=>{mats.forEach(m=>{m.emissive.copy(m.userData.e0).lerp(new THREE.Color(color),1-t);m.emissiveIntensity=lerp(intensity,m.userData.i0,t)})},easeOut)}
 const heroMats=[];hero.traverse(o=>{if(o.isMesh&&o.material.emissive){if(!heroMats.includes(o.material)){o.material.userData.e0=o.material.emissive.clone();o.material.userData.i0=o.material.emissiveIntensity;heroMats.push(o.material)}}});
 const heroObj={g:hero,mats:heroMats};
@@ -578,7 +587,7 @@ const windmill=(()=>{const g=grp(worldG,17,hgt(17,-14),-14);mk(new THREE.Cylinde
 const treeGrid=new Map();const tk=(x,z)=>Math.floor(x/4)+','+Math.floor(z/4);
 const TERR=[
  {i:0,c:[-24,-14],r:8,n:4,s:.8},{i:1,c:[28,-26],r:9,n:4,s:.62},{i:2,c:[-32,-46],r:9,n:3,s:.55},{i:9,c:[-12,-38],r:8,n:3,s:.8},{i:10,c:[18,-52],r:8,n:2,s:.6},{i:2,c:[-26,-72],r:9,n:2,s:.55},{i:7,c:[34,-60],r:2,n:1,s:.62,boss:1},
- {i:5,c:[0,-83],r:0,n:1,s:.55,boss:1},{i:6,c:[-6,-1],r:0,n:1,s:1},
+ {i:5,c:[0,-83],r:0,n:1,s:.55,boss:1,only:1},{i:26,c:[0,-83],r:0,n:1,s:.8,boss:1,only:2},{i:6,c:[-6,-1],r:0,n:1,s:1},
  {i:16,c:[94,-18],r:10,n:3,s:.62,k:1.8,tint:0x40c8c0},{i:17,c:[112,36],r:8,n:3,s:.9,k:1.8},{i:19,c:[78,32],r:8,n:3,s:.7,k:1.8},{i:20,c:[138,-24],r:8,n:3,s:.65,k:1.9},{i:18,c:[138,30],r:8,n:3,s:.65,k:1.9},{i:8,c:[127,6],r:2,n:1,s:.7,boss:1,tint:0x4a90c0},
  {i:11,c:[-72,-16],r:8,n:3,s:.8,k:1.9,tint:0xaaddff},{i:12,c:[-90,-16],r:8,n:3,s:.8,k:1.9,tint:0xcfe6ff},{i:13,c:[-100,24],r:8,n:3,s:.62,k:1.9,tint:0xf0f6ff},{i:14,c:[-116,-12],r:7,n:2,s:.6,k:2,tint:0xaadfff},{i:15,c:[-120,28],r:7,n:3,s:.85,k:2},{i:3,c:[-130,8],r:2,n:1,s:.5,boss:1,tint:0xbfe6ff},
  {i:21,c:[8,86],r:9,n:3,s:.8,k:2.2,tint:0xff6a3a},{i:22,c:[32,120],r:8,n:3,s:.8,k:2.2,tint:0xff5a2a},{i:23,c:[34,138],r:7,n:3,s:.4,k:2.2},{i:24,c:[-14,112],r:8,n:3,s:.65,k:2.3},{i:25,c:[52,114],r:7,n:2,s:.6,k:2.4,tint:0xff6a3a},{i:4,c:[22,153],r:2,n:1,s:.85,boss:1}
@@ -654,7 +663,8 @@ const ES=[
  {lv:12,hp:85,atk:14,spd:4.4,aggro:15,type:'melee',range:2.2,cd:1.2,xp:48,gold:[14,24],r:.8,def:2},
  {lv:12,hp:100,atk:13,spd:3.8,aggro:14,type:'proj3',range:10,cd:1.9,xp:52,gold:[14,24],r:.7,def:3},
  {lv:13,hp:120,atk:14,spd:2.8,aggro:13,type:'cone',range:6.5,cd:2.1,xp:58,gold:[16,28],r:.9,armor:1,def:4},
- {lv:14,hp:260,atk:17,spd:1.9,aggro:11,type:'slam',range:3.4,cd:2.5,xp:90,gold:[24,44],r:1.3,armor:1,def:10}
+ {lv:14,hp:260,atk:17,spd:1.9,aggro:11,type:'slam',range:3.4,cd:2.5,xp:90,gold:[24,44],r:1.3,armor:1,def:10},
+ {lv:30,hp:2600,atk:40,spd:3.2,aggro:30,type:'clone',range:9,cd:1,xp:2500,gold:[1500,1500],r:1.6,armor:1,boss:1,final2:1,def:40}
 ];
 
 // ---- hidden class hall + cairns
@@ -666,17 +676,19 @@ const hallParts=[];
  const lab=sprite(textTex('전직관',{font:'bold 90px "Black Han Sans",Jua',color:'#fff',stroke:'#2a7aff',w:320,h:140}),1);lab.scale.set(5,2.2,1);lab.position.set(0,6.2,0);g.add(lab);}
 const master=mkNPC(HALL[0]+1.3,HALL[1]+2.2,{name:'전직 스승',robe:0x2a1a4a,belt:0x66ddff,beard:true,hat:'straw',s:1.1,cane:true});
 // ---- world monsters
+function calcS(t){const S=Object.assign({},ES[t.i]);if(t.k){S.hp=Math.round(S.hp*t.k);S.atk=Math.round(S.atk*t.k);S.xp=Math.round(S.xp*t.k*1.2);S.gold=[Math.round(S.gold[0]*t.k*1.5),Math.round(S.gold[1]*t.k*1.5)];S.lv+=Math.round((t.k-1)*6);S.def=Math.round((S.def||0)*t.k)}
+ if(SEASON===2){S.hp=Math.round(S.hp*2.6);S.atk=Math.round(S.atk*2);S.def=Math.round((S.def||0)*1.6);S.xp=Math.round(S.xp*3);S.gold=[Math.round(S.gold[0]*2.5),Math.round(S.gold[1]*2.5)];S.lv+=18;S.spd*=1.15}return S}
 function wmonPos(t){const a=rand(0,6.283),r=Math.sqrt(Math.random())*t.r;return[t.c[0]+Math.cos(a)*r,t.c[1]+Math.sin(a)*r]}
 function spawnWM(t){const g=new THREE.Group(),b=builders[t.i](g);g.scale.setScalar(t.s);const[x,z]=wmonPos(t);g.position.set(x,hgt(x,z),z);
  const mats=[];g.traverse(o=>{if(o.isMesh&&o.material.emissive&&!(o.material instanceof THREE.MeshBasicMaterial)&&!mats.includes(o.material)){o.material.userData.e0=o.material.emissive.clone();o.material.userData.i0=o.material.emissiveIntensity;mats.push(o.material)}});
  g.traverse(o=>{if(o.isMesh)o.castShadow=false});if(t.tint){const tc=new THREE.Color(t.tint);mats.forEach(mm=>{mm.color.lerp(tc,.5)})}
- worldG.add(g);const S=Object.assign({},ES[t.i]);if(t.k){S.hp=Math.round(S.hp*t.k);S.atk=Math.round(S.atk*t.k);S.xp=Math.round(S.xp*t.k*1.2);S.gold=[Math.round(S.gold[0]*t.k*1.5),Math.round(S.gold[1]*t.k*1.5)];S.lv+=Math.round((t.k-1)*6);S.def=Math.round((S.def||0)*t.k)}
+ worldG.add(g);const S=calcS(t)
  wmons.push({g,b,t,S,mats,hp:S.hp,max:S.hp,alive:true,state:'idle',tt:0,tDur:1,cd:rand(0,1),fightT:0,combatT:0,frozen:0,kv:new THREE.Vector3(),kbT:0,lungeT:0,tx:x,tz:z,wait:rand(0,3),yaw:rand(0,6),ph:rand(0,6),dead:0,repLeft:0,bar:null,sayT:0,tog:0,lockYaw:0,curType:S.type})}
 for(const t of TERR)for(let i=0;i<t.n;i++)spawnWM(t);
 function collide(p){for(const c of colliders){const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz),m=c.r+.45;if(d<m&&d>1e-4){p.x=c.x+dx/d*m;p.z=c.z+dz/d*m}}
  const cx=Math.floor(p.x/4),cz=Math.floor(p.z/4);for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const l=treeGrid.get((cx+i)+','+(cz+j));if(l)for(const c of l){const dx=p.x-c.x,dz=p.z-c.z,d=Math.hypot(dx,dz),m=c.r+.4;if(d<m&&d>1e-4){p.x=c.x+dx/d*m;p.z=c.z+dz/d*m}}}}
 const angDiff=(a,b)=>{let d=b-a;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return d};
-const stageLabel=()=>{const x=hero.position.x,z=hero.position.z,d=Math.hypot(x,z);return d<19?'🏔️ 뇌절마을 (산)':x>70?'🌊 동쪽 바다':x<-70?'❄️ 서쪽 툰드라':z>70?'🔥 남쪽 불의 땅':z<-78?'🏰 타락성 앞':'⛰️ 산악 지대 · '+Math.round(d)+'m'};
+const stageLabel=()=>{const x=hero.position.x,z=hero.position.z,d=Math.hypot(x,z);return (SEASON===2?'🌑S2 ':'')+(d<19?'🏔️ 뇌절마을 (산)':x>70?'🌊 동쪽 바다':x<-70?'❄️ 서쪽 툰드라':z>70?'🔥 남쪽 불의 땅':z<-78?'🏰 타락성 앞':'⛰️ 산악 지대 · '+Math.round(d)+'m')};
 let mmBig=false;
 const mmc=$('#mm').getContext('2d');$('#mm').onclick=()=>{mmBig=!mmBig;const m=$('#mm');m.width=m.height=mmBig?260:112;m.classList.toggle('xl',mmBig)};
 function drawMM(){const c=mmc,W=mmBig?260:112,h=W/2,S=.7;c.clearRect(0,0,W,W);c.save();c.beginPath();c.arc(h,h,h-1,0,7);c.clip();c.fillStyle='rgba(18,10,36,.82)';c.fillRect(0,0,W,W);
@@ -692,7 +704,7 @@ function drawMM(){const c=mmc,W=mmBig?260:112,h=W/2,S=.7;c.clearRect(0,0,W,W);c.
  c.translate(h,h);c.rotate(Math.PI-hero.rotation.y);c.fillStyle='#fff';c.beginPath();c.moveTo(0,-6);c.lineTo(4.5,5);c.lineTo(0,3);c.lineTo(-4.5,5);c.closePath();c.fill();c.restore()}
 
 /* ================= GAME STATE ================= */
-const G={lv:1,xp:0,gold:40,hp:100,max:100,atk:8,def:0,thr:5,joke:.3,guardPow:.5,boom:0,pots:1,jelly:0,herb:0,wl:0,al:0,job:'none',jb:{max:0,atk:0,def:0,thr:0,joke:0},wt:{club:0,sword:0,staff:0,bow:0,mic:0,dagger:0,mace:0,fist:0,axe:0},hintHall:false,wps:{village:true},bd:{}};
+const G={lv:1,xp:0,gold:40,hp:100,max:100,atk:8,def:0,thr:5,joke:.3,guardPow:.5,boom:0,pots:1,jelly:0,herb:0,wl:0,al:0,job:'none',jb:{max:0,atk:0,def:0,thr:0,joke:0},wt:{club:0,sword:0,staff:0,bow:0,mic:0,dagger:0,mace:0,fist:0,axe:0},hintHall:false,wps:{village:true},bd:{},season:1,s1clear:false};
 const DMGS=.5;
 const WP={club:[{n:'나무몽둥이',a:2,c:0},{n:'쇠몽둥이',a:9,c:100},{n:'대못 몽둥이',a:18,c:450}],
  sword:[{n:'연습용 철검',a:8,c:0},{n:'강철검',a:20,c:500},{n:'기사의 검',a:36,c:1500},{n:'용사의 검',a:60,c:4000}],
@@ -805,7 +817,7 @@ function updateEnv(real){
  hemi.color.copy(mixC(0x2a2a7a,0xcfe0ff,0xffc090,d,du,_c1));hemi.groundColor.set(0x1a1a30).lerp(_c3.set(0x6a8a3a),d);hemi.intensity=lerp(.3,.75,d);
  key.color.copy(mixC(0x8aa0ff,0xfff0d0,0xffa060,d,du,_c1));key.intensity=lerp(.7,2.1,d)+du*.5;
  const ld=elev>0?sunDir:sunDir.clone().multiplyScalar(-1);const p=hero.position;key.position.set(p.x+ld.x*18,p.y+Math.max(7,Math.abs(ld.y)*20+4),p.z+ld.z*18-4);key.target.position.copy(p);key.target.updateMatrixWorld();
- rim.intensity=lerp(1.2,.7,d);scene.fog.color.copy(mixC(0x0c0820,0xe8bfdc,0xffa078,d,du,_c1));scene.fog.density=lerp(.016,.0075,d);{const bm=biome(hero.position.x,hero.position.z),tv=U.tint.value;tv.set(0,0,0);let ta=0;if(bm.s>.01){scene.fog.color.lerp(_c3.set(0xff5a2a),bm.s*.55*(.4+.6*d));scene.fog.density+=bm.s*.004;tv.x+=bm.s;tv.y+=.35*bm.s;tv.z+=.15*bm.s;ta=Math.max(ta,bm.s)}if(bm.w>.01){scene.fog.color.lerp(_c3.set(0xdce8ff),bm.w*.3);tv.x+=.85*bm.w;tv.y+=.92*bm.w;tv.z+=bm.w;ta=Math.max(ta,bm.w*.8)}if(bm.e>.01){scene.fog.color.lerp(_c3.set(0xa8e4ff),bm.e*.4);tv.x+=.5*bm.e;tv.y+=.9*bm.e;tv.z+=bm.e;ta=Math.max(ta,bm.e*.6)}U.ta.value=ta}
+ rim.intensity=lerp(1.2,.7,d);scene.fog.color.copy(mixC(0x0c0820,0xe8bfdc,0xffa078,d,du,_c1));scene.fog.density=lerp(.016,.0075,d);{const bm=biome(hero.position.x,hero.position.z),tv=U.tint.value;tv.set(0,0,0);let ta=0;if(bm.s>.01){scene.fog.color.lerp(_c3.set(0xff5a2a),bm.s*.55*(.4+.6*d));scene.fog.density+=bm.s*.004;tv.x+=bm.s;tv.y+=.35*bm.s;tv.z+=.15*bm.s;ta=Math.max(ta,bm.s)}if(bm.w>.01){scene.fog.color.lerp(_c3.set(0xdce8ff),bm.w*.3);tv.x+=.85*bm.w;tv.y+=.92*bm.w;tv.z+=bm.w;ta=Math.max(ta,bm.w*.8)}if(bm.e>.01){scene.fog.color.lerp(_c3.set(0xa8e4ff),bm.e*.4);tv.x+=.5*bm.e;tv.y+=.9*bm.e;tv.z+=bm.e;ta=Math.max(ta,bm.e*.6)}if(SEASON===2){scene.fog.color.lerp(_c3.set(0x3a0a28),.35);tv.x+=.55;tv.y+=.04;tv.z+=.3;ta=Math.max(ta,.5)}U.ta.value=ta}
  renderer.toneMappingExposure=lerp(1.1,.85,d);
  for(const g of glowMats)g.m.emissiveIntensity=g.base*(.15+nightF*2.6);
  for(const f of flames){const k=1+Math.sin(T*18+f.ph)*.15+Math.sin(T*31+f.ph*2)*.1;f.fl.scale.set(k*.9,k*1.1,k*.9);f.l.intensity=f.base*(.85+(k-1)*2)*(.5+nightF*.8)}
@@ -1076,7 +1088,7 @@ const PROJV={15:{tex:glowTex,add:true,color:0xcfe8ff,size:1.3},20:{tex:glowTex,a
 const badgeTex=textTex('99+',{color:'#fff',bg:'#ff2d55',font:'bold 70px "Black Han Sans",Jua',w:140,h:100});
 const orbTex=glowTex;
 function shoot(m,yaw,{tex,spd=9,dmg,life=2.8,r=.75,size=1.5,color=0xffffff,add=false}){
- const s=sprite(tex,size,add?{blending:THREE.AdditiveBlending,color}:{});const f=fwdOf(yaw),gp=m.g.position;s.position.set(gp.x+f.x*1.2,gp.y+1.6,gp.z+f.z*1.2);scene.add(s);projs.push({s,vx:f.x*spd,vz:f.z*spd,life,dmg,r,ox:gp.x,oz:gp.z})}
+ const s=sprite(tex,size,add?{blending:THREE.AdditiveBlending,color}:{});const f=fwdOf(yaw),gp=m.g.position;s.position.set(gp.x+f.x*1.2,gp.y+1.6,gp.z+f.z*1.2);scene.add(s);{const sp2=SEASON===2?1.25:1;projs.push({s,vx:f.x*spd*sp2,vz:f.z*spd*sp2,life,dmg,r,ox:gp.x,oz:gp.z})}}
 function updateProjs(dt){for(let i=projs.length-1;i>=0;i--){const o=projs[i];o.s.position.x+=o.vx*dt;o.s.position.z+=o.vz*dt;o.life-=dt;o.s.material.rotation+=dt*4;
   const dx=o.s.position.x-hero.position.x,dz=o.s.position.z-hero.position.z;let dead=o.life<=0;
   if(!dead&&Math.hypot(dx,dz)<o.r+.55&&Math.abs(o.s.position.y-(hero.position.y+1.2))<1.8&&mode==='world'){if(hurtHero(o.dmg,o.ox,o.oz)||PA.iframes>0)dead=true;burst(o.s.position,{color:0xff6688,n:16,speed:4,life:.4})}
@@ -1094,10 +1106,12 @@ function wonder(m,dt){m.wait-=dt;const gp=m.g.position,tdx=m.tx-gp.x,tdz=m.tz-gp
  if(td<.6||m.wait<-6){[m.tx,m.tz]=wmonPos(m.t);m.wait=rand(0,2.5)}else if(m.wait<=0&&!m.t.boss){gp.x+=tdx/td*1.4*dt;gp.z+=tdz/td*1.4*dt;m.yaw=Math.atan2(tdx,tdz)}}
 function beginWindup(m,dur){
  m.state='windup';m.tt=dur;m.tDur=dur;const gp=m.g.position,S=m.S;m.lockYaw=Math.atan2(hero.position.x-gp.x,hero.position.z-gp.z);m.yaw=m.lockYaw;
- let type=S.type;if(type==='king'){m.tog=(m.tog+1)%2;type=m.tog?'slam':'ring';m.curType=type}else m.curType=type;
+ let type=S.type;if(type==='king'){m.tog=(m.tog+1)%2;type=m.tog?'slam':'ring';m.curType=type}else if(type==='clone'){m.tog=(m.tog+1)%4;type=['slam','ring','dash','boom'][m.tog];m.curType=type}else m.curType=type;
  if(type==='melee'){const f=fwdOf(m.lockYaw);telegraph('circle',gp.x+f.x*1.5,gp.z+f.z*1.5,0,1.8,dur)}
  else if(type==='slam')telegraph('circle',gp.x,gp.z,0,S.boss?6.2:3.4,dur);
  else if(type==='cone')telegraph('cone',gp.x,gp.z,m.lockYaw,7.5,dur,.55);
+ else if(type==='dash')telegraph('cone',gp.x,gp.z,m.lockYaw,13,dur,.2);
+ else if(type==='boom'){m.boomPts=[];for(let i=0;i<5;i++){const a=rand(0,6.28),r=i?rand(1.5,6):0,bx=hero.position.x+Math.cos(a)*r,bz=hero.position.z+Math.sin(a)*r;m.boomPts.push([bx,bz]);telegraph('circle',bx,bz,0,2.8,dur)}}
  else if(type==='ring'||type==='proj'||type==='proj3'){const gl=sprite(glowTex,3,{blending:THREE.AdditiveBlending,color:0xff3355});gl.position.set(gp.x,gp.y+1.6,gp.z);scene.add(gl);fxList.push({o:gl,t:0,life:dur,upd(d,k){gl.material.opacity=k;gl.scale.setScalar(1+k*3)}})}
  flashMats(m,0xff2244,1.8,dur)}
 function fireAttack(m){
@@ -1109,13 +1123,15 @@ function fireAttack(m){
   const dx=hp.x-gp.x,dz=hp.z-gp.z;if(Math.hypot(dx,dz)<7.6&&Math.abs(angDiff(yaw,Math.atan2(dx,dz)))<.6)hurtHero(dmg,gp.x,gp.z)}
  else if(type==='proj'){shoot(m,yaw,Object.assign({dmg,spd:10,size:1.5},PROJV[m.t.i]||{tex:frameTex}));SFX.slash()}
  else if(type==='proj3'){const gb=m.t.i===7;for(const o of(gb?[-.5,-.25,0,.25,.5]:[-.32,0,.32]))shoot(m,yaw+o,Object.assign({dmg:dmg*.8,spd:8,size:gb?1.5:1.2},PROJV[m.t.i]||{tex:gb?frameTex:badgeTex}));SFX.joke()}
+ else if(type==='dash'){m.lungeT=.38;m.lungeV=f.clone().multiplyScalar(4);burst(new THREE.Vector3(gp.x,gp.y+1,gp.z),{color:0xff2a4a,n:30,speed:6,life:.5});const dx=hp.x-gp.x,dz=hp.z-gp.z;if(Math.hypot(dx,dz)<14&&Math.abs(angDiff(yaw,Math.atan2(dx,dz)))<.28)hurtHero(dmg*1.1,gp.x,gp.z);SFX.slash()}
+ else if(type==='boom'){for(const[bx,bz] of(m.boomPts||[])){const q=P3(bx,bz);blast(q,2.8,0xff2a4a);if(Math.hypot(hp.x-bx,hp.z-bz)<2.8)hurtHero(dmg*.9,bx,bz)}}
  else if(type==='ring'){const pr=m.t.i===5;for(let i=0;i<10;i++)shoot(m,yaw+i/10*Math.PI*2,{tex:pr?heartTex:orbTex,dmg:dmg*.7,spd:7,size:1.4,add:!pr,color:0xff49d8});for(const o of[-.15,0,.15])shoot(m,yaw+o,{tex:pr?replyTex:badgeTex,dmg:dmg*.8,spd:10,size:1.3});ring(gp,{color:0xff49d8,max:8,life:.6,y:.15});SFX.boom()}
  m.state='recover';m.tt=.35}
 const BARK_REP=['!','!!','!!!'];
 function bark(m,reps){const lines=ENEMIES[m.t.i].lines;const l=lines[(m.li=(m.li||0)+1)%lines.length]+(reps>1?` (${reps}연타!)`:'');
  if(m.t.boss){fxFloat(l,enemyHead(m),'#ffb0f0');return}
  if(!m.bar)showBar(m);const sp=m.bar.querySelector('.sp');sp.textContent=l;sp.style.display='block';m.sayT=2}
-function startAttack(m){const reps=1+Math.min(4,Math.floor(m.fightT/5))+(m.S.boss?1:0)+(m.rage?1:0);m.repLeft=reps-1;bark(m,reps);beginWindup(m,m.rage?.4:m.S.boss?.5:.62)}
+function startAttack(m){const reps=1+Math.min(4,Math.floor(m.fightT/5))+(m.S.boss?1:0)+(m.rage?1:0)+(SEASON===2?1:0);m.repLeft=reps-1;bark(m,reps);beginWindup(m,(m.rage?.4:m.S.boss?.5:.62)*(SEASON===2?.85:1))}
 function updateEnemies(dt){
  const hp=hero.position;
  for(const m of wmons){
@@ -1151,6 +1167,7 @@ function updateEnemies(dt){
   gp.y=hgt(gp.x,gp.z)+(m.air||0)+(m.t.i===0?Math.abs(Math.sin(T*5+m.ph))*.25:0);
  }
 }
+const mname=m=>(m.t.pre||'')+(SEASON===2&&m.t.boss&&!m.S.final2?'분신 ':'')+ENEMIES[m.t.i].n;
 function showBar(m){if(m.bar||m.t.boss)return;const d=document.createElement('div');d.className='eb';d.innerHTML=`<div class="en">Lv.${m.S.lv} ${(m.t.pre||'')}${ENEMIES[m.t.i].n}</div><div class="eh"><i></i></div><div class="sp"></div>`;$('#ebars').appendChild(d);m.bar=d}
 function updateBars(){let boss=null;
  for(const m of wmons){
@@ -1160,7 +1177,7 @@ function updateBars(){let boss=null;
   if(!show){m.bar.style.display='none';continue}
   const v=enemyHead(m).project(camera);if(v.z>1||Math.abs(v.x)>1.2){m.bar.style.display='none';continue}
   m.bar.style.display='block';m.bar.style.left=((v.x*.5+.5)*innerWidth)+'px';m.bar.style.top=((-v.y*.5+.5)*innerHeight)+'px';m.bar.querySelector('i').style.width=clamp(m.hp/m.max*100,0,100)+'%'}
- const b=$('#boss');if(boss&&mode==='world'){b.style.display='block';$('#bn').textContent=(boss.S.final?'💔 ':'⚔️ ')+(boss.t.pre||'')+ENEMIES[boss.t.i].n;$('#bh').style.width=clamp(boss.hp/boss.max*100,0,100)+'%';$('#bt').textContent=boss.frozen>0?'🥶 썰렁':''}else b.style.display='none'}
+ const b=$('#boss');if(boss&&mode==='world'){b.style.display='block';$('#bn').textContent=(boss.S.final||boss.S.final2?'💔 ':'⚔️ ')+mname(boss);$('#bh').style.width=clamp(boss.hp/boss.max*100,0,100)+'%';$('#bt').textContent=boss.frozen>0?'🥶 썰렁':''}else b.style.display='none'}
 function hurtEnemy(m,d,{crit=false,kb=2}={}){
  if(!m.alive)return;impactFx(enemyHead(m),crit);if(m.S.dummy){m.combatT=3;showBar(m);fxFloat(crit?d+'!':''+d,enemyHead(m),crit?'#ffd84d':'#fff');burst(enemyHead(m).add(new THREE.Vector3(0,-.6,0)),{color:0xffe9a0,n:14,speed:4,life:.5});SFX.hit();m.g.userData.wob=1;addShake(.15);tutEvent('hit',1);return}
  d=Math.max(Math.ceil(d*DMGS*.25),Math.round(d*DMGS)-(m.S.def||0));m.hp-=d;if(PA.rage>0)G.hp=Math.min(G.max,G.hp+Math.max(1,Math.round(d*.25)));m.combatT=6;if(m.state==='idle'){m.state='chase';m.fightT=0}showBar(m);
@@ -1168,7 +1185,7 @@ function hurtEnemy(m,d,{crit=false,kb=2}={}){
  SFX.hit();flashMats(m,0xffffff,crit?4:2.4,.25);addShake(crit?.7:.28);hitstop(crit?110:55,.1);fxPass.uniforms.amt.value=crit?1.4:.7;bloomKick=crit?.4:.1;
  const dx=m.g.position.x-hero.position.x,dz=m.g.position.z-hero.position.z,l=Math.hypot(dx,dz)||1,k=(m.S.armor?.45:1)*(m.t.boss?.25:1)*kb*2.2;m.kv.set(dx/l*k,0,dz/l*k);m.kbT=.2;
  if(!m.S.armor&&m.state!=='recover'){m.state='stagger';m.tt=.3}
- if(m.S.final&&!m.rage&&m.hp>0&&m.hp<m.max*.5){m.rage=true;m.cd=0;bigText('분노!!',1,false);toast('타락공주: 마왕 때릴 때보다 약하네...?');flashMats(m,0xff0000,4,1);addShake(.8)}
+ if((m.S.final||m.S.final2||(SEASON===2&&m.S.boss))&&!m.rage&&m.hp>0&&m.hp<m.max*(m.S.final?.5:.6)){m.rage=true;m.cd=0;bigText('분노!!',1,false);toast(m.S.final?'타락공주: 마왕 때릴 때보다 약하네...?':m.S.final2?'복제 마왕: 이제부터 진짜 뇌절이다!':mname(m)+'이(가) 분노했다!');flashMats(m,0xff0000,4,1);addShake(.8)}
  if(m.hp<=0)killEnemy(m)}
 function killEnemy(m){
  m.alive=false;m.state='dead';SFX.die();deathFx(enemyHead(m));m.dead=30;if(m.frozen>0)thaw(m);if(m.bar){m.bar.remove();m.bar=null}
@@ -1176,8 +1193,9 @@ function killEnemy(m){
  const sc=m.t.s,g=m.g;tween(.8,t=>{g.scale.setScalar(sc*(1-t));g.rotation.y+=t*.4;g.position.y+=.02},easeIn).then(()=>{g.visible=false});
  const S=m.S,n=m.t.boss?25:rand(3,6)|0;for(let i=0;i<n;i++)dropItem('gold',m.g.position,Math.max(1,Math.round(rand(S.gold[0],S.gold[1])/n)));
  if(m.t.i===0&&Math.random()<.75)dropItem('jelly',m.g.position,1);if(Math.random()<.14)dropItem('pot',m.g.position,1);
- gainXP(S.xp);onKill(m.t.i);if(m.S.boss){G.bd[m.t.i]=1;if(!m.S.final&&bossOpen())setTimeout(()=>{toast('🏰 네 지형의 수문장을 모두 쓰러뜨렸다! 북쪽 타락성의 문이 열린다!');bigText('타락성 개방!',1,false);SFX.boom();addShake(.6)},4600)}
- if(m.S.final)setTimeout(victory,1800);else if(m.S.boss){const af=ENEMIES[m.t.i].after;if(af)setTimeout(()=>{if(mode==='world')dialogue(ENEMIES[m.t.i].n,af)},1700)}}
+ gainXP(S.xp);onKill(m.t.i);if(m.S.boss){G.bd[m.t.i]=1;if(!m.S.final&&!m.S.final2&&bossOpen())setTimeout(()=>{toast(SEASON===2?'🌑 네 수문장의 분신 조각을 모았다! 북쪽 성문에 복제 마왕이 나타난다!':'🏰 네 지형의 수문장을 모두 쓰러뜨렸다! 북쪽 타락성의 문이 열린다!');bigText('타락성 개방!',1,false);SFX.boom();addShake(.6)},4600)}
+ if(m.S.final)setTimeout(victory,1800);else if(m.S.final2)setTimeout(victory2,1800);else if(m.S.boss&&SEASON===1){const af=ENEMIES[m.t.i].after;if(af)setTimeout(()=>{if(mode==='world')dialogue(ENEMIES[m.t.i].n,af)},1700)}}
+function applySeason(){QUESTS=SEASON===2?QUESTS2:QUESTS1;for(const m of wmons){const t=m.t,hide=t.only&&t.only!==SEASON;m.S=calcS(t);m.max=m.S.hp;if(hide){m.alive=false;m.g.visible=false;m.dead=1e9;if(m.bar){m.bar.remove();m.bar=null}}else if(t.boss&&G.bd[t.i]){m.alive=false;m.g.visible=false;m.dead=1e9}else respawnWM(m)}}
 function respawnWM(m){const[x,z]=wmonPos(m.t);m.g.position.set(x,hgt(x,z),z);m.tx=x;m.tz=z;m.g.visible=true;m.g.scale.setScalar(m.t.s);m.alive=true;m.rage=false;m.hp=m.max;m.state='idle';m.frozen=0;m.fightT=0;m.combatT=0;if(m.ice)m.ice.visible=false;m.mats.forEach(x=>{x.emissive.copy(x.userData.e0);x.emissiveIntensity=x.userData.i0})}
 
 /* ================= LOOT / XP ================= */
@@ -1198,7 +1216,7 @@ function gainXP(n){G.xp+=n;fxFloat('+'+n+' XP',heroHead().add(new THREE.Vector3(
 function levelUp(){G.lv++;G.max+=8;G.atk+=2;G.hp=G.max;SFX.win();bigText('LEVEL UP!',1,false);ring(hero.position,{color:0xffd84d,max:10,life:1,y:.1});ring(hero.position,{color:0xffffff,max:6,life:.8,y:.2});burst(heroHead(),{color:0xffd84d,n:100,speed:6,life:1.4,up:3});pillar(hero.position.x,hero.position.z,0xffd84d,{w:1.5,life:.9});sparks(heroHead(),{n:80,color:0xffd84d,speed:9,life:1.4,size:.45});lightPulse(0xffd84d,30,.7,heroHead());toast(`레벨 ${G.lv}! 공격력 +2, 최대 HP +8, HP 전부 회복`);if(G.lv===3)setTimeout(()=>toast('🔓 스킬1 해금! (F 키 / 주황 버튼)'),2400);if(G.lv===6)setTimeout(()=>toast('🔓 스킬2 해금! (G 키 / 주황 버튼)'),2400);if(G.lv===5&&G.job==='none')setTimeout(()=>toast('✨ 5레벨! 이제 직업을 가질 수 있다! 마을 북서쪽 전직관으로 가보자'),2500)}
 
 /* ================= QUESTS / SHOP ================= */
-const QUESTS=[
+let QUESTS=[
  {t:'공주의 눈물',en:0,need:2,xp:40,gold:30,ask:['오! 용사님이 오셨구먼! 반갑네, 반갑네!','난 이 마을 이장인데 말이야... 이장인데 말이야... 이장인데 말이야... 아, 본론부터 하지.','옛날에 마왕이 공주님을 좋아했다네. 큰맘 먹고 고백을 했지. 고백... 고백... 고백!','공주님은 받아 주셨고 둘은 사귀었어. 100일 때는 마왕이 직접 케이크도 구웠다네.','그런데 마왕놈이 어느 날부터 메시지를 읽씹하더니... 잠수를 탔네. 잠수이별! 잠수이별!!','공주님은 사흘을 기다리다가 마왕성에 쳐들어가서 프라이팬으로 마왕을 때려잡으셨지. 그리고 그 뒤로... 타락하셨네.','"남자는 다 똑같아"라며 온 세상을 때려부수고 계시다네. 자네가 공주님을 막아 주게.','이 세계는 네 개의 지형으로 되어 있다네. 우리가 사는 이 산악 지대, 서쪽 툰드라, 동쪽 바다, 남쪽 불의 땅. 지형마다 수문장이 있고, 네 수문장을 모두 쓰러뜨려야 공주님이 계신 타락성의 문이 열린다네.','일단 서쪽 길가의 공주님 눈물로 태어난 눈물 슬라임 2마리부터 처치해 주겠나? 처치해 주겠나? 처치해 주겠나?','(조작: 칼질=J/클릭, 구르기=Space. 수문장들은 방어가 단단해서 레벨과 무기가 약하면 흠집도 안 난다네!)','자네 장비가 그게 뭔가... 나무몽둥이라니! 골드를 모아 무기상점에서 무기를 사게. 5레벨이 되면 마을 북서쪽 전직관에서 직업도 고를 수 있다네.'],hint:'눈물 슬라임은 서쪽 길가에 있네. 서쪽... 서쪽... 서쪽! (지도의 빨간 점을 보게)',done:['오오! 해냈구먼! 해냈구먼! 해냈구먼!','공주님의 눈물이 조금은 마른 것 같네. 약속한 보상일세. 마음껏 골라 보게나.']},
  {t:'읽씹 킹 (산의 수문장)',en:7,need:1,xp:300,gold:150,ask:['먼저 이 산악 지대의 수문장이라네. 북동쪽 끝에 사는 읽씹 킹이지.','마왕의 메시지를 전하던 고블린 대장인데, "1"이 안 사라져서 미쳐 버렸다네. 1이... 1이... 1이!','녀석이 던지는 "1"은 구르기로 피하게. 방어가 단단하니 무기를 꼭 장만하고 가게나.'],hint:'북동쪽 길 끝이야, 북동쪽. 아까 말했는데... 아까 말했는데...',done:['읽씹 킹을 쓰러뜨리다니! 마을의 "1"이 모두 사라졌구먼!','남은 수문장은 서쪽 툰드라, 동쪽 바다, 남쪽 불의 땅에 있다네.']},
  {t:'이별 드래곤 (툰드라의 수문장)',en:3,need:1,xp:450,gold:250,ask:['서쪽 끝 툰드라... 눈 덮인 땅에 공주님이 아끼던 애마 드래곤이 산다네.','이별 후 충격으로 마음이 얼어붙어서 "이별이 별로야?" 같은 개그만 한다네.','추운 곳이니 두껍게 입고... 아니, 무기를 먼저 사게. 부채꼴 불길은 옆으로 구르게!'],hint:'툰드라는 서쪽 길 끝일세. 개그에 웃어주면 안 돼, 절대로!',done:['드래곤이 조용해졌네! 툰드라가 한결 따뜻해졌어.','이제 남은 수문장은 둘이라네.']},
@@ -1207,6 +1225,16 @@ const QUESTS=[
  {t:'타락공주',en:5,need:1,xp:1500,gold:1000,ask:['이제 북쪽 타락성의 문이 열려 있을 걸세. 거기에 공주님이 계시네.','"남자는 다 똑같아"를 외치며 프라이팬을 휘두르지. 오래 끌면 연타 횟수가 계속 늘어난다네!','체력이 반쯤 깎이면 분노하실 거야. 조심하게나. 하지만 공주님도 사실은... 그냥 답장이 받고 싶었던 거라네.','부디 정신 차리게 해 주게. 달렸네... 달렸네... 아니 이제 진짜 끝!'],hint:'타락성은 마을에서 쭉 북쪽이네. 큰 붉은 빛기둥이 보일 걸세. 물약은 넉넉히!',done:['공주님이 정신을 차리셨다고...! 정말 해냈구먼!','이제 이 마을도 같은 얘기를 덜 하게 될 걸세. 아마도... 아마도... 아마도.']}
 ];
 
+const QUESTS1=QUESTS;
+const QUESTS2=[
+ {t:'분신의 시작',en:0,need:3,xp:300,gold:300,ask:['오... 용사님. 돌아오셨군. 그런데 큰일이 났네.','자네가 뇌절 폭발을 할 때마다 분신들이 생겼지? 그 분신들이... 사라지지 않고 남아 있었다네.','잠수 마왕이 호수... 아니 용암 속에 두고 간 왕관에 그 분신들이 반응해서 하나로 뭉쳐 버렸어!','자네와 똑같은 얼굴, 똑같은 기술을 쓰는 놈이 새 마왕이 되었다네. "내가 진짜 용사다!"라고 외치면서 말일세. 진짜... 진짜... 진짜!','분신의 힘이 퍼져서 몬스터도, 수문장도 예전과는 비교도 안 되게 강해졌다네. 일단 눈물 슬라임 3마리로 얼마나 강해졌는지 확인해 보게.','(경고: 시즌 2의 적은 체력·공격·속도가 훨씬 높고, 연타도 더 빨리 늘어납니다!)'],hint:'슬라임이 예전 슬라임이 아닐세. 서쪽 길가를 보게.',done:['세상에, 슬라임조차 저렇게 강해졌다니...','다음은 수문장들일세. 분신 조각을 지닌 그들을 쓰러뜨려야 복제 마왕이 나타난다네.']},
+ {t:'분신 읽씹 킹 (산)',en:7,need:1,xp:1500,gold:800,ask:['산의 수문장 읽씹 킹이 분신 조각을 삼켰다네. 이번엔 "1"이 아니라 "11111"을 던진다는군.','탄막이 훨씬 빽빽해졌을 걸세. 구르기 타이밍을 잘 보게.'],hint:'북동쪽 길 끝이야. 조심하게.',done:['첫 번째 조각을 되찾았군! 대단하네.','계속해서 툰드라로 가 보게.']},
+ {t:'분신 이별 드래곤 (툰드라)',en:3,need:1,xp:2200,gold:1100,ask:['툰드라의 드래곤도 분신의 힘에 물들어 이번엔 이별 개그를 "연달아" 한다네. 연달아... 연달아... 연달아!','불길이 연속으로 나올 거야. 한번 맞으면 끝장일세, 구르게!'],hint:'서쪽 길 끝, 툰드라일세.',done:['드래곤이 또 조용해졌구먼!','이제 바다와 불의 땅이 남았네.']},
+ {t:'분신 잠수 오크 선장 (바다)',en:8,need:1,xp:3000,gold:1500,ask:['바다의 오크 선장은 이제 선원 분신까지 거느리고 있다네. 정말 "단체 잠수"일세.','붉은 원이 보이면 지체 없이 피하게. 이번엔 정말 아프다네!'],hint:'동쪽 부두에서 출발하게.',done:['선장도 다시 퇴근시켰군!','마지막 조각은 불의 땅에 있네.']},
+ {t:'분신 잠수 마왕 (불의 땅)',en:4,need:1,xp:4200,gold:2000,ask:['불의 땅의 마왕은 사과하고 돕겠다고 했지만... 분신의 힘에 휩쓸려 다시 날뛰고 있다네.','"미안... 미안... 미안..." 하면서 공격하니 더 무섭지. 정신을 차리게 해 주게나.'],hint:'남쪽 길 끝 불의 땅일세. 물약은 넉넉히!',done:['마왕이 정신을 차렸다니! 그럼 이제 네 조각이 다 모였네.','북쪽 성문에 복제 마왕이 나타날 걸세. 마지막 부탁이네...']},
+ {t:'복제 마왕 (복제 용사)',en:26,need:1,xp:9000,gold:5000,ask:['북쪽 성문에 자네와 똑같이 생긴 놈이 서 있을 걸세. 자네의 직업, 자네의 기술까지 흉내 내는 녀석이지.','그놈도 "뇌절 폭발"을 한다네. 같은 기술을 연속으로 쓰면 큰일이 나지. 자네가 제일 잘 알 거야.','체력이 절반 아래로 내려가면 진짜 뇌절을 시작할 걸세. 부디 이기고 돌아오게나.','돌아오게나... 돌아오게나... 아니 이제 진짜 끝!'],hint:'북쪽 길 끝 성문이네. 큰 붉은 빛기둥이 보일 걸세.',done:['해냈구먼...! 자네가 자네를 이기다니!','이 세계는 이제 정말 평화일세. 평화... 평화... 평화!']}
+]
+;
 /* ===== QUEST GUIDE ===== */
 const GU={on:null,t:null};
 {const at=canvasTex(128,128,(g)=>{g.fillStyle='#7cf0ff';g.strokeStyle='#0a3a5a';g.lineWidth=8;g.beginPath();g.moveTo(64,8);g.lineTo(114,104);g.lineTo(64,78);g.lineTo(14,104);g.closePath();g.stroke();g.fill()});
@@ -1272,7 +1300,7 @@ function openJobs(){return new Promise(res=>{mode='dialog';const s=$('#scr');con
  $('#shopx').onclick=()=>{SFX.ui();s.className='';mode='world';res()}})}
 async function talk(n){
  if(n.chief){tutEvent('talk');
-  if(qi>=QUESTS.length){await dialogue('이장님',['자네 덕분에 마을이 평화롭네.','평화... 평화... 평화... 아, 또 말이 길어졌군.']);return}
+  if(qi>=QUESTS.length){if(SEASON===1){const c=G.s1clear||cleared;await dialogue('이장님',['자네 덕분에 마을이 평화롭네.','평화... 평화... 평화... 아, 또 말이 길어졌군.',...(c?['그런데 말이야... 요즘 이상한 소문이 돌아. 자네가 뇌절 폭발로 만들어 낸 분신들 말일세...','자세한 이야기를 들어 보겠나? (시즌 2)']:[])]);if(c)await openSeason2()}else await dialogue('이장님',['복제 마왕까지 쓰러뜨리다니... 이제 정말 이 세계는 평화일세.','뇌절은... 적당히 하게나. 적당히... 적당히...']);return}
   const q=QUESTS[qi];
   if(qstate==='none'){await dialogue('이장님',q.ask);qstate='active';qprog=0;if(G.bd[q.en]){qprog=q.need;qstate='ready';setTimeout(()=>toast('이미 쓰러뜨린 상대입니다! 이장님에게 보고하세요'),600)}SFX.win();toast('퀘스트 수락: '+q.t);updateQuestUI()}
   else if(qstate==='active')await dialogue('이장님',[q.hint,`(${ENEMIES[q.en].n} ${qprog}/${q.need})`]);
@@ -1296,9 +1324,17 @@ function interact(){if(mode!=='world'||!nearTarget)return;ac();SFX.ui();
   else if(pr.kind==='chest'){pr.alive=false;const g=Math.round(rand(80,200));G.gold+=g;if(Math.random()<.6)G.pots++;SFX.win();burst(new THREE.Vector3(pr.x,pr.g.position.y+1,pr.z),{color:0xffd04d,n:80,speed:5,life:1.2,up:3});ring(pr.g.position,{color:0xffd04d,max:5,life:.8,y:.1});toast(`상자에서 💰${g} 획득!`);pr.g.traverse(o=>{if(o.isSprite)o.visible=false})}
   else if(pr.kind==='wp'){if(!G.wps[pr.id]){G.wps[pr.id]=true;SFX.win();toast('✨ 순간이동 지점 활성화: '+pr.name);bigText('지점 발견!',1,false);ring(pr.g.position,{color:0x66ddff,max:8,life:1,y:.1})}openWaypoints(pr)}
   hud()}}
-function victory(){if(cleared)return;cleared=true;SFX.win();bigText('CLEAR!!',6);mode='dialog';const s=$('#scr');
- s.innerHTML=`<h2 class="ttl">CLEAR!</h2><div class="desc">타락공주를 쓰러뜨렸다!<br>정신을 차린 공주는 눈물을 닦으며 말했다.<br><b>"나... 그냥 답장이 받고 싶었어."</b><br>세계는 평화를 되찾았다.<br>(잠수 마왕은 아직 호수 밑에서 나오지 않았다고 한다.)</div><button class="go" id="vback">계속 탐험하기</button>`;s.className='on';
+
+function openSeason2(){return new Promise(res=>{mode='dialog';const s=$('#scr');
+ s.innerHTML=`<h2 class="ttl" style="font-size:clamp(40px,11vw,72px)">시즌 2</h2><div class="desc"><b>복제된 용사, 마왕이 되다</b><br>뇌절 폭발로 남겨진 수많은 분신이 마왕의 왕관에 반응해 하나로 뭉쳤다.<br>그것은 용사와 똑같은 얼굴, 똑같은 기술로 외친다.<br><b>"내가 진짜 용사다!"</b><br><br><b style="color:#ff7a93">몬스터와 수문장이 훨씬 강해집니다</b><br>(체력 약 2.6배 · 공격 2배 · 방어 1.6배 · 더 빠르고 더 오래 연타)<br>레벨 · 직업 · 장비는 그대로 유지돼요.</div><button class="go" id="s2go">시즌 2 시작</button><button id="s2no" style="pointer-events:auto">나중에</button>`;s.className='on';
+ $('#s2go').onclick=()=>{SFX.ui();s.className='';startSeason2();res()};$('#s2no').onclick=()=>{SFX.ui();s.className='';mode='world';res()}})}
+function startSeason2(){G.season=2;SEASON=2;G.s1clear=true;G.bd={};qi=0;qstate='none';qprog=0;cleared=false;applySeason();G.hp=G.max;respawnHero();updateQuestUI();bigText('시즌 2',1,false);SFX.boom();screenFlash(.6,700);toast('🌑 시즌 2 시작! 이장님에게 말을 걸어 보세요');saveGame()}
+function victory2(){if(cleared)return;cleared=true;SFX.win();bigText('SEASON 2 CLEAR!!',6);mode='dialog';const s=$('#scr');
+ s.innerHTML=`<h2 class="ttl">시즌 2 CLEAR!</h2><div class="desc">복제 마왕이 무릎을 꿇었다.<br><b>"나는... 너였어. 너의 뇌절이 만든 너."</b><br>"뇌절의 끝은... 같은 말을 안 하는 거였군."<br>복제의 몸은 빛이 되어 용사에게 스며들었다.<br>세계는 다시 평화를 되찾았다. ...아마도.</div><button class="go" id="vback">계속 탐험하기</button>`;s.className='on';
  $('#vback').onclick=()=>{SFX.ui();s.className='';mode='world';updateQuestUI()}}
+function victory(){if(cleared)return;cleared=true;G.s1clear=true;SFX.win();bigText('CLEAR!!',6);mode='dialog';const s=$('#scr');
+ s.innerHTML=`<h2 class="ttl">CLEAR!</h2><div class="desc">타락공주를 쓰러뜨렸다!<br>정신을 차린 공주는 눈물을 닦으며 말했다.<br><b>"나... 그냥 답장이 받고 싶었어."</b><br>세계는 평화를 되찾았다.<br>(잠수 마왕은 아직 호수 밑에서 나오지 않았다고 한다.)</div><button class="go" id="vs2">시즌 2 시작 ⚔️</button><button class="go" id="vback" style="animation:none;font-size:18px">계속 탐험하기</button>`;s.className='on';
+ $('#vback').onclick=()=>{SFX.ui();s.className='';mode='world';updateQuestUI()};$('#vs2').onclick=()=>{SFX.ui();s.className='';startSeason2()}}
 
 /* ================= TUTORIAL ================= */
 const TUT={on:false,done:false,step:0,n:0};let tutArrow=null;
@@ -1324,8 +1360,8 @@ const SAVEK='brainRpg:';let who=null,pinHash=0;
 const hashS=t=>{let h=5381;for(const c of t)h=((h<<5)+h+c.charCodeAt(0))>>>0;return h};
 function listProfiles(){const o=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(SAVEK))o.push(k.slice(SAVEK.length))}}catch(e){}return o}
 function loadProfile(n){try{return JSON.parse(localStorage.getItem(SAVEK+n))}catch(e){return null}}
-function saveGame(){if(!who||mode==='title')return;const d={v:1,name:who,pin:pinHash,G,qi,qstate,qprog,SQ,hallFound,cleared,pos:[hero.position.x,hero.position.z],tod,tutDone:TUT.done,boss:wmons.filter(m=>m.t.boss&&!m.alive).map(m=>m.t.i),chests:props.map(q=>q.kind==='chest'&&!q.alive?1:0),t:Date.now()};try{localStorage.setItem(SAVEK+who,JSON.stringify(d));localStorage.setItem(SAVEK+'__last','1')}catch(e){}}
-function applySave(d){for(const k in d.G)G[k]=d.G[k];G.bd=Object.assign({},G.bd);(d.boss||[]).forEach(i=>{G.bd[i]=1});G.wt=Object.assign({club:0,sword:0,staff:0,bow:0,mic:0,dagger:0,mace:0,fist:0,axe:0},G.wt);G.wps=Object.assign({village:true},G.wps);if(!JOBKIND[G.job])G.job='none';qi=d.qi;qstate=d.qstate;qprog=d.qprog;Object.assign(SQ,d.SQ);hallFound=true;cleared=!!d.cleared;tod=d.tod??tod;TUT.done=!!d.tutDone;
+function saveGame(){if(!who||mode==='title')return;const d={v:1,name:who,pin:pinHash,G,qi,qstate,qprog,SQ,hallFound,cleared,pos:[hero.position.x,hero.position.z],tod,tutDone:TUT.done,boss:wmons.filter(m=>m.t.boss&&!m.alive&&!(m.t.only&&m.t.only!==SEASON)).map(m=>m.t.i),chests:props.map(q=>q.kind==='chest'&&!q.alive?1:0),t:Date.now()};try{localStorage.setItem(SAVEK+who,JSON.stringify(d));localStorage.setItem(SAVEK+'__last','1')}catch(e){}}
+function applySave(d){for(const k in d.G)G[k]=d.G[k];if(!G.season)G.season=1;SEASON=G.season;G.bd=Object.assign({},G.bd);applySeason();(d.boss||[]).forEach(i=>{G.bd[i]=1});G.wt=Object.assign({club:0,sword:0,staff:0,bow:0,mic:0,dagger:0,mace:0,fist:0,axe:0},G.wt);G.wps=Object.assign({village:true},G.wps);if(!JOBKIND[G.job])G.job='none';qi=d.qi;qstate=d.qstate;qprog=d.qprog;Object.assign(SQ,d.SQ);hallFound=true;cleared=!!d.cleared;tod=d.tod??tod;TUT.done=!!d.tutDone;
  (d.boss||[]).forEach(i=>wmons.filter(m=>m.t.i===i).forEach(m=>{m.alive=false;m.g.visible=false;m.dead=1e9}));
  (d.chests||[]).forEach((v,i)=>{const q=props[i];if(v&&q){q.alive=false;q.g.traverse(o=>{if(o.isSprite)o.visible=false})}});
  let[x,z]=d.pos||[-4,2];if(isBlocked(x,z)||Math.hypot(x,z)>160){x=-4;z=2}hero.position.set(x,hgt(x,z),z);groundY=hgt(x,z);hero.rotation.set(0,0,0);
@@ -1426,10 +1462,10 @@ $('#qbtn').onclick=()=>{Q=(Q+1)%3;applyQuality()};
 scene.add(key.target);applyQuality();setWeapon('club',0);setOutfit('none');
 hero.position.set(-4,0,2);hero.rotation.set(0,-2.6,0);groundY=hgt(-4,2);hero.scale.setScalar(1);
 worldG.visible=true;camSmooth.set(-4+Math.sin(camYaw)*6,3,2+Math.cos(camYaw)*6);camLook.set(-4,1.6,2);
-updateQuestUI();updateEnv(.01);
+applySeason();updateQuestUI();updateEnv(.01);
 frame();title();
 const ld=$('#load');ld.style.opacity=0;setTimeout(()=>ld.remove(),700);
-window.__game={applyJob,setOutfit,setWeapon,hero,camera,G,PA,doAction,tp(x,z){hero.position.set(x,hgt(x,z),z)},talk,chief,get mode(){return mode},get qi(){return qi},get qprog(){return qprog},get qstate(){return qstate},get wmons(){return wmons},get tod(){return tod},setTod(v){tod=v},interact,get nearTarget(){return nearTarget}};
+window.__game={startSeason2,applyJob,setOutfit,setWeapon,hero,camera,G,PA,doAction,tp(x,z){hero.position.set(x,hgt(x,z),z)},talk,chief,get mode(){return mode},get qi(){return qi},get qprog(){return qprog},get qstate(){return qstate},get wmons(){return wmons},get tod(){return tod},setTod(v){tod=v},interact,get nearTarget(){return nearTarget}};
 </script>
 </body>
 </html>
