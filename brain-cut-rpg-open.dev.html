@@ -17,7 +17,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#0a0614;color:#fff;fon
 #wui>*{pointer-events:none}
 #tl{position:absolute;left:12px;top:max(10px,env(safe-area-inset-top));display:flex;flex-direction:column;gap:6px;max-width:220px}
 .pill{padding:6px 12px;font-size:14px}
-#quest{padding:8px 12px;font-size:13px;line-height:1.5}
+#quest{padding:8px 12px;font-size:13px;line-height:1.5;pointer-events:auto}#quest .q{cursor:pointer;border-radius:8px;padding:3px 5px;margin:0 -5px 5px}#quest .q small{opacity:.7;font-size:10px}#quest .q.g{background:rgba(124,240,255,.18);outline:1px solid rgba(124,240,255,.6)}
+#gdist{padding:5px 10px;font-size:12px;color:#7cf0ff;cursor:pointer;pointer-events:auto;display:none}
 #quest .q{margin-bottom:5px}#quest .q:last-child{margin:0}
 #quest b{color:var(--yel)}
 #hud{position:absolute;left:50%;top:max(10px,env(safe-area-inset-top));transform:translateX(-50%);width:min(340px,calc(100vw - 380px));min-width:230px;padding:8px 12px}
@@ -112,7 +113,7 @@ button:hover:not(:disabled){filter:brightness(1.25)}button:active:not(:disabled)
 <div class="vig"></div><div id="danger"></div>
 <div id="ebars"></div>
 <div id="wui" style="display:none">
-  <div id="tl"><div class="glass pill" id="stage">-</div><div class="glass" id="quest"></div></div>
+  <div id="tl"><div class="glass pill" id="stage">-</div><div class="glass" id="quest"></div><div class="glass" id="gdist"></div></div>
   <div class="glass" id="hudmini">Lv.1</div>
   <div class="glass" id="hud"><button id="hudx" title="닫기">✕</button>
     <div class="hrow"><div id="lv">Lv.1</div><div class="bar"><i class="hp" id="ph" style="width:100%"></i><span id="phn"></span></div><div id="gold">💰0</div></div>
@@ -540,7 +541,7 @@ function walkable(x,z,pad=0){if(x*x+z*z<(19+pad)*(19+pad))return true;if(roadDis
  const g1=new THREE.Color(),g2=new THREE.Color(),pu=new THREE.Color(),sand=new THREE.Color(),path=new THREE.Color(),sandB=new THREE.Color(),snowB=new THREE.Color(),rock=new THREE.Color(),seabed=new THREE.Color(),basalt=new THREE.Color(),lavaC=new THREE.Color(),c=new THREE.Color();
  for(let i=0;i<pa.count;i++){const x=pa.getX(i),z=pa.getZ(i);pa.setY(i,hgt(x,z));const d=Math.hypot(x,z);const n=Math.sin(x*.5)*Math.cos(z*.43)*.5+.5;
   g1.setHSL(.29,.55,.3+n*.08);g2.setHSL(.2,.42,.27+n*.06);pu.setHSL(.76,.42,.17+n*.06);sand.setHSL(.1,.33,.56-n*.05);
-  c.copy(g1).lerp(g2,smooth(d,25,50));{const b=biome(x,z);const mt=(1-Math.max(b.e,b.w,b.s))*smooth(d,20,50);c.lerp(rock.setHSL(.08,.1,.4+n*.12),mt*.75);c.lerp(pu,b.n*.7);c.lerp(snowB.setHSL(.58,.15,.9-n*.05),b.w);if(b.e>.01){const hy=pa.getY(i);c.lerp(hy>-.45?sandB.setHSL(.12,.5,.6-n*.05):seabed.setHSL(.52,.45,.28+n*.05),b.e)}if(b.s>.01){c.lerp(basalt.setHSL(.02,.25,.1+n*.06),b.s);const vein=Math.abs(Math.sin(x*.19+Math.sin(z*.15)*2.2));if(vein<.07)c.lerp(lavaC.setHSL(.06,1,.5),b.s*(1-vein/.07))}}if(d<9.5)c.lerp(sand,smooth(9.5-d,0,2.5));{const ld=Math.hypot(x-26,z-20);if(ld<13)c.lerp(sand,smooth(13-ld,0,3)*.8)}{const rd=roadDist(x,z);if(rd<3.4){path.setHSL(.09,.38,.4+n*.05);c.lerp(path,smooth(3.4-rd,0,1.6))}const td=trailDist(x,z);if(td<1.6)c.lerp(path.setHSL(.09,.3,.36),smooth(1.6-td,0,.8)*.4)}
+  c.copy(g1).lerp(g2,smooth(d,25,50));{const b=biome(x,z);const mt=(1-Math.max(b.e,b.w,b.s))*smooth(d,20,50);c.lerp(rock.setHSL(.08,.1,.4+n*.12),mt*.75);c.lerp(pu,b.n*.7);c.lerp(snowB.setHSL(.58,.15,.9-n*.05),b.w);if(b.e>.01){const hy=pa.getY(i);c.lerp(hy>-.45?sandB.setHSL(.12,.5,.6-n*.05):seabed.setHSL(.52,.45,.28+n*.05),b.e)}if(b.s>.01){c.lerp(basalt.setHSL(.02,.25,.1+n*.06),b.s);const vein=Math.abs(Math.sin(x*.19+Math.sin(z*.15)*2.2));if(vein<.07)c.lerp(lavaC.setHSL(.06,1,.5),b.s*(1-vein/.07))}}if(d<9.5)c.lerp(sand,smooth(9.5-d,0,2.5));{const ld=Math.hypot(x-26,z-20);if(ld<13)c.lerp(sand,smooth(13-ld,0,3)*.8)}{const rd=roadDist(x,z);if(rd<3.8){const b2=biome(x,z);const hh=lerp(lerp(lerp(.09,.6,b2.w),.07,b2.e),.02,b2.s),ss=lerp(lerp(lerp(.38,.12,b2.w),.55,b2.e),.12,b2.s),ll=lerp(lerp(lerp(.42,.3,b2.w),.3,b2.e),.36,b2.s);path.setHSL(hh,ss,ll+n*.04);c.lerp(path,smooth(3.8-rd,0,1.1))}const td=trailDist(x,z);if(td<1.6)c.lerp(path.setHSL(.09,.3,.36),smooth(1.6-td,0,.8)*.4)}
   col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b}
  geo.setAttribute('color',new THREE.BufferAttribute(col,3));geo.computeVertexNormals();
  const ter=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.95,metalness:0,envMapIntensity:.4}));ter.receiveShadow=true;worldG.add(ter)}
@@ -687,6 +688,7 @@ function drawMM(){const c=mmc,W=mmBig?260:112,h=W/2,S=.7;c.clearRect(0,0,W,W);c.
  c.fillStyle='#d8b070';for(const k of colliders)if(k.r>2.5&&!k.h)c.fillRect(px(k.x)-3,pz(k.z)-3,6,6);
  for(const m of wmons){if(!m.alive||m.S.dummy)continue;c.fillStyle=m.t.boss?'#ff49d8':'#ff6b6b';const x=px(m.g.position.x),y=pz(m.g.position.z);c.beginPath();c.arc(x,y,m.t.boss?4:2.6,0,7);c.fill()}
  for(const n of npcs){c.fillStyle=n.marker.visible?(n.marker.material.map===markerTex.r?'#7cf0ff':'#ffd84d'):'#9fd6ff';c.beginPath();c.arc(px(n.x),pz(n.z),n.chief?4:2.5,0,7);c.fill()}
+ if(GU.on&&GU.t){let tx=px(GU.t.x),ty=pz(GU.t.z);const dxm=tx-h,dym=ty-h,L=Math.hypot(dxm,dym),mx=h-6;if(L>mx){tx=h+dxm/L*mx;ty=h+dym/L*mx}c.fillStyle='#00ffff';c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(tx,ty,5+Math.sin(T*6)*1.5,0,7);c.fill();c.stroke()}
  c.translate(h,h);c.rotate(Math.PI-hero.rotation.y);c.fillStyle='#fff';c.beginPath();c.moveTo(0,-6);c.lineTo(4.5,5);c.lineTo(0,3);c.lineTo(-4.5,5);c.closePath();c.fill();c.restore()}
 
 /* ================= GAME STATE ================= */
@@ -834,6 +836,17 @@ const boats=[],lavas=[];
  for(const [x,z] of[[84,-50],[104,56],[145,-34],[152,32],[86,40]]){const g=grp(worldG,x,-.35,z);g.rotation.y=rand(0,6);mk(new THREE.BoxGeometry(3.2,.7,1.3),M(0x7a4a22,{roughness:.7}),0,.2,0,g);mk(new THREE.ConeGeometry(.75,.9,4),M(0x7a4a22),1.9,.25,0,g).rotation.z=-Math.PI/2;mk(new THREE.CylinderGeometry(.06,.06,3,6),M(0x4a2a12),0,1.7,0,g);const sl=mk(new THREE.PlaneGeometry(1.8,2.2),new THREE.MeshStandardMaterial({color:0xf4f4f0,side:THREE.DoubleSide,roughness:.9}),.1,2,0,g);sl.rotation.y=Math.PI/2;boats.push(g)}}
 for(const [x,z,r] of[[-34,92,4],[46,100,5],[-12,142,5],[58,148,4],[-8,170,5],[42,170,4],[68,104,4],[-34,124,4]]){colliders.push({x,z,r:r*.9,h:1});const g=grp(worldG,x,hgt(x,z)+.12,z);const lv=mk(new THREE.CircleGeometry(r,28),E(0xff5a1a,2.2),0,0,0,g,false);lv.rotation.x=-Math.PI/2;lavas.push(lv);const gl=sprite(glowTex,r*3.4,{blending:THREE.AdditiveBlending,color:0xff6a2a,opacity:.5});gl.position.y=1.2;g.add(gl);
  for(let i=0;i<5;i++){const a=rand(0,6.28);mk(new THREE.ConeGeometry(rand(.4,.9),rand(1.6,3.6),5),M(0x1a1416,{roughness:.8,flatShading:true}),Math.cos(a)*(r+.6),.8,Math.sin(a)*(r+.6),g)}}
+
+// ---- road tiles + lanterns (visible in every biome)
+{const tl=[];for(const r of ROADS)for(let i=0;i<r.length-1;i++){const[ax,az]=r[i],[bx,bz]=r[i+1],L=Math.hypot(bx-ax,bz-az),n=Math.max(1,Math.floor(L/2.5)),yaw=Math.atan2(bx-ax,bz-az);for(let k=0;k<n;k++){const t=(k+.5)/n,x=ax+(bx-ax)*t,z=az+(bz-az)*t;if(Math.hypot(x,z)>18.5)tl.push([x,z,yaw])}}
+ const im=new THREE.InstancedMesh(new THREE.BoxGeometry(2.7,.14,2.6),M(0xffffff,{roughness:.9}),tl.length),m4=new THREE.Matrix4(),q=new THREE.Quaternion(),col=new THREE.Color();
+ tl.forEach(([x,z,yaw],i)=>{const y=hgt(x,z)+.05;q.setFromEuler(new THREE.Euler(0,yaw,0));im.setMatrixAt(i,m4.compose(new THREE.Vector3(x,y,z),q,new THREE.Vector3(1,1,1)));const b=biome(x,z);
+  col.setHex(b.w>.5?0x59606e:b.e>.5?0x9a6a3a:b.s>.5?0x3a3234:0x8c7b68);col.offsetHSL(rand(-.01,.01),0,rand(-.05,.05));im.setColorAt(i,col)});
+ im.receiveShadow=true;worldG.add(im);
+ const poles=[];for(const r of ROADS)for(let i=0;i<r.length-1;i++){const[ax,az]=r[i],[bx,bz]=r[i+1],L=Math.hypot(bx-ax,bz-az),ux=(bx-ax)/L,uz=(bz-az)/L;for(let t=3;t<L;t+=15){const x=ax+ux*t-uz*2.9,z=az+uz*t+ux*2.9;if(Math.hypot(x,z)>21&&!poles.some(p=>Math.hypot(p[0]-x,p[1]-z)<9))poles.push([x,z])}}
+ const po=new THREE.InstancedMesh(new THREE.CylinderGeometry(.07,.09,2.8,6),M(0x2a2236,{roughness:.6,metalness:.5}),poles.length),la=new THREE.InstancedMesh(new THREE.SphereGeometry(.26,10,8),new THREE.MeshBasicMaterial({color:0xffffff}),poles.length);
+ poles.forEach(([x,z],i)=>{const y=hgt(x,z);po.setMatrixAt(i,m4.compose(new THREE.Vector3(x,y+1.4,z),new THREE.Quaternion(),new THREE.Vector3(1,1,1)));la.setMatrixAt(i,m4.compose(new THREE.Vector3(x,y+3,z),new THREE.Quaternion(),new THREE.Vector3(1,1,1)));const b=biome(x,z);col.setHex(b.w>.5?0x8ae8ff:b.e>.5?0xffe08a:b.s>.5?0xff7a2a:0xffd890);la.setColorAt(i,col)});
+ worldG.add(po,la)}
 colliders.push({x:26,z:20,r:7});
 // water
 {const w=new THREE.Mesh(new THREE.CircleGeometry(11.5,48),new THREE.MeshPhysicalMaterial({color:0x2a7fe0,transparent:true,opacity:.78,roughness:.05,metalness:.2,clearcoat:1,envMapIntensity:2}));w.rotation.x=-Math.PI/2;w.position.set(26,-.55,20);worldG.add(w);window.__water=w}
@@ -1193,18 +1206,35 @@ const QUESTS=[
  {t:'잠수 마왕 (불의 땅의 수문장)',en:4,need:1,xp:800,gold:500,ask:['자, 이제 진짜 원흉이 남았네. 프라이팬에 두들겨 맞은 마왕은 도망쳐서... 남쪽 불의 땅 용암 속에 숨었다네. 진짜 "잠수"일세.','반성은커녕 아직도 폰을 꺼놨다고 하네. 놈이 던지는 "1" 탄막과 내려치기를 조심하게나.','불의 땅은 뜨겁고 위험하니 물약을 넉넉히 챙기게!'],hint:'마왕은 남쪽 길 끝, 불의 땅에 있다네. 용암에 빠지지 않게 조심하게.',done:['마왕이 그런 말을 했다고...? 사랑이 너무 커서 무서웠다니...','네 수문장이 모두 쓰러졌네! 이제 타락성의 문이 열릴 걸세. 마지막 부탁이 있네...']},
  {t:'타락공주',en:5,need:1,xp:1500,gold:1000,ask:['이제 북쪽 타락성의 문이 열려 있을 걸세. 거기에 공주님이 계시네.','"남자는 다 똑같아"를 외치며 프라이팬을 휘두르지. 오래 끌면 연타 횟수가 계속 늘어난다네!','체력이 반쯤 깎이면 분노하실 거야. 조심하게나. 하지만 공주님도 사실은... 그냥 답장이 받고 싶었던 거라네.','부디 정신 차리게 해 주게. 달렸네... 달렸네... 아니 이제 진짜 끝!'],hint:'타락성은 마을에서 쭉 북쪽이네. 큰 붉은 빛기둥이 보일 걸세. 물약은 넉넉히!',done:['공주님이 정신을 차리셨다고...! 정말 해냈구먼!','이제 이 마을도 같은 얘기를 덜 하게 될 걸세. 아마도... 아마도... 아마도.']}
 ];
+
+/* ===== QUEST GUIDE ===== */
+const GU={on:null,t:null};
+{const at=canvasTex(128,128,(g)=>{g.fillStyle='#7cf0ff';g.strokeStyle='#0a3a5a';g.lineWidth=8;g.beginPath();g.moveTo(64,8);g.lineTo(114,104);g.lineTo(64,78);g.lineTo(14,104);g.closePath();g.stroke();g.fill()});
+ GU.arrow=sprite(at,1.1,{depthTest:false});GU.arrow.renderOrder=20;GU.arrow.visible=false;scene.add(GU.arrow);
+ GU.beam=new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,70,20,1,true),new THREE.ShaderMaterial({transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide,uniforms:{t:{value:0}},vertexShader:`varying float vY;varying float vA;void main(){vY=position.y/70.+.5;vA=atan(position.z,position.x);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,fragmentShader:`varying float vY;varying float vA;uniform float t;void main(){float a=pow(1.-vY,.7)*(.6+.4*sin(vA*6.+vY*10.-t*3.))*.7;gl_FragColor=vec4(vec3(.4,.95,1.)*1.2,a);}`}));GU.beam.visible=false;worldG.add(GU.beam)}
+function monTarget(en){let b=null,bd=1e9;for(const m of wmons){if(m.t.i!==en||!m.alive)continue;const d=Math.hypot(m.g.position.x-hero.position.x,m.g.position.z-hero.position.z);if(d<bd){bd=d;b=m}}if(b)return{x:b.g.position.x,z:b.g.position.z,name:ENEMIES[en].n};const t=TERR.find(t=>t.i===en);return t?{x:t.c[0],z:t.c[1],name:ENEMIES[en].n}:{x:0,z:0,name:'?'}}
+function guideTarget(key){
+ if(key==='main'){if(qi>=QUESTS.length||qstate!=='active')return{x:chief.x,z:chief.z,name:'이장님'};return monTarget(QUESTS[qi].en)}
+ if(key==='kid'){if(SQ.kid==='none'||G.jelly>=3)return{x:kid.x,z:kid.z,name:'철수'};return monTarget(0)}
+ let b=null,bd=1e9;if(SQ.granny==='none'||G.herb>=4)return{x:granny.x,z:granny.z,name:'순자 할머니'};for(const q of props)if(q.kind==='herb'&&q.alive){const d=Math.hypot(q.x-hero.position.x,q.z-hero.position.z);if(d<bd){bd=d;b=q}}return b?{x:b.x,z:b.z,name:'약초'}:{x:granny.x,z:granny.z,name:'순자 할머니'}}
+function updateGuide(){const a=GU.arrow,bm=GU.beam,gd=$('#gdist');if(!GU.on||mode!=='world'){a.visible=false;bm.visible=false;gd.style.display='none';return}
+ const tg=guideTarget(GU.on);GU.t=tg;const dx=tg.x-hero.position.x,dz=tg.z-hero.position.z,d=Math.hypot(dx,dz);
+ if(d<6&&tg.name!==ENEMIES[0].n&&!(GU.on==='main'&&qstate==='active')&&tg.name!=='약초'){toast('📍 도착했어요!');GU.on=null;updateQuestUI();return}
+ bm.visible=true;bm.position.set(tg.x,hgt(tg.x,tg.z)+35,tg.z);bm.material.uniforms.t.value=T;
+ const hv=heroHead().add(new THREE.Vector3(0,.8,0));a.visible=true;a.position.copy(hv);const ph=toScreen(hv),pt=toScreen(new THREE.Vector3(tg.x,hgt(tg.x,tg.z)+2,tg.z));let ddx=pt.x-ph.x,ddy=pt.y-ph.y;if(pt.z>1){ddx=-ddx;ddy=-ddy}a.material.rotation=-Math.atan2(ddx,-ddy);a.scale.setScalar(.85+Math.sin(T*6)*.08);
+ gd.style.display='';gd.textContent=`📍 ${tg.name} · ${Math.round(d)}m (눌러서 끄기)`}
 let qi=0,qstate='none',qprog=0;const SQ={kid:'none',granny:'none'};
 function onKill(i){if(qstate==='active'&&QUESTS[qi].en===i){qprog++;if(qprog>=QUESTS[qi].need){qstate='ready';setTimeout(()=>toast('퀘스트 목표 달성! 이장님에게 보고하세요'),900);SFX.win()}updateQuestUI()}}
 function updateQuestUI(){const el=$('#quest');let h='';
  if(qi>=QUESTS.length)h+='<div class="q">📜 <b>모든 메인 퀘스트 완료!</b></div>';
  else{const q=QUESTS[qi];
-  if(qstate==='none'){h+=`<div class="q">📜 <b>${q.t}</b><br>이장님에게 말을 걸자 (<span style="color:#ffd84d">!</span>)</div>`;chief.marker.material.map=markerTex.q;chief.marker.visible=true}
-  else if(qstate==='active'){h+=`<div class="q">📜 <b>${q.t}</b><br>${ENEMIES[q.en].n} 처치 <b>${qprog}/${q.need}</b></div>`;chief.marker.visible=false}
-  else{h+=`<div class="q">📜 <b>${q.t}</b><br>이장님에게 보고하자 (<span style="color:#7cf0ff">?</span>)</div>`;chief.marker.material.map=markerTex.r;chief.marker.visible=true}
+  if(qstate==='none'){h+=`<div class="q${GU.on==='main'?' g':''}" data-g="main">📜 <b>${q.t}</b><br>이장님에게 말을 걸자 (<span style="color:#ffd84d">!</span>)<br><small>📍 눌러서 길 안내</small></div>`;chief.marker.material.map=markerTex.q;chief.marker.visible=true}
+  else if(qstate==='active'){h+=`<div class="q${GU.on==='main'?' g':''}" data-g="main">📜 <b>${q.t}</b><br>${ENEMIES[q.en].n} 처치 <b>${qprog}/${q.need}</b><br><small>📍 눌러서 길 안내</small></div>`;chief.marker.visible=false}
+  else{h+=`<div class="q${GU.on==='main'?' g':''}" data-g="main">📜 <b>${q.t}</b><br>이장님에게 보고하자 (<span style="color:#7cf0ff">?</span>)<br><small>📍 눌러서 길 안내</small></div>`;chief.marker.material.map=markerTex.r;chief.marker.visible=true}
   chief.marker.material.needsUpdate=true}
  if(qi>=QUESTS.length)chief.marker.visible=false;
- if(SQ.kid==='active')h+=`<div class="q">🟢 철수의 부탁<br>눈물 젤리 <b>${Math.min(3,G.jelly)}/3</b></div>`;
- if(SQ.granny==='active')h+=`<div class="q">🌿 할머니의 부탁<br>약초 <b>${Math.min(4,G.herb)}/4</b></div>`;
+ if(SQ.kid==='active')h+=`<div class="q${GU.on==='kid'?' g':''}" data-g="kid">🟢 철수의 부탁<br>눈물 젤리 <b>${Math.min(3,G.jelly)}/3</b><br><small>📍 눌러서 길 안내</small></div>`;
+ if(SQ.granny==='active')h+=`<div class="q${GU.on==='granny'?' g':''}" data-g="granny">🌿 할머니의 부탁<br>약초 <b>${Math.min(4,G.herb)}/4</b><br><small>📍 눌러서 길 안내</small></div>`;
  el.innerHTML=h;
  kid.marker.visible=SQ.kid==='none'||(SQ.kid==='active'&&G.jelly>=3);granny.marker.visible=SQ.granny==='none'||(SQ.granny==='active'&&G.herb>=4);
  kid.marker.material.map=SQ.kid==='active'?markerTex.r:markerTex.q;granny.marker.material.map=SQ.granny==='active'?markerTex.r:markerTex.q;kid.marker.material.needsUpdate=granny.marker.material.needsUpdate=true}
@@ -1318,6 +1348,7 @@ function title(){
  try{const l=profs[0];if(l)$('#nick').value=l}catch(e){}}
 
 
+$('#quest').addEventListener('click',e=>{const q=e.target.closest('.q');if(!q||!q.dataset.g)return;const k=q.dataset.g;GU.on=GU.on===k?null:k;SFX.ui();if(GU.on)toast('📍 길 안내 시작! 머리 위 화살표와 하늘로 뻗은 빛줄기를 따라가세요');updateQuestUI()});$('#gdist').onclick=()=>{GU.on=null;SFX.ui();updateQuestUI()};
 /* ================= VIEW SETTINGS ================= */
 const V=(()=>{const d={hud:'full',quest:1,mm:1,clock:1,hint:1,btns:1};try{return Object.assign(d,JSON.parse(localStorage.getItem('brainView')||'{}'))}catch(e){return d}})();
 const VROWS=[['hud','상태창(레벨/HP)',['full','mini','off'],{full:'펼침',mini:'작게',off:'숨김'}],['quest','퀘스트 창',[1,0],{1:'보임',0:'숨김'}],['mm','미니맵',[1,0],{1:'보임',0:'숨김'}],['clock','시계',[1,0],{1:'보임',0:'숨김'}],['hint','조작 도움말',[1,0],{1:'보임',0:'숨김'}],['btns','전투 버튼',[1,0],{1:'보임',0:'숨김'}]];
@@ -1384,7 +1415,7 @@ function frame(){requestAnimationFrame(frame);
  sky.material.uniforms.boost.value=lerp(sky.material.uniforms.boost.value,gg*.9+boomBoost,.05);boomBoost*=.96;
  if(G.hp>0&&G.hp<G.max&&mode==='world'&&PA.stun<=0){const village=Math.hypot(hp.x,hp.z)<19;G.hp=Math.min(G.max,G.hp+dt*(village?2.5:0))}
  {const r=G.hp/G.max,dg=$('#danger');dg.style.opacity=(r<.3&&G.hp>0&&mode==='world')?((.45+.55*Math.abs(Math.sin(T*5)))*(1-r/.3)).toFixed(2):0;if(r<.3&&G.hp>0&&mode==='world'&&frameNo%50===0)tone(70,.14,'sine',.12)}
- updateBars();hudT-=real;if(hudT<=0){hudT=.1;hud()}
+ updateBars();updateGuide();hudT-=real;if(hudT<=0){hudT=.1;hud()}
  composer.render();
 }
 let hudT=0;
