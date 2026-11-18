@@ -528,7 +528,7 @@ const TERR=[
  {i:0,c:[8,86],r:9,n:5,s:.8,k:2.2,tint:0xff6a3a,pre:'불꽃 '},{i:1,c:[32,120],r:9,n:4,s:.62,k:2.1,tint:0xff6a3a,pre:'불꽃 '},{i:2,c:[34,138],r:7,n:3,s:.55,k:2,tint:0xff6a3a,pre:'불꽃 '},{i:4,c:[22,153],r:2,n:1,s:.85,boss:1}
 ];
 function freeSpot(x,z,pad=0){const d=Math.hypot(x,z);if(d<19||d>170)return false;if(Math.hypot(x-26,z-20)<14)return false;for(const t of TERR){if(Math.hypot(x-t.c[0],z-t.c[1])<t.r+3+pad)return false}if(Math.abs(x)<7&&z<-18&&z>-90)return false;return true}
-{const N=3400,f1=new THREE.InstancedMesh(new THREE.ConeGeometry(1.5,3,7),M(0xffffff,{roughness:.8}),N),f2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.1,2.4,7),M(0xffffff,{roughness:.8}),N),tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.2,.3,2,6),M(0x5a3a22),N);
+{const N=1500,f1=new THREE.InstancedMesh(new THREE.ConeGeometry(1.5,3,7),M(0xffffff,{roughness:.8}),N),f2=new THREE.InstancedMesh(new THREE.ConeGeometry(1.1,2.4,7),M(0xffffff,{roughness:.8}),N),tr=new THREE.InstancedMesh(new THREE.CylinderGeometry(.2,.3,2,6),M(0x5a3a22),N);
  const m4=new THREE.Matrix4(),col=new THREE.Color(),darkC=new THREE.Color(0x1a1210),whiteC=new THREE.Color(1,1,1);let n=0;
  for(let tries=0;tries<40000&&n<N;tries++){const a=rand(0,6.283),r=Math.sqrt(rand(361,28900));const x=Math.cos(a)*r,z=Math.sin(a)*r;if(walkable(x,z,1.3)||Math.hypot(x-26,z-20)<14||biome(x,z).e>.25)continue;
   const y=hgt(x,z),s=rand(.7,1.25);m4.makeTranslation(x,y+1*s,z).scale(new THREE.Vector3(s,s,s));tr.setMatrixAt(n,new THREE.Matrix4().makeScale(s,s,s).setPosition(x,y+s,z));
@@ -612,7 +612,7 @@ function drawMM(){const c=mmc,W=mmBig?260:112,h=W/2,S=.7;c.clearRect(0,0,W,W);c.
  c.strokeStyle='rgba(225,185,125,.9)';c.lineWidth=2;for(const r of ROADS){c.beginPath();r.forEach(([x,z],i)=>i?c.lineTo(px(x),pz(z)):c.moveTo(px(x),pz(z)));c.stroke()}
  if(hallFound){c.strokeStyle='rgba(120,230,255,.7)';c.beginPath();TRAIL.forEach(([x,z],i)=>i?c.lineTo(px(x),pz(z)):c.moveTo(px(x),pz(z)));c.stroke();c.fillStyle='#7cf0ff';c.beginPath();c.arc(px(HALL[0]),pz(HALL[1]),4,0,7);c.fill()}
  for(const q of props){if(q.kind==='wp'){c.fillStyle=G.wps[q.id]?'#7cf0ff':'rgba(124,240,255,.35)';c.save();c.translate(px(q.x),pz(q.z));c.rotate(.785);c.fillRect(-3,-3,6,6);c.restore()}}
- c.fillStyle='#d8b070';for(const k of colliders)if(k.r>2.5)c.fillRect(px(k.x)-3,pz(k.z)-3,6,6);
+ c.fillStyle='#d8b070';for(const k of colliders)if(k.r>2.5&&!k.h)c.fillRect(px(k.x)-3,pz(k.z)-3,6,6);
  for(const m of wmons){if(!m.alive||m.S.dummy)continue;c.fillStyle=m.t.boss?'#ff49d8':'#ff6b6b';const x=px(m.g.position.x),y=pz(m.g.position.z);c.beginPath();c.arc(x,y,m.t.boss?4:2.6,0,7);c.fill()}
  for(const n of npcs){c.fillStyle=n.marker.visible?(n.marker.material.map===markerTex.r?'#7cf0ff':'#ffd84d'):'#9fd6ff';c.beginPath();c.arc(px(n.x),pz(n.z),n.chief?4:2.5,0,7);c.fill()}
  c.translate(h,h);c.rotate(Math.PI-hero.rotation.y);c.fillStyle='#fff';c.beginPath();c.moveTo(0,-6);c.lineTo(4.5,5);c.lineTo(0,3);c.lineTo(-4.5,5);c.closePath();c.fill();c.restore()}
@@ -756,17 +756,18 @@ WPS.forEach(mkWaypoint);
 const boats=[],lavas=[];
 {const mat=M(0x7a7885,{roughness:.9,flatShading:true}),snowM=M(0xf2f6ff,{roughness:.8,flatShading:true});const N=44,pk=new THREE.InstancedMesh(new THREE.ConeGeometry(1,1,7),mat,N),cap=new THREE.InstancedMesh(new THREE.ConeGeometry(.3,.3,7),snowM,N);let n=0;const m4=new THREE.Matrix4(),q=new THREE.Quaternion();
  for(let t=0;t<900&&n<N;t++){const a=rand(0,6.283),r=rand(48,150),x=Math.cos(a)*r,z=Math.sin(a)*r,b=biome(x,z);const R=rand(7,15),H=rand(16,36);if(Math.max(b.e,b.w,b.s)>.2||walkable(x,z,R+8))continue;const y=hgt(x,z);
-  pk.setMatrixAt(n,m4.compose(new THREE.Vector3(x,y-1+H/2,z),q,new THREE.Vector3(R,H,R)));cap.setMatrixAt(n,m4.compose(new THREE.Vector3(x,y-1+H*.85,z),q,new THREE.Vector3(R,H,R)));n++}
+  colliders.push({x,z,r:R*.42,h:1});pk.setMatrixAt(n,m4.compose(new THREE.Vector3(x,y-1+H/2,z),q,new THREE.Vector3(R,H,R)));cap.setMatrixAt(n,m4.compose(new THREE.Vector3(x,y-1+H*.85,z),q,new THREE.Vector3(R,H,R)));n++}
  pk.count=cap.count=n;worldG.add(pk,cap)}
 {const sw=new THREE.Mesh(new THREE.PlaneGeometry(190,300),new THREE.MeshPhysicalMaterial({color:0x2a9fd8,transparent:true,opacity:.82,roughness:.06,metalness:.1,clearcoat:1,envMapIntensity:2}));sw.rotation.x=-Math.PI/2;sw.position.set(160,-.35,-25);worldG.add(sw);
  for(const [x,z] of[[84,-50],[104,56],[145,-34],[152,32],[86,40]]){const g=grp(worldG,x,-.35,z);g.rotation.y=rand(0,6);mk(new THREE.BoxGeometry(3.2,.7,1.3),M(0x7a4a22,{roughness:.7}),0,.2,0,g);mk(new THREE.ConeGeometry(.75,.9,4),M(0x7a4a22),1.9,.25,0,g).rotation.z=-Math.PI/2;mk(new THREE.CylinderGeometry(.06,.06,3,6),M(0x4a2a12),0,1.7,0,g);const sl=mk(new THREE.PlaneGeometry(1.8,2.2),new THREE.MeshStandardMaterial({color:0xf4f4f0,side:THREE.DoubleSide,roughness:.9}),.1,2,0,g);sl.rotation.y=Math.PI/2;boats.push(g)}}
-for(const [x,z,r] of[[-12,92,4],[44,102,5],[0,132,5],[52,142,4],[-6,162,5],[40,164,4],[62,100,4]]){const g=grp(worldG,x,hgt(x,z)+.12,z);const lv=mk(new THREE.CircleGeometry(r,28),E(0xff5a1a,2.2),0,0,0,g,false);lv.rotation.x=-Math.PI/2;lavas.push(lv);const gl=sprite(glowTex,r*3.4,{blending:THREE.AdditiveBlending,color:0xff6a2a,opacity:.5});gl.position.y=1.2;g.add(gl);
+for(const [x,z,r] of[[-12,92,4],[44,102,5],[0,132,5],[52,142,4],[-6,162,5],[40,164,4],[62,100,4]]){colliders.push({x,z,r:r*.9,h:1});const g=grp(worldG,x,hgt(x,z)+.12,z);const lv=mk(new THREE.CircleGeometry(r,28),E(0xff5a1a,2.2),0,0,0,g,false);lv.rotation.x=-Math.PI/2;lavas.push(lv);const gl=sprite(glowTex,r*3.4,{blending:THREE.AdditiveBlending,color:0xff6a2a,opacity:.5});gl.position.y=1.2;g.add(gl);
  for(let i=0;i<5;i++){const a=rand(0,6.28);mk(new THREE.ConeGeometry(rand(.4,.9),rand(1.6,3.6),5),M(0x1a1416,{roughness:.8,flatShading:true}),Math.cos(a)*(r+.6),.8,Math.sin(a)*(r+.6),g)}}
 colliders.push({x:26,z:20,r:7});
 // water
 {const w=new THREE.Mesh(new THREE.CircleGeometry(11.5,48),new THREE.MeshPhysicalMaterial({color:0x2a7fe0,transparent:true,opacity:.78,roughness:.05,metalness:.2,clearcoat:1,envMapIntensity:2}));w.rotation.x=-Math.PI/2;w.position.set(26,-.55,20);worldG.add(w);window.__water=w}
 
-function stepMove(dx,dz,sp,dt){const p=hero.position;const ox=p.x,oz=p.z;p.x+=dx*sp*dt;p.z+=dz*sp*dt;if(!walkable(p.x,p.z)){if(walkable(p.x,oz))p.z=oz;else if(walkable(ox,p.z))p.x=ox;else{p.x=ox;p.z=oz}}collide(p);const d=Math.hypot(p.x,p.z);if(d>165){p.x*=165/d;p.z*=165/d}
+function isBlocked(x,z){return x>58&&hgt(x,z)<-1.0}
+function stepMove(dx,dz,sp,dt){const p=hero.position;const ox=p.x,oz=p.z;p.x+=dx*sp*dt;p.z+=dz*sp*dt;if(isBlocked(p.x,p.z)){if(!isBlocked(p.x,oz))p.z=oz;else if(!isBlocked(ox,p.z))p.x=ox;else{p.x=ox;p.z=oz}}collide(p);const d=Math.hypot(p.x,p.z);if(d>165){p.x*=165/d;p.z*=165/d}
  if(!bossOpen()&&p.z<-76&&Math.abs(p.x)<12){p.z=-76;if(hintCool<=0){toast('타락성의 문이 굳게 닫혀 있다... 남은 수문장: '+gateLeft().join(', '));hintCool=4}}}
 function updateWorld(dt){
  const p=hero.position;const px0=p.x,pz0=p.z;let moving=false;hintCool-=dt;
@@ -1058,7 +1059,7 @@ function updateEnemies(dt){
     case 'recover':m.fightT+=dt;m.tt-=dt;if(m.tt<=0){if(m.repLeft>0){m.repLeft--;beginWindup(m,.3)}else{m.state='chase';m.cd=S.cd}}break;
    }
   }
-  if(!walkable(gp.x,gp.z)){gp.x=lx0;gp.z=lz0}
+  if(isBlocked(gp.x,gp.z)){gp.x=lx0;gp.z=lz0}
   g.rotation.y+=angDiff(g.rotation.y,m.yaw)*Math.min(1,dt*7);
   const dd=Math.hypot(gp.x,gp.z);if(dd<19){gp.x*=19/dd;gp.z*=19/dd}
   gp.y=hgt(gp.x,gp.z)+(m.air||0)+(m.t.i===0?Math.abs(Math.sin(T*5+m.ph))*.25:0);
@@ -1224,7 +1225,7 @@ function saveGame(){if(!who||mode==='title')return;const d={v:1,name:who,pin:pin
 function applySave(d){for(const k in d.G)G[k]=d.G[k];G.bd=Object.assign({},G.bd);(d.boss||[]).forEach(i=>{G.bd[i]=1});G.wt=Object.assign({club:0,sword:0,staff:0,bow:0,mic:0,dagger:0,mace:0,fist:0,axe:0},G.wt);G.wps=Object.assign({village:true},G.wps);if(!JOBKIND[G.job])G.job='none';qi=d.qi;qstate=d.qstate;qprog=d.qprog;Object.assign(SQ,d.SQ);hallFound=true;cleared=!!d.cleared;tod=d.tod??tod;TUT.done=!!d.tutDone;
  (d.boss||[]).forEach(i=>wmons.filter(m=>m.t.i===i).forEach(m=>{m.alive=false;m.g.visible=false;m.dead=1e9}));
  (d.chests||[]).forEach((v,i)=>{const q=props[i];if(v&&q){q.alive=false;q.g.traverse(o=>{if(o.isSprite)o.visible=false})}});
- let[x,z]=d.pos||[-4,2];if(!walkable(x,z)||Math.hypot(x,z)>160){x=-4;z=2}hero.position.set(x,hgt(x,z),z);groundY=hgt(x,z);hero.rotation.set(0,0,0);
+ let[x,z]=d.pos||[-4,2];if(isBlocked(x,z)||Math.hypot(x,z)>160){x=-4;z=2}hero.position.set(x,hgt(x,z),z);groundY=hgt(x,z);hero.rotation.set(0,0,0);
  const k=JOBKIND[G.job];setWeapon(k,G.wt[k]);setOutfit(G.job);G.hp=Math.max(1,Math.min(G.hp,G.max));camSmooth.set(x,hero.position.y+4,z+8);camLook.set(x,hero.position.y+1.6,z)}
 setInterval(saveGame,8000);addEventListener('pagehide',saveGame);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveGame()});
 $('#who').onclick=()=>{if(mode!=='world')return;if(confirm('저장하고 처음 화면(로그인)으로 돌아갈까요?')){saveGame();location.reload()}};
