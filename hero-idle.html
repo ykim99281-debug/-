@@ -82,6 +82,7 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 .abar i{display:block;height:100%;width:100%;background:linear-gradient(#b8ffd0,#2ed573);transition:width .12s}
 .undead svg{filter:hue-rotate(95deg) saturate(1.3) brightness(.9) drop-shadow(0 0 6px #7bed9f)}
 .card.lock{opacity:.55;filter:grayscale(.85)}
+.card.cur{border-color:#00b894;box-shadow:0 0 0 2px #00b894 inset}
 .card.lock .pic svg{filter:brightness(.35)}
 #heroMv{position:relative}
 .dome{position:absolute;left:-16px;right:-16px;top:-8px;bottom:-4px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.06),rgba(116,185,255,.32));border:3px solid rgba(255,255,255,.85);box-shadow:0 0 18px currentColor,inset 0 0 22px currentColor;animation:domep .9s ease-in-out infinite alternate;pointer-events:none;z-index:2}
@@ -316,7 +317,7 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
     </div>
     <!-- 환생 -->
     <div class="pg" id="pg4">
-      <div class="row"><div class="ic" id="clsIc"></div><div class="tx"><b>내 직업: <span id="clsName"></span></b><small id="clsDesc"></small></div></div>
+      <div class="row"><div class="ic" id="clsIc"></div><div class="tx"><b>내 직업: <span id="clsName"></span></b><small id="clsDesc"></small></div><button class="btn" id="changeBtn" style="min-width:84px">🔄 직업<br>바꾸기</button></div>
       <div class="row"><div class="ic">👻</div><div class="tx"><b>영혼 <span id="soul">0</span>개</b><small>영혼 1개당 공격력·골드 +10% (영구!)</small></div></div>
       <div class="row">
         <div class="ic">🔥</div>
@@ -364,7 +365,7 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
   <small>이 계정은 이 게임에서만 쓰는 계정이에요. 이 기기의 브라우저에 저장돼서, 다른 기기에서 하려면 <b>저장 코드</b>를 써요.</small>
 </div></div>
 
-<div id="clsModal"><div id="cbox"><h2>직업을 골라요!</h2><p>직업마다 능력과 필살기가 달라요</p><div id="cards"></div></div></div>
+<div id="clsModal"><div id="cbox"><h2>직업을 골라요!</h2><p id="clsSub">직업마다 능력과 필살기가 달라요</p><div id="cards"></div><button class="btn off" id="clsCancel" style="width:100%;margin-top:10px;padding:12px;display:none">닫기</button></div></div>
 
 <div id="modal"><div id="mbox"><h2 id="mt"></h2><p id="mp"></p><button class="btn" id="mok" style="width:100%;padding:14px">확인</button></div></div>
 
@@ -2470,14 +2471,20 @@ function modal(t,p,cb){
   $("mt").textContent=t;$("mp").innerHTML=p;$("modal").classList.add("show");
   $("mok").onclick=()=>{$("modal").classList.remove("show");cb&&cb()};
 }
-function chooseClass(cb){
+function chooseClass(cb,cancelable){
   paused=true;
-  $("cards").innerHTML=Object.keys(CLS).map(k=>{const ok=clsUnlocked(k);return `<button class="card${ok?"":" lock"}" data-c="${k}"${ok?"":" disabled"}><div class="pic">${HEROES[k]()}</div><b>${CLS[k].n}</b><small>${ok?CLS[k].d:"???"}</small><em>${ok?CLS[k].info:"🔒 "+CLS_NEED[k]+"번째 환생하면 열려요"}</em></button>`}).join("");
+  $("clsSub").textContent=cancelable?"원하는 직업으로 바꿀 수 있어요 (진행 상황은 그대로!)":"직업마다 능력과 필살기가 달라요";
+  $("cards").innerHTML=Object.keys(CLS).map(k=>{const ok=clsUnlocked(k),cur=cancelable&&k===S.cls;return `<button class="card${ok?"":" lock"}${cur?" cur":""}" data-c="${k}"${ok?"":" disabled"}><div class="pic">${HEROES[k]()}</div><b>${CLS[k].n}</b><small>${ok?CLS[k].d:"???"}</small><em>${cur?"✅ 지금 직업":ok?CLS[k].info:"🔒 "+CLS_NEED[k]+"번째 환생하면 열려요"}</em></button>`}).join("");
   $("clsModal").classList.add("show");
+  const cc=$("clsCancel");cc.style.display=cancelable?"block":"none";
+  const close=()=>{$("clsModal").classList.remove("show");paused=false};
+  cc.onclick=close;
   $("cards").onclick=e=>{
     const b=e.target.closest("[data-c]");if(!b||b.disabled)return;
+    if(cancelable&&b.dataset.c===S.cls){close();return}
     S.cls=b.dataset.c;dirty=true;
-    $("clsModal").classList.remove("show");paused=false;
+    close();
+    rageT=0;goldT=0;shieldT=0;beat=0;document.querySelectorAll(".dome").forEach(e=>e.remove());$("hero").classList.remove("rage","goldfx");
     hp=gc().maxHp;setHeroArt();$("clsIc").innerHTML=HEROES[S.cls]();skCd={};clearAllies();setSkills();buildSkills();refreshUI();save();
     toast(`${CLS[S.cls].n} 선택!`);cb&&cb();
   };
@@ -2516,6 +2523,7 @@ $("wGrid").addEventListener("click",e=>{const b=e.target.closest("[data-it]");if
 $("glBtn").onclick=enhanceSlot;
 $("gear").addEventListener("click",e=>{const b=e.target.closest("[data-gear]");if(b){selSlot=b.dataset.gear;document.querySelector('.tab[data-t="2"]').click();refreshUI()}});
 $("autoBtn").onclick=()=>{S.auto=!S.auto;refreshUI()};
+$("changeBtn").onclick=()=>chooseClass(null,true);
 $("rebBtn").onclick=rebirth;$("resetBtn").onclick=reset;
 $("wipeBtn").onclick=()=>HeroAuth.wipeAll();
 $("logoutBtn").onclick=()=>{if(confirm("로그아웃할까요? (진행 상황은 저장돼요)")){save();HeroAuth.logout()}};
