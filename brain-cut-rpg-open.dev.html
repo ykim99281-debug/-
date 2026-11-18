@@ -113,7 +113,7 @@ button:hover:not(:disabled){filter:brightness(1.25)}button:active:not(:disabled)
 <div class="vig"></div><div id="danger"></div>
 <div id="ebars"></div>
 <div id="wui" style="display:none">
-  <div id="tl"><div class="glass pill" id="stage">-</div><div class="glass" id="quest"></div><div class="glass" id="gdist"></div></div>
+  <div id="tl"><div class="glass pill" id="stage">-</div><div class="glass" id="quest"></div><div class="glass" id="gdist"></div><div class="glass" id="s2btn" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:none;place-items:center;justify-content:center;pointer-events:auto;;font-size:12px;white-space:nowrap;border-color:#ff7a93;color:#ffd0da;animation:pu .7s infinite alternate">🌑 시즌 2</div></div>
   <div class="glass" id="hudmini">Lv.1</div>
   <div class="glass" id="hud"><button id="hudx" title="닫기">✕</button>
     <div class="hrow"><div id="lv">Lv.1</div><div class="bar"><i class="hp" id="ph" style="width:100%"></i><span id="phn"></span></div><div id="gold">💰0</div></div>
@@ -796,7 +796,7 @@ const isNight=()=>nightF>.5;
 function fxFloat(text,pos,color){const p=toScreen(pos);if(p.z>1)return;const d=document.createElement('div');d.className='fl';d.textContent=text;d.style.left=p.x+'px';d.style.top=p.y+'px';d.style.color=color;$('#fx').appendChild(d);setTimeout(()=>d.remove(),1100)}
 function bigText(txt,n=1,spread=true){for(let i=0;i<n;i++){setTimeout(()=>{const d=document.createElement('div');d.className='big';d.textContent=txt;d.style.setProperty('--r',rand(-14,14)+'deg');const edge=spread==='edge';d.style.left=(edge?(Math.random()<.5?rand(8,24):rand(76,92)):spread?rand(18,82):50)+'vw';d.style.top=(edge?rand(12,82):spread?rand(18,70):22)+'vh';d.style.fontSize=(edge?rand(34,70):spread?rand(34,84):96)+'px';$('#fx').appendChild(d);setTimeout(()=>d.remove(),1350)},i*(spread?70:0))}}
 function screenFlash(o=.8,ms=500){const f=$('#flash');f.style.transition='none';f.style.opacity=o;requestAnimationFrame(()=>{f.style.transition=`opacity ${ms}ms`;f.style.opacity=0})}
-function hud(){{const J=SK[G.job];[0,1].forEach(i=>{const sk=J[i],lock=G.lv<sk.lv;$('#is'+(i+1)).textContent=sk.i;$('#es'+(i+1)).textContent=sk.n;$('#bs'+(i+1)).style.opacity=lock?.45:1;$('#ls'+(i+1)).textContent=lock?'🔒Lv'+sk.lv:(i?'G':'F')})}
+function hud(){$('#s2btn').style.display=(G.s1clear&&SEASON===1)?'grid':'none';{const J=SK[G.job];[0,1].forEach(i=>{const sk=J[i],lock=G.lv<sk.lv;$('#is'+(i+1)).textContent=sk.i;$('#es'+(i+1)).textContent=sk.n;$('#bs'+(i+1)).style.opacity=lock?.45:1;$('#ls'+(i+1)).textContent=lock?'🔒Lv'+sk.lv:(i?'G':'F')})}
  $('#hudmini').textContent=`Lv.${G.lv} ${JOBNAME[G.job]} · ♥ ${Math.max(0,Math.ceil(G.hp))}/${G.max}`;
  $('#lv').textContent='Lv.'+G.lv+' '+JOBNAME[G.job];$('#ph').style.width=clamp(G.hp/G.max*100,0,100)+'%';$('#phn').textContent=`${Math.max(0,Math.ceil(G.hp))} / ${G.max}`;
  $('#xpb').style.width=clamp(G.xp/need(G.lv)*100,0,100)+'%';$('#gold').textContent='💰'+G.gold;$('#npot').textContent=G.pots;
@@ -1392,6 +1392,7 @@ function applyView(){$('#hud').style.display=V.hud==='full'?'':'none';$('#hudmin
  try{localStorage.setItem('brainView',JSON.stringify(V))}catch(e){}renderViewMenu()}
 function renderViewMenu(){const m=$('#viewm');m.innerHTML='<div class="t">화면에 보일 것</div>'+VROWS.map(r=>`<button data-k="${r[0]}">${r[1]}: <b>${r[3][V[r[0]]]}</b></button>`).join('')+'<button data-k="__all">🙈 전부 숨기기 / 🙉 전부 보기</button>';
  m.querySelectorAll('button').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='__all'){const anyOn=V.hud!=='off'||V.quest||V.mm||V.clock||V.hint||V.btns;Object.assign(V,anyOn?{hud:'off',quest:0,mm:0,clock:0,hint:0,btns:0}:{hud:'full',quest:1,mm:1,clock:1,hint:1,btns:1})}else{const r=VROWS.find(x=>x[0]===k),o=r[2];V[k]=o[(o.indexOf(V[k])+1)%o.length]}applyView()})}
+$('#s2btn').onclick=()=>{if(mode==='world'){SFX.ui();openSeason2()}};
 $('#viewb').onclick=()=>{const m=$('#viewm');m.style.display=m.style.display==='flex'?'none':'flex'};
 $('#hudx').onclick=()=>{V.hud='mini';applyView()};$('#hudmini').onclick=()=>{V.hud='full';applyView()};
 const mq=matchMedia('(max-width:760px)');function placeHud(){const h=$('#hud'),mi=$('#hudmini');if(mq.matches){$('#tl').insertBefore(h,$('#quest'));$('#tl').insertBefore(mi,$('#quest'))}else{$('#wui').appendChild(h);$('#wui').appendChild(mi)}}
