@@ -1512,7 +1512,8 @@ const EVTS={xp3:{n:'경험치 3배',i:'📈'},gold3:{n:'골드 3배',i:'💰'},a
 const evOn=t=>EVT.type===t&&EVT.until>Date.now()+srvOff;
 const evMul=t=>evOn(t)?1:0;
 const isSuperMail=()=>!!(FB&&FB.auth.currentUser&&FB.auth.currentUser.email===SUPERMAIL);
-function setBanScreen(b){banned=true;mode='dead';const sc=$('#scr');sc.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,60px)">${b.deleted?'삭제된 계정':'정지된 계정'}</h2><div class="desc">${b.deleted?'이 계정은 관리자에 의해 삭제되었어요.':'이 계정은 관리자에 의해 정지되었어요.'}${b.reason?'<br>사유: '+String(b.reason).replace(/[<>&]/g,''):''}</div><button class="go" id="bnx">처음 화면으로</button>`;sc.className='on';$('#bnx').onclick=()=>location.reload()}
+function setBanScreen(b){banned=true;mode='dead';const sc=$('#scr');if(b.maint){sc.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,56px)">🛠 서버 점검 중</h2><div class="desc">${String(b.reason||'잠시 후 다시 접속해 주세요.').replace(/[<>&]/g,'')}<br><small>진행 상황은 저장되어 있어요.</small></div><button class="go" id="bnx">다시 시도</button>`;sc.className='on';$('#bnx').onclick=()=>location.reload();return}
+ sc.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,60px)">${b.deleted?'삭제된 계정':'정지된 계정'}</h2><div class="desc">${b.deleted?'이 계정은 관리자에 의해 삭제되었어요.':'이 계정은 관리자에 의해 정지되었어요.'}${b.reason?'<br>사유: '+String(b.reason).replace(/[<>&]/g,''):''}</div><button class="go" id="bnx">처음 화면으로</button>`;sc.className='on';$('#bnx').onclick=()=>location.reload()}
 async function adminSetup(){const f=FB,u=f.auth.currentUser.uid,{D}=f;
  // ban check
  try{const bs=await D.get(D.ref(f.db,'brainRpgBans/'+u));if(bs.val()){await f.Au.signOut(f.auth).catch(()=>{});cloudOn=false;return bs.val()}}catch(e){}
@@ -1558,6 +1559,9 @@ async function runDiag(){const f=FB,D=f.D,u=f.auth.currentUser.uid,out=[];const 
  await t('PK 쓰기 (brainRpgPk)',async()=>{const k='diag'+Date.now();await D.set(D.ref(f.db,'brainRpgPk/'+u+'/'+k),{f:u,n:'diag',d:0,t:Date.now()});await D.remove(D.ref(f.db,'brainRpgPk/'+u+'/'+k))});
  await t('내 저장 쓰기 (brainRpg)',()=>{forceCloud=true;return D.update(D.ref(f.db),{['brainRpg/'+u]:{name:String(who),v:BUILD,t:Date.now(),save:JSON.stringify(Object.assign({},{v:1,name:who,G,qi,qstate,qprog,SQ,hallFound,cleared,pos:[hero.position.x,hero.position.z],tod,tutDone:TUT.done,boss:[],chests:[],t:Date.now()}))}})});
  return out}
+async function maintBans(on,msg){const f=FB,D=f.D;const g=async p=>{try{return(await D.get(D.ref(f.db,p))).val()||{}}catch(e){return{}}};const[a,sv,ad,bn]=await Promise.all([g('brainRpgPub'),g('brainRpg'),g('brainRpgAdmins'),g('brainRpgBans')]);const ids=new Set([...Object.keys(a),...Object.keys(sv)]),now=Date.now(),paths={};
+ if(on){for(const id of ids)if(!ad[id]&&id!==ADM.uid&&!bn[id])paths['brainRpgBans/'+id]={maint:true,reason:msg,t:now,by:ADM.uid}}else{for(const[id,v]of Object.entries(bn))if(v&&v.maint)paths['brainRpgBans/'+id]=null}
+ const keys=Object.keys(paths);for(let i=0;i<keys.length;i+=15){const part={};keys.slice(i,i+15).forEach(k=>part[k]=paths[k]);await D.update(D.ref(f.db),part)}return keys.length}
 async function wipeAll(){const f=FB,D=f.D;const[a,sv,ad]=await Promise.all([D.get(D.ref(f.db,'brainRpgPub')),D.get(D.ref(f.db,'brainRpg')),D.get(D.ref(f.db,'brainRpgAdmins'))]);const adm=ad.val()||{};const ids=new Set([...Object.keys(a.val()||{}),...Object.keys(sv.val()||{})]);
  const list=[...ids].filter(id=>!adm[id]&&id!==ADM.uid);const now=Date.now();
  for(let i=0;i<list.length;i+=15){const paths={};for(const id of list.slice(i,i+15)){paths['brainRpgBans/'+id]={deleted:true,t:now,by:ADM.uid};paths['brainRpg/'+id]=null;paths['brainRpgPub/'+id]=null;paths['brainRpgLive/'+id]=null}await D.update(D.ref(f.db),paths)}
@@ -1594,8 +1598,8 @@ async function openAdmin(){if(!ADM.role||!FB)return;mode='dialog';const sc=$('#s
    else if(a==='dismiss'){if(!confirm(`'${u.name}'을(를) 해임할까요?`))return;act(()=>D.remove(D.ref(f.db,'brainRpgAdmins/'+id)),'해임했어요')}
    else if(a==='ev'){const dur=(+b.dataset.m)*60000;act(()=>D.set(D.ref(f.db,'brainRpgEvent'),{type:b.dataset.k,until:Date.now()+srvOff+dur,by:ADM.uid,t:Date.now()}),`${EVTS[b.dataset.k].n} 이벤트 ${b.dataset.m}분 시작!`)}
    else if(a==='diag'){runDiag().then(r=>{alert('서버 진단 결과\n\n'+r.join('\n')+'\n\n❌ 표시가 있으면 그 줄을 알려 주세요.');})}
-   else if(a==='maint_on'){const msg=(($('#maintmsg')&&$('#maintmsg').value)||'서버 점검 중입니다').slice(0,60);if(!confirm('서버 점검을 시작할까요? 일반 유저는 모두 접속이 끊겨요.'))return;act(()=>D.set(D.ref(f.db,'brainRpgConfig/maint'),{on:true,msg,t:Date.now(),by:ADM.uid}),'서버 점검을 시작했어요')}
-   else if(a==='maint_off')act(()=>D.remove(D.ref(f.db,'brainRpgConfig/maint')),'서버 점검을 종료했어요')
+   else if(a==='maint_on'){const msg=(($('#maintmsg')&&$('#maintmsg').value)||'서버 점검 중입니다').slice(0,60);if(!confirm('서버 점검을 시작할까요? 일반 유저는 모두 접속이 끊겨요.'))return;act(async()=>{await D.set(D.ref(f.db,'brainRpgConfig/maint'),{on:true,msg,t:Date.now(),by:ADM.uid});const n=await maintBans(true,msg);toast(`점검 시작 · 접속 중인 유저 ${n}명에게 점검 알림을 보냈어요`)},'서버 점검을 시작했어요')}
+   else if(a==='maint_off')act(async()=>{await D.remove(D.ref(f.db,'brainRpgConfig/maint'));await maintBans(false)},'서버 점검을 종료했어요')
    else if(a==='cleanup'){const wipe=sup&&$('#cl_acc')&&$('#cl_acc').checked;if(!confirm('구버전을 정리할까요?\n현재 버전보다 낮은 파일은 모두 접속이 끊겨요.'+(wipe?'\n※ 모든 유저 계정도 삭제돼요!':'')))return;if(wipe&&prompt("모든 계정을 삭제합니다. 계속하려면 '삭제'를 입력하세요")!=='삭제')return;act(async()=>{await D.set(D.ref(f.db,'brainRpgConfig/minVersion'),BUILD);if(wipe)await wipeAll()},wipe?'구버전 정리 + 전 계정 삭제 완료':'구버전을 정리했어요')}
    else if(a==='wipe'){if(!sup)return;if(prompt("어드민/관리자를 뺀 모든 유저 계정을 삭제합니다.\n되돌릴 수 없어요. 계속하려면 '삭제'를 입력하세요")!=='삭제')return;act(wipeAll,'전 계정을 삭제했어요')}
    else if(a==='setlv'){setAdminLevel($('#admlv').value);render()}
@@ -1634,7 +1638,7 @@ function title(){
  const online=async(create)=>{const name=nameOK();if(!name)return;const pw=$('#pin').value;if(pw.length<6){toast('비밀번호는 6자 이상이에요');return}cs('⏳ 처리 중...');
   try{await cloudAuth(name,pw,create);cloudOn=true;let d=null;try{d=await cloudLoad()}catch(e){cs('⚠️ '+fbMsg(e));cloudOn=true}
    const gate=await cfgGate();if(gate){try{await FB.Au.signOut(FB.auth)}catch(e){}cloudOn=false;const t=gate==='update'?'이 버전은 더 이상 사용할 수 없어요. 최신 파일로 접속해 주세요':'서버 점검 중이에요'+(CFG.maint&&CFG.maint.msg?' · '+CFG.maint.msg:'');cs('⛔ '+t);toast(t);return}
-   const bn=await adminSetup();if(bn){cs('⛔ '+(bn.deleted?'삭제된 계정이에요':'정지된 계정이에요'+(bn.reason?' · '+bn.reason:'')));toast(bn.deleted?'삭제된 계정이에요':'정지된 계정이에요');return}
+   const bn=await adminSetup();if(bn){{const t=bn.maint?'서버 점검 중이에요'+(bn.reason?' · '+bn.reason:''):bn.deleted?'삭제된 계정이에요':'정지된 계정이에요'+(bn.reason?' · '+bn.reason:'');cs('⛔ '+t);toast(t)}return}
    const lc=loadProfile(name);if(lc&&lc.G&&(!d||(lc.t||0)>(d.t||0)))d=lc;enter(name,d);applyAdminPerks();forceCloud=true;saveGame()}catch(e){cs('⚠️ '+fbMsg(e));toast(fbMsg(e))}};
  $('#start').onclick=()=>online(false);$('#signup').onclick=()=>online(true);
  $('#offl').onclick=()=>{const name=nameOK();if(!name)return;cloudOn=false;const ex=loadProfile(name);if(ex&&ex.pin&&hashS($('#pin').value)!==ex.pin){toast('이 기기 저장의 비밀번호가 달라요');return}enter(name,ex);if(ex&&ex.pin)pinHash=ex.pin};
