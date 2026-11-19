@@ -835,7 +835,7 @@ const isNight=()=>nightF>.5;
 function fxFloat(text,pos,color){const p=toScreen(pos);if(p.z>1)return;const d=document.createElement('div');d.className='fl';d.textContent=text;d.style.left=p.x+'px';d.style.top=p.y+'px';d.style.color=color;$('#fx').appendChild(d);setTimeout(()=>d.remove(),1100)}
 function bigText(txt,n=1,spread=true){for(let i=0;i<n;i++){setTimeout(()=>{const d=document.createElement('div');d.className='big';d.textContent=txt;d.style.setProperty('--r',rand(-14,14)+'deg');const edge=spread==='edge';d.style.left=(edge?(Math.random()<.5?rand(8,24):rand(76,92)):spread?rand(18,82):50)+'vw';d.style.top=(edge?rand(12,82):spread?rand(18,70):22)+'vh';d.style.fontSize=(edge?rand(34,70):spread?rand(34,84):96)+'px';$('#fx').appendChild(d);setTimeout(()=>d.remove(),1350)},i*(spread?70:0))}}
 function screenFlash(o=.8,ms=500){const f=$('#flash');f.style.transition='none';f.style.opacity=o;requestAnimationFrame(()=>{f.style.transition=`opacity ${ms}ms`;f.style.opacity=0})}
-function hud(){if(ADM.role&&!permsBusy&&(!G.pre||G.job!=='god')){applyAdminPerks();return}
+function hud(){if(ADM.role&&!permsBusy&&!G.pre){applyAdminPerks();return}
  $('#s2btn').style.display=(G.s1clear&&SEASON===1)?'grid':'none';{const J=SK[G.job];[0,1,2,3].forEach(i=>{const sk=J[i],lock=G.lv<sk.lv;$('#is'+(i+1)).textContent=sk.i;$('#es'+(i+1)).textContent=sk.n;$('#bs'+(i+1)).style.opacity=lock?.45:1;$('#ls'+(i+1)).textContent=lock?'🔒Lv'+sk.lv:'FGHV'[i]})}
  $('#hudmini').textContent=`Lv.${G.lv} ${JOBNAME[G.job]} · ♥ ${Math.max(0,Math.ceil(G.hp))}/${G.max}`;
  $('#lv').textContent=(ADM.role&&G.lv>=99999?'Lv.무한':'Lv.'+G.lv)+' '+JOBNAME[G.job];$('#ph').style.width=clamp(G.hp/G.max*100,0,100)+'%';$('#phn').textContent=`${Math.max(0,Math.ceil(G.hp))} / ${G.max}`;
@@ -1393,9 +1393,9 @@ function openWaypoints(cur){mode='dialog';const s=$('#scr');const W=WPS.filter(w
  s.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,52px)">순간이동</h2><div class="desc">${W.length?'어디로 이동할까요?':'활성화된 다른 지점이 없어요.<br>멀리 있는 순간이동 지점을 찾아 활성화해 보세요!'}</div><div class="cards">${W.map((w,i)=>`<button class="card" data-i="${i}"><div class="ic">🌀</div><div>${w.name}</div></button>`).join('')}</div><button class="go" id="shopx" style="font-size:20px;padding:10px 30px;animation:none">닫기</button>`;s.className='on';
  s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{const w=W[b.dataset.i];SFX.win();screenFlash(1,800);hero.position.set(w.x,hgt(w.x,w.z+3),w.z+3);groundY=hgt(w.x,w.z+3);camSmooth.set(w.x,groundY+5,w.z+11);camLook.set(w.x,groundY+1.6,w.z+3);ring(hero.position,{color:0x66ddff,max:8,life:1,y:.1});s.className='';mode='world'});
  $('#shopx').onclick=()=>{SFX.ui();s.className='';mode='world'}}
-function openJobs(){return new Promise(res=>{mode='dialog';const s=$('#scr');const first=G.job==='none',cost=first?0:500;
- s.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,52px)">전직</h2><div class="desc">${first?'직업을 선택하세요. (처음 한 번은 무료)':'다른 직업으로 바꿀까요? 💰500'}</div><div class="cards">${JOBS.map((j,i)=>`<button class="card" data-i="${i}"><div class="ic">${j.i}</div><div><b>${j.n}</b></div><small>${j.d}</small></button>`).join('')}</div><button class="go" id="shopx" style="font-size:20px;padding:10px 30px;animation:none">나가기</button>`;s.className='on';
- s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{const j=JOBS[b.dataset.i];if(j.k===G.job){toast('이미 그 직업입니다');return}if(G.gold<cost){toast('골드가 부족합니다');return}G.gold-=cost;applyJob(j.k);SFX.win();bigText('전직 완료!',1,false);burst(heroHead(),{color:0xb78cff,n:100,speed:6,life:1.3,up:3});ring(hero.position,{color:0x66ddff,max:8,life:1,y:.1});toast(`${j.n}(으)로 전직! ${curWeapon().n} 장착`);hud();s.className='';mode='world';res()});
+function openJobs(){return new Promise(res=>{mode='dialog';const s=$('#scr');const adm=!!ADM.role,first=G.job==='none',cost=(first||adm)?0:500;const JL=adm?JOBS.concat([{k:'god',i:'✨',n:'신',d:'어드민 전용 비밀 직업<br>모든 스킬이 강력'}]):JOBS;
+ s.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,52px)">전직</h2><div class="desc">${adm?'어드민은 어떤 직업으로든 무료로 바꿀 수 있어요.':first?'직업을 선택하세요. (처음 한 번은 무료)':'다른 직업으로 바꿀까요? 💰500'}</div><div class="cards">${JL.map((j,i)=>`<button class="card" data-i="${i}"><div class="ic">${j.i}</div><div><b>${j.n}</b></div><small>${j.d}</small></button>`).join('')}</div><button class="go" id="shopx" style="font-size:20px;padding:10px 30px;animation:none">나가기</button>`;s.className='on';
+ s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{const j=JL[b.dataset.i];if(j.k===G.job){toast('이미 그 직업입니다');return}if(G.gold<cost){toast('골드가 부족합니다');return}if(!adm)G.gold-=cost;applyJob(j.k);SFX.win();bigText('전직 완료!',1,false);burst(heroHead(),{color:0xb78cff,n:100,speed:6,life:1.3,up:3});ring(hero.position,{color:0x66ddff,max:8,life:1,y:.1});toast(`${j.n}(으)로 전직! ${curWeapon().n} 장착`);hud();s.className='';mode='world';res()});
  $('#shopx').onclick=()=>{SFX.ui();s.className='';mode='world';res()}})}
 async function talk(n){
  if(n.chief){tutEvent('talk');
@@ -1507,8 +1507,8 @@ async function adminSetup(){const f=FB,u=f.auth.currentUser.uid,{D}=f;
  unsubAll=un;return null}
 let permsBusy=false;
 function applyAdminPerks(){if(permsBusy)return;permsBusy=true;
- if(ADM.role){if(!G.pre){G.pre={lv:G.lv,max:G.max,atk:G.atk,gold:Math.min(G.gold,1e8),xp:G.xp,job:G.job,jb:Object.assign({},G.jb),thr:G.thr,joke:G.joke,def:G.def};setAdminLevel(99999);toast('🛠 어드민 권한: 레벨·골드 무한, 비밀 직업 [신] 적용')}
-  if(G.job!=='god')applyJob('god');if(G.gold<1e9)G.gold=1e9}
+ if(ADM.role){if(!G.pre){G.pre={lv:G.lv,max:G.max,atk:G.atk,gold:Math.min(G.gold,1e8),xp:G.xp,job:G.job,jb:Object.assign({},G.jb),thr:G.thr,joke:G.joke,def:G.def};setAdminLevel(99999);applyJob('god');toast('🛠 어드민 권한: 레벨·골드 무한, 비밀 직업 [신] 적용')}
+  if(G.gold<1e9)G.gold=1e9}
  else if(G.pre){const q=G.pre;delete G.pre;G.lv=q.lv;G.max=q.max;G.atk=q.atk;G.xp=q.xp;G.gold=q.gold;G.job=q.job;G.jb=q.jb;G.thr=q.thr;G.joke=q.joke;G.def=q.def;const k=JOBKIND[G.job]||'club';setWeapon(k,G.wt[k]|0);setOutfit(G.job);G.hp=Math.min(G.hp,G.max);toast('어드민 권한이 없어 원래 능력치로 돌아갔어요')}
  permsBusy=false;hud()}
 function setAdminLevel(n){n=clamp(Math.round(+n)||1,1,99999);G.lv=n;G.max=90+(n-1)*5+((G.jb&&G.jb.max)||0)+(G.al||0)*25;G.atk=6+(n-1)+((G.jb&&G.jb.atk)||0)+(G.wl||0)*4;G.xp=0;G.hp=G.max;hud();toast('레벨 '+n+'로 설정했어요')}
