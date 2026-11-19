@@ -1,0 +1,87 @@
+{
+  "rules": {
+    "brainRpg": {
+      ".read": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (auth.uid === $uid || (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local'))",
+        ".validate": "newData.hasChildren(['name','t','save']) && newData.child('name').isString() && newData.child('save').isString() && newData.child('save').val().length < 1000000"
+      }
+    },
+    "brainRpgPub": {
+      ".read": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')",
+      "$uid": {
+        ".write": "auth != null && (auth.uid === $uid || (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local'))",
+        ".validate": "newData.hasChildren(['name','t']) && newData.child('name').isString() && newData.child('name').val().length <= 12"
+      }
+    },
+    "brainRpgLive": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && (auth.uid === $uid || (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local'))",
+        ".validate": "newData.hasChildren(['name','t']) && newData.child('name').isString() && newData.child('name').val().length <= 12"
+      }
+    },
+    "brainRpgPk": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$key": {
+          ".write": "auth != null && (auth.uid === $uid || (newData.exists() && newData.child('f').val() === auth.uid) || (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local'))",
+          ".validate": "newData.hasChildren(['f','t']) && newData.child('f').isString() && (!newData.child('d').exists() || (newData.child('d').isNumber() && newData.child('d').val() <= 10000000)) && (!newData.child('n').exists() || (newData.child('n').isString() && newData.child('n').val().length <= 12))"
+        }
+      }
+    },
+    "brainRpgBans": {
+      ".read": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')"
+      }
+    },
+    "brainRpgAdmins": {
+      ".read": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.token.email === 'geab980ebaa85eca480@brainrpg.local'"
+      }
+    },
+    "brainRpgConfig": {
+      ".read": "auth != null",
+      ".write": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')"
+    },
+    "brainRpgEvent": {
+      ".read": "auth != null",
+      ".write": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')"
+    },
+    "heroIdle": {
+      ".read": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && ((auth.uid === $uid && !root.child('heroIdleBans').child($uid).exists()) || (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local'))",
+        ".validate": "newData.hasChildren(['name','t','save']) && newData.child('name').isString() && newData.child('name').val().length <= 10 && newData.child('save').isString() && newData.child('save').val().length < 300000"
+      }
+    },
+    "heroIdlePub": {
+      ".read": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')",
+      "$uid": {
+        ".write": "auth != null && ((auth.uid === $uid && !root.child('heroIdleBans').child($uid).exists()) || (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local'))",
+        ".validate": "newData.hasChildren(['name','t']) && newData.child('name').isString() && newData.child('name').val().length <= 10"
+      }
+    },
+    "heroIdleBans": {
+      ".read": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')"
+      }
+    },
+    "heroIdleEvent": {
+      ".read": "auth != null",
+      ".write": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')"
+    },
+    "heroIdleConfig": {
+      ".read": "auth != null",
+      ".write": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')"
+    }
+  }
+}
