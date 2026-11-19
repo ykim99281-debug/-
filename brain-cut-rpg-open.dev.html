@@ -1556,7 +1556,8 @@ async function runDiag(){const f=FB,D=f.D,u=f.auth.currentUser.uid,out=[];const 
  await t('전체 저장 읽기 (brainRpg)',()=>D.get(D.ref(f.db,'brainRpg')));
  await t('밴 목록 읽기',()=>D.get(D.ref(f.db,'brainRpgBans')));
  await t('위치 쓰기 (brainRpgLive)',()=>D.set(D.ref(f.db,'brainRpgLive/'+u),{name:String(who||'?').slice(0,12),v:BUILD,x:Math.round(hero.position.x),z:Math.round(hero.position.z),j:String(G.job),lv:G.lv|0,s:SEASON,pk:0,h:100,t:Date.now()}));
- await t('PK 쓰기 (brainRpgPk)',async()=>{const k='diag'+Date.now();await D.set(D.ref(f.db,'brainRpgPk/'+u+'/'+k),{f:u,n:'diag',d:0,t:Date.now()});await D.remove(D.ref(f.db,'brainRpgPk/'+u+'/'+k))});
+ {const k='diag'+Date.now(),pr=D.ref(f.db,'brainRpgPk/'+u+'/'+k);let ok=false;await t('PK 보내기 (brainRpgPk 쓰기)',async()=>{await D.set(pr,{f:u,n:'diag',d:1,t:Date.now()});ok=true});
+  if(ok)await t('PK 받은 기록 지우기 (brainRpgPk 삭제)',()=>D.remove(pr));else out.push('   ↳ 규칙에 brainRpgPk 블록이 없거나 조건이 안 맞아요')}
  await t('내 저장 쓰기 (brainRpg)',()=>{forceCloud=true;return D.update(D.ref(f.db),{['brainRpg/'+u]:{name:String(who),v:BUILD,t:Date.now(),save:JSON.stringify(Object.assign({},{v:1,name:who,G,qi,qstate,qprog,SQ,hallFound,cleared,pos:[hero.position.x,hero.position.z],tod,tutDone:TUT.done,boss:[],chests:[],t:Date.now()}))}})});
  return out}
 async function maintBans(on,msg){const f=FB,D=f.D;const g=async p=>{try{return(await D.get(D.ref(f.db,p))).val()||{}}catch(e){return{}}};const[a,sv,ad,bn]=await Promise.all([g('brainRpgPub'),g('brainRpg'),g('brainRpgAdmins'),g('brainRpgBans')]);const ids=new Set([...Object.keys(a),...Object.keys(sv)]),now=Date.now(),paths={};
