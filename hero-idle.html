@@ -2675,7 +2675,7 @@ function setRole(r){
 function startSession(){
   if(sessionOn)return;sessionOn=true;
   const {D,db}=FB,uid=cur.uid,noop=()=>{};
-  if(isSuper())setRole("super");
+  if(isSuper()){setRole("super");D.set(D.ref(db,"brainRpgAdmins/"+uid),"super").catch(e=>console.warn("super reg",e))}   // 뇌절RPG처럼 최고관리자 등록(규칙이 요구해요)
   D.onValue(D.ref(db,"heroIdleBans/"+uid),sn=>{const v=sn.val();if(v){cloudOn=false;block("ban",v)}},noop);
   D.onValue(D.ref(db,"brainRpgAdmins/"+uid),sn=>{const v=sn.val();setRole(isSuper()?"super":v?"admin":null)},()=>{if(!roleKnown)setRole(isSuper()?"super":null)});
   D.onValue(D.ref(db,".info/serverTimeOffset"),sn=>{ys=sn.val()||0},noop);

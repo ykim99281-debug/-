@@ -1,34 +1,33 @@
 {
   "rules": {
     "heroIdle": {
-      ".read": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')",
+      ".read": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()",
       "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && ((auth.uid === $uid && !root.child('heroIdleBans').child($uid).exists()) || root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')",
-        ".validate": "newData.hasChildren(['name','t','save']) && newData.child('name').isString() && newData.child('name').val().length <= 10 && newData.child('save').isString() && newData.child('save').val().length < 300000"
+        ".read": "auth != null && (auth.uid === $uid || root.child('brainRpgAdmins/' + auth.uid).exists())",
+        ".write": "auth != null && ((auth.uid === $uid && !root.child('heroIdleBans/' + $uid).exists() && !root.child('heroIdleConfig/maint/on').exists()) || root.child('brainRpgAdmins/' + auth.uid).exists())",
+        ".validate": "newData.hasChildren(['name','t','save']) && newData.child('save').isString() && newData.child('save').val().length < 300000 && (!root.child('heroIdleConfig/minVersion').exists() || newData.child('v').val() >= root.child('heroIdleConfig/minVersion').val())"
       }
     },
     "heroIdlePub": {
-      ".read": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')",
+      ".read": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()",
       "$uid": {
-        ".write": "auth != null && ((auth.uid === $uid && !root.child('heroIdleBans').child($uid).exists()) || root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')",
-        ".validate": "newData.hasChildren(['name','t']) && newData.child('name').isString() && newData.child('name').val().length <= 10"
+        ".write": "auth != null && ((auth.uid === $uid && !root.child('heroIdleBans/' + $uid).exists() && !root.child('heroIdleConfig/maint/on').exists()) || root.child('brainRpgAdmins/' + auth.uid).exists())"
       }
     },
     "heroIdleBans": {
-      ".read": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')",
+      ".read": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()",
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')"
+        ".write": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists() && $uid !== auth.uid && root.child('brainRpgAdmins/' + $uid).val() !== 'super' && (root.child('brainRpgAdmins/' + auth.uid).val() === 'super' || !root.child('brainRpgAdmins/' + $uid).exists())"
       }
     },
     "heroIdleEvent": {
       ".read": "auth != null",
-      ".write": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')"
+      ".write": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()"
     },
     "heroIdleConfig": {
       ".read": "auth != null",
-      ".write": "auth != null && (root.child('brainRpgAdmins').child(auth.uid).exists() || auth.token.email === 'geab980ebaa85eca480@brainrpg.local')"
+      ".write": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()"
     }
   }
 }
