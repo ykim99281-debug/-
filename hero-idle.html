@@ -627,6 +627,42 @@ CSK.ice=mk("i",[
     {ic:"💎",n:"얼음 보석",cd:40,color:"#fdcb6e",kind:"gold",dur:10,fx:"gold"},
     {ic:"🥶",n:"블리자드 폭풍",cd:28,color:"#7fd6ff",kind:"freeze",mul:50,fx:"ice"},
     {ic:"👑",n:"얼음 여왕의 심판",cd:45,color:"#e0f7ff",kind:"aoe",mul:150,fx:"judge"}]);
+CSK.bmb=mk("l",[
+    {ic:"💣",n:"폭탄 투척",cd:10,color:"#ff9f43",kind:"snipe",mul:14,fx:"flask"},
+    {ic:"🩹",n:"구급 상자",cd:20,color:"#55efc4",kind:"heal",fx:"heal"},
+    {ic:"🧱",n:"폭발 방어막",cd:26,color:"#b2bec3",kind:"shield",dur:5,fx:"shield"},
+    {ic:"🎆",n:"연쇄 폭죽",cd:20,color:"#ff6b6b",kind:"aoe",mul:18,fx:"arrowboom"},
+    {ic:"🔥",n:"도화선 점화",cd:30,color:"#ff9f43",kind:"rage",dur:8,fx:"rage"},
+    {ic:"⛏️",n:"광산 폭파",cd:40,color:"#fdcb6e",kind:"gold",dur:10,fx:"gold"},
+    {ic:"🧨",n:"TNT 폭파",cd:28,color:"#ff4757",kind:"aoe",mul:50,fx:"labboom"},
+    {ic:"🌋",n:"화산 폭탄",cd:45,color:"#ff6b35",kind:"aoe",mul:150,fx:"volcano"}]);
+CSK.vmp=mk("y",[
+    {ic:"🦇",n:"흡혈 박쥐",cd:10,color:"#c0392b",kind:"snipe",mul:14,fx:"curse"},
+    {ic:"🩸",n:"피의 수혈",cd:20,color:"#ff4757",kind:"heal",fx:"heal"},
+    {ic:"🌫️",n:"안개 변신",cd:26,color:"#b2bec3",kind:"shield",dur:5,fx:"shield",smoke:true},
+    {ic:"🦇",n:"박쥐 떼",cd:20,color:"#a55eea",kind:"aoe",mul:18,fx:"poison"},
+    {ic:"🌙",n:"광란의 밤",cd:30,color:"#c0392b",kind:"rage",dur:8,fx:"rage"},
+    {ic:"🏰",n:"성 약탈",cd:40,color:"#fdcb6e",kind:"gold",dur:10,fx:"gold"},
+    {ic:"🩸",n:"피의 폭풍",cd:28,color:"#c0392b",kind:"aoe",mul:50,fx:"reaper"},
+    {ic:"🧛",n:"드라큘라의 저주",cd:45,color:"#a55eea",kind:"aoe",mul:150,fx:"legion"}]);
+CSK.thr=mk("u",[
+    {ic:"⚡",n:"번개 창",cd:10,color:"#ffe27a",kind:"snipe",mul:14,fx:"snipe"},
+    {ic:"🔋",n:"전기 충전",cd:20,color:"#ffe27a",kind:"heal",fx:"heal"},
+    {ic:"🌩️",n:"정전기 방벽",cd:26,color:"#ffe27a",kind:"shield",dur:5,fx:"shield"},
+    {ic:"🔗",n:"연쇄 번개",cd:20,color:"#ffe27a",kind:"aoe",mul:18,fx:"arrowboom"},
+    {ic:"🌀",n:"전자기 폭주",cd:30,color:"#74b9ff",kind:"rage",dur:8,fx:"rage"},
+    {ic:"🔌",n:"전기 장사",cd:40,color:"#fdcb6e",kind:"gold",dur:10,fx:"gold"},
+    {ic:"⛈️",n:"뇌우",cd:28,color:"#ffe27a",kind:"aoe",mul:50,fx:"firerain"},
+    {ic:"⚡",n:"천둥신의 분노",cd:45,color:"#fff3b0",kind:"aoe",mul:150,fx:"judge"}]);
+CSK.hnt=mk("v",[
+    {ic:"🏹",n:"급소 사격",cd:10,color:"#8bc34a",kind:"snipe",mul:14,fx:"snipe"},
+    {ic:"🌿",n:"약초 치료",cd:20,color:"#55efc4",kind:"heal",fx:"heal"},
+    {ic:"🕸️",n:"덫 방어",cd:26,color:"#b2bec3",kind:"shield",dur:5,fx:"shield"},
+    {ic:"🪤",n:"폭발 덫",cd:20,color:"#ffa94d",kind:"aoe",mul:18,fx:"arrowboom"},
+    {ic:"🦅",n:"매의 눈",cd:30,color:"#8bc34a",kind:"rage",dur:8,fx:"rage"},
+    {ic:"🦌",n:"사냥감 판매",cd:40,color:"#fdcb6e",kind:"gold",dur:10,fx:"gold"},
+    {ic:"🔥",n:"불화살 폭풍",cd:28,color:"#ff7f50",kind:"aoe",mul:50,fx:"firerain"},
+    {ic:"🐺",n:"늑대 무리 습격",cd:45,color:"#ffe27a",kind:"aoe",mul:150,fx:"starbeam"}]);
 const ULT={
   war:[{ic:"🗡️",n:"천검 난무",cd:55,color:"#ffe27a",kind:"aoe",mul:400,fx:"bladestorm",emo:"⚔️"},
        {ic:"🌅",n:"천지개벽",cd:75,color:"#ffb142",kind:"aoe",mul:1200,fx:"worldsplit"}],
@@ -662,14 +698,22 @@ const ULT={
        {ic:"🍔",n:"거대 햄버거 강림",cd:75,color:"#ffb142",kind:"aoe",mul:1200,fx:"summonbig",emo:"🍔",mode:"stomp"}],
   ice:[{ic:"☄️",n:"빙하 유성우",cd:55,color:"#9be7ff",kind:"aoe",mul:400,fx:"meteorstorm",emo:"🧊"},
        {ic:"🌌",n:"영원한 겨울",cd:75,color:"#9be7ff",kind:"aoe",mul:1200,fx:"iceage"}],
+  bmb:[{ic:"☢️",n:"핵폭탄",cd:55,color:"#ff9f43",kind:"aoe",mul:400,fx:"nuke"},
+       {ic:"💣",n:"거대 폭탄 강림",cd:75,color:"#ff4757",kind:"aoe",mul:1200,fx:"summonbig",emo:"💣",mode:"stomp"}],
+  vmp:[{ic:"🌕",n:"붉은 달",cd:55,color:"#c0392b",kind:"aoe",mul:400,fx:"meteorstorm",emo:"🦇"},
+       {ic:"🧛",n:"드라큘라 백작 강림",cd:75,color:"#a55eea",kind:"aoe",mul:1200,fx:"summonbig",emo:"🧛",mode:"bone"}],
+  thr:[{ic:"🌩️",n:"낙뢰 폭풍",cd:55,color:"#ffe27a",kind:"aoe",mul:400,fx:"thunderstorm"},
+       {ic:"🔱",n:"뇌신 강림",cd:75,color:"#fff3b0",kind:"aoe",mul:1200,fx:"summonbig",emo:"⚡",mode:"holy"}],
+  hnt:[{ic:"🌠",n:"별빛 화살비",cd:55,color:"#8bc34a",kind:"aoe",mul:400,fx:"meteorstorm",emo:"🏹"},
+       {ic:"🐻",n:"숲의 왕 강림",cd:75,color:"#8bc34a",kind:"aoe",mul:1200,fx:"summonbig",emo:"🐻",mode:"stomp"}],
   alch:[{ic:"☢️",n:"핵 실험",cd:55,color:"#7bed9f",kind:"aoe",mul:400,fx:"nuke"},
        {ic:"🧊",n:"절대영도",cd:75,color:"#9be7ff",kind:"aoe",mul:1200,fx:"iceage"}],
 };
-Object.keys(ULT).forEach(k=>{const pre={war:"w",mage:"m",arc:"a",asn:"s",pal:"p",ber:"b",nec:"n",dgn:"d",beg:"g",pir:"o",bard:"t",alch:"c",nin:"j",cln:"k",bot:"r",sam:"x",chf:"h",ice:"i"}[k];
+Object.keys(ULT).forEach(k=>{const pre={war:"w",mage:"m",arc:"a",asn:"s",pal:"p",ber:"b",nec:"n",dgn:"d",beg:"g",pir:"o",bard:"t",alch:"c",nin:"j",cln:"k",bot:"r",sam:"x",chf:"h",ice:"i",bmb:"l",vmp:"y",thr:"u",hnt:"v"}[k];
   ULT[k].forEach((x,i)=>CSK[k].push(Object.assign({id:pre+(9+i),price:PR[8+i],star:STAR[8+i]},x,{id:pre+(9+i)})))});
 const DEF={};Object.values(CSK).forEach(l=>l.forEach(d=>DEF[d.id]=d));
 let SKILLS=[];
-const clsPre=()=>({war:"w",mage:"m",arc:"a",asn:"s",pal:"p",ber:"b",nec:"n",dgn:"d",beg:"g",pir:"o",bard:"t",alch:"c",nin:"j",cln:"k",bot:"r",sam:"x",chf:"h",ice:"i"}[S.cls||"war"]);
+const clsPre=()=>({war:"w",mage:"m",arc:"a",asn:"s",pal:"p",ber:"b",nec:"n",dgn:"d",beg:"g",pir:"o",bard:"t",alch:"c",nin:"j",cln:"k",bot:"r",sam:"x",chf:"h",ice:"i",bmb:"l",vmp:"y",thr:"u",hnt:"v"}[S.cls||"war"]);
 const sid=r=>clsPre()+r;                       // 현재 직업의 r번째 스킬 id
 function setSkills(){SKILLS=[{id:"cls",price:0,star:1,kind:"core"},...CSK[S.cls||"war"]]}
 const PETS=[
@@ -680,9 +724,9 @@ const PETS=[
   {n:"드래곤",e:"🐲",cost:500, t:"atk", v:1.00},
   {n:"유니콘",e:"🦄",cost:1000,t:"gold",v:1.00},
 ];
-const CLS_NEED={war:0,mage:0,arc:0,asn:1,pal:1,ber:2,nec:3,dgn:4,beg:0,pir:2,bard:3,alch:4,nin:5,cln:6,bot:7,sam:8,chf:9,ice:10};   // 필요한 환생 횟수 (환생할수록 새 직업이 열려요)
-const CM={war:{a:1,h:2.2,s:1,c:0},mage:{a:1.3,h:.8,s:1,c:0},arc:{a:1,h:1,s:1.6,c:.1},asn:{a:1.7,h:.3,s:1.35,c:.15},pal:{a:1,h:1.8,s:1,c:0},ber:{a:1.4,h:1.2,s:1.1,c:0},nec:{a:1.3,h:.9,s:1,c:0},dgn:{a:1.25,h:1.4,s:1.2,c:.05},beg:{a:.7,h:.8,s:1,c:0},pir:{a:1.3,h:1.1,s:1.15,c:.1},bard:{a:1,h:1,s:1.25,c:0},alch:{a:1.15,h:1,s:1,c:0},nin:{a:1.2,h:.7,s:1.4,c:.1},cln:{a:.9,h:1.1,s:1,c:0},bot:{a:1.1,h:1.5,s:1,c:0},sam:{a:1.45,h:.9,s:1.1,c:.2},chf:{a:1,h:1.3,s:1,c:0},ice:{a:1.3,h:.9,s:1,c:0}};
-const MELEE=["sam","war","asn","pal","ber","dgn","beg","pir"];
+const CLS_NEED={war:0,mage:0,arc:0,asn:1,pal:1,ber:2,nec:3,dgn:4,beg:0,pir:2,bard:3,alch:4,nin:5,cln:6,bot:7,sam:8,chf:9,ice:10,bmb:11,vmp:12,thr:13,hnt:14};   // 필요한 환생 횟수 (환생할수록 새 직업이 열려요)
+const CM={war:{a:1,h:2.2,s:1,c:0},mage:{a:1.3,h:.8,s:1,c:0},arc:{a:1,h:1,s:1.6,c:.1},asn:{a:1.7,h:.3,s:1.35,c:.15},pal:{a:1,h:1.8,s:1,c:0},ber:{a:1.4,h:1.2,s:1.1,c:0},nec:{a:1.3,h:.9,s:1,c:0},dgn:{a:1.25,h:1.4,s:1.2,c:.05},beg:{a:.7,h:.8,s:1,c:0},pir:{a:1.3,h:1.1,s:1.15,c:.1},bard:{a:1,h:1,s:1.25,c:0},alch:{a:1.15,h:1,s:1,c:0},nin:{a:1.2,h:.7,s:1.4,c:.1},cln:{a:.9,h:1.1,s:1,c:0},bot:{a:1.1,h:1.5,s:1,c:0},sam:{a:1.45,h:.9,s:1.1,c:.2},chf:{a:1,h:1.3,s:1,c:0},ice:{a:1.3,h:.9,s:1,c:0},bmb:{a:1.2,h:.9,s:1,c:0},vmp:{a:1.25,h:.8,s:1.1,c:.05},thr:{a:1.3,h:.8,s:1.1,c:0},hnt:{a:1.1,h:1,s:1.3,c:.1}};
+const MELEE=["vmp","sam","war","asn","pal","ber","dgn","beg","pir"];
 const CLS={
   war :{n:"전사",  d:"체력 +120%",           skill:"⚔️ 대폭격",  cd:8, color:"#ff7675",info:"필살기: 5배 강타"},
   mage:{n:"마법사",d:"공격력 +30%, 체력 -20%",skill:"⚡ 번개",    cd:10,color:"#a29bfe",info:"필살기: 8배 번개 데미지"},
@@ -701,6 +745,10 @@ const CLS={
   sam :{n:"사무라이",d:"공격력 +45%, 치명타 +20%·데미지 3배, 체력 -10% (패시브)",skill:"⚔️ 발도술",cd:9,color:"#ff6b6b",info:"필살기: 전체 6배 거합 베기"},
   chf :{n:"요리사",d:"체력 +30%, 공격할 때마다 체력 2% 회복 (패시브)",skill:"🍳 불꽃 프라이팬",cd:9,color:"#ffb142",info:"필살기: 전체 5배 + 체력 회복"},
   ice :{n:"얼음 마녀",d:"공격력 +30%, 체력 -10%, 공격할 때 10% 확률로 몬스터를 2초 얼려요 (패시브)",skill:"❄️ 빙결 폭풍",cd:9,color:"#9be7ff",info:"필살기: 전체 7배 + 얼리기"},
+  bmb :{n:"폭탄마",d:"공격력 +20%, 체력 -10%, 공격할 때 15% 확률로 폭탄이 터져 전체 2배 피해 (패시브)",skill:"💣 연쇄 폭탄",cd:9,color:"#ff9f43",info:"필살기: 전체 6배 폭발"},
+  vmp :{n:"뱀파이어",d:"공격력 +25%, 공속 +10%, 체력 -20%, 준 피해의 7% 흡혈 (패시브)",skill:"🦇 박쥐 떼",cd:9,color:"#c0392b",info:"필살기: 전체 6배 박쥐 습격 + 흡혈"},
+  thr :{n:"번개술사",d:"공격력 +30%, 공속 +10%, 체력 -20%, 공격할 때 20% 확률로 번개가 4마리에게 튀어요 (패시브)",skill:"⚡ 천둥 번개",cd:9,color:"#ffe27a",info:"필살기: 전체 7배 번개"},
+  hnt :{n:"사냥꾼",d:"공격력 +10%, 공속 +30%, 치명타 +10%, 늑대 2마리가 함께 싸워요 (패시브)",skill:"🏹 화살 사냥",cd:9,color:"#8bc34a",info:"필살기: 화살 8발 (각 1.3배)"},
   alch:{n:"연금술사",d:"공격력 +15%, 처치할 때 25% 확률로 물약을 얻어 체력 20% 회복 (패시브)",skill:"⚗️ 폭발 플라스크",cd:10,color:"#55efc4",info:"필살기: 전체 6배 폭발"},
 };
 
@@ -738,6 +786,7 @@ function save(){if(!SAVE_KEY||window.__noSave)return;try{S.last=Date.now();local
 const UNITS=["","만","억","조","경","해","자","양","구","간","정","재","극","항하사","아승기","나유타","불가사의","무량대수"];
 function fmt(n){
   if(!isFinite(n))return "∞";
+  if(n>=1e100)return (n/1e100>=100?(n/1e100).toFixed(0):n/1e100>=10?(n/1e100).toFixed(1):(n/1e100).toFixed(2))+"구골";
   if(n<10000)return n<10&&n%1?n.toFixed(1):Math.floor(n)+"";
   let i=0;while(n>=10000&&i<UNITS.length-1){n/=10000;i++}
   return (n>=100?n.toFixed(0):n>=10?n.toFixed(1):n.toFixed(2))+UNITS[i];
@@ -765,7 +814,7 @@ const skLv=id=>S.sk[id]||1;
 const owned=id=>id==="cls"||!!(S.own&&S.own[id]);
 function skVals(id){
   const d=DEF[id]||{},lv=skLv(id),m=1+0.15*(lv-1);
-  const base=id==="cls"?({war:5,mage:8,arc:1,asn:2,pal:5,ber:6,nec:7,dgn:6,beg:3,pir:6,bard:5,alch:6,nin:1.5,cln:3,bot:6,sam:6,chf:5,ice:7}[S.cls||"war"]):(d.mul||0);
+  const base=id==="cls"?({war:5,mage:8,arc:1,asn:2,pal:5,ber:6,nec:7,dgn:6,beg:3,pir:6,bard:5,alch:6,nin:1.5,cln:3,bot:6,sam:6,chf:5,ice:7,bmb:6,vmp:6,thr:7,hnt:1.3}[S.cls||"war"]):(d.mul||0);
   return{m,lv,dmg:base*m,heal:Math.min(0.95,0.5+0.03*(lv-1)),
     dur:Math.min(d.kind==="rage"?20:d.kind==="shield"?12:30,(d.dur||0)+0.5*(lv-1)),
     atk:2+0.1*(lv-1),gold:3+0.2*(lv-1),frz:Math.min(8,3+0.2*(lv-1))};
@@ -775,7 +824,7 @@ function skInfo(id){
   const v=skVals(id);
   if(id==="cls"){const k=CLS[S.cls||"war"],p=k.skill.split(" ");
     return{ic:p[0],n:p.slice(1).join(" "),cd:k.cd,color:k.color,price:0,
-      desc:S.cls==="war"?`몬스터 전체 강타 (가장 가까운 적 ${n1(v.dmg)}배, 나머지 60%)`:S.cls==="mage"?`몬스터 전체에 ${n1(v.dmg)}배 번개 폭풍`:S.cls==="asn"?`8연속 베기 (각 ${n1(v.dmg)}배, 랜덤 대상)`:S.cls==="sam"?`전체 ${n1(v.dmg)}배 거합 베기`:S.cls==="chf"?`전체 ${n1(v.dmg)}배 + 체력 20% 회복`:S.cls==="ice"?`전체 ${n1(v.dmg)}배 + 3초 얼리기`:S.cls==="nin"?`수리검 10발 (각 ${n1(v.dmg)}배, 랜덤 대상)`:S.cls==="cln"?`풍선 6발 (각 ${n1(v.dmg)}배, 랜덤 대상)`:S.cls==="arc"?`화살 8발 (각 ${n1(v.dmg)}배, 랜덤 대상)`:S.cls==="pal"?`전체 ${n1(v.dmg)}배 강타`:S.cls==="nec"?`전체 ${n1(v.dmg)}배 공격`:`전체 ${n1(v.dmg)}배 공격`}}
+      desc:S.cls==="war"?`몬스터 전체 강타 (가장 가까운 적 ${n1(v.dmg)}배, 나머지 60%)`:S.cls==="mage"?`몬스터 전체에 ${n1(v.dmg)}배 번개 폭풍`:S.cls==="asn"?`8연속 베기 (각 ${n1(v.dmg)}배, 랜덤 대상)`:S.cls==="hnt"?`화살 8발 (각 ${n1(v.dmg)}배, 랜덤 대상)`:S.cls==="vmp"?`전체 ${n1(v.dmg)}배 + 체력 15% 흡혈`:S.cls==="sam"?`전체 ${n1(v.dmg)}배 거합 베기`:S.cls==="chf"?`전체 ${n1(v.dmg)}배 + 체력 20% 회복`:S.cls==="ice"?`전체 ${n1(v.dmg)}배 + 3초 얼리기`:S.cls==="nin"?`수리검 10발 (각 ${n1(v.dmg)}배, 랜덤 대상)`:S.cls==="cln"?`풍선 6발 (각 ${n1(v.dmg)}배, 랜덤 대상)`:S.cls==="arc"?`화살 8발 (각 ${n1(v.dmg)}배, 랜덤 대상)`:S.cls==="pal"?`전체 ${n1(v.dmg)}배 강타`:S.cls==="nec"?`전체 ${n1(v.dmg)}배 공격`:`전체 ${n1(v.dmg)}배 공격`}}
   const d=DEF[id];
   const desc={snipe:`가장 가까운 적 하나에 ${n1(v.dmg)}배 강타`,heal:`체력 ${Math.round(v.heal*100)}% 즉시 회복`,
     shield:`${n1(v.dur)}초 동안 몬스터 공격을 모두 막아요`,aoe:`몬스터 전체에 ${n1(v.dmg)}배 공격`,
@@ -932,6 +981,31 @@ const HEROES={
     FACE+`<path d="M44 84 Q60 94 76 84" stroke="#c0392b" stroke-width="3" fill="none" stroke-linecap="round"/>`+
     `<path d="M26 74 Q18 28 60 24 Q102 28 94 74 Q88 50 60 46 Q32 50 26 74z" fill="#dff9fb" ${O}/><path d="M36 46 L44 20 L52 40 L60 12 L68 40 L76 20 L84 46z" fill="#9be7ff" ${O}/><circle cx="60" cy="40" r="4" fill="#fff"/>`+
     `<g class="wp" ${PV}><g transform="translate(0 10)">${limb(78,92,96,104,"#a5d8ff")}<rect x="97" y="30" width="6" height="76" rx="3" fill="#dfe6e9" ${O}/><path d="M100 4 L110 20 L100 36 L90 20z" fill="#9be7ff" ${O}/><circle cx="100" cy="20" r="3.5" fill="#fff"/><circle cx="98" cy="102" r="6" fill="url(#gSkin)" ${O}/></g></g>`),
+  bmb:()=>svg(HERO_VB,HSH+
+    `<rect x="46" y="114" width="13" height="22" rx="5" fill="#636e72" ${O}/><rect x="70" y="114" width="13" height="22" rx="5" fill="#636e72" ${O}/>`+boot(51)+boot(77)+
+    `<path d="M42 82 Q42 74 60 74 Q78 74 78 82 L82 122 Q60 128 38 122z" fill="#e17055" ${O}/><path d="M44 96 H78 M44 108 H78" stroke="#fdcb6e" stroke-width="4"/><circle cx="52" cy="116" r="4" fill="#2d3436"/><circle cx="68" cy="116" r="4" fill="#2d3436"/>`+
+    FACE+`<path d="M44 84 Q60 94 76 84" stroke="#c0392b" stroke-width="3" fill="none" stroke-linecap="round"/><ellipse cx="46" cy="76" rx="6" ry="3" fill="#2d3436" opacity=".35"/>`+
+    `<path d="M30 52 Q32 20 60 20 Q88 20 90 52z" fill="#f9ca24" ${O}/><rect x="26" y="50" width="68" height="8" rx="4" fill="#f9ca24" ${O}/><rect x="52" y="26" width="16" height="14" rx="3" fill="#fff3b0" stroke="${OL}" stroke-width="2"/><rect x="38" y="60" width="44" height="8" rx="4" fill="#2d3436" ${O}/><circle cx="48" cy="64" r="3.4" fill="#74b9ff"/><circle cx="72" cy="64" r="3.4" fill="#74b9ff"/>`+
+    `<g class="wp" ${PV}><g transform="translate(0 10)">${limb(78,92,96,104,"#e17055")}<circle cx="102" cy="104" r="17" fill="#2d3436" ${O}/><path d="M102 87 Q108 74 118 76" stroke="#6d4c41" stroke-width="3" fill="none"/><circle cx="119" cy="76" r="4" fill="#ff4757" ${O}/><circle cx="96" cy="98" r="4" fill="#fff" opacity=".5"/><circle cx="96" cy="106" r="6" fill="url(#gSkin)" ${O}/></g></g>`),
+  vmp:()=>svg(HERO_VB,HSH+
+    `<path d="M24 82 Q14 120 22 142 L60 128 L98 142 Q106 120 96 82 Q60 96 24 82z" fill="#7b1d1d" ${O}/>`+
+    `<rect x="46" y="114" width="13" height="22" rx="5" fill="#2d3436" ${O}/><rect x="70" y="114" width="13" height="22" rx="5" fill="#2d3436" ${O}/>`+boot(51)+boot(77)+
+    `<path d="M42 82 Q42 74 60 74 Q78 74 78 82 L82 122 Q60 128 38 122z" fill="#2d3436" ${O}/><path d="M60 78 L46 74 L50 94z M60 78 L74 74 L70 94z" fill="#c0392b" ${O}/><circle cx="60" cy="100" r="4" fill="#ff4757"/>`+
+    `<circle cx="60" cy="68" r="27" fill="#f1e4ff" ${O}/>`+E(53,72,5,"#c0392b")+E(73,72,5,"#c0392b")+`<path d="M48 84 Q60 92 72 84" stroke="${OL}" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M52 85 l2 7 l2 -6 M64 85 l2 6 l2 -7" fill="#fff" stroke="${OL}" stroke-width="1.6"/>`+
+    `<path d="M32 62 Q30 26 62 28 Q92 28 88 62 Q80 46 60 44 Q44 46 32 62z" fill="#12101f" ${O}/><path d="M60 44 L56 54 L64 54z" fill="#12101f"/>`+
+    `<g class="wp" ${PV}><g transform="translate(0 10)">${limb(78,92,96,104,"#2d3436")}<path d="M96 100 Q120 80 126 52 Q108 74 96 80z" fill="#7b1d1d" ${O}/><path d="M92 106 L116 92" stroke="#c0392b" stroke-width="5" stroke-linecap="round"/><circle cx="96" cy="104" r="6" fill="#f1e4ff" ${O}/></g></g>`),
+  thr:()=>svg(HERO_VB,HSH+
+    `<rect x="46" y="114" width="13" height="22" rx="5" fill="#2d3436" ${O}/><rect x="70" y="114" width="13" height="22" rx="5" fill="#2d3436" ${O}/>`+boot(51)+boot(77)+
+    `<path d="M42 82 Q42 74 60 74 Q78 74 78 82 L82 122 Q60 128 38 122z" fill="#2e86de" ${O}/><path d="M64 80 L52 100 L62 100 L54 120 L72 94 L62 94z" fill="#ffe27a" ${O}/>`+
+    FACE+`<path d="M44 84 Q60 94 76 84" stroke="#c0392b" stroke-width="3" fill="none" stroke-linecap="round"/>`+
+    `<path d="M30 60 L24 30 L40 42 L42 14 L54 36 L64 10 L72 36 L88 18 L86 44 L96 38 L90 62 Q80 46 60 44 Q40 46 30 60z" fill="#ffe27a" ${O}/>`+
+    `<g class="wp" ${PV}><g transform="translate(0 10)">${limb(78,92,96,104,"#2e86de")}<rect x="97" y="30" width="6" height="76" rx="3" fill="#8d6e63" ${O}/><path d="M100 2 L110 18 L102 18 L108 36 L90 14 L98 14z" fill="#ffe27a" ${O}/><circle cx="98" cy="104" r="6" fill="url(#gSkin)" ${O}/></g></g>`),
+  hnt:()=>svg(HERO_VB,HSH+
+    `<rect x="46" y="114" width="13" height="22" rx="5" fill="#6d4c41" ${O}/><rect x="70" y="114" width="13" height="22" rx="5" fill="#6d4c41" ${O}/>`+boot(51)+boot(77)+
+    `<path d="M42 82 Q42 74 60 74 Q78 74 78 82 L82 122 Q60 128 38 122z" fill="#6b8e23" ${O}/><path d="M42 82 Q60 96 78 82 L80 94 Q60 106 40 94z" fill="#d7b98a" ${O}/><rect x="39" y="108" width="43" height="7" rx="3" fill="#6d4c41" ${O}/>`+
+    FACE+`<path d="M44 84 Q60 94 76 84" stroke="#c0392b" stroke-width="3" fill="none" stroke-linecap="round"/>`+
+    `<path d="M32 62 Q30 22 60 22 Q90 22 88 62 Q80 42 60 40 Q42 42 32 62z" fill="#556b2f" ${O}/><ellipse cx="60" cy="44" rx="40" ry="8" fill="#6b8e23" ${O}/><path d="M80 40 Q104 10 116 14 Q104 26 86 46z" fill="#e74c3c" ${O}/>`+
+    `<g class="wp" ${PV}><g transform="translate(0 10)">${limb(78,92,96,104,"#6b8e23")}<path d="M100 40 Q130 100 100 160" stroke="${OL}" stroke-width="7" fill="none" transform="translate(0 -26) scale(1 .85)"/><path d="M100 40 Q130 100 100 160" stroke="#8d6e63" stroke-width="4" fill="none" transform="translate(0 -26) scale(1 .85)"/><path d="M100 14 V110" stroke="#fff" stroke-width="1.5"/><circle cx="98" cy="102" r="6" fill="url(#gSkin)" ${O}/></g></g>`),
   arc:()=>svg(HERO_VB,HSH+
     `<path d="M28 84 l14 -8 l10 34 l-14 8z" fill="url(#gWood)" ${O}/><path d="M36 76 l-3 -12 M42 74 l-1 -13 M48 76 l3 -12" stroke="#ff6b6b" stroke-width="4" stroke-linecap="round"/>`+
     `<circle cx="58" cy="70" r="32" fill="url(#gGreenD)" ${O}/>`+
@@ -1085,7 +1159,29 @@ NB.demon=()=>{const wing=`<path d="M30 58 Q4 50 0 20 L16 30 L18 12 L30 34 L38 20
   `<path d="M50 28 L54 36 L50 42 L46 36z" fill="#ff4757" ${O}/><path d="M24 42 L46 54 M76 42 L54 54" stroke="#1e1252" stroke-width="6" stroke-linecap="round"/>`+
   GE(37,54,5,"#ff4757")+GE(63,54,5,"#ff4757")+`<path d="M28 70 Q50 94 72 70 Q50 78 28 70z" fill="#1e1252" ${O}/><path d="M34 73 l4 10 4 -9 M54 73 l4 9 4 -10" fill="#fff" stroke="${OL}" stroke-width="1.5"/>`)};
 TIERS[2].b=["화염 드래곤",NB.dragon];TIERS[5].b=["마왕",NB.demon];
-const AURA=[null,"#9be7ff","#ffd36a","#c9c9ff","#5ef2c0","#ff9a3c","#ff3b3b","#e0b3ff"];
+
+/* ===== 새 지역 (스테이지 81~120): 우주 · 기계 · 심해 · 신화 ===== */
+let _mg=0;
+const GR=(c1,c2)=>{const id="gm"+(++_mg);return{u:`url(#${id})`,d:`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset="1" stop-color="${c2}"/></linearGradient></defs>`}};
+const MF={
+ alien:(c1,c2,ey="#ff4757")=>()=>{const g=GR(c1,c2);return svg(MON_VB,g.d+MS+`<path d="M34 66 Q50 78 66 66 L70 92 H30z" fill="${g.u}" ${O}/><path d="M50 14 V3" stroke="${OL}" stroke-width="3"/><circle cx="50" cy="3" r="4" fill="${ey}" ${O}/><ellipse cx="50" cy="40" rx="31" ry="30" fill="${g.u}" ${O}/><path d="M20 38 Q28 58 46 52 Q42 32 20 38z M80 38 Q72 58 54 52 Q58 32 80 38z" fill="#12101f" ${O}/><circle cx="32" cy="44" r="3" fill="#fff"/><circle cx="68" cy="44" r="3" fill="#fff"/><path d="M42 64 Q50 69 58 64" stroke="${OL}" stroke-width="2.5" fill="none"/>`)},
+ jelly:(c1,c2,n=5,crown=false,ey="#12101f")=>()=>{const g=GR(c1,c2);let t="";for(let i=0;i<n;i++){const x=18+i*(64/(n-1));t+=`<path d="M${x} 50 q-7 14 0 26 q7 12 0 20" stroke="${OL}" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M${x} 50 q-7 14 0 26 q7 12 0 20" stroke="${c2}" stroke-width="5" fill="none" stroke-linecap="round"/>`}
+  return svg(MON_VB,g.d+t+`<path d="M12 56 Q12 6 50 6 Q88 6 88 56 Q50 64 12 56z" fill="${g.u}" ${O}/><ellipse cx="34" cy="22" rx="9" ry="5" fill="#fff" opacity=".45"/>`+E(36,38,6,ey)+E(64,38,6,ey)+`<path d="M42 50 Q50 56 58 50" stroke="${OL}" stroke-width="2.5" fill="none"/>`+(crown?CROWN.replace('d="M30 24','d="M30 18').replace(/<circle[^>]*\/>/,""):""))},
+ bot:(c1,c2,horn=false)=>()=>{const g=GR(c1,c2);return svg(MON_VB,g.d+MS+(horn?`<path d="M30 20 L20 0 L40 14z M70 20 L80 0 L60 14z" fill="#ffd36a" ${O}/>`:"")+`<rect x="8" y="50" width="14" height="30" rx="6" fill="${c2}" ${O}/><rect x="78" y="50" width="14" height="30" rx="6" fill="${c2}" ${O}/><rect x="22" y="44" width="56" height="44" rx="10" fill="${g.u}" ${O}/><circle cx="50" cy="66" r="8" fill="#ff4757" ${O}/><circle cx="50" cy="66" r="3" fill="#fff"/><rect x="28" y="12" width="44" height="34" rx="9" fill="${g.u}" ${O}/><rect x="33" y="22" width="34" height="14" rx="5" fill="#12101f"/>`+GE(42,29,4)+GE(58,29,4)+`<path d="M50 12 V4" stroke="${OL}" stroke-width="3"/><circle cx="50" cy="3" r="3.5" fill="#55efc4" ${O}/><rect x="30" y="86" width="14" height="8" rx="3" fill="${c2}" ${O}/><rect x="56" y="86" width="14" height="8" rx="3" fill="${c2}" ${O}/>`)},
+ drone:(c1,c2)=>()=>{const g=GR(c1,c2);return svg(MON_VB,g.d+`<path d="M24 36 L38 52 M76 36 L62 52" stroke="${OL}" stroke-width="3.5"/><ellipse cx="22" cy="32" rx="19" ry="4.5" fill="#dff9fb" ${O} opacity=".85"/><ellipse cx="78" cy="32" rx="19" ry="4.5" fill="#dff9fb" ${O} opacity=".85"/><ellipse cx="50" cy="58" rx="30" ry="22" fill="${g.u}" ${O}/><circle cx="50" cy="58" r="12" fill="#12101f" ${O}/>`+GE(50,58,7)+`<path d="M30 78 L24 94 M70 78 L76 94" stroke="${OL}" stroke-width="4" stroke-linecap="round"/>`)},
+ crystal:(c1,c2,ey="#ff4757")=>()=>{const g=GR(c1,c2);return svg(MON_VB,g.d+MS+`<path d="M20 92 L8 54 L30 80z M80 92 L92 54 L70 80z" fill="${c2}" ${O}/><path d="M50 4 L76 34 L68 92 H32 L24 34z" fill="${g.u}" ${O}/><path d="M50 4 V92 M24 34 H76" stroke="#fff" stroke-width="2" opacity=".5"/>`+GE(40,50,5,ey)+GE(60,50,5,ey)+`<path d="M42 70 Q50 76 58 70" stroke="${OL}" stroke-width="3" fill="none"/>`)},
+ angler:(c1,c2,big=false)=>()=>{const g=GR(c1,c2);return svg(MON_VB,g.d+MS+`<path d="M84 58 L100 42 L100 76z" fill="${g.u}" ${O}/><path d="M30 36 Q18 6 46 8" stroke="${OL}" stroke-width="3" fill="none"/><circle cx="46" cy="8" r="7" fill="#fff3a0" ${O}/><circle cx="46" cy="8" r="12" fill="#ffe27a" opacity=".3"/><ellipse cx="46" cy="58" rx="40" ry="30" fill="${g.u}" ${O}/>`+(big?`<path d="M30 30 L26 14 L40 26z M52 28 L56 12 L62 28z" fill="${c2}" ${O}/>`:"")+`<circle cx="62" cy="46" r="9" fill="#fff" ${O}/><circle cx="64" cy="46" r="4.5" fill="#12101f"/><path d="M8 62 Q30 86 62 70 Q36 64 8 62z" fill="#12101f" ${O}/><path d="M14 63 l4 8 l4 -7 M26 66 l4 8 l4 -7 M40 68 l4 7 l4 -8" fill="#fff" stroke="${OL}" stroke-width="1.4"/>`)},
+ bird:(c1,c2,ey="#ff4757")=>()=>{const g=GR(c1,c2);const w=`<path d="M46 56 Q10 16 0 44 Q14 46 14 60 Q28 54 30 70 Q40 66 46 76z" fill="${c2}" ${O}/>`;return svg(MON_VB,g.d+w+MIR(w)+`<ellipse cx="50" cy="62" rx="20" ry="28" fill="${g.u}" ${O}/><circle cx="50" cy="30" r="17" fill="${g.u}" ${O}/><path d="M42 12 L50 0 L58 12z" fill="${c2}" ${O}/><path d="M44 34 L50 46 L56 34z" fill="#fdcb6e" ${O}/>`+GE(43,28,4,ey)+GE(57,28,4,ey)+`<path d="M40 90 L36 98 M60 90 L64 98" stroke="${OL}" stroke-width="4" stroke-linecap="round"/>`)},
+ spirit:(c1,c2,ey="#fff")=>()=>{const g=GR(c1,c2);return svg(MON_VB,g.d+`<circle cx="50" cy="54" r="42" fill="none" stroke="${c1}" stroke-width="2.5" stroke-dasharray="6 6" opacity=".7"/><path d="M50 6 Q82 40 76 70 Q74 94 50 94 Q26 94 24 70 Q18 40 50 6z" fill="${g.u}" ${O}/><ellipse cx="50" cy="66" rx="16" ry="20" fill="#fff" opacity=".3"/>`+E(40,56,6,ey)+E(60,56,6,ey)+`<path d="M42 74 Q50 82 58 74" stroke="${OL}" stroke-width="3" fill="none"/>`)},
+ horn:(c1,c2)=>()=>{const g=GR(c1,c2);return svg(MON_VB,g.d+MS+`<path d="M8 70 Q-2 30 20 6 Q22 34 36 50z M92 70 Q102 30 80 6 Q78 34 64 50z" fill="${c2}" ${O}/><path d="M26 44 Q4 28 16 2 Q16 24 34 32z M74 44 Q96 28 84 2 Q84 24 66 32z" fill="#ffd36a" ${O}/><circle cx="50" cy="58" r="36" fill="${g.u}" ${O}/>`+GE(36,50,6,"#fff3a0")+GE(64,50,6,"#fff3a0")+`<path d="M34 66 Q50 88 66 66 Q50 74 34 66z" fill="#12101f" ${O}/><path d="M38 68 l3 8 l3 -7 M50 70 l3 9 l3 -9 M58 68 l3 7 l3 -7" fill="#fff" stroke="${OL}" stroke-width="1.4"/><circle cx="50" cy="30" r="5" fill="#fff3a0" ${O}/>`)},
+};
+TIERS.push(
+ {n:[["별똥 벌레",MF.alien("#b388ff","#5e35b1","#fff3a0")],["외계인",MF.alien("#7bed9f","#1e8449")],["우주 해파리",MF.jelly("#a29bfe","#6c5ce7",5)]],b:["은하 크라켄",MF.jelly("#6c5ce7","#341f97",7,true,"#ff4757")]},
+ {n:[["고철 로봇",MF.bot("#b2bec3","#636e72")],["정찰 드론",MF.drone("#74b9ff","#2d3436")],["레이저 터렛",MF.bot("#ff9f43","#6d4c41")]],b:["거대 메카",MF.bot("#ffd36a","#636e72",true)]},
+ {n:[["수정 골렘",MF.crystal("#9be7ff","#0abde3")],["발광 아귀",MF.angler("#00b894","#006266")],["산호 괴물",MF.jelly("#ff9ff3","#e84393",4)]],b:["심해의 리바이어던",MF.angler("#5f27cd","#341f97",true)]},
+ {n:[["천둥새",MF.bird("#ffe27a","#f39c12","#74b9ff")],["불사조",MF.bird("#ff7f50","#c0392b","#fff3a0")],["시간 정령",MF.spirit("#a29bfe","#6c5ce7")]],b:["혼돈의 신",MF.horn("#ff4757","#6c0b3a")]}
+);
+const AURA=[null,"#9be7ff","#ffd36a","#c9c9ff","#5ef2c0","#ff9a3c","#ff3b3b","#e0b3ff","#a29bfe","#74b9ff","#5ef2c0","#ffe27a"];
 const THEMES=[
   {a:"#74b9ff",b:"#dff9fb",h1:"#7bed9f",h2:"#2ed573",d:"sun",t:"#218c53"},
   {a:"#81ecec",b:"#f1f9ff",h1:"#dff9fb",h2:"#b8e6f5",d:"snow",t:"#7aa6b8"},
@@ -1093,6 +1189,12 @@ const THEMES=[
   {a:"#273c75",b:"#6c5ce7",h1:"#34495e",h2:"#2c3e50",d:"moon",t:"#1e6f4f"},
   {a:"#341f97",b:"#a29bfe",h1:"#5f4bb6",h2:"#3c2ea6",d:"crystal",t:"#0abde3"},
   {a:"#2d0a0a",b:"#e55039",h1:"#4a2020",h2:"#2b1212",d:"lava",t:"#ff9f1a"},
+  {a:"#1a0b2e",b:"#5b2c83",h1:"#3a2a5a",h2:"#241a3c",d:"moon",t:"#6c3483"},
+  {a:"#1b1b3a",b:"#5c6bc0",h1:"#34397a",h2:"#222558",d:"crystal",t:"#ffe27a"},
+  {a:"#0b0630",b:"#4b2c9a",h1:"#2a1f66",h2:"#1a1244",d:"moon",t:"#6c5ce7"},
+  {a:"#2d3436",b:"#74b9ff",h1:"#636e72",h2:"#2d3436",d:"crystal",t:"#b2bec3"},
+  {a:"#023e5a",b:"#00a8cc",h1:"#0a6a85",h2:"#07485e",d:"crystal",t:"#55efc4"},
+  {a:"#6c0b3a",b:"#ffd36a",h1:"#8e2a5a",h2:"#5a1030",d:"lava",t:"#ffe27a"},
 ];
 function sceneSVG(z){
   const T=THEMES[z%THEMES.length];let d="";
@@ -1216,13 +1318,14 @@ function summonAlly(f,quiet){                       // 죽인 몬스터를 공�
   const r=rel(e);ring(r.cx,r.cy+14,"#7bed9f",76,520);burst(r.cx,r.cy,{n:7,colors:["#7bed9f","#d6ffe5","#2ed573"],dist:32,size:8,shape:"s"});
 }
 let botT=0;
+const PETC={bot:{n:3,e:"🤖",k:.25,h:.2,c:"#55efc4"},hnt:{n:2,e:"🐺",k:.35,h:.25,c:"#8bc34a"}};
 function summonTurret(quiet){
-  const mx=gc().maxHp*0.2,a={id:++allyUid,kind:["bot",()=>'<span style="font-size:30px;line-height:38px">🤖</span>'],hp:mx,max:mx,t:Math.random(),k:0.25};
+  const P=PETC[S.cls],mx=gc().maxHp*P.h,a={id:++allyUid,kind:[S.cls,()=>`<span style="font-size:30px;line-height:38px">${P.e}</span>`],hp:mx,max:mx,t:Math.random(),k:P.k};
   allies.push(a);
   if(quiet)return;
   const e=mkAllyEl(a);layoutAllies();
   e.animate([{transform:"translateY(-60px) scale(.5)",opacity:0},{transform:"translateY(0) scale(1.2)",opacity:1,offset:.6},{transform:"scale(1)"}],{duration:420});
-  const r=rel(e);ring(r.cx,r.cy+14,"#55efc4",70,480);burst(r.cx,r.cy,{n:6,colors:["#55efc4","#fff","#74b9ff"],dist:28,size:7,shape:"s"});
+  const r=rel(e);ring(r.cx,r.cy+14,P.c,70,480);burst(r.cx,r.cy,{n:6,colors:[P.c,"#fff","#74b9ff"],dist:28,size:7,shape:"s"});
 }
 function killAlly(a){
   const i=allies.indexOf(a);if(i<0)return;allies.splice(i,1);
@@ -1247,8 +1350,8 @@ function dealDamage(f,d,crit,quiet){
   if(!f||f.dead)return;
   if(S.cls==="ber"&&hp<gc().maxHp*0.5)d*=1.6;          // 광전사 패시브: 체력이 낮을수록 강해져요
   f.hp-=d;
-  if(S.cls==="asn"){                                  // 어쌔신 기본 패시브: 흡혈 (준 피해의 10%)
-    const mx=gc().maxHp,ls=Math.min(d*0.10,mx*0.04);
+  if(S.cls==="asn"||S.cls==="vmp"){                   // 흡혈 (어쌔신 10%, 뱀파이어 7%)
+    const mx=gc().maxHp,ls=Math.min(d*(S.cls==="vmp"?0.07:0.10),mx*0.04);
     hp=Math.min(mx,hp+ls);
     if(!quiet){const n=performance.now();if(n-lsT>350){lsT=n;float("+"+fmt(ls),"heal","heroBox")}}
   }
@@ -1264,9 +1367,12 @@ function heroHit(quiet){
   if(S.cls==="chf"){const mx=c.maxHp;hp=Math.min(mx,hp+mx*0.02)}   // 요리사 패시브: 공격마다 체력 2% 회복
   if(S.cls==="ice"&&Math.random()<0.1)run0(f,quiet);
   if(S.cls==="cln"){const r=Math.random();if(r<0.05){d=c.atk*10;crit=true}else d=c.atk*(0.3+Math.random()*2.2)}   // 광대 패시브: 데미지 랜덤
-  if(quiet){dealDamage(f,d,crit,true);return}
+  let xtra=null;
+  if(S.cls==="bmb"&&Math.random()<0.15)xtra=()=>{aliveF().forEach(t=>dealDamage(t,c.atk*2,false,quiet));if(!quiet){const t0=tgt();if(t0){const r=rel(spOf(t0));ring(r.cx,r.cy,"#ff9f43",110,320);burst(r.cx,r.cy,{n:10,colors:["#ff9f43","#ffe27a","#fff"],dist:50,size:9,shape:"s"});shakeB(4,140)}}};
+  if(S.cls==="thr"&&Math.random()<0.2)xtra=()=>{aliveF().slice(0,4).forEach(t=>{dealDamage(t,c.atk*1.5,false,quiet);if(!quiet&&t.el){const r=rel(spOf(t));boltFx(r.cx,-10,r.cy,"#ffe27a",0,22)}})};
+  if(quiet){dealDamage(f,d,crit,true);xtra&&xtra();return}
   const id=monId,delay=playAttack(Math.min(0.34,0.85/c.aspd),f);
-  setTimeout(()=>{if(monId!==id||paused)return;const t=f.dead?tgt():f;if(t)dealDamage(t,d,crit,false)},delay);
+  setTimeout(()=>{if(monId!==id||paused)return;const t=f.dead?tgt():f;if(t)dealDamage(t,d,crit,false);xtra&&xtra()},delay);
 }
 function killFoe(f,quiet){
   f.dead=true;
@@ -1311,6 +1417,8 @@ function useSkill(id,quiet){
       }else if(S.cls==="mage")all(v.dmg,true);
       else if(S.cls==="asn")hits(8,v.dmg,90);
       else if(S.cls==="arc")hits(8,v.dmg,70);
+      else if(S.cls==="hnt")hits(8,v.dmg,70);
+      else if(S.cls==="vmp"){all(v.dmg,true);run(()=>{const h=c.maxHp*0.15;hp=Math.min(c.maxHp,hp+h);if(!quiet)float("+"+fmt(h),"heal","heroBox")},delay)}
       else if(S.cls==="chf"){all(v.dmg,true);run(()=>{const h=c.maxHp*0.2;hp=Math.min(c.maxHp,hp+h);if(!quiet)float("+"+fmt(h),"heal","heroBox")},delay)}
       else if(S.cls==="ice"){all(v.dmg,true);run(()=>aliveF().forEach(f=>{f.frz=3;if(f.sprite)f.sprite.classList.add("frz")}),delay)}
       else if(S.cls==="nin")hits(10,v.dmg,60);
@@ -1357,7 +1465,7 @@ function step(dt,quiet){
     }
     if(monId!==wid)break;
   }
-  if(S.cls==="bot"){botT-=dt;if(allies.length<3&&botT<=0){botT=4;summonTurret(quiet)}}   // 로봇 패시브: 터렛 자동 설치
+  if(PETC[S.cls]){botT-=dt;if(allies.length<PETC[S.cls].n&&botT<=0){botT=4;summonTurret(quiet)}}   // 로봇 패시브: 터렛 자동 설치
   for(const a of allies.slice()){                       // 소환수 공격 (공격력 10%)
     a.t+=dt;
     if(a.t>=1){a.t-=1;const f=tgt();if(f){
@@ -1517,7 +1625,7 @@ function boltFx(x,y1,y2,color,delay=0,w=34){
 }
 const SHURI='<svg viewBox="0 0 20 20"><path d="M10 0 L13 7 L20 10 L13 13 L10 20 L7 13 L0 10 L7 7z" fill="#cfd8dc" stroke="#2b1d3a" stroke-width="1.2"/><circle cx="10" cy="10" r="2.2" fill="#2b1d3a"/></svg>';
 const BOTSHOT='<div style="width:100%;height:100%;border-radius:50%;background:radial-gradient(circle,#fff,#55efc4 55%,transparent 72%)"></div>';
-const PROJ={mage:FX.orb,nec:FX.orbG,bard:FX.note,alch:"🧪",nin:SHURI,cln:"🔴",bot:BOTSHOT,chf:"🍳",ice:"❄️"};
+const PROJ={mage:FX.orb,nec:FX.orbG,bard:FX.note,alch:"🧪",nin:SHURI,cln:"🔴",bot:BOTSHOT,chf:"🍳",ice:"❄️",bmb:"💣",thr:"⚡"};
 function fly(html,w,h,x1,y1,x2,y2,ms,delay=0,done,easing){
   const rot=html.charAt(0)==="<"?Math.atan2(y2-y1,x2-x1):0;
   fx(html,x1,y1,w,h,[{transform:`translate(0,0) rotate(${rot}rad)`},{transform:`translate(${x2-x1}px,${y2-y1}px) rotate(${rot}rad)`}],{duration:ms,delay,easing:easing||"linear",fill:"backwards"});
@@ -1594,6 +1702,21 @@ const SKFX={
     list.slice(0,8).forEach((q,i)=>fly("🍳",44,44,h.cx+20,h.cy-10,q.cx,q.cy,220,i*50,()=>{burst(q.cx,q.cy,{n:9,colors:["#ffb142","#ff4757","#fff"],dist:42,size:9,shape:"s"});glow(q.cx,q.cy,Math.max(60,q.w),"#ff7f50",260)},"ease-in"));
     return 230;
   },
+  hnt(ps,h){return SKFX.arc(ps,h)},
+  bmb(ps,h){
+    banner("💣 연쇄 폭탄!","#ff9f43");heroCast("#ff9f43");flashScr("#ff9f43",300,.3);
+    const list=ps.length?ps:[centroid(ps,h)];
+    list.slice(0,8).forEach((q,i)=>fly("💣",40,40,q.cx+rnd(-30,30),-30,q.cx,q.cy,260,i*60,()=>{burst(q.cx,q.cy,{n:12,colors:["#ff9f43","#ffe27a","#fff"],dist:52,size:10,shape:"s"});ring(q.cx,q.cy,"#ff6b35",Math.max(80,q.w*1.2),300);glow(q.cx,q.cy,Math.max(70,q.w),"#ff9f43",300);shakeB(5,160)},"ease-in"));
+    return 270;
+  },
+  vmp(ps,h){
+    banner("🦇 박쥐 떼!","#c0392b");heroCast("#c0392b");flashScr("#7b1d1d",400,.35);dimScr(.35,800);
+    const list=ps.length?ps:[centroid(ps,h)];
+    for(let i=0;i<10;i++){const q=list[i%list.length];fly("🦇",36,36,h.cx+20,h.cy+rnd(-30,20),q.cx+rnd(-10,10),q.cy+rnd(-10,10),240,i*45,()=>{burst(q.cx,q.cy,{n:5,colors:["#ff4757","#7b1d1d","#fff"],dist:34,size:7,shape:"s"})},"ease-in")}
+    setTimeout(()=>{const r=rel($("hero"));burst(r.cx,r.cy,{n:8,colors:["#ff4757","#fff"],dist:40,size:8,grav:-40,dur:600})},500);
+    return 260;
+  },
+  thr(ps,h){return SKFX.thunderstorm(ps,h,{ic:"⚡",n:"천둥 번개",color:"#ffe27a"})},
   nin(ps,h){
     banner("🌟 수리검 난무!","#9be7ff");heroCast("#9be7ff");flashScr("#0a1a3a",400,.3);dimScr(.35,700);
     const list=ps.length?ps:[centroid(ps,h)];
@@ -2704,7 +2827,7 @@ let prev=performance.now(),uiT=0,freezeUntil=0;
 function loop(t){
   let dt=Math.min((t-prev)/1000,0.5);prev=t;
   if(!paused&&t>freezeUntil)step(dt,false);
-  uiT+=dt;if(uiT>=0.1){uiT=0;refreshUI();const ek=EVT.t&&evOn(EVT.t)?EVT.t:"";if(ek!==lastEvKey){lastEvKey=ek;dirty=true}if(S._adm){if(S.gold<9e67)S.gold=1e68;if(S.gems<9e8)S.gems=1e9}}
+  uiT+=dt;if(uiT>=0.1){uiT=0;refreshUI();const ek=EVT.t&&evOn(EVT.t)?EVT.t:"";if(ek!==lastEvKey){lastEvKey=ek;dirty=true}if(S._adm){if(S.gold<9e101)S.gold=1e102;if(S.gems<9e8)S.gems=1e9}}
   saveT+=dt;if(saveT>=5){saveT=0;save()}
   requestAnimationFrame(loop);
 }
@@ -2727,7 +2850,7 @@ window.HeroGame={
     if(on){
       if(!S._adm){S._adm={gold:S.gold,gems:S.gems,rb:S.rb|0,soul:S.soul|0,cu:Object.assign({},S.cu),own:Object.assign({},S.own)}}
       Object.keys(CLS).forEach(k=>{S.cu[k]=true});Object.keys(DEF).forEach(id=>{S.own[id]=true});
-      S.gold=1e68;S.gems=Math.max(S.gems,1e9);refreshUI();
+      S.gold=1e102;S.gems=Math.max(S.gems,1e9);refreshUI();
     }else if(S._adm){
       const a=S._adm;delete S._adm;S.gold=a.gold;if(a.gems!=null)S.gems=a.gems;if(a.rb!=null){S.rb=a.rb;S.soul=a.soul}S.cu=a.cu||{};S.own=a.own||{cls:true};
       if(S.cls&&!clsUnlocked(S.cls))S.cu[S.cls]=true;
