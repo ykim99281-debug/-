@@ -1496,10 +1496,11 @@ function setBanScreen(b){banned=true;mode='dead';const sc=$('#scr');sc.innerHTML
 async function adminSetup(){const f=FB,u=f.auth.currentUser.uid,{D}=f;
  // ban check
  try{const bs=await D.get(D.ref(f.db,'brainRpgBans/'+u));if(bs.val()){await f.Au.signOut(f.auth).catch(()=>{});cloudOn=false;return bs.val()}}catch(e){}
- // super auto-register
+ // super: recognised locally by the verified login e-mail (works even if DB rules are not ready)
+ if(isSuperMail()){ADM.role='super';ADM.uid=u;$('#admb').style.display='grid';applyAdminPerks()}
  if(isSuperMail()){try{await D.set(D.ref(f.db,'brainRpgAdmins/'+u),'super')}catch(e){console.warn('super reg',e);toast('⚠️ 관리자 등록 실패 — Firebase 규칙(brainRpgAdmins)을 게시했는지 확인하세요')}}
  const un=[];un.push(D.onValue(D.ref(f.db,'brainRpgBans/'+u),sn=>{const v=sn.val();if(v&&mode!=='title'){saveGameLocalOnly();setBanScreen(v)}}));
- un.push(D.onValue(D.ref(f.db,'brainRpgAdmins/'+u),sn=>{const v=sn.val();ADM.role=v==='super'?'super':v?'admin':null;ADM.uid=u;$('#admb').style.display=ADM.role?'grid':'none';applyAdminPerks()}));
+ un.push(D.onValue(D.ref(f.db,'brainRpgAdmins/'+u),sn=>{const v=sn.val();ADM.role=(v==='super'||isSuperMail())?'super':v?'admin':null;ADM.uid=u;$('#admb').style.display=ADM.role?'grid':'none';applyAdminPerks()}));
  un.push(D.onValue(D.ref(f.db,'.info/serverTimeOffset'),sn=>{srvOff=sn.val()||0}));
  try{un.push(presenceSetup())}catch(e){console.warn('presence',e)}
  un.push(D.onValue(D.ref(f.db,'brainRpgEvent'),sn=>{const v=sn.val();EVT=v&&v.until?v:{type:null,until:0};if(EVT.type&&EVT.until>Date.now()+srvOff&&mode==='world')toast(`🎉 이벤트 시작! ${EVTS[EVT.type]?EVTS[EVT.type].n:''}`);}));
@@ -1559,8 +1560,8 @@ function applySave(d){for(const k in d.G)G[k]=d.G[k];if(!G.season)G.season=1;SEA
  const k=JOBKIND[G.job];setWeapon(k,G.wt[k]);setOutfit(G.job);G.hp=Math.max(1,Math.min(G.hp,G.max));camSmooth.set(x,hero.position.y+4,z+8);camLook.set(x,hero.position.y+1.6,z)}
 setInterval(saveGame,8000);addEventListener('pagehide',()=>{forceCloud=true;saveGame()});document.addEventListener('visibilitychange',()=>{if(document.hidden){forceCloud=true;saveGame()}});
 $('#who').onclick=()=>{if(mode!=='world')return;if(confirm('저장하고 처음 화면(로그인)으로 돌아갈까요?')){forceCloud=true;saveGame();setTimeout(()=>location.reload(),700)}};
-function begin(isNew){const s=$('#scr');ac();startMusic();SFX.ui();s.className='';mode='world';camDistT=11;camPitch=.55;camYaw=0;showUI('world');$('#who').textContent='🚪 '+who;updateQuestUI();hud();
- if(isNew){TUT.done=false;startTutorial();toast(`환영합니다, ${who}님!`)}else{if(!TUT.done&&false)startTutorial();toast(`${who}님, 다시 오셨군요! 이어서 모험을 계속합니다`)}saveGame()}
+function begin(isNew){const s=$('#scr');ac();startMusic();SFX.ui();s.className='';mode='world';camDistT=11;camPitch=.55;camYaw=0;showUI('world');$('#who').textContent=(cloudOn?'☁️ ':'💾 ')+who;updateQuestUI();hud();
+ if(isNew){TUT.done=false;startTutorial();toast(`환영합니다, ${who}님!`)}else{if(!TUT.done&&false)startTutorial();toast(`${who}님, 다시 오셨군요! 이어서 모험을 계속합니다`)}saveGame();setTimeout(()=>toast((cloudOn?'☁️ 클라우드 로그인':'💾 오프라인 모드')+' · '+(ADM.role==='super'?'어드민':ADM.role?'관리자':'일반 계정')),2600)}
 function title(){
  mode='title';showUI('title');
  const s=$('#scr'),profs=listProfiles().filter(n=>n!=='__last'),ip='font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.45);color:#fff;text-align:center;outline:none',bs='font-size:17px;padding:10px 14px;flex:1';
