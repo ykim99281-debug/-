@@ -1414,31 +1414,56 @@ function endTutorial(reward){TUT.on=false;TUT.done=true;if(tutArrow)tutArrow.vis
 $('#tutSkip').onclick=()=>{SFX.ui();endTutorial(false)};
 
 /* ================= LOGIN / SAVE (local only) ================= */
+
+/* ================= FIREBASE (cloud save, optional) ================= */
+const FBC={apiKey:"AIzaSyDFFs0EqhlomgiHw4CZTzRHx2clSXQZXs8",authDomain:"vwiwvwkwj.firebaseapp.com",databaseURL:"https://vwiwvwkwj-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"vwiwvwkwj",storageBucket:"vwiwvwkwj.firebasestorage.app",messagingSenderId:"870276348788",appId:"1:870276348788:web:78c0de7924c8218d734a21"};
+let FB=null,FBp=null,cloudOn=false,lastPush=0,pushing=false;
+const hexN=t=>[...new TextEncoder().encode(t)].map(b=>b.toString(16).padStart(2,'0')).join('');
+const mailOf=n=>'g'+hexN(n)+'@brainrpg.local';
+function fbInit(){if(FBp)return FBp;const imp=u=>import(u);const V='https://www.gstatic.com/firebasejs/10.14.1/';
+ FBp=(async()=>{try{const[A,Au,D]=await Promise.all([imp(V+'firebase-app.js'),imp(V+'firebase-auth.js'),imp(V+'firebase-database.js')]);const app=A.initializeApp(FBC,'brainrpg');const auth=Au.initializeAuth(app,{persistence:[Au.inMemoryPersistence]});FB={Au,D,auth,db:D.getDatabase(app)};return FB}catch(e){console.warn('firebase unavailable',e);return null}})();return FBp}
+const FBERR={'auth/email-already-in-use':'이미 있는 닉네임이에요. 로그인해 주세요.','auth/invalid-credential':'닉네임 또는 비밀번호가 맞지 않아요.','auth/user-not-found':'없는 닉네임이에요. 회원가입을 눌러 주세요.','auth/wrong-password':'비밀번호가 맞지 않아요.','auth/weak-password':'비밀번호는 6자 이상이어야 해요.','auth/too-many-requests':'시도가 너무 많아요. 잠시 후 다시 해 주세요.','auth/network-request-failed':'인터넷 연결을 확인해 주세요.','auth/operation-not-allowed':'이메일 로그인이 꺼져 있어요 (Firebase 콘솔에서 켜야 해요).','PERMISSION_DENIED':'저장 권한이 없어요 (Firebase 규칙에서 brainRpg/{uid} 허용 필요).'};
+const fbMsg=e=>FBERR[e&&e.code]||FBERR[e&&e.message]||('오류: '+((e&&(e.code||e.message))||e));
+async function cloudAuth(name,pw,create){const f=await fbInit();if(!f)throw{code:'auth/network-request-failed'};const fn=create?f.Au.createUserWithEmailAndPassword:f.Au.signInWithEmailAndPassword;const r=await fn(f.auth,mailOf(name),pw);return r.user}
+async function cloudLoad(){const f=FB,u=f.auth.currentUser;const snap=await f.D.get(f.D.ref(f.db,'brainRpg/'+u.uid));const v=snap.val();if(!v||!v.save)return null;try{return JSON.parse(v.save)}catch(e){return null}}
+async function cloudPush(d,force){if(!cloudOn||!FB||!FB.auth.currentUser||pushing)return;const now=Date.now();if(!force&&now-lastPush<15000)return;lastPush=now;pushing=true;
+ try{await FB.D.set(FB.D.ref(FB.db,'brainRpg/'+FB.auth.currentUser.uid),{name:d.name,t:now,save:JSON.stringify(d)})}catch(e){console.warn('cloud save failed',e);if(!cloudPush.warned){cloudPush.warned=1;toast('☁️ 클라우드 저장 실패 — 이 기기에만 저장 중 ('+fbMsg(e)+')')}}pushing=false}
 const SAVEK='brainRpg:';let who=null,pinHash=0;
 const hashS=t=>{let h=5381;for(const c of t)h=((h<<5)+h+c.charCodeAt(0))>>>0;return h};
 function listProfiles(){const o=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(SAVEK))o.push(k.slice(SAVEK.length))}}catch(e){}return o}
 function loadProfile(n){try{return JSON.parse(localStorage.getItem(SAVEK+n))}catch(e){return null}}
-function saveGame(){if(!who||mode==='title')return;const d={v:1,name:who,pin:pinHash,G,qi,qstate,qprog,SQ,hallFound,cleared,pos:[hero.position.x,hero.position.z],tod,tutDone:TUT.done,boss:wmons.filter(m=>m.t.boss&&!m.alive&&!(m.t.only&&m.t.only!==SEASON)).map(m=>m.t.i),chests:props.map(q=>q.kind==='chest'&&!q.alive?1:0),t:Date.now()};try{localStorage.setItem(SAVEK+who,JSON.stringify(d));localStorage.setItem(SAVEK+'__last','1')}catch(e){}}
+function saveGame(){if(!who||mode==='title')return;const d={v:1,name:who,pin:pinHash,G,qi,qstate,qprog,SQ,hallFound,cleared,pos:[hero.position.x,hero.position.z],tod,tutDone:TUT.done,boss:wmons.filter(m=>m.t.boss&&!m.alive&&!(m.t.only&&m.t.only!==SEASON)).map(m=>m.t.i),chests:props.map(q=>q.kind==='chest'&&!q.alive?1:0),t:Date.now()};try{localStorage.setItem(SAVEK+who,JSON.stringify(d));localStorage.setItem(SAVEK+'__last','1')}catch(e){}cloudPush(d,forceCloud);forceCloud=false}
+let forceCloud=false;
 function applySave(d){for(const k in d.G)G[k]=d.G[k];if(!G.season)G.season=1;SEASON=G.season;G.bd=Object.assign({},G.bd);applySeason();(d.boss||[]).forEach(i=>{G.bd[i]=1});G.wt=Object.assign({club:0,sword:0,staff:0,bow:0,mic:0,dagger:0,mace:0,fist:0,axe:0},G.wt);G.wps=Object.assign({village:true},G.wps);if(!JOBKIND[G.job])G.job='none';qi=d.qi;qstate=d.qstate;qprog=d.qprog;Object.assign(SQ,d.SQ);hallFound=true;cleared=!!d.cleared;tod=d.tod??tod;TUT.done=!!d.tutDone;
  (d.boss||[]).forEach(i=>wmons.filter(m=>m.t.i===i).forEach(m=>{m.alive=false;m.g.visible=false;m.dead=1e9}));
  (d.chests||[]).forEach((v,i)=>{const q=props[i];if(v&&q){q.alive=false;q.g.traverse(o=>{if(o.isSprite)o.visible=false})}});
  let[x,z]=d.pos||[-4,2];if(isBlocked(x,z)||Math.hypot(x,z)>160){x=-4;z=2}hero.position.set(x,hgt(x,z),z);groundY=hgt(x,z);hero.rotation.set(0,0,0);
  const k=JOBKIND[G.job];setWeapon(k,G.wt[k]);setOutfit(G.job);G.hp=Math.max(1,Math.min(G.hp,G.max));camSmooth.set(x,hero.position.y+4,z+8);camLook.set(x,hero.position.y+1.6,z)}
-setInterval(saveGame,8000);addEventListener('pagehide',saveGame);document.addEventListener('visibilitychange',()=>{if(document.hidden)saveGame()});
-$('#who').onclick=()=>{if(mode!=='world')return;if(confirm('저장하고 처음 화면(로그인)으로 돌아갈까요?')){saveGame();location.reload()}};
+setInterval(saveGame,8000);addEventListener('pagehide',()=>{forceCloud=true;saveGame()});document.addEventListener('visibilitychange',()=>{if(document.hidden){forceCloud=true;saveGame()}});
+$('#who').onclick=()=>{if(mode!=='world')return;if(confirm('저장하고 처음 화면(로그인)으로 돌아갈까요?')){forceCloud=true;saveGame();setTimeout(()=>location.reload(),700)}};
 function begin(isNew){const s=$('#scr');ac();startMusic();SFX.ui();s.className='';mode='world';camDistT=11;camPitch=.55;camYaw=0;showUI('world');$('#who').textContent='🚪 '+who;updateQuestUI();hud();
  if(isNew){TUT.done=false;startTutorial();toast(`환영합니다, ${who}님!`)}else{if(!TUT.done&&false)startTutorial();toast(`${who}님, 다시 오셨군요! 이어서 모험을 계속합니다`)}saveGame()}
 function title(){
  mode='title';showUI('title');
- const s=$('#scr'),profs=listProfiles().filter(n=>n!=='__last'),ip='font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.45);color:#fff;text-align:center;outline:none';
+ const s=$('#scr'),profs=listProfiles().filter(n=>n!=='__last'),ip='font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.45);color:#fff;text-align:center;outline:none',bs='font-size:17px;padding:10px 14px;flex:1';
  s.innerHTML=`<h1 class="ttl">뇌절<br>RPG</h1><div class="desc">마왕이 공주에게 고백했다. 사귀었다. 그리고 <b>잠수이별</b>했다.<br>분노한 공주는 마왕을 프라이팬으로 때려잡고 <b style="color:#ff7a93">타락</b>했다...<br>이제 용사가 <b>타락공주를 잡으러</b> 간다!</div>
- <div class="glass" style="padding:14px;display:flex;flex-direction:column;gap:8px;width:min(330px,90vw)"><input id="nick" maxlength="10" placeholder="닉네임 (처음이면 새로 만들어요)" autocomplete="off" style="${ip}"><input id="pin" maxlength="4" inputmode="numeric" type="password" placeholder="비밀번호 4자리 (선택)" autocomplete="off" style="${ip}"><button class="go" id="start" style="font-size:20px;padding:10px 20px">시작 / 이어하기</button>
- ${profs.length?`<div style="font-size:12px;color:#cdbdf5">저장된 캐릭터 (누르면 불러와요)</div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">${profs.map(n=>{const d=loadProfile(n);return `<button class="pf" data-n="${n.replace(/"/g,'')}" style="font-size:13px;padding:6px 10px">${n} · Lv.${d&&d.G?d.G.lv:1} ${d&&d.G?JOBNAME[d.G.job]||'':''}</button>`}).join('')}</div>`:''}</div>
- <div class="desc" style="font-size:12px;opacity:.75">※ 서버·계정 없이 <b>이 기기의 브라우저</b>에만 저장됩니다.<br>PC: WASD 이동 · 마우스 시점 · J/클릭 공격 · L 드립 · K 방어 · Space 구르기 · R 한번 더 · Q 물약 · E 대화<br>모바일: 왼쪽 드래그 이동 · 오른쪽 드래그 시점 · 오른쪽 아래 버튼</div>`;s.className='on';
- const go=()=>{const name=$('#nick').value.trim();if(!name){toast('닉네임을 입력해 주세요');return}const pin=$('#pin').value.trim(),ex=loadProfile(name);
-  if(ex&&ex.G){if(ex.pin&&hashS(pin)!==ex.pin){toast('비밀번호가 달라요');return}who=name;pinHash=ex.pin||0;applySave(ex);begin(false)}else{who=name;pinHash=pin?hashS(pin):0;begin(true)}};
- $('#start').onclick=go;$('#nick').addEventListener('keydown',e=>{if(e.key==='Enter')$('#pin').focus()});$('#pin').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
- s.querySelectorAll('.pf').forEach(b=>b.onclick=()=>{$('#nick').value=b.dataset.n;const d=loadProfile(b.dataset.n);if(d&&!d.pin)go();else $('#pin').focus()});
+ <div class="glass" style="padding:14px;display:flex;flex-direction:column;gap:8px;width:min(340px,90vw)"><input id="nick" maxlength="10" placeholder="아이디(닉네임)" autocomplete="username" style="${ip}"><input id="pin" maxlength="24" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password" style="${ip}">
+ <div style="display:flex;gap:8px"><button class="go" id="start" style="${bs};animation:none;border-radius:14px">로그인</button><button id="signup" style="${bs}">회원가입</button></div>
+ <div id="cstat" style="font-size:12px;color:#cdbdf5;min-height:1.3em">☁️ 클라우드 연결 중...</div>
+ <button id="offl" style="font-size:12px;padding:6px 10px;opacity:.85">오프라인으로 시작 (이 기기에만 저장)</button>
+ ${profs.length?`<div style="font-size:12px;color:#cdbdf5">이 기기의 저장된 캐릭터</div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">${profs.map(n=>{const d=loadProfile(n);return `<button class="pf" data-n="${n.replace(/"/g,'')}" style="font-size:13px;padding:6px 10px">${n} · Lv.${d&&d.G?d.G.lv:1} ${d&&d.G?JOBNAME[d.G.job]||'':''}</button>`}).join('')}</div>`:''}</div>
+ <div class="desc" style="font-size:12px;opacity:.75">☁️ 계정으로 로그인하면 <b>어느 기기에서든</b> 이어서 할 수 있어요. 처음이면 회원가입!<br>PC: WASD 이동 · 마우스 시점 · J/클릭 공격 · L 드립 · K 방어 · Space 구르기 · R 한번 더 · Q 물약 · E 대화<br>모바일: 왼쪽 드래그 이동 · 오른쪽 드래그 시점 · 오른쪽 아래 버튼</div>`;s.className='on';
+ const cs=t=>{const e=$('#cstat');if(e)e.textContent=t};
+ fbInit().then(f=>cs(f?'☁️ 클라우드 연결됨':'⚠️ 클라우드 연결 안 됨 — 오프라인으로 시작할 수 있어요'));
+ const nameOK=()=>{const n=$('#nick').value.trim();if(!n){toast('아이디를 입력해 주세요');return null}return n};
+ const enter=(name,d)=>{who=name;pinHash=0;if(d&&d.G){applySave(d);begin(false)}else begin(true)};
+ const online=async(create)=>{const name=nameOK();if(!name)return;const pw=$('#pin').value;if(pw.length<6){toast('비밀번호는 6자 이상이에요');return}cs('⏳ 처리 중...');
+  try{await cloudAuth(name,pw,create);cloudOn=true;let d=null;try{d=await cloudLoad()}catch(e){cs('⚠️ '+fbMsg(e));cloudOn=true}
+   const lc=loadProfile(name);if(lc&&lc.G&&(!d||(lc.t||0)>(d.t||0)))d=lc;enter(name,d);forceCloud=true;saveGame()}catch(e){cs('⚠️ '+fbMsg(e));toast(fbMsg(e))}};
+ $('#start').onclick=()=>online(false);$('#signup').onclick=()=>online(true);
+ $('#offl').onclick=()=>{const name=nameOK();if(!name)return;cloudOn=false;const ex=loadProfile(name);if(ex&&ex.pin&&hashS($('#pin').value)!==ex.pin){toast('이 기기 저장의 비밀번호가 달라요');return}enter(name,ex);if(ex&&ex.pin)pinHash=ex.pin};
+ $('#nick').addEventListener('keydown',e=>{if(e.key==='Enter')$('#pin').focus()});$('#pin').addEventListener('keydown',e=>{if(e.key==='Enter')online(false)});
+ s.querySelectorAll('.pf').forEach(b=>{b.onclick=()=>{$('#nick').value=b.dataset.n;$('#pin').focus()}});
  try{const l=profs[0];if(l)$('#nick').value=l}catch(e){}}
 
 
