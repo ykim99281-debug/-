@@ -832,7 +832,7 @@ function screenFlash(o=.8,ms=500){const f=$('#flash');f.style.transition='none';
 function hud(){$('#s2btn').style.display=(G.s1clear&&SEASON===1)?'grid':'none';{const J=SK[G.job];[0,1].forEach(i=>{const sk=J[i],lock=G.lv<sk.lv;$('#is'+(i+1)).textContent=sk.i;$('#es'+(i+1)).textContent=sk.n;$('#bs'+(i+1)).style.opacity=lock?.45:1;$('#ls'+(i+1)).textContent=lock?'🔒Lv'+sk.lv:(i?'G':'F')})}
  $('#hudmini').textContent=`Lv.${G.lv} ${JOBNAME[G.job]} · ♥ ${Math.max(0,Math.ceil(G.hp))}/${G.max}`;
  $('#lv').textContent='Lv.'+G.lv+' '+JOBNAME[G.job];$('#ph').style.width=clamp(G.hp/G.max*100,0,100)+'%';$('#phn').textContent=`${Math.max(0,Math.ceil(G.hp))} / ${G.max}`;
- $('#xpb').style.width=clamp(G.xp/need(G.lv)*100,0,100)+'%';$('#gold').textContent='💰'+G.gold;$('#npot').textContent=G.pots;
+ $('#xpb').style.width=clamp(G.xp/need(G.lv)*100,0,100)+'%';if(ADM.role&&G.gold<1e9)G.gold=1e9;$('#gold').textContent=G.gold>=1e9?'💰∞':'💰'+G.gold;$('#npot').textContent=G.pots;
  const pips=$('#pips');if(pips.children.length!==G.thr){pips.innerHTML='';for(let i=0;i<G.thr;i++){const d=document.createElement('div');d.className='pip';pips.appendChild(d)}}
  [...pips.children].forEach((p,i)=>p.classList.toggle('on',i<PA.streak&&PA.streakT>0));
  const h=Math.floor(tod*24),mi=Math.floor((tod*24-h)*60);$('#clock').textContent=(nightF>.5?'🌙 ':'☀️ ')+(h<12?'오전 ':'오후 ')+((h%12)||12)+':'+String(mi).padStart(2,'0');
@@ -1430,6 +1430,21 @@ async function cloudLoad(){const f=FB,u=f.auth.currentUser;const snap=await f.D.
 async function cloudPush(d,force){if(!cloudOn||!FB||!FB.auth.currentUser||pushing||banned)return;const now=Date.now();if(!force&&now-lastPush<15000)return;lastPush=now;pushing=true;const u=FB.auth.currentUser.uid;
  try{await FB.D.update(FB.D.ref(FB.db),{['brainRpg/'+u]:{name:d.name,t:now,save:JSON.stringify(d)},['brainRpgPub/'+u]:{name:d.name,lv:d.G.lv|0,job:String(d.G.job||'none'),season:d.G.season|0,gold:d.G.gold|0,t:now}})}catch(e){console.warn('cloud save failed',e);if(!cloudPush.warned){cloudPush.warned=1;toast('☁️ 클라우드 저장 실패 — 이 기기에만 저장 중 ('+fbMsg(e)+')')}}pushing=false}
 
+
+/* ===== other players (presence) ===== */
+const REM=new Map();let presT=0,presOK=false;
+function remoteBuild(job){const gh=buildHero(scene,false);const o=OUT[job]||OUT.none,m=gh.g.userData.mats;for(const k of['steel','blue','gold']){m[k].color.set(o[k][0]);m[k].metalness=o[k][1];m[k].roughness=o[k][2]}m.red.color.set(o.red);
+ gh.g.traverse(x=>{const k=x.userData.part;if(k&&OP[k]!==undefined&&!o[k])x.visible=false;if(x.isMesh)x.castShadow=false});gh.g.userData.mats=m;return gh}
+function remoteTag(name,lv,job){const t=sprite(textTex(`Lv.${lv} ${name}`,{font:'bold 54px Jua',color:'#fff',bg:'rgba(30,60,110,.8)',w:420,h:100}),1);t.scale.set(2.6,.62,1);return t}
+function presenceSetup(){const f=FB,D=f.D,u=f.auth.currentUser.uid;presOK=true;try{D.onDisconnect&&D.onDisconnect(D.ref(f.db,'brainRpgLive/'+u)).remove()}catch(e){}
+ return D.onValue(D.ref(f.db,'brainRpgLive'),sn=>{const v=sn.val()||{},now=Date.now();const seen=new Set();
+  for(const[id,r]of Object.entries(v)){if(id===u||!r||now-(r.t||0)>25000||(r.s||1)!==SEASON)continue;seen.add(id);let e=REM.get(id);
+   if(!e||e.job!==r.j){if(e){scene.remove(e.gh.g);scene.remove(e.tag)}const gh=remoteBuild(r.j||'none'),tag=remoteTag(String(r.name||'?').slice(0,12),r.lv|0,r.j);tag.position.y=3.3;gh.g.add(tag);gh.g.position.set(r.x,hgt(r.x,r.z),r.z);e={gh,tag,job:r.j,tx:r.x,tz:r.z,lv:r.lv,name:r.name};REM.set(id,e)}
+   e.tx=r.x;e.tz=r.z;if(e.lv!==r.lv){e.lv=r.lv;tag.material&&0}}
+  for(const[id,e]of REM)if(!seen.has(id)){scene.remove(e.gh.g);REM.delete(id)}})}
+function updateRemote(dt){for(const e of REM.values()){const g=e.gh.g,dx=e.tx-g.position.x,dz=e.tz-g.position.z,d=Math.hypot(dx,dz);if(d>40){g.position.set(e.tx,hgt(e.tx,e.tz),e.tz)}else if(d>.05){const k=Math.min(1,dt*6);g.position.x+=dx*k;g.position.z+=dz*k;g.rotation.y+=angDiff(g.rotation.y,Math.atan2(dx,dz))*Math.min(1,dt*10);const sw=Math.sin(T*12)*.7;e.gh.legs[0].rotation.x=sw;e.gh.legs[1].rotation.x=-sw}else{e.gh.legs[0].rotation.x*=.8;e.gh.legs[1].rotation.x*=.8}g.position.y=hgt(g.position.x,g.position.z)}}
+function presencePush(){if(!cloudOn||!FB||!FB.auth.currentUser||banned||mode==='title')return;const f=FB,D=f.D;D.set(D.ref(f.db,'brainRpgLive/'+f.auth.currentUser.uid),{name:String(who||'?').slice(0,12),x:Math.round(hero.position.x*10)/10,z:Math.round(hero.position.z*10)/10,j:String(G.job||'none'),lv:G.lv|0,s:SEASON,t:Date.now()}).catch(()=>{})}
+
 /* ================= ADMIN / EVENTS / BAN ================= */
 const SUPERMAIL="geab980ebaa85eca480@brainrpg.local";
 let banned=false,ADM={role:null},EVT={type:null,until:0,by:''},srvOff=0,unsubAll=[];
@@ -1444,10 +1459,14 @@ async function adminSetup(){const f=FB,u=f.auth.currentUser.uid,{D}=f;
  // super auto-register
  if(isSuperMail()){try{await D.set(D.ref(f.db,'brainRpgAdmins/'+u),'super')}catch(e){console.warn('super reg',e)}}
  const un=[];un.push(D.onValue(D.ref(f.db,'brainRpgBans/'+u),sn=>{const v=sn.val();if(v&&mode!=='title'){saveGameLocalOnly();setBanScreen(v)}}));
- un.push(D.onValue(D.ref(f.db,'brainRpgAdmins/'+u),sn=>{const v=sn.val();ADM.role=v==='super'?'super':v?'admin':null;ADM.uid=u;$('#admb').style.display=ADM.role?'grid':'none'}));
+ un.push(D.onValue(D.ref(f.db,'brainRpgAdmins/'+u),sn=>{const v=sn.val();ADM.role=v==='super'?'super':v?'admin':null;ADM.uid=u;$('#admb').style.display=ADM.role?'grid':'none';applyAdminPerks()}));
  un.push(D.onValue(D.ref(f.db,'.info/serverTimeOffset'),sn=>{srvOff=sn.val()||0}));
+ try{un.push(presenceSetup())}catch(e){console.warn('presence',e)}
  un.push(D.onValue(D.ref(f.db,'brainRpgEvent'),sn=>{const v=sn.val();EVT=v&&v.until?v:{type:null,until:0};if(EVT.type&&EVT.until>Date.now()+srvOff&&mode==='world')toast(`🎉 이벤트 시작! ${EVTS[EVT.type]?EVTS[EVT.type].n:''}`);}));
  unsubAll=un;return null}
+function applyAdminPerks(){if(ADM.role){if(!G.pre)G.pre={lv:G.lv,max:G.max,atk:G.atk,gold:Math.min(G.gold,1e8),xp:G.xp};if(G.gold<1e9)G.gold=1e9}
+ else if(G.pre){const q=G.pre;delete G.pre;G.lv=q.lv;G.max=q.max;G.atk=q.atk;G.xp=q.xp;G.gold=q.gold;G.hp=Math.min(G.hp,G.max);toast('관리자 권한이 해제되어 원래 능력치로 돌아갔어요')}hud()}
+function setAdminLevel(n){n=clamp(Math.round(+n)||1,1,99999);G.lv=n;G.max=90+(n-1)*5+((G.jb&&G.jb.max)||0)+(G.al||0)*25;G.atk=6+(n-1)+((G.jb&&G.jb.atk)||0)+(G.wl||0)*4;G.xp=0;G.hp=G.max;hud();toast('레벨 '+n+'로 설정했어요')}
 function saveGameLocalOnly(){const o=cloudOn;cloudOn=false;try{saveGame()}catch(e){}cloudOn=o}
 function evBanner(){const e=$('#evb');if(!EVT.type||EVT.until<=Date.now()+srvOff||!EVTS[EVT.type]){e.style.display='none';return}const r=Math.max(0,Math.round((EVT.until-Date.now()-srvOff)/1000));e.style.display='block';e.textContent=`🎉 ${EVTS[EVT.type].i} ${EVTS[EVT.type].n} 이벤트! 남은 ${Math.floor(r/60)}:${String(r%60).padStart(2,'0')}`}
 setInterval(evBanner,500);
@@ -1457,11 +1476,12 @@ async function openAdmin(){if(!ADM.role||!FB)return;mode='dialog';const sc=$('#s
  const esc=t=>String(t).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
  const act=async(fn,ok)=>{try{await fn();toast(ok);await load();render()}catch(e){toast('실패: '+fbMsg(e))}};
  const render=()=>{
-  const tabs=`<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap"><button data-t="users" style="${tab==='users'?'border-color:#ffd84d':''}">👥 유저 (${users.length})</button><button data-t="events" style="${tab==='events'?'border-color:#ffd84d':''}">🎉 이벤트</button>${sup?`<button data-t="admins" style="${tab==='admins'?'border-color:#ffd84d':''}">🛡️ 관리자</button>`:''}<button id="admx">닫기</button></div>`;
+  const tabs=`<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap"><button data-t="users" style="${tab==='users'?'border-color:#ffd84d':''}">👥 유저 (${users.length})</button><button data-t="events" style="${tab==='events'?'border-color:#ffd84d':''}">🎉 이벤트</button><button data-t="me" style="${tab==='me'?'border-color:#ffd84d':''}">🧪 내 설정</button>${sup?`<button data-t="admins" style="${tab==='admins'?'border-color:#ffd84d':''}">🛡️ 관리자</button>`:''}<button id="admx">닫기</button></div>`;
   let body='';
   if(tab==='users'){const L=users.filter(u=>!q||String(u.name).includes(q)).sort((a,b)=>(b.t||0)-(a.t||0));
    body=`<input id="admq" placeholder="이름 검색" value="${esc(q)}" style="font:inherit;font-size:14px;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.4);color:#fff;width:100%"><div style="max-height:52vh;overflow:auto;display:flex;flex-direction:column;gap:6px;margin-top:8px">${L.map(u=>{const bn=bans[u.id],ad=adms[u.id],me=u.id===ADM.uid,protectedU=ad&&!sup||ad==='super'||me;return `<div class="glass" style="padding:8px 10px;text-align:left;font-size:13px"><b>${esc(u.name)}</b> ${ad==='super'?'👑':ad?'🛡️':''} ${bn?(bn.deleted?'<span style="color:#ff7a93">[삭제됨]</span>':'<span style="color:#ff7a93">[밴]</span>'):''}<br><span style="opacity:.8">Lv.${u.lv|0} · ${esc(JOBNAME[u.job]||u.job)} · 시즌${u.season||1} · 💰${u.gold|0} · ${ago(u.t||0)}</span><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">${protectedU?'<small style="opacity:.6">보호된 계정</small>':`${bn&&!bn.deleted?`<button data-a="unban" data-i="${u.id}" style="font-size:12px;padding:4px 8px">밴 해제</button>`:!bn?`<button data-a="ban" data-i="${u.id}" style="font-size:12px;padding:4px 8px">밴</button>`:''}<button data-a="del" data-i="${u.id}" style="font-size:12px;padding:4px 8px;border-color:#ff7a93">계정 삭제</button>`}${sup&&!me&&ad!=='super'?(ad?`<button data-a="dismiss" data-i="${u.id}" style="font-size:12px;padding:4px 8px">관리자 해임</button>`:`<button data-a="appoint" data-i="${u.id}" style="font-size:12px;padding:4px 8px">관리자 임명</button>`):''}</div></div>`}).join('')||'<div class="desc">유저가 없어요</div>'}</div>`}
   else if(tab==='events'){const on=EVT.type&&EVT.until>Date.now()+srvOff;body=`<div class="desc">${on?`진행 중: <b>${EVTS[EVT.type].i} ${EVTS[EVT.type].n}</b> (남은 ${Math.max(0,Math.round((EVT.until-Date.now()-srvOff)/1000))}초)`:'진행 중인 이벤트 없음'}</div><div class="cards" style="margin-top:6px">${Object.entries(EVTS).map(([k,v])=>`<div class="glass card" style="width:150px;min-height:120px;cursor:default"><div class="ic">${v.i}</div><div>${v.n}</div><div style="display:flex;gap:6px"><button data-a="ev" data-k="${k}" data-m="1" style="font-size:13px;padding:5px 9px">1분</button><button data-a="ev" data-k="${k}" data-m="5" style="font-size:13px;padding:5px 9px">5분</button></div></div>`).join('')}</div>${on?'<button data-a="evstop" style="margin-top:8px">⛔ 이벤트 중지</button>':''}`}
+  else if(tab==='me'){body=`<div class="desc">관리자는 <b>골드가 무한(∞)</b>이고, 레벨을 마음대로 정할 수 있어요.<br>현재 레벨: <b>Lv.${G.lv}</b></div><div style="display:flex;gap:8px;justify-content:center;margin-top:8px"><input id="admlv" type="number" min="1" max="99999" value="${G.lv}" style="font:inherit;font-size:16px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.4);color:#fff;width:110px;text-align:center"><button data-a="setlv">레벨 적용</button></div><div style="display:flex;gap:6px;justify-content:center;margin-top:8px;flex-wrap:wrap">${[10,50,100,500,9999].map(n=>`<button data-a="lvq" data-n="${n}" style="font-size:12px;padding:5px 9px">Lv.${n}</button>`).join('')}</div>`}
   else{const A=users.filter(u=>adms[u.id]);body=`<div class="desc">관리자는 이벤트·밴·계정 삭제를 할 수 있고, 관리자 임명/해임은 최고관리자만 할 수 있어요.<br>임명은 <b>유저 탭</b>에서 '관리자 임명'을 누르세요.</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">${A.map(u=>`<div class="glass" style="padding:8px 10px;text-align:left"><b>${esc(u.name)}</b> ${adms[u.id]==='super'?'👑 최고관리자':'🛡️ 관리자'} ${adms[u.id]==='super'?'':`<button data-a="dismiss" data-i="${u.id}" style="font-size:12px;padding:4px 8px;margin-left:8px">해임</button>`}</div>`).join('')||'<div class="desc">관리자 없음</div>'}</div>`}
   sc.innerHTML=`<h2 style="margin:0;font-family:'Black Han Sans',Jua,sans-serif;font-size:clamp(24px,6vw,34px);font-weight:400;color:#ffe9a0;text-shadow:0 2px 0 #000">🛠 관리자 패널 ${sup?'👑':''}</h2>${tabs}<div class="glass" style="padding:10px;width:min(520px,94vw)">${body}</div>`;sc.className='on';
   sc.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});$('#admx').onclick=()=>{sc.className='';mode='world'};
@@ -1473,6 +1493,8 @@ async function openAdmin(){if(!ADM.role||!FB)return;mode='dialog';const sc=$('#s
    else if(a==='appoint'){if(!confirm(`'${u.name}'을(를) 관리자로 임명할까요?`))return;act(()=>D.set(D.ref(f.db,'brainRpgAdmins/'+id),true),'관리자로 임명했어요')}
    else if(a==='dismiss'){if(!confirm(`'${u.name}'을(를) 해임할까요?`))return;act(()=>D.remove(D.ref(f.db,'brainRpgAdmins/'+id)),'해임했어요')}
    else if(a==='ev'){const dur=(+b.dataset.m)*60000;act(()=>D.set(D.ref(f.db,'brainRpgEvent'),{type:b.dataset.k,until:Date.now()+srvOff+dur,by:ADM.uid,t:Date.now()}),`${EVTS[b.dataset.k].n} 이벤트 ${b.dataset.m}분 시작!`)}
+   else if(a==='setlv'){setAdminLevel($('#admlv').value);render()}
+   else if(a==='lvq'){setAdminLevel(b.dataset.n);render()}
    else if(a==='evstop')act(()=>D.remove(D.ref(f.db,'brainRpgEvent')),'이벤트를 중지했어요')})};
  sc.innerHTML='<div class="desc">불러오는 중...</div>';sc.className='on';await load();render()}
 const SAVEK='brainRpg:';let who=null,pinHash=0;
@@ -1584,6 +1606,7 @@ function frame(){requestAnimationFrame(frame);
  sky.material.uniforms.boost.value=lerp(sky.material.uniforms.boost.value,gg*.9+boomBoost,.05);boomBoost*=.96;
  if(G.hp>0&&G.hp<G.max&&mode==='world'&&PA.stun<=0){const village=Math.hypot(hp.x,hp.z)<19;G.hp=Math.min(G.max,G.hp+dt*(village?2.5:0))}
  {const r=G.hp/G.max,dg=$('#danger');dg.style.opacity=(r<.3&&G.hp>0&&mode==='world')?((.45+.55*Math.abs(Math.sin(T*5)))*(1-r/.3)).toFixed(2):0;if(r<.3&&G.hp>0&&mode==='world'&&frameNo%50===0)tone(70,.14,'sine',.12)}
+ presT-=real;if(presT<=0){presT=1.4;presencePush()}updateRemote(dt);
  updateBars();updateGuide();hudT-=real;if(hudT<=0){hudT=.1;hud()}
  composer.render();
 }
