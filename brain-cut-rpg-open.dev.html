@@ -91,7 +91,7 @@ button:hover:not(:disabled){filter:brightness(1.25)}button:active:not(:disabled)
 .big{position:absolute;font-family:"Black Han Sans","Jua",sans-serif;color:#fff;white-space:nowrap;text-shadow:0 0 18px #c070ff,0 0 40px #ff49d8,0 4px 0 #3a0a6a;-webkit-text-stroke:2px #5a1fb0;animation:bg 1.3s cubic-bezier(.2,.9,.2,1) forwards}
 @keyframes bg{0%{transform:translate(-50%,-50%) rotate(var(--r)) scale(.1);opacity:0}12%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1.3);opacity:1}25%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1)}100%{transform:translate(-50%,-50%) rotate(var(--r)) scale(1.25);opacity:0}}
 #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:7}
-#scr{position:fixed;inset:0;display:none;align-items:center;justify-content:safe center;flex-direction:column;gap:14px;z-index:20;padding:20px;background:radial-gradient(ellipse at center,rgba(10,5,25,.3),rgba(5,2,14,.85));text-align:center;overflow:auto}
+#scr{position:fixed;inset:0;display:none;align-items:center;justify-content:safe center;flex-direction:column;gap:14px;z-index:30;padding:20px;background:radial-gradient(ellipse at center,rgba(10,5,25,.3),rgba(5,2,14,.85));text-align:center;overflow:auto}
 #scr.on{display:flex;animation:fadein .5s}@keyframes fadein{from{opacity:0}}
 .ttl{font-family:"Black Han Sans","Jua",sans-serif;font-size:clamp(46px,13vw,92px);line-height:1;margin:0;background:linear-gradient(180deg,#fff,#ffb6f3 40%,#8b5bff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 22px rgba(190,110,255,.75)) drop-shadow(0 6px 0 rgba(40,10,90,.9));animation:tt 1.6s ease-in-out infinite alternate}
 @keyframes tt{from{transform:scale(1) rotate(-1deg)}to{transform:scale(1.05) rotate(1deg)}}
@@ -120,7 +120,8 @@ button:hover:not(:disabled){filter:brightness(1.25)}button:active:not(:disabled)
     <div class="bar thin"><i class="xp" id="xpb" style="width:0%"></i></div>
     <div class="gauge"><span>뇌절</span><div class="pips" id="pips"></div></div>
   </div>
-  <div id="tr"><div style="display:flex;gap:6px"><div class="glass" id="viewb" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">👁 보기</div><div class="glass" id="qbtn" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">화질</div><div class="glass" id="who" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px;white-space:nowrap;max-width:110px;overflow:hidden">🚪</div><div class="glass" id="mute" style="pointer-events:auto">🔊</div></div><canvas id="mm" class="glass" width="112" height="112"></canvas><div class="glass pill" id="clock" style="font-size:12px"></div></div>
+  <div id="tr"><div style="display:flex;gap:6px"><div class="glass" id="admb" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:none;place-items:center;font-size:12px;white-space:nowrap;border-color:#ffd84d">🛠 관리자</div><div class="glass" id="viewb" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">👁 보기</div><div class="glass" id="qbtn" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">화질</div><div class="glass" id="who" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px;white-space:nowrap;max-width:110px;overflow:hidden">🚪</div><div class="glass" id="mute" style="pointer-events:auto">🔊</div></div><canvas id="mm" class="glass" width="112" height="112"></canvas><div class="glass pill" id="clock" style="font-size:12px"></div></div>
+  <div class="glass" id="evb" style="position:absolute;left:50%;top:calc(max(10px,env(safe-area-inset-top)) + 64px);transform:translateX(-50%);padding:5px 14px;font-size:13px;display:none;border-color:#ffd84d;color:#ffe9a0;white-space:nowrap;z-index:3"></div>
   <div class="glass" id="boss"><div class="nm"><b id="bn">-</b><i id="bt" style="font-style:normal;color:var(--yel);font-size:12px"></i></div><div class="bar"><i class="he" id="bh" style="width:100%"></i></div></div>
   <div class="glass" id="viewm"></div>
   <button id="act"></button>
@@ -789,7 +790,7 @@ const JOBS=[{k:'warrior',i:'🗡️',n:'전사',d:'HP +40, 방어 +2<br>넓은 �
  {k:'monk',i:'🥊',n:'격투가',d:'HP +20, 방어 +1<br>양손 2연타, 흡혈',b:{max:20,def:1}},
  {k:'berserker',i:'🪓',n:'광전사',d:'공격력 +5, HP +20<br>느리지만 강타, 체력 낮을수록 강함',b:{atk:5,max:20}}];
 const curWeapon=()=>{const k=JOBKIND[G.job]||'club';const t=Math.min(Math.max(G.wt[k]|0,0),WP[k].length-1);return WP[k][t]};
-const ATK=()=>(G.atk+curWeapon().a)*(PA.rage>0?1.5:1);
+const ATK=()=>(G.atk+curWeapon().a)*(PA.rage>0?1.5:1)*(evMul('atk2')?2:1);
 function applyJob(k){const o=G.jb;G.max-=o.max;G.atk-=o.atk;G.def-=o.def;G.thr-=o.thr;G.joke-=o.joke;const j=JOBS.find(x=>x.k===k),b=Object.assign({max:0,atk:0,def:0,thr:0,joke:0},j.b);
  if(G.thr+b.thr<3)b.thr=3-G.thr;G.max+=b.max;G.atk+=b.atk;G.def+=b.def;G.thr+=b.thr;G.joke+=b.joke;G.jb=b;G.job=k;G.hp=Math.min(G.max,G.hp+b.max);G.wt[JOBKIND[k]]=Math.max(G.wt[JOBKIND[k]]|0,0);setWeapon(JOBKIND[k],G.wt[JOBKIND[k]]);setOutfit(k)}
 function setWeapon(kind,tier){const sw=H.sword;while(sw.children.length)sw.remove(sw.children[0]);const tc=[0xb98a4a,0x9fb3ff,0xffd04d,0xff7be5][Math.min(tier,3)],iron=P(0x8a8a9a,{metalness:1,roughness:.3}),wood=M(0x8a5a2a,{roughness:.8});
@@ -1121,7 +1122,7 @@ function updateHeroCombat(dt){
 }
 function hurtHero(dmg,fx,fz,{pierce=false}={}){
  if(PA.iframes>0||G.hp<=0||mode!=='world')return false;
- const blocked=PA.guard>0&&!pierce;let d=dmg;d=blocked?Math.round(d*(1-PA.guardPow)):Math.max(1,Math.round(d-G.def));
+ const blocked=PA.guard>0&&!pierce;let d=dmg*(evMul('god')?.5:1);d=blocked?Math.round(d*(1-PA.guardPow)):Math.max(1,Math.round(d-G.def));
  G.hp-=d;fxFloat('-'+d,heroHead(),blocked?'#8fe8ff':'#ff4d6d');burst(heroHead().add(new THREE.Vector3(0,-.8,0)),{color:blocked?0x66ddff:0xff4d6d,n:blocked?24:34,speed:5,life:.6});
  SFX.hurt();addShake(blocked?.25:.5);hitstop(60);fxPass.uniforms.amt.value=blocked?.5:1.1;if(!blocked)fxPass.uniforms.tint.value.set(.14,0,0);
  if(blocked){shieldMat.uniforms.o.value=3}else flashMats(heroObj,0xff3355,2.8,.3);
@@ -1264,10 +1265,10 @@ function updateDrops(dt){for(let i=drops.length-1;i>=0;i--){const o=drops[i],m=o
   m.rotation.y+=dt*4;
   if(o.age>.8&&d<1.3){pickup(o);scene.remove(m);drops.splice(i,1)}}}
 function pickup(o){SFX.ui();const p=heroHead();
- if(o.kind==='gold'){G.gold+=o.val;fxFloat('+'+o.val+'G',p,'#ffd84d');tone(900+Math.random()*300,.08,'triangle',.05)}
+ if(o.kind==='gold'){const gv=o.val*(evMul('gold3')?3:1);G.gold+=gv;fxFloat('+'+gv+'G',p,'#ffd84d');tone(900+Math.random()*300,.08,'triangle',.05)}
  else if(o.kind==='jelly'){G.jelly++;fxFloat('눈물 젤리',p,'#7cffb0');updateQuestUI()}
  else{G.pots++;fxFloat('🧪 물약 +1',p,'#ff8aa0')}hud()}
-function gainXP(n){n=Math.max(1,Math.round(n*.6));G.xp+=n;fxFloat('+'+n+' XP',heroHead().add(new THREE.Vector3(0,.6,0)),'#b78cff');while(G.xp>=need(G.lv)){G.xp-=need(G.lv);levelUp()}hud()}
+function gainXP(n){n=Math.max(1,Math.round(n*.6*(evMul('xp3')?3:1)));G.xp+=n;fxFloat('+'+n+' XP',heroHead().add(new THREE.Vector3(0,.6,0)),'#b78cff');while(G.xp>=need(G.lv)){G.xp-=need(G.lv);levelUp()}hud()}
 function levelUp(){G.lv++;G.max+=5;G.atk+=1;G.hp=G.max;SFX.win();bigText('LEVEL UP!',1,false);ring(hero.position,{color:0xffd84d,max:10,life:1,y:.1});ring(hero.position,{color:0xffffff,max:6,life:.8,y:.2});burst(heroHead(),{color:0xffd84d,n:100,speed:6,life:1.4,up:3});pillar(hero.position.x,hero.position.z,0xffd84d,{w:1.5,life:.9});sparks(heroHead(),{n:80,color:0xffd84d,speed:9,life:1.4,size:.45});lightPulse(0xffd84d,30,.7,heroHead());toast(`레벨 ${G.lv}! 공격력 +1, 최대 HP +5, HP 전부 회복`);if(G.lv===3)setTimeout(()=>toast('🔓 스킬1 해금! (F 키 / 주황 버튼)'),2400);if(G.lv===6)setTimeout(()=>toast('🔓 스킬2 해금! (G 키 / 주황 버튼)'),2400);if(G.lv===5&&G.job==='none')setTimeout(()=>toast('✨ 5레벨! 이제 직업을 가질 수 있다! 마을 북서쪽 전직관으로 가보자'),2500)}
 
 /* ================= QUESTS / SHOP ================= */
@@ -1426,8 +1427,54 @@ const FBERR={'auth/email-already-in-use':'이미 있는 닉네임이에요. 로�
 const fbMsg=e=>FBERR[e&&e.code]||FBERR[e&&e.message]||('오류: '+((e&&(e.code||e.message))||e));
 async function cloudAuth(name,pw,create){const f=await fbInit();if(!f)throw{code:'auth/network-request-failed'};const fn=create?f.Au.createUserWithEmailAndPassword:f.Au.signInWithEmailAndPassword;const r=await fn(f.auth,mailOf(name),pw);return r.user}
 async function cloudLoad(){const f=FB,u=f.auth.currentUser;const snap=await f.D.get(f.D.ref(f.db,'brainRpg/'+u.uid));const v=snap.val();if(!v||!v.save)return null;try{return JSON.parse(v.save)}catch(e){return null}}
-async function cloudPush(d,force){if(!cloudOn||!FB||!FB.auth.currentUser||pushing)return;const now=Date.now();if(!force&&now-lastPush<15000)return;lastPush=now;pushing=true;
- try{await FB.D.set(FB.D.ref(FB.db,'brainRpg/'+FB.auth.currentUser.uid),{name:d.name,t:now,save:JSON.stringify(d)})}catch(e){console.warn('cloud save failed',e);if(!cloudPush.warned){cloudPush.warned=1;toast('☁️ 클라우드 저장 실패 — 이 기기에만 저장 중 ('+fbMsg(e)+')')}}pushing=false}
+async function cloudPush(d,force){if(!cloudOn||!FB||!FB.auth.currentUser||pushing||banned)return;const now=Date.now();if(!force&&now-lastPush<15000)return;lastPush=now;pushing=true;const u=FB.auth.currentUser.uid;
+ try{await FB.D.update(FB.D.ref(FB.db),{['brainRpg/'+u]:{name:d.name,t:now,save:JSON.stringify(d)},['brainRpgPub/'+u]:{name:d.name,lv:d.G.lv|0,job:String(d.G.job||'none'),season:d.G.season|0,gold:d.G.gold|0,t:now}})}catch(e){console.warn('cloud save failed',e);if(!cloudPush.warned){cloudPush.warned=1;toast('☁️ 클라우드 저장 실패 — 이 기기에만 저장 중 ('+fbMsg(e)+')')}}pushing=false}
+
+/* ================= ADMIN / EVENTS / BAN ================= */
+const SUPERMAIL="geab980ebaa85eca480@brainrpg.local";
+let banned=false,ADM={role:null},EVT={type:null,until:0,by:''},srvOff=0,unsubAll=[];
+const EVTS={xp3:{n:'경험치 3배',i:'📈'},gold3:{n:'골드 3배',i:'💰'},atk2:{n:'공격력 2배',i:'⚔️'},god:{n:'받는 피해 절반',i:'🛡️'}};
+const evOn=t=>EVT.type===t&&EVT.until>Date.now()+srvOff;
+const evMul=t=>evOn(t)?1:0;
+const isSuperMail=()=>!!(FB&&FB.auth.currentUser&&FB.auth.currentUser.email===SUPERMAIL);
+function setBanScreen(b){banned=true;mode='dead';const sc=$('#scr');sc.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,60px)">${b.deleted?'삭제된 계정':'정지된 계정'}</h2><div class="desc">${b.deleted?'이 계정은 관리자에 의해 삭제되었어요.':'이 계정은 관리자에 의해 정지되었어요.'}${b.reason?'<br>사유: '+String(b.reason).replace(/[<>&]/g,''):''}</div><button class="go" id="bnx">처음 화면으로</button>`;sc.className='on';$('#bnx').onclick=()=>location.reload()}
+async function adminSetup(){const f=FB,u=f.auth.currentUser.uid,{D}=f;
+ // ban check
+ try{const bs=await D.get(D.ref(f.db,'brainRpgBans/'+u));if(bs.val()){await f.Au.signOut(f.auth).catch(()=>{});cloudOn=false;return bs.val()}}catch(e){}
+ // super auto-register
+ if(isSuperMail()){try{await D.set(D.ref(f.db,'brainRpgAdmins/'+u),'super')}catch(e){console.warn('super reg',e)}}
+ const un=[];un.push(D.onValue(D.ref(f.db,'brainRpgBans/'+u),sn=>{const v=sn.val();if(v&&mode!=='title'){saveGameLocalOnly();setBanScreen(v)}}));
+ un.push(D.onValue(D.ref(f.db,'brainRpgAdmins/'+u),sn=>{const v=sn.val();ADM.role=v==='super'?'super':v?'admin':null;ADM.uid=u;$('#admb').style.display=ADM.role?'grid':'none'}));
+ un.push(D.onValue(D.ref(f.db,'.info/serverTimeOffset'),sn=>{srvOff=sn.val()||0}));
+ un.push(D.onValue(D.ref(f.db,'brainRpgEvent'),sn=>{const v=sn.val();EVT=v&&v.until?v:{type:null,until:0};if(EVT.type&&EVT.until>Date.now()+srvOff&&mode==='world')toast(`🎉 이벤트 시작! ${EVTS[EVT.type]?EVTS[EVT.type].n:''}`);}));
+ unsubAll=un;return null}
+function saveGameLocalOnly(){const o=cloudOn;cloudOn=false;try{saveGame()}catch(e){}cloudOn=o}
+function evBanner(){const e=$('#evb');if(!EVT.type||EVT.until<=Date.now()+srvOff||!EVTS[EVT.type]){e.style.display='none';return}const r=Math.max(0,Math.round((EVT.until-Date.now()-srvOff)/1000));e.style.display='block';e.textContent=`🎉 ${EVTS[EVT.type].i} ${EVTS[EVT.type].n} 이벤트! 남은 ${Math.floor(r/60)}:${String(r%60).padStart(2,'0')}`}
+setInterval(evBanner,500);
+async function openAdmin(){if(!ADM.role||!FB)return;mode='dialog';const sc=$('#scr'),f=FB,D=f.D,sup=ADM.role==='super';let tab='users',users=[],bans={},adms={},q='';
+ const load=async()=>{try{const[a,b,c]=await Promise.all([D.get(D.ref(f.db,'brainRpgPub')),D.get(D.ref(f.db,'brainRpgBans')),D.get(D.ref(f.db,'brainRpgAdmins'))]);users=Object.entries(a.val()||{}).map(([id,v])=>({id,...v}));bans=b.val()||{};adms=c.val()||{}}catch(e){toast('불러오기 실패: '+fbMsg(e))}};
+ const ago=t=>{const m=Math.round((Date.now()-t)/60000);return m<1?'방금':m<60?m+'분 전':m<1440?Math.round(m/60)+'시간 전':Math.round(m/1440)+'일 전'};
+ const esc=t=>String(t).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+ const act=async(fn,ok)=>{try{await fn();toast(ok);await load();render()}catch(e){toast('실패: '+fbMsg(e))}};
+ const render=()=>{
+  const tabs=`<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap"><button data-t="users" style="${tab==='users'?'border-color:#ffd84d':''}">👥 유저 (${users.length})</button><button data-t="events" style="${tab==='events'?'border-color:#ffd84d':''}">🎉 이벤트</button>${sup?`<button data-t="admins" style="${tab==='admins'?'border-color:#ffd84d':''}">🛡️ 관리자</button>`:''}<button id="admx">닫기</button></div>`;
+  let body='';
+  if(tab==='users'){const L=users.filter(u=>!q||String(u.name).includes(q)).sort((a,b)=>(b.t||0)-(a.t||0));
+   body=`<input id="admq" placeholder="이름 검색" value="${esc(q)}" style="font:inherit;font-size:14px;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(0,0,0,.4);color:#fff;width:100%"><div style="max-height:52vh;overflow:auto;display:flex;flex-direction:column;gap:6px;margin-top:8px">${L.map(u=>{const bn=bans[u.id],ad=adms[u.id],me=u.id===ADM.uid,protectedU=ad&&!sup||ad==='super'||me;return `<div class="glass" style="padding:8px 10px;text-align:left;font-size:13px"><b>${esc(u.name)}</b> ${ad==='super'?'👑':ad?'🛡️':''} ${bn?(bn.deleted?'<span style="color:#ff7a93">[삭제됨]</span>':'<span style="color:#ff7a93">[밴]</span>'):''}<br><span style="opacity:.8">Lv.${u.lv|0} · ${esc(JOBNAME[u.job]||u.job)} · 시즌${u.season||1} · 💰${u.gold|0} · ${ago(u.t||0)}</span><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">${protectedU?'<small style="opacity:.6">보호된 계정</small>':`${bn&&!bn.deleted?`<button data-a="unban" data-i="${u.id}" style="font-size:12px;padding:4px 8px">밴 해제</button>`:!bn?`<button data-a="ban" data-i="${u.id}" style="font-size:12px;padding:4px 8px">밴</button>`:''}<button data-a="del" data-i="${u.id}" style="font-size:12px;padding:4px 8px;border-color:#ff7a93">계정 삭제</button>`}${sup&&!me&&ad!=='super'?(ad?`<button data-a="dismiss" data-i="${u.id}" style="font-size:12px;padding:4px 8px">관리자 해임</button>`:`<button data-a="appoint" data-i="${u.id}" style="font-size:12px;padding:4px 8px">관리자 임명</button>`):''}</div></div>`}).join('')||'<div class="desc">유저가 없어요</div>'}</div>`}
+  else if(tab==='events'){const on=EVT.type&&EVT.until>Date.now()+srvOff;body=`<div class="desc">${on?`진행 중: <b>${EVTS[EVT.type].i} ${EVTS[EVT.type].n}</b> (남은 ${Math.max(0,Math.round((EVT.until-Date.now()-srvOff)/1000))}초)`:'진행 중인 이벤트 없음'}</div><div class="cards" style="margin-top:6px">${Object.entries(EVTS).map(([k,v])=>`<div class="glass card" style="width:150px;min-height:120px;cursor:default"><div class="ic">${v.i}</div><div>${v.n}</div><div style="display:flex;gap:6px"><button data-a="ev" data-k="${k}" data-m="1" style="font-size:13px;padding:5px 9px">1분</button><button data-a="ev" data-k="${k}" data-m="5" style="font-size:13px;padding:5px 9px">5분</button></div></div>`).join('')}</div>${on?'<button data-a="evstop" style="margin-top:8px">⛔ 이벤트 중지</button>':''}`}
+  else{const A=users.filter(u=>adms[u.id]);body=`<div class="desc">관리자는 이벤트·밴·계정 삭제를 할 수 있고, 관리자 임명/해임은 최고관리자만 할 수 있어요.<br>임명은 <b>유저 탭</b>에서 '관리자 임명'을 누르세요.</div><div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">${A.map(u=>`<div class="glass" style="padding:8px 10px;text-align:left"><b>${esc(u.name)}</b> ${adms[u.id]==='super'?'👑 최고관리자':'🛡️ 관리자'} ${adms[u.id]==='super'?'':`<button data-a="dismiss" data-i="${u.id}" style="font-size:12px;padding:4px 8px;margin-left:8px">해임</button>`}</div>`).join('')||'<div class="desc">관리자 없음</div>'}</div>`}
+  sc.innerHTML=`<h2 style="margin:0;font-family:'Black Han Sans',Jua,sans-serif;font-size:clamp(24px,6vw,34px);font-weight:400;color:#ffe9a0;text-shadow:0 2px 0 #000">🛠 관리자 패널 ${sup?'👑':''}</h2>${tabs}<div class="glass" style="padding:10px;width:min(520px,94vw)">${body}</div>`;sc.className='on';
+  sc.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});$('#admx').onclick=()=>{sc.className='';mode='world'};
+  const qi=$('#admq');if(qi)qi.oninput=()=>{q=qi.value.trim();const pos=qi.selectionStart;render();const n=$('#admq');n.focus();n.setSelectionRange(pos,pos)};
+  sc.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a,id=b.dataset.i,u=users.find(x=>x.id===id)||{};
+   if(a==='ban'){const r=prompt(`'${u.name}' 밴 사유 (선택)`,'');if(r===null)return;act(()=>D.set(D.ref(f.db,'brainRpgBans/'+id),{reason:r.slice(0,60),t:Date.now(),by:ADM.uid}),'밴했어요')}
+   else if(a==='unban')act(()=>D.remove(D.ref(f.db,'brainRpgBans/'+id)),'밴을 해제했어요');
+   else if(a==='del'){if(!confirm(`'${u.name}' 계정을 삭제할까요?\n게임 데이터가 지워지고 로그인할 수 없게 돼요.`))return;act(async()=>{await D.set(D.ref(f.db,'brainRpgBans/'+id),{deleted:true,t:Date.now(),by:ADM.uid});await D.remove(D.ref(f.db,'brainRpg/'+id));await D.remove(D.ref(f.db,'brainRpgPub/'+id))},'계정을 삭제했어요')}
+   else if(a==='appoint'){if(!confirm(`'${u.name}'을(를) 관리자로 임명할까요?`))return;act(()=>D.set(D.ref(f.db,'brainRpgAdmins/'+id),true),'관리자로 임명했어요')}
+   else if(a==='dismiss'){if(!confirm(`'${u.name}'을(를) 해임할까요?`))return;act(()=>D.remove(D.ref(f.db,'brainRpgAdmins/'+id)),'해임했어요')}
+   else if(a==='ev'){const dur=(+b.dataset.m)*60000;act(()=>D.set(D.ref(f.db,'brainRpgEvent'),{type:b.dataset.k,until:Date.now()+srvOff+dur,by:ADM.uid,t:Date.now()}),`${EVTS[b.dataset.k].n} 이벤트 ${b.dataset.m}분 시작!`)}
+   else if(a==='evstop')act(()=>D.remove(D.ref(f.db,'brainRpgEvent')),'이벤트를 중지했어요')})};
+ sc.innerHTML='<div class="desc">불러오는 중...</div>';sc.className='on';await load();render()}
 const SAVEK='brainRpg:';let who=null,pinHash=0;
 const hashS=t=>{let h=5381;for(const c of t)h=((h<<5)+h+c.charCodeAt(0))>>>0;return h};
 function listProfiles(){const o=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(SAVEK))o.push(k.slice(SAVEK.length))}}catch(e){}return o}
@@ -1459,6 +1506,7 @@ function title(){
  const enter=(name,d)=>{who=name;pinHash=0;if(d&&d.G){applySave(d);begin(false)}else begin(true)};
  const online=async(create)=>{const name=nameOK();if(!name)return;const pw=$('#pin').value;if(pw.length<6){toast('비밀번호는 6자 이상이에요');return}cs('⏳ 처리 중...');
   try{await cloudAuth(name,pw,create);cloudOn=true;let d=null;try{d=await cloudLoad()}catch(e){cs('⚠️ '+fbMsg(e));cloudOn=true}
+   const bn=await adminSetup();if(bn){cs('⛔ '+(bn.deleted?'삭제된 계정이에요':'정지된 계정이에요'+(bn.reason?' · '+bn.reason:'')));toast(bn.deleted?'삭제된 계정이에요':'정지된 계정이에요');return}
    const lc=loadProfile(name);if(lc&&lc.G&&(!d||(lc.t||0)>(d.t||0)))d=lc;enter(name,d);forceCloud=true;saveGame()}catch(e){cs('⚠️ '+fbMsg(e));toast(fbMsg(e))}};
  $('#start').onclick=()=>online(false);$('#signup').onclick=()=>online(true);
  $('#offl').onclick=()=>{const name=nameOK();if(!name)return;cloudOn=false;const ex=loadProfile(name);if(ex&&ex.pin&&hashS($('#pin').value)!==ex.pin){toast('이 기기 저장의 비밀번호가 달라요');return}enter(name,ex);if(ex&&ex.pin)pinHash=ex.pin};
@@ -1475,6 +1523,7 @@ function applyView(){$('#hud').style.display=V.hud==='full'?'':'none';$('#hudmin
  try{localStorage.setItem('brainView',JSON.stringify(V))}catch(e){}renderViewMenu()}
 function renderViewMenu(){const m=$('#viewm');m.innerHTML='<div class="t">화면에 보일 것</div>'+VROWS.map(r=>`<button data-k="${r[0]}">${r[1]}: <b>${r[3][V[r[0]]]}</b></button>`).join('')+'<button data-k="__all">🙈 전부 숨기기 / 🙉 전부 보기</button>';
  m.querySelectorAll('button').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='__all'){const anyOn=V.hud!=='off'||V.quest||V.mm||V.clock||V.hint||V.btns;Object.assign(V,anyOn?{hud:'off',quest:0,mm:0,clock:0,hint:0,btns:0}:{hud:'full',quest:1,mm:1,clock:1,hint:1,btns:1})}else{const r=VROWS.find(x=>x[0]===k),o=r[2];V[k]=o[(o.indexOf(V[k])+1)%o.length]}applyView()})}
+$('#admb').onclick=()=>{if(mode==='world'){SFX.ui();openAdmin()}};
 $('#s2btn').onclick=()=>{if(mode==='world'){SFX.ui();openSeason2()}};
 $('#viewb').onclick=()=>{const m=$('#viewm');m.style.display=m.style.display==='flex'?'none':'flex'};
 $('#hudx').onclick=()=>{V.hud='mini';applyView()};$('#hudmini').onclick=()=>{V.hud='full';applyView()};
