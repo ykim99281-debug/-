@@ -1139,7 +1139,7 @@ Object.assign(SKF.berserker,{2:m=>{PA.lock=1.6;PA.iframes=1.6;const y0=hero.rota
  3:m=>{const e=nearestEnemy(13);if(!e){toast('대상이 없어요');PA.cd.s4=1;return}tpTo(e,-1.8);PA.lock=.9;PA.iframes=.9;after(250,()=>{const kill=e.hp<e.max*.3&&!e.t.boss;skHit(e,kill?e.hp+99999:7*m,{kb:6,crit:true});heal(Math.round(G.max*.15));blast(e.g.position,4,0xff2a2a);bigText(kill?'처형!!':'일격!',1,false);hitstop(160,.04)})}});
 SKF.god=[m=>{const L=nearList(22,30);L.forEach((e,i)=>after(i*70,()=>{const q=e.g.position.clone();bolt(new THREE.Vector3(q.x,q.y+28,q.z),q,{color:0xfff0a0});pillar(q.x,q.z,0xfff0a0,{w:1.4,life:.5});skHit(e,6*m,{kb:5,crit:true});e.state='stagger';e.tt=1})),ring(hero.position,{color:0xfff0a0,max:20,life:.9,y:.2});bigText('신의 심판!',1,false);addShake(.7);SFX.boom()},
  m=>{const pp=hero.position;blast(pp,10,0xfff0a0);ring(pp,{color:0xffd84d,max:22,life:1.1,y:.25,w:.3});ring(pp,{color:0xfff0a0,max:16,life:.8,y:.2});pillar(pp.x,pp.z,0xfff0a0,{w:2,life:.7});foes(pp,14.5).forEach(e=>skHit(e,12*m,{kb:12,crit:true}));hitstop(200,.04);bigText('천지개벽!',1,false)},
- m=>{nearList(22,40).forEach(e=>{freezeEnemy(e,5);e.state='stagger';e.tt=5});fxPass.uniforms.tint.value.set(.1,.1,.18);ring(hero.position,{color:0x9ee9ff,max:22,life:1,y:.2});bigText('시간 정지!',1,false);SFX.freeze();toast('⏳ 주변의 시간이 5초간 멈춘다')},
+ m=>{nearList(22,40).forEach(e=>{freezeEnemy(e,5);e.state='stagger';e.tt=5});remoteTargets().filter(e=>Math.hypot(e.g.position.x-hero.position.x,e.g.position.z-hero.position.z)<22).forEach(e=>pkFreeze(e,5));fxPass.uniforms.tint.value.set(.1,.1,.18);ring(hero.position,{color:0x9ee9ff,max:22,life:1,y:.2});bigText('시간 정지!',1,false);SFX.freeze();toast('⏳ 주변의 시간이 5초간 멈춘다')},
  m=>{G.hp=G.max;PA.iframes=5;PA.guard=5;PA.guardPow=.95;PA.rage=8;PA.encore=8;pillar(hero.position.x,hero.position.z,0xffffff,{w:1.8,life:.9});sparks(heroHead(),{n:100,color:0xfff0a0,speed:9,life:1.4,size:.5});heal(1);bigText('신의 가호!',1,false);toast('✨ 5초 무적 · 8초 광폭화 · 쿨타임 가속')}];
 
 /* ================= HERO UPDATE ================= */
@@ -1193,7 +1193,7 @@ function telegraph(kind,x,z,yaw,size,dur,half=.6){
  const m=new THREE.Mesh(geo,ADD(0xff2a4a,{opacity:.1}));m.rotation.x=-Math.PI/2;m.position.set(x,y,z);scene.add(m);
  let o2=null;if(kind!=='cone'){o2=new THREE.Mesh(new THREE.RingGeometry(size-.15,size,40),ADD(0xff7a8a,{opacity:.8}));o2.rotation.x=-Math.PI/2;o2.position.set(x,y+.02,z);scene.add(o2);fxList.push({o:o2,t:0,life:dur,upd(){}})}
  fxList.push({o:m,t:0,life:dur,upd(dt,k){m.material.opacity=.12+.5*k}})}
-function freezeEnemy(m,s){if(!m.alive||m.remote)return;m.frozen=s;SFX.freeze();m.mats.forEach(x=>{x.emissive.set(0x44bbff);x.emissiveIntensity=.7});
+function freezeEnemy(m,s){if(m.remote){if(m.alive)pkFreeze(m,s);return}if(!m.alive)return;m.frozen=s;SFX.freeze();m.mats.forEach(x=>{x.emissive.set(0x44bbff);x.emissiveIntensity=.7});
  if(!m.ice){const g=new THREE.Group(),h=m.b.hy;for(let i=0;i<8;i++){const c=mk(new THREE.ConeGeometry(h*.12,h*.55,5),iceMat,Math.cos(i/8*6.28)*h*.28,h*.25,Math.sin(i/8*6.28)*h*.28,g,false);c.rotation.set(rand(-.3,.3),0,rand(-.3,.3))}m.g.add(g);m.ice=g}m.ice.visible=true;
  burst(enemyHead(m),{color:0x9ee9ff,n:30,speed:3,life:.8});floatSprite('썰렁...',enemyHead(m).add(new THREE.Vector3(0,.8,0)),{color:'#bff3ff',stroke:'#1b6a9a',size:1.4})}
 function thaw(m){m.frozen=0;m.mats.forEach(x=>{x.emissive.copy(x.userData.e0);x.emissiveIntensity=x.userData.i0});if(m.ice)m.ice.visible=false;burst(enemyHead(m),{color:0x9ee9ff,n:30,speed:4,life:.7})}
@@ -1494,9 +1494,13 @@ function remoteTargets(){if(!PK.on||inVillage(hero.position)||mode!=='world')ret
 function pkSend(m,d,crit){const f=FB;if(!cloudOn||!f||!f.auth.currentUser)return;const now=Date.now();if(now-(PK.sendT[m.id]||0)<130)return;PK.sendT[m.id]=now;
  impactFx(enemyHead(m),crit);fxFloat(String(Math.round(Math.min(d,99999))),enemyHead(m),'#ff7a93');SFX.hit();
  const key=now+'_'+Math.floor(Math.random()*1e6);f.D.set(f.D.ref(f.db,'brainRpgPk/'+m.id+'/'+key),{f:f.auth.currentUser.uid,n:String(who).slice(0,12),d:Math.min(1e7,Math.round(d)),t:now,x:Math.round(hero.position.x),z:Math.round(hero.position.z)}).catch(()=>{})}
+function pkFreeze(m,sec){const f=FB;if(!cloudOn||!f||!f.auth.currentUser)return;const now=Date.now();if(now-(PK.sendT['z'+m.id]||0)<500)return;PK.sendT['z'+m.id]=now;
+ burst(enemyHead(m),{color:0x9ee9ff,n:30,speed:3,life:.8});floatSprite('시간 정지!',enemyHead(m).add(new THREE.Vector3(0,.8,0)),{color:'#bff3ff',stroke:'#1b6a9a',size:1.4});
+ f.D.set(f.D.ref(f.db,'brainRpgPk/'+m.id+'/'+now+'_z'+Math.floor(Math.random()*1e5)),{f:f.auth.currentUser.uid,n:String(who).slice(0,12),d:0,fz:Math.min(5,sec),t:now,x:Math.round(hero.position.x),z:Math.round(hero.position.z)}).catch(()=>{})}
 function pkReceive(ev,key){const f=FB,u=f.auth.currentUser.uid;f.D.remove(f.D.ref(f.db,'brainRpgPk/'+u+'/'+key)).catch(()=>{});if(!ev||Date.now()-(ev.t||0)>15000)return;
  if(ev.k){const rw=Math.round(80+(ev.lv|0)*8);if(!ADM.role)G.gold+=rw;toast(`⚔️ ${ev.n}을(를) 쓰러뜨렸다! +${rw}G`);bigText('PK 승리!',1,false);SFX.win();hud();return}
  if(!PK.on||inVillage(hero.position)||mode!=='world'||G.hp<=0)return;
+ if(ev.fz){const sec=Math.min(5,+ev.fz||3);PA.stun=Math.max(PA.stun,sec);PA.lock=0;fxPass.uniforms.tint.value.set(.08,.1,.18);ring(hero.position,{color:0x9ee9ff,max:5,life:.8,y:.2});toast(`⏳ ${ev.n}에게 ${Math.round(sec)}초간 시간이 멈췄다!`);SFX.freeze();return}
  const dmg=Math.max(1,Math.round(Math.min((+ev.d||0)*.5,G.max*.3)));PK.lastHit={n:ev.n,uid:ev.f,t:Date.now()};
  if(hurtHero(dmg,+ev.x||hero.position.x,+ev.z||hero.position.z)&&!PK.warn){PK.warn=1;toast(`⚔️ ${ev.n}에게 공격받고 있어요! (PK 끄기: 🗡️ 버튼, 마을은 안전)`)}}
 function pkSetup(){const f=FB,D=f.D,u=f.auth.currentUser.uid;return D.onChildAdded(D.ref(f.db,'brainRpgPk/'+u),sn=>pkReceive(sn.val(),sn.key))}
@@ -1505,7 +1509,7 @@ function togglePK(){if(!cloudOn){toast('PK는 클라우드 로그인 상태에�
 
 /* ================= ADMIN / EVENTS / BAN ================= */
 const SUPERMAIL="geab980ebaa85eca480@brainrpg.local";
-const BUILD=2026111901,TAG='r7 (진단2줄·점검알림)';
+const BUILD=2026111901,TAG='r8 (시간정지 유저적용)';
 let kicked=false,CFG={};
 let banned=false,ADM={role:null},EVT={type:null,until:0,by:''},srvOff=0,unsubAll=[];
 const EVTS={xp3:{n:'경험치 3배',i:'📈'},gold3:{n:'골드 3배',i:'💰'},atk2:{n:'공격력 2배',i:'⚔️'},god:{n:'받는 피해 절반',i:'🛡️'}};
