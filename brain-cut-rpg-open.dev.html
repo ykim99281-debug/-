@@ -831,8 +831,8 @@ function bigText(txt,n=1,spread=true){for(let i=0;i<n;i++){setTimeout(()=>{const
 function screenFlash(o=.8,ms=500){const f=$('#flash');f.style.transition='none';f.style.opacity=o;requestAnimationFrame(()=>{f.style.transition=`opacity ${ms}ms`;f.style.opacity=0})}
 function hud(){$('#s2btn').style.display=(G.s1clear&&SEASON===1)?'grid':'none';{const J=SK[G.job];[0,1].forEach(i=>{const sk=J[i],lock=G.lv<sk.lv;$('#is'+(i+1)).textContent=sk.i;$('#es'+(i+1)).textContent=sk.n;$('#bs'+(i+1)).style.opacity=lock?.45:1;$('#ls'+(i+1)).textContent=lock?'🔒Lv'+sk.lv:(i?'G':'F')})}
  $('#hudmini').textContent=`Lv.${G.lv} ${JOBNAME[G.job]} · ♥ ${Math.max(0,Math.ceil(G.hp))}/${G.max}`;
- $('#lv').textContent='Lv.'+G.lv+' '+JOBNAME[G.job];$('#ph').style.width=clamp(G.hp/G.max*100,0,100)+'%';$('#phn').textContent=`${Math.max(0,Math.ceil(G.hp))} / ${G.max}`;
- $('#xpb').style.width=clamp(G.xp/need(G.lv)*100,0,100)+'%';if(ADM.role&&G.gold<1e9)G.gold=1e9;$('#gold').textContent=G.gold>=1e9?'💰∞':'💰'+G.gold;$('#npot').textContent=G.pots;
+ $('#lv').textContent=(ADM.role&&G.lv>=99999?'Lv.무한':'Lv.'+G.lv)+' '+JOBNAME[G.job];$('#ph').style.width=clamp(G.hp/G.max*100,0,100)+'%';$('#phn').textContent=`${Math.max(0,Math.ceil(G.hp))} / ${G.max}`;
+ $('#xpb').style.width=clamp(G.xp/need(G.lv)*100,0,100)+'%';if(ADM.role&&G.gold<1e9)G.gold=1e9;$('#gold').textContent=(ADM.role&&G.gold>=1e9)?'💰무한':'💰'+G.gold;$('#npot').textContent=G.pots;
  const pips=$('#pips');if(pips.children.length!==G.thr){pips.innerHTML='';for(let i=0;i<G.thr;i++){const d=document.createElement('div');d.className='pip';pips.appendChild(d)}}
  [...pips.children].forEach((p,i)=>p.classList.toggle('on',i<PA.streak&&PA.streakT>0));
  const h=Math.floor(tod*24),mi=Math.floor((tod*24-h)*60);$('#clock').textContent=(nightF>.5?'🌙 ':'☀️ ')+(h<12?'오전 ':'오후 ')+((h%12)||12)+':'+String(mi).padStart(2,'0');
@@ -1457,14 +1457,14 @@ async function adminSetup(){const f=FB,u=f.auth.currentUser.uid,{D}=f;
  // ban check
  try{const bs=await D.get(D.ref(f.db,'brainRpgBans/'+u));if(bs.val()){await f.Au.signOut(f.auth).catch(()=>{});cloudOn=false;return bs.val()}}catch(e){}
  // super auto-register
- if(isSuperMail()){try{await D.set(D.ref(f.db,'brainRpgAdmins/'+u),'super')}catch(e){console.warn('super reg',e)}}
+ if(isSuperMail()){try{await D.set(D.ref(f.db,'brainRpgAdmins/'+u),'super')}catch(e){console.warn('super reg',e);toast('⚠️ 관리자 등록 실패 — Firebase 규칙(brainRpgAdmins)을 게시했는지 확인하세요')}}
  const un=[];un.push(D.onValue(D.ref(f.db,'brainRpgBans/'+u),sn=>{const v=sn.val();if(v&&mode!=='title'){saveGameLocalOnly();setBanScreen(v)}}));
  un.push(D.onValue(D.ref(f.db,'brainRpgAdmins/'+u),sn=>{const v=sn.val();ADM.role=v==='super'?'super':v?'admin':null;ADM.uid=u;$('#admb').style.display=ADM.role?'grid':'none';applyAdminPerks()}));
  un.push(D.onValue(D.ref(f.db,'.info/serverTimeOffset'),sn=>{srvOff=sn.val()||0}));
  try{un.push(presenceSetup())}catch(e){console.warn('presence',e)}
  un.push(D.onValue(D.ref(f.db,'brainRpgEvent'),sn=>{const v=sn.val();EVT=v&&v.until?v:{type:null,until:0};if(EVT.type&&EVT.until>Date.now()+srvOff&&mode==='world')toast(`🎉 이벤트 시작! ${EVTS[EVT.type]?EVTS[EVT.type].n:''}`);}));
  unsubAll=un;return null}
-function applyAdminPerks(){if(ADM.role){if(!G.pre)G.pre={lv:G.lv,max:G.max,atk:G.atk,gold:Math.min(G.gold,1e8),xp:G.xp};if(G.gold<1e9)G.gold=1e9}
+function applyAdminPerks(){if(ADM.role){if(!G.pre){G.pre={lv:G.lv,max:G.max,atk:G.atk,gold:Math.min(G.gold,1e8),xp:G.xp};setAdminLevel(99999)}if(G.gold<1e9)G.gold=1e9;toast('🛠 관리자: 레벨·골드 무한 적용')}
  else if(G.pre){const q=G.pre;delete G.pre;G.lv=q.lv;G.max=q.max;G.atk=q.atk;G.xp=q.xp;G.gold=q.gold;G.hp=Math.min(G.hp,G.max);toast('관리자 권한이 해제되어 원래 능력치로 돌아갔어요')}hud()}
 function setAdminLevel(n){n=clamp(Math.round(+n)||1,1,99999);G.lv=n;G.max=90+(n-1)*5+((G.jb&&G.jb.max)||0)+(G.al||0)*25;G.atk=6+(n-1)+((G.jb&&G.jb.atk)||0)+(G.wl||0)*4;G.xp=0;G.hp=G.max;hud();toast('레벨 '+n+'로 설정했어요')}
 function saveGameLocalOnly(){const o=cloudOn;cloudOn=false;try{saveGame()}catch(e){}cloudOn=o}
