@@ -150,6 +150,22 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 .pull .btn{flex:1;padding:9px 6px;font-size:14px}
 #gachaRes{min-height:44px;background:#0003;border-radius:14px;padding:6px;text-align:center;font-size:24px;margin-bottom:6px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;align-items:center}
 #gachaRes small{font-size:13px;color:#b8b3dd}
+/* 관리자 */
+#admFab{position:fixed;right:10px;top:10px;z-index:90;width:40px;height:40px;border-radius:50%;border:2px solid #fdcb6e;background:#272250;color:#fff;font-size:20px;display:none;align-items:center;justify-content:center;box-shadow:0 2px 10px #0008}
+#admOv{position:fixed;inset:0;z-index:120;background:#000c;display:none;align-items:flex-start;justify-content:center;padding:14px;overflow-y:auto}
+#admOv.show{display:flex}
+#admBox{width:100%;max-width:460px;background:#1a1730;border:2px solid #fdcb6e;border-radius:18px;padding:14px;color:#fff;font-family:inherit}
+#admBox h2{margin:0 0 8px;text-align:center;color:#fdcb6e;font-size:20px}
+.at{display:flex;gap:5px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}
+.at button,.ab{border:2px solid #fff3;background:#0004;color:#fff;border-radius:10px;padding:7px 10px;font-weight:800;font-size:13px;font-family:inherit}
+.at button.on{border-color:#fdcb6e}
+.ab.red{border-color:#ff7a93}.ab.gold{background:#6c5ce7;border-color:#a29bfe}
+.ac{background:#272250;border-radius:12px;padding:9px 10px;margin-bottom:7px;font-size:13px;text-align:left}
+.ac small{opacity:.75}
+#admBox input{width:100%;padding:8px 10px;border-radius:10px;border:1px solid #fff3;background:#0006;color:#fff;font-family:inherit;font-size:14px;user-select:text;-webkit-user-select:text}
+#heroBlock{position:fixed;inset:0;z-index:200;background:#0a0614;color:#fff;display:none;align-items:center;justify-content:center;text-align:center;padding:24px}
+#heroBlock.show{display:flex}
+#evBar{position:fixed;left:50%;top:6px;transform:translateX(-50%);z-index:95;background:#000b;border:1px solid #fdcb6e;border-radius:999px;padding:4px 12px;font-size:12px;font-weight:800;color:#ffd36a;display:none;white-space:nowrap}
 /* 로그인 */
 #loginModal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:18px;background:radial-gradient(circle at 50% 18%,#3b2f80,#12101f 70%)}
 #loginModal.show{display:flex}
@@ -331,13 +347,8 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
       </div>
       <div class="row">
         <div class="ic">👤</div>
-        <div class="tx"><b>계정: <span id="acctName"></span></b><small>이 게임에서만 쓰는 계정이에요</small></div>
+        <div class="tx"><b>계정: <span id="acctName"></span> <span id="acctRole"></span></b><small id="acctSub">☁️ 연결 중...</small></div>
         <button class="btn" id="logoutBtn">로그아웃</button>
-      </div>
-      <div class="row">
-        <div class="ic">🧹</div>
-        <div class="tx"><b>모든 계정 삭제</b><small>이 기기의 모든 계정과 진행 상황을 지워요</small></div>
-        <button class="btn off" id="wipeBtn" style="min-width:80px">삭제</button>
       </div>
       <div class="row">
         <div class="ic">💾</div>
@@ -353,16 +364,17 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
   </div>
 </div>
 
+<button id="admFab" title="관리자 패널">🛠️</button><div id="evBar"></div><div id="heroBlock"></div>
+<div id="admOv"><div id="admBox"></div></div>
 <div id="loginModal"><div id="lbox">
-  <div class="logo">🦸</div><h1>용사 키우기</h1><p>내 계정으로 로그인하고 이어서 키워요!</p>
-  <div class="ltabs"><button class="on" data-m="in">로그인</button><button data-m="up">회원가입</button></div>
-  <input id="lname" placeholder="닉네임 (2~12글자)" maxlength="12" autocomplete="username">
-  <input id="lpw" type="password" placeholder="비밀번호 (4글자 이상)" autocomplete="current-password">
-  <input id="lpw2" type="password" placeholder="비밀번호 한 번 더" autocomplete="new-password" style="display:none">
+  <div class="logo">🦸</div><h1>용사 키우기</h1><p>뇌절RPG와 같은 계정으로 로그인해요!</p>
+  <input id="lname" placeholder="아이디(닉네임)" maxlength="10" autocomplete="username">
+  <input id="lpw" type="password" placeholder="비밀번호 (6자 이상)" autocomplete="current-password" maxlength="24">
   <div id="lerr"></div>
-  <button class="btn" id="lgo">로그인</button>
-  <button id="wipeAll" style="margin-top:10px;background:none;border:0;color:#ff7675;font-size:12px;font-weight:800;text-decoration:underline;font-family:inherit">모든 계정 삭제</button>
-  <small>이 계정은 이 게임에서만 쓰는 계정이에요. 이 기기의 브라우저에 저장돼서, 다른 기기에서 하려면 <b>저장 코드</b>를 써요.</small>
+  <div style="display:flex;gap:8px"><button class="btn" id="lgo" style="flex:1;padding:14px">로그인</button><button class="btn" id="lup" style="flex:1;padding:14px;background:#4b4770">회원가입</button></div>
+  <div id="lstat" style="margin-top:8px;font-size:12px;color:#cdbdf5;min-height:1.3em">☁️ 클라우드 연결 중...</div>
+  <button id="loff" style="margin-top:6px;background:none;border:0;color:#b8b3dd;font-size:12px;font-weight:700;text-decoration:underline;font-family:inherit">오프라인으로 시작 (이 기기에만 저장)</button>
+  <small>☁️ 계정으로 로그인하면 <b>어느 기기에서든</b> 이어서 할 수 있어요. 뇌절RPG에서 쓰던 아이디·비밀번호 그대로 로그인돼요. 처음이면 회원가입!</small>
 </div></div>
 
 <div id="clsModal"><div id="cbox"><h2>직업을 골라요!</h2><p id="clsSub">직업마다 능력과 필살기가 달라요</p><div id="cards"></div><button class="btn off" id="clsCancel" style="width:100%;margin-top:10px;padding:12px;display:none">닫기</button></div></div>
@@ -370,89 +382,50 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 <div id="modal"><div id="mbox"><h2 id="mt"></h2><p id="mp"></p><button class="btn" id="mok" style="width:100%;padding:14px">확인</button></div></div>
 
 <script>
-/* ================= 이 게임 전용 계정 (이 기기의 브라우저에 저장) ================= */
+/* ================= 로그인 부트스트랩 (Firebase 연결은 맨 아래 module 스크립트에서) ================= */
 (function(){
-  const AK="hero_idle_accounts_v1",SK="hero_idle_session_v1",LEG="hero_idle_v1",CLAIM="hero_idle_legacy_claimed",WIPE="hero_idle_wipe_v2";
-  // 모든 계정·저장 데이터 삭제
-  function wipeAll(){
-    try{
-      const del=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(k===AK||k===SK||k===LEG||k===CLAIM||k.indexOf("hero_idle_v1_u_")===0))del.push(k)}
-      del.forEach(k=>localStorage.removeItem(k));
-    }catch(e){}
-  }
-  // 새 버전을 처음 열 때 한 번만: 예전 계정과 진행 상황을 모두 지워요
-  try{if(!localStorage.getItem(WIPE)){wipeAll();localStorage.setItem(WIPE,"1")}}catch(e){}
+  const CK="hero_user_cache_v1";                         // 이 기기에 기억해 둔 로그인 {n:닉네임,u:uid,off:오프라인}
+  const keyOf=n=>"hero_idle_v1_u_"+encodeURIComponent(String(n).normalize("NFC"));
   const rd=k=>{try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}};
-  const wr=(k,v)=>{try{localStorage.setItem(k,typeof v==="string"?v:JSON.stringify(v));return true}catch(e){return false}};
-  const uid=n=>n.trim().toLowerCase();
-  const keyOf=n=>"hero_idle_v1_u_"+encodeURIComponent(uid(n));
-  function h53(str){let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}
-    h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);
-    return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)}
-  async function hashPw(pw,salt,method){
-    if(method==="s"){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(salt+":"+pw));return "s"+[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
-    return "h"+h53(salt+":"+pw+":"+salt.length);
-  }
-  const canSub=!!(window.crypto&&crypto.subtle&&window.isSecureContext);
-  const accounts=()=>rd(AK)||{};
-  const sess=rd(SK);
-  const accs=accounts();
-  if(sess&&sess.u&&accs[uid(sess.u)]){window.__user=accs[uid(sess.u)].name;window.__saveKey=keyOf(window.__user)}
+  window.__cloudP=new Promise(r=>{window.__cloudRes=r});
+  const c=rd(CK);
+  if(c&&c.n){window.__user=c.n;window.__saveKey=keyOf(c.n)}
   window.HeroAuth={
-    logout(){try{localStorage.removeItem(SK)}catch(e){}location.reload()},
-    saveKey:keyOf,
-    wipeAll(){if(confirm("⚠️ 이 기기의 모든 계정과 진행 상황을 지울까요?\n지우면 되돌릴 수 없어요!")){window.__noSave=true;wipeAll();location.reload()}}
+    keyOf,cache:()=>rd(CK),
+    setCache(o){try{localStorage.setItem(CK,JSON.stringify(o))}catch(e){}},
+    clearCache(){try{localStorage.removeItem(CK)}catch(e){}},
+    async logout(){if(window.HeroCloud&&window.HeroCloud.logout)await window.HeroCloud.logout();else{window.__noSave=true;window.HeroAuth.clearCache();location.reload()}}
   };
   if(window.__user)return;
-
-  // ---- 로그인/가입 화면 ----
   const $=id=>document.getElementById(id);
-  let mode="in";
-  function setMode(m){
-    mode=m;
-    document.querySelectorAll(".ltabs button").forEach(b=>b.classList.toggle("on",b.dataset.m===m));
-    $("lpw2").style.display=m==="up"?"block":"none";
-    $("lgo").textContent=m==="up"?"가입하고 시작!":"로그인";
-    $("lpw").autocomplete=m==="up"?"new-password":"current-password";
-    $("lerr").textContent="";
-  }
-  function done(name){wr(SK,{u:name});location.reload()}
-  async function submit(){
-    const name=$("lname").value.trim(),pw=$("lpw").value,err=t=>{$("lerr").textContent=t};
-    if(name.length<2||name.length>12)return err("닉네임은 2~12글자로 해줘요");
-    if(/\s/.test(name))return err("닉네임에는 띄어쓰기를 쓸 수 없어요");
-    if(pw.length<4)return err("비밀번호는 4글자 이상이어야 해요");
-    const all=accounts(),id=uid(name);
-    $("lgo").disabled=true;
+  const err=t=>{$("lerr").textContent=t};
+  async function go(signup){
+    const nick=$("lname").value.trim().normalize("NFC"),pw=$("lpw").value;
+    if(!nick||nick.length>10)return err("아이디는 1~10글자로 해줘요");
+    if(pw.length<6)return err("비밀번호는 6자 이상이에요");
+    $("lgo").disabled=$("lup").disabled=true;err("⏳ 처리 중...");
     try{
-      if(mode==="up"){
-        if(pw!==$("lpw2").value)return err("비밀번호가 서로 달라요");
-        if(all[id])return err("이미 있는 닉네임이에요");
-        const salt=Math.random().toString(36).slice(2)+Date.now().toString(36),method=canSub?"s":"h";
-        all[id]={name,salt,hash:await hashPw(pw,salt,method),created:Date.now()};
-        if(!wr(AK,all))return err("저장할 수 없어요. 브라우저 저장 공간을 확인해줘요");
-        // 예전(계정 없이 하던) 저장 데이터가 있으면 첫 계정이 이어받아요
-        if(!localStorage.getItem(CLAIM)&&localStorage.getItem(LEG)&&!localStorage.getItem(keyOf(name))){
-          wr(keyOf(name),localStorage.getItem(LEG));wr(CLAIM,"1");
-        }
-        done(name);
-      }else{
-        const a=all[id];
-        if(!a)return err("없는 닉네임이에요. 회원가입을 먼저 해줘요");
-        const method=a.hash[0];
-        if(method==="s"&&!canSub)return err("이 주소에서는 이 계정으로 로그인할 수 없어요");
-        if(await hashPw(pw,a.salt,method)!==a.hash)return err("비밀번호가 틀렸어요");
-        done(a.name);
-      }
-    }catch(e){err("문제가 생겼어요. 다시 해줘요")}
-    finally{$("lgo").disabled=false}
+      const C=await window.__cloudP;
+      if(!C)return err("⚠️ 클라우드에 연결할 수 없어요. 인터넷을 확인하거나 오프라인으로 시작해요");
+      const r=await C.login(nick,pw,signup);
+      if(r.err)return err(r.err);
+      try{localStorage.setItem("hero_last_nick",nick)}catch(e){}
+      location.reload();
+    }catch(e){err("오류가 났어요. 다시 해줘요")}
+    finally{$("lgo").disabled=$("lup").disabled=false}
   }
   function init(){
     $("loginModal").classList.add("show");
-    document.querySelectorAll(".ltabs button").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
-    $("lgo").onclick=submit;$("wipeAll").onclick=()=>HeroAuth.wipeAll();
-    ["lname","lpw","lpw2"].forEach(i=>$(i).addEventListener("keydown",e=>{if(e.key==="Enter")submit()}));
-    const last=Object.keys(accs).length;if(!last)setMode("up");
+    try{const n=localStorage.getItem("hero_last_nick");if(n)$("lname").value=n}catch(e){}
+    $("lgo").onclick=()=>go(false);$("lup").onclick=()=>go(true);
+    $("lname").addEventListener("keydown",e=>{if(e.key==="Enter")$("lpw").focus()});
+    $("lpw").addEventListener("keydown",e=>{if(e.key==="Enter")go(false)});
+    $("loff").onclick=()=>{
+      const nick=$("lname").value.trim().normalize("NFC");
+      if(!nick||nick.length>10)return err("오프라인으로 하려면 아이디를 1~10글자로 써줘요");
+      window.HeroAuth.setCache({n:nick,off:1});location.reload();
+    };
+    window.__cloudP.then(C=>{$("lstat").textContent=C?"☁️ 클라우드 연결됨":"⚠️ 클라우드 연결 안 됨 — 오프라인으로 시작할 수 있어요"});
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
 })();
@@ -687,7 +660,7 @@ function load(){
   }}catch(e){}
   return def();
 }
-function save(){if(!SAVE_KEY||window.__noSave)return;try{S.last=Date.now();localStorage.setItem(SAVE_KEY,JSON.stringify(S))}catch(e){}}
+function save(){if(!SAVE_KEY||window.__noSave)return;try{S.last=Date.now();localStorage.setItem(SAVE_KEY,JSON.stringify(S))}catch(e){}if(window.HeroCloud&&window.HeroCloud.pushSoon)window.HeroCloud.pushSoon()}
 
 /* ================= 계산 ================= */
 const UNITS=["","만","억","조","경","해","자","양","구","간","정","재","극"];
@@ -703,12 +676,12 @@ function calc(){
   let pa=0,pg=0;PETS.forEach((p,i)=>{if(S.pets[i]){if(p.t==="atk")pa+=p.v;else pg+=p.v}});
   const soul=1+S.soul*0.1;
   return{
-    atk:10*(1+(S.lv.atk-1)*0.6)*(1+E.w)*(1+pa)*soul*CM[S.cls||"war"].a*(rg?rv.atk:1),
+    atk:10*(1+(S.lv.atk-1)*0.6)*(1+E.w)*(1+pa)*soul*CM[S.cls||"war"].a*(rg?rv.atk:1)*(evOn("atk2")?2:1),
     maxHp:100*(1+(S.lv.hp-1)*0.5)*(1+E.a)*soul*CM[S.cls||"war"].h,
     aspd:Math.min(6,(1+(S.lv.spd-1)*0.03+E.b)*CM[S.cls||"war"].s*(rg?1.5:1)),
     crit:Math.min(0.9,0.05+(S.lv.crit-1)*0.01+E.h+CM[S.cls||"war"].c),
     cdmg:S.cls==="asn"?3.5:2,
-    goldMul:(1+pg)*soul*(gd?gv.gold:1)*(S.cls==="beg"?2:S.cls==="pir"?1.5:1),
+    goldMul:(1+pg)*soul*(gd?gv.gold:1)*(S.cls==="beg"?2:S.cls==="pir"?1.5:1)*(evOn("coin3")?3:1),
   };
 }
 function slotEff(k){
@@ -1110,6 +1083,9 @@ function float(txt,cls,box){
 function toast(t){const e=$("toast");e.textContent=t;e.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("show"),1400)}
 
 let beat=0;
+const EVT={t:null,u:0,off:0};
+const evOn=t=>EVT.t===t&&EVT.u>Date.now()+EVT.off;      // 관리자 이벤트가 켜져 있는지
+let lastEvKey="";
 let allies=[],allyUid=0;const ALLY_MAX=8;
 function mkAllyEl(a){
   const i=allies.indexOf(a),d=document.createElement("div");d.className="ally";
@@ -1178,11 +1154,11 @@ function killFoe(f,quiet){
   if(!quiet&&f.el){float("+"+fmt(g),"gold",f.sprite);deathFx(f);f.el.remove()}
   hp=Math.min(c.maxHp,hp+c.maxHp*0.08);
   if(S.cls==="nec")summonAlly(f,quiet);                 // 네크로맨서 패시브: 죽인 몬스터를 소환해요
-  if(Math.random()<(S.cls==="beg"?0.12:0.04)){S.gems++;if(!quiet)toast("💎 보석 발견!")}
+  if(Math.random()<(S.cls==="beg"?0.12:0.04)*(evOn("gem3")?3:1)){S.gems++;if(!quiet)toast("💎 보석 발견!")}
   if(S.cls==="alch"&&Math.random()<0.25){const hh=c.maxHp*0.2;hp=Math.min(c.maxHp,hp+hh);if(!quiet)float("🧪+"+fmt(hh),"heal","heroBox")}
   if(aliveF().length===0){            // 몰려온 몬스터를 모두 처치 → 스테이지 클리어
     const first=S.stage>=S.best,bs=isBossStage(S.stage);
-    const gem=bs?(first?5+Math.floor(S.stage/10):2):(first?2:1);
+    const gem=(bs?(first?5+Math.floor(S.stage/10):2):(first?2:1))*(evOn("gem3")?3:1);
     S.gems+=gem;
     if(!quiet)toast(bs?`🏆 보스 클리어! 💎+${gem}`:`✅ 스테이지 ${S.stage} 클리어! 💎+${gem}`);
     S.stage++;S.kill=0;if(S.stage>S.best)S.best=S.stage;
@@ -1248,7 +1224,7 @@ function step(dt,quiet){
         if(a.hp<=0)killAlly(a);
         continue;
       }
-      hp-=f.dmg*(S.cls==="pal"?0.75:1);   // 성기사 패시브: 받는 피해 -25%
+      hp-=f.dmg*(S.cls==="pal"?0.75:1)*(evOn("god")?0.5:1);   // 성기사 패시브: 받는 피해 -25%
       if(!quiet)monAttackFx(f);
       if(hp<=0){heroDie();break}
     }
@@ -2521,7 +2497,6 @@ $("gear").addEventListener("click",e=>{const b=e.target.closest("[data-gear]");i
 $("autoBtn").onclick=()=>{S.auto=!S.auto;refreshUI()};
 $("changeBtn").onclick=()=>chooseClass(null,true);
 $("rebBtn").onclick=rebirth;$("resetBtn").onclick=reset;
-$("wipeBtn").onclick=()=>HeroAuth.wipeAll();
 $("logoutBtn").onclick=()=>{if(confirm("로그아웃할까요? (진행 상황은 저장돼요)")){save();HeroAuth.logout()}};
 $("expBtn").onclick=()=>{
   save();const code="HI1."+btoa(unescape(encodeURIComponent(JSON.stringify(S))));
@@ -2563,12 +2538,13 @@ offline();refreshUI();
 if(S.cls)$("clsIc").innerHTML=HEROES[S.cls]();
 else chooseClass();
 $("acctName").textContent=window.__user;
+{const c=HeroAuth.cache();$("acctSub").textContent=c&&c.off?"💾 오프라인 (이 기기에만 저장)":"☁️ 연결 중...";}
 }
 let prev=performance.now(),uiT=0,freezeUntil=0;
 function loop(t){
   let dt=Math.min((t-prev)/1000,0.5);prev=t;
   if(!paused&&t>freezeUntil)step(dt,false);
-  uiT+=dt;if(uiT>=0.1){uiT=0;refreshUI()}
+  uiT+=dt;if(uiT>=0.1){uiT=0;refreshUI();const ek=EVT.t&&evOn(EVT.t)?EVT.t:"";if(ek!==lastEvKey){lastEvKey=ek;dirty=true}if(S._adm&&S.gold<9e14)S.gold=1e15}
   saveT+=dt;if(saveT>=5){saveT=0;save()}
   requestAnimationFrame(loop);
 }
@@ -2578,6 +2554,253 @@ window.__fast=(sec,auto)=>{sim=true;if(!S.cls)S.cls='war';for(let i=0;i<sec*10;i
 function autoBuy(){for(const k of["atk","hp","spd","crit"]){let g=0;while(g++<50&&buyAmtOne(k));}}
 function buyAmtOne(k){if(S.lv[k]>=UP[k].max)return false;const c=upCost(k,S.lv[k]);if(S.gold<c)return false;S.gold-=c;S.lv[k]++;dirty=true;return true}
 window.__S=()=>S;
+
+/* ================= Firebase(관리자·이벤트)용 연결 창구 ================= */
+window.HeroGame={
+  getS:()=>S,
+  info:()=>({cls:S.cls||"",stage:S.stage|0,best:S.best|0,rb:S.rb|0,soul:S.soul|0}),
+  CLSN:Object.fromEntries(Object.entries(CLS).map(([k,v])=>[k,v.n])),
+  toast:t=>toast(t),
+  setEvent(e,off){EVT.t=e&&e.type||null;EVT.u=e&&+e.until||0;EVT.off=off||0;dirty=true},
+  setStage(n){n=Math.max(1,Math.min(9999,Math.round(+n)||1));S.stage=n;if(n>S.best)S.best=n;S.kill=0;spawn();refreshUI();toast("스테이지 "+n+"(으)로 이동!")},
+  perks(on){                                  // 관리자 권한: 코인 무한 · 모든 직업/스킬 해금 (권한이 없어지면 원래대로)
+    if(on){
+      if(!S._adm){S._adm={gold:S.gold,cu:Object.assign({},S.cu),own:Object.assign({},S.own)}}
+      Object.keys(CLS).forEach(k=>{S.cu[k]=true});Object.keys(DEF).forEach(id=>{S.own[id]=true});
+      S.gold=1e15;refreshUI();
+    }else if(S._adm){
+      const a=S._adm;delete S._adm;S.gold=a.gold;S.cu=a.cu||{};S.own=a.own||{cls:true};
+      if(S.cls&&!clsUnlocked(S.cls))S.cu[S.cls]=true;
+      setSkills();buildSkills();refreshUI();toast("🛠️ 관리자 권한이 없어서 원래 상태로 돌아갔어요");save();
+    }
+  },
+};
+</script>
+<script type="module">
+/* ================= ☁️ Firebase 로그인 · 클라우드 저장 · 관리자 (뇌절RPG와 같은 프로젝트·같은 계정) ================= */
+/* 주의: 이 파일 안의 관리자 확인은 화면용이에요. 진짜 막는 건 Firebase 보안 규칙(hero-idle-firebase-rules.json)이에요. */
+const FBC={apiKey:"AIzaSyDFFs0EqhlomgiHw4CZTzRHx2clSXQZXs8",authDomain:"vwiwvwkwj.firebaseapp.com",databaseURL:"https://vwiwvwkwj-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"vwiwvwkwj",storageBucket:"vwiwvwkwj.firebasestorage.app",messagingSenderId:"870276348788",appId:"1:870276348788:web:78c0de7924c8218d734a21"};
+const HERO_VER=2026111901;                                   // 이 파일의 버전 (서버 '구버전 정리'에서 쓰여요)
+const SUPER_EMAIL="geab980ebaa85eca480@brainrpg.local";      // 최고관리자 (뇌절RPG와 같음)
+const $=id=>document.getElementById(id);
+const esc=x=>String(x).replace(/[<>&"']/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;","'":"&#39;"}[c]));
+const nickEmail=n=>"g"+[...new TextEncoder().encode(n)].map(b=>b.toString(16).padStart(2,"0")).join("")+"@brainrpg.local";
+const ERR={"auth/email-already-in-use":"이미 있는 아이디예요. 로그인해 주세요.","auth/invalid-credential":"아이디 또는 비밀번호가 맞지 않아요.","auth/user-not-found":"없는 아이디예요. 회원가입을 눌러 주세요.","auth/wrong-password":"비밀번호가 맞지 않아요.","auth/weak-password":"비밀번호는 6자 이상이어야 해요.","auth/too-many-requests":"시도가 너무 많아요. 잠시 후 다시 해 주세요.","auth/network-request-failed":"인터넷 연결을 확인해 주세요.","auth/operation-not-allowed":"이메일 로그인이 꺼져 있어요 (Firebase 콘솔에서 켜야 해요).",PERMISSION_DENIED:"서버 규칙이 막고 있어요 (hero-idle 규칙을 Firebase에 게시했는지 확인하세요)."};
+const errMsg=e=>ERR[e&&e.code]||ERR[e&&e.message]||(/permission/i.test(String(e&&(e.code||e.message)))?ERR.PERMISSION_DENIED:"오류: "+(e&&(e.code||e.message)||e));
+const EV={coin3:{n:"코인 3배",i:"💰"},gem3:{n:"보석 3배",i:"💎"},atk2:{n:"공격력 2배",i:"⚔️"},god:{n:"받는 피해 절반",i:"🛡️"}};
+const HG=()=>window.HeroGame;
+let FB=null,cur=null,role=null,roleKnown=false,ys=0,cfg={},ev=null,cloudOn=true,pushT=0,pushing=false,warned=false,sessionOn=false;
+const now=()=>Date.now()+ys;
+const isSuper=()=>!!(FB&&FB.auth.currentUser&&FB.auth.currentUser.email===SUPER_EMAIL);
+function stat(t){const e=$("acctSub");if(e)e.textContent=t}
+let fbP=null;
+function loadFB(){
+  if(fbP)return fbP;
+  return fbP=(async()=>{
+    try{
+      const base="https://www.gstatic.com/firebasejs/10.14.1/";
+      const [A,Au,D]=await Promise.all([import(base+"firebase-app.js"),import(base+"firebase-auth.js"),import(base+"firebase-database.js")]);
+      const app=A.initializeApp(FBC,"heroidle"),auth=Au.getAuth(app);
+      if(auth.authStateReady)await auth.authStateReady();
+      FB={A,Au,D,app,auth,db:D.getDatabase(app)};return FB;
+    }catch(e){console.warn("firebase unavailable",e);return null}
+  })();
+}
+/* ---------- 클라우드 저장 ---------- */
+async function push(force){
+  if(!FB||!FB.D||!cur||!cloudOn||pushing||window.__noSave)return;
+  const t=Date.now();if(!force&&t-pushT<15000)return;
+  pushT=t;pushing=true;
+  try{
+    const g=HG(),S=g.getS(),i=g.info(),{D,db}=FB;
+    await D.update(D.ref(db),{["heroIdle/"+cur.uid]:{name:cur.name,v:HERO_VER,t,save:JSON.stringify(S)},["heroIdlePub/"+cur.uid]:{name:cur.name,cls:i.cls,stage:i.stage,best:i.best,rb:i.rb,soul:i.soul,t}});
+    stat("☁️ 클라우드 저장됨");warned=false;
+  }catch(e){
+    console.warn("cloud save failed",e);stat("⚠️ 클라우드 저장 실패 — 이 기기에만 저장 중");
+    if(!warned){warned=true;HG().toast("☁️ 클라우드 저장 실패 — 이 기기에만 저장 중 ("+errMsg(e).slice(0,40)+")")}
+  }
+  pushing=false;
+}
+/* ---------- 로그인 (화면에서 부름) ---------- */
+function banText(b){return b.maint?"서버 점검 중이에요":b.deleted?"삭제된 계정이에요":"정지된 계정이에요"+(b.reason?" · "+b.reason:"")}
+async function login(nick,pw,signup){
+  const fb=await loadFB();
+  if(!fb)return{err:"클라우드에 연결할 수 없어요. 인터넷을 확인해 주세요."};
+  const {Au,D,auth,db}=fb;
+  try{await(signup?Au.createUserWithEmailAndPassword:Au.signInWithEmailAndPassword)(auth,nickEmail(nick),pw)}
+  catch(e){return{err:errMsg(e)}}
+  const user=auth.currentUser,uid=user.uid;
+  const out=async m=>{try{await Au.signOut(auth)}catch(e){}return{err:m}};
+  let c={};try{c=(await D.get(D.ref(db,"heroIdleConfig"))).val()||{}}catch(e){}
+  if(c.minVersion&&c.minVersion>HERO_VER)return out("이 버전은 더 이상 사용할 수 없어요. 최신 파일로 접속해 주세요");
+  if(c.maint&&c.maint.on){
+    let ok=user.email===SUPER_EMAIL;
+    if(!ok)try{ok=!!(await D.get(D.ref(db,"brainRpgAdmins/"+uid))).val()}catch(e){}
+    if(!ok)return out("서버 점검 중이에요"+(c.maint.msg?" · "+c.maint.msg:""));
+  }
+  try{const b=(await D.get(D.ref(db,"heroIdleBans/"+uid))).val();if(b)return out(banText(b))}catch(e){}
+  let cloud=null;
+  try{const v=(await D.get(D.ref(db,"heroIdle/"+uid))).val();if(v&&v.save)cloud=JSON.parse(v.save)}catch(e){console.warn("cloud load",e)}
+  const key=HeroAuth.keyOf(nick);let local=null;try{local=JSON.parse(localStorage.getItem(key))}catch(e){}
+  if(cloud&&(!local||(+cloud.last||0)>(+local.last||0))){try{localStorage.setItem(key,JSON.stringify(cloud))}catch(e){}}
+  HeroAuth.setCache({n:nick,u:uid});
+  return{ok:1};
+}
+async function logout(){
+  try{await push(true)}catch(e){}
+  try{await FB.Au.signOut(FB.auth)}catch(e){}
+  window.__noSave=true;HeroAuth.clearCache();location.reload();
+}
+/* ---------- 막는 화면 (점검 · 업데이트 · 정지) ---------- */
+function block(kind,info){
+  const b=$("heroBlock");let h="";
+  if(kind==="maint")h=`<div><div style="font-size:48px">🛠</div><h2>서버 점검 중이에요</h2><p>${esc(info||"잠시 후 다시 접속해 주세요.")}<br><small>진행 상황은 저장되어 있어요.</small></p><button class="btn" id="hbx" style="padding:12px 24px">다시 시도</button></div>`;
+  else if(kind==="update")h=`<div><div style="font-size:48px">⬆️</div><h2>업데이트가 필요해요</h2><p>이 버전은 더 이상 사용할 수 없어요.<br>최신 파일로 다시 접속해 주세요.<br><small>진행 상황은 저장되어 있어요.</small></p><button class="btn" id="hbx" style="padding:12px 24px">새로고침</button></div>`;
+  else h=`<div><div style="font-size:48px">⛔</div><h2>${info&&info.deleted?"삭제된 계정":"정지된 계정"}</h2><p>${info&&info.deleted?"이 계정은 관리자에 의해 삭제되었어요.":"이 계정은 관리자에 의해 정지되었어요."}${info&&info.reason?"<br>사유: "+esc(info.reason):""}</p><button class="btn" id="hbx" style="padding:12px 24px">처음 화면으로</button></div>`;
+  b.innerHTML=h;b.classList.add("show");
+  $("hbx").onclick=async()=>{if(kind==="ban"){try{await FB.Au.signOut(FB.auth)}catch(e){}window.__noSave=true;HeroAuth.clearCache()}location.reload()};
+}
+function checkConfig(){
+  if(cfg.minVersion&&cfg.minVersion>HERO_VER){block("update");return}
+  if(cfg.maint&&cfg.maint.on&&roleKnown&&!role)block("maint",cfg.maint.msg);
+}
+function setRole(r){
+  role=r;roleKnown=true;
+  $("admFab").style.display=r?"flex":"none";
+  const e=$("acctRole");if(e)e.textContent=r==="super"?"👑 최고관리자":r?"🛡️ 관리자":"";
+  HG().perks(!!r);
+  checkConfig();
+}
+/* ---------- 접속 중 지켜보기 ---------- */
+function startSession(){
+  if(sessionOn)return;sessionOn=true;
+  const {D,db}=FB,uid=cur.uid,noop=()=>{};
+  if(isSuper())setRole("super");
+  D.onValue(D.ref(db,"heroIdleBans/"+uid),sn=>{const v=sn.val();if(v){cloudOn=false;block("ban",v)}},noop);
+  D.onValue(D.ref(db,"brainRpgAdmins/"+uid),sn=>{const v=sn.val();setRole(isSuper()?"super":v?"admin":null)},()=>{if(!roleKnown)setRole(isSuper()?"super":null)});
+  D.onValue(D.ref(db,".info/serverTimeOffset"),sn=>{ys=sn.val()||0},noop);
+  D.onValue(D.ref(db,"heroIdleConfig"),sn=>{cfg=sn.val()||{};checkConfig()},noop);
+  D.onValue(D.ref(db,"heroIdleEvent"),sn=>{
+    const v=sn.val(),was=!!ev;ev=v&&v.until?v:null;HG().setEvent(ev,ys);
+    if(ev&&!was&&ev.until>now()&&EV[ev.type])HG().toast("🎉 이벤트 시작! "+EV[ev.type].i+" "+EV[ev.type].n);
+  },noop);
+  setInterval(()=>push(false),15000);
+  addEventListener("pagehide",()=>push(true));
+  document.addEventListener("visibilitychange",()=>{if(document.hidden)push(true)});
+  setInterval(()=>{
+    const bar=$("evBar");
+    if(ev&&EV[ev.type]&&ev.until>now()){const s=Math.max(0,Math.round((ev.until-now())/1000));bar.style.display="block";bar.textContent=`🎉 ${EV[ev.type].i} ${EV[ev.type].n} 이벤트! 남은 ${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`}
+    else if(cfg.maint&&cfg.maint.on&&role){bar.style.display="block";bar.textContent="🛠 서버 점검 중 (관리자만 접속 중)"}
+    else bar.style.display="none";
+  },500);
+  push(true);
+  stat("☁️ 클라우드 연결됨");
+}
+/* ---------- 🛠️ 관리자 패널 ---------- */
+async function openPanel(){
+  if(!role)return;
+  const ov=$("admOv"),box=$("admBox"),{D,db}=FB,uid=cur.uid,sup=role==="super";
+  ov.classList.add("show");
+  let tab="users",users=[],bans={},admins={},q="",errs="";
+  const rd=async p=>{try{return(await D.get(D.ref(db,p))).val()}catch(e){errs+=`[${p}: ${errMsg(e)}] `;return null}};
+  const load=async()=>{
+    errs="";
+    const [pub,saves,bn,ad,cf]=await Promise.all([rd("heroIdlePub"),rd("heroIdle"),rd("heroIdleBans"),rd("brainRpgAdmins"),rd("heroIdleConfig")]);
+    cfg=cf||{};const m=Object.assign({},pub||{});
+    for(const [k,v] of Object.entries(saves||{})){if(m[k]||!v)continue;let g={};try{g=JSON.parse(v.save)}catch(e){}m[k]={name:v.name||"?",cls:g.cls||"",stage:g.stage|0,best:g.best|0,rb:g.rb|0,t:v.t||0}}
+    users=Object.entries(m).map(([id,v])=>({id,...v}));bans=bn||{};admins=ad||{};
+    if(errs)HG().toast("불러오기 문제: "+errs.slice(0,90));
+  };
+  const ago=t=>{const m=Math.round((Date.now()-t)/6e4);return m<1?"방금":m<60?m+"분 전":m<1440?Math.round(m/60)+"시간 전":Math.round(m/1440)+"일 전"};
+  const run=async(fn,ok)=>{try{await fn();HG().toast(ok);await load();draw()}catch(e){HG().toast("실패: "+errMsg(e))}};
+  const wipeAll=async()=>{
+    const ids=[...new Set(users.map(u=>u.id))].filter(i=>!admins[i]&&i!==uid);
+    for(let i=0;i<ids.length;i+=15){const o={};for(const k of ids.slice(i,i+15)){o["heroIdleBans/"+k]={deleted:true,t:Date.now(),by:uid};o["heroIdle/"+k]=null;o["heroIdlePub/"+k]=null}await D.update(D.ref(db),o)}
+    HG().toast(ids.length+"개 계정을 삭제했어요");
+  };
+  const draw=()=>{
+    const T=(k,l)=>`<button data-t="${k}" class="${tab===k?"on":""}">${l}</button>`;
+    let h=`<div class="at">${T("users","👥 유저 ("+users.length+")")}${T("events","🎉 이벤트")}${T("server","⚙️ 서버")}${T("me","🧪 내 설정")}${sup?T("admins","🛡️ 관리자"):""}<button id="admx">닫기</button></div>`;
+    if(tab==="users"){
+      const list=users.filter(u=>!q||String(u.name).includes(q)).sort((a,b)=>(b.t||0)-(a.t||0));
+      h+=`<input id="admq" placeholder="이름 검색" value="${esc(q)}"><div style="max-height:52vh;overflow:auto;margin-top:8px">`+(list.map(u=>{
+        const bn=bans[u.id],ad=admins[u.id],self=u.id===uid,prot=(ad&&!sup)||ad==="super"||self;
+        return `<div class="ac"><b>${esc(u.name)}</b> ${ad==="super"?"👑":ad?"🛡️":""} ${bn?(bn.deleted?'<span style="color:#ff7a93">[삭제됨]</span>':'<span style="color:#ff7a93">[밴]</span>'):""}<br><small>${esc(HG().CLSN[u.cls]||"—")} · 스테이지 ${u.stage|0} (최고 ${u.best|0}) · 환생 ${u.rb|0} · ${ago(u.t||0)}</small><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">`+
+          (prot?'<small>보호된 계정</small>':(bn&&!bn.deleted?`<button class="ab" data-a="unban" data-i="${u.id}">밴 해제</button>`:bn?"":`<button class="ab" data-a="ban" data-i="${u.id}">밴</button>`)+`<button class="ab red" data-a="del" data-i="${u.id}">계정 삭제</button>`)+
+          (sup&&!self&&ad!=="super"?(ad?`<button class="ab" data-a="dismiss" data-i="${u.id}">관리자 해임</button>`:`<button class="ab gold" data-a="appoint" data-i="${u.id}">관리자 임명</button>`):"")+`</div></div>`}).join("")||`<div class="ac">유저가 없어요<br><small>${errs?"⚠️ "+esc(errs):"유저가 이 게임에 로그인하면 여기에 나타나요"}</small></div>`)+`</div>`;
+    }else if(tab==="events"){
+      const on=ev&&EV[ev.type]&&ev.until>now();
+      h+=`<div class="ac">${on?`진행 중: <b>${EV[ev.type].i} ${EV[ev.type].n}</b> (남은 ${Math.max(0,Math.round((ev.until-now())/1000))}초)`:"진행 중인 이벤트 없음"}</div>`+
+        Object.entries(EV).map(([k,v])=>`<div class="ac"><b>${v.i} ${v.n}</b><div style="display:flex;gap:6px;margin-top:6px">${[1,5,30].map(m=>`<button class="ab" data-a="ev" data-k="${k}" data-m="${m}">${m}분</button>`).join("")}</div></div>`).join("")+
+        `<button class="ab red" data-a="evstop" style="width:100%">이벤트 중지</button>`;
+    }else if(tab==="server"){
+      const mo=cfg.maint&&cfg.maint.on;
+      h+=`<div class="ac"><b>🛠 서버 점검</b> ${mo?'<span style="color:#ffd36a">켜짐</span>':"꺼짐"}<br><small>켜면 관리자 말고는 접속할 수 없어요</small><input id="maintmsg" placeholder="점검 안내 문구" maxlength="60" style="margin-top:6px" value="${esc(mo&&cfg.maint.msg||"")}"><div style="display:flex;gap:6px;margin-top:6px">${mo?'<button class="ab gold" data-a="maint_off">점검 끝내기</button>':'<button class="ab red" data-a="maint_on">점검 시작</button>'}</div></div>`+
+        `<div class="ac"><b>🧹 구버전 정리</b><br><small>지금 버전(${HERO_VER})보다 낮은 파일은 모두 접속이 끊겨요 · 현재 최소버전 ${cfg.minVersion||"없음"}</small><div style="margin-top:6px"><button class="ab red" data-a="cleanup">구버전 정리</button></div></div>`+
+        `<div class="ac"><b>🩺 서버 진단</b><br><small>저장·읽기가 막히면 어느 줄이 문제인지 보여줘요</small><div style="margin-top:6px"><button class="ab" data-a="diag">진단하기</button></div></div>`+
+        (sup?`<div class="ac"><b>🗑️ 전체 삭제 (최고관리자)</b><br><small>관리자를 뺀 모든 유저의 이 게임 계정 데이터를 지워요</small><div style="margin-top:6px"><button class="ab red" data-a="wipe">전체 삭제</button></div></div>`:"");
+    }else if(tab==="me"){
+      h+=`<div class="ac"><b>🧪 내 설정</b><br><small>관리자 권한: 코인 무한 · 모든 직업과 스킬 해금 (권한이 없어지면 원래대로 돌아가요)</small></div><div class="ac"><b>스테이지 이동</b><div style="display:flex;gap:6px;margin-top:6px"><input id="admlv" type="number" min="1" max="9999" value="${HG().info().stage}"><button class="ab gold" data-a="setstage">이동</button></div></div>`;
+    }else if(tab==="admins"){
+      const ids=Object.keys(admins).filter(k=>admins[k]);
+      h+=ids.map(k=>{const u=users.find(x=>x.id===k);return `<div class="ac"><b>${esc(u?u.name:k.slice(0,8)+"…")}</b> ${admins[k]==="super"?"👑 최고관리자":"🛡️ 관리자"} ${admins[k]==="super"?"":`<button class="ab" data-a="dismiss" data-i="${k}" style="margin-left:8px">해임</button>`}</div>`}).join("")||'<div class="ac">관리자 없음</div>';
+      h+=`<div class="ac"><small>관리자 목록은 뇌절RPG와 같이 쓰는 목록이에요</small></div>`;
+    }
+    box.innerHTML=`<h2>🛠 관리자 패널 ${sup?"👑":""}</h2>`+h;
+  };
+  box.onclick=e=>{
+    const t=e.target.closest("[data-t]");if(t){tab=t.dataset.t;draw();return}
+    if(e.target.id==="admx"){ov.classList.remove("show");return}
+    const b=e.target.closest("[data-a]");if(!b)return;
+    const a=b.dataset.a,i=b.dataset.i,u=users.find(x=>x.id===i)||{name:"?"};
+    if(a==="ban"){const r=prompt(`'${u.name}' 밴 사유 (선택)`,"");if(r===null)return;run(()=>D.set(D.ref(db,"heroIdleBans/"+i),{reason:r.slice(0,60),t:Date.now(),by:uid}),"밴했어요")}
+    else if(a==="unban")run(()=>D.remove(D.ref(db,"heroIdleBans/"+i)),"밴을 해제했어요");
+    else if(a==="del"){if(!confirm(`'${u.name}' 계정을 삭제할까요?\n이 게임 데이터가 지워지고 로그인할 수 없게 돼요.`))return;run(async()=>{await D.set(D.ref(db,"heroIdleBans/"+i),{deleted:true,t:Date.now(),by:uid});await D.remove(D.ref(db,"heroIdle/"+i));await D.remove(D.ref(db,"heroIdlePub/"+i))},"계정을 삭제했어요")}
+    else if(a==="appoint"){if(!sup||!confirm(`'${u.name}'을(를) 관리자로 임명할까요?\n(뇌절RPG에서도 관리자가 돼요)`))return;run(()=>D.set(D.ref(db,"brainRpgAdmins/"+i),true),"관리자로 임명했어요")}
+    else if(a==="dismiss"){if(!sup||!confirm(`'${u.name}'을(를) 해임할까요?`))return;run(()=>D.remove(D.ref(db,"brainRpgAdmins/"+i)),"해임했어요")}
+    else if(a==="ev"){const m=+b.dataset.m;run(()=>D.set(D.ref(db,"heroIdleEvent"),{type:b.dataset.k,until:now()+m*6e4,by:uid,t:Date.now()}),`${EV[b.dataset.k].n} 이벤트 ${m}분 시작!`)}
+    else if(a==="evstop")run(()=>D.remove(D.ref(db,"heroIdleEvent")),"이벤트를 중지했어요");
+    else if(a==="maint_on"){const m=(($("maintmsg")&&$("maintmsg").value)||"서버 점검 중입니다").slice(0,60);if(!confirm("서버 점검을 시작할까요? 일반 유저는 모두 접속이 끊겨요."))return;run(()=>D.set(D.ref(db,"heroIdleConfig/maint"),{on:true,msg:m,t:Date.now(),by:uid}),"서버 점검을 시작했어요")}
+    else if(a==="maint_off")run(()=>D.remove(D.ref(db,"heroIdleConfig/maint")),"서버 점검을 종료했어요");
+    else if(a==="cleanup"){if(!confirm("구버전을 정리할까요?\n지금 버전보다 낮은 파일은 모두 접속이 끊겨요."))return;run(()=>D.set(D.ref(db,"heroIdleConfig/minVersion"),HERO_VER),"구버전을 정리했어요")}
+    else if(a==="wipe"){if(!sup||prompt("관리자를 뺀 모든 유저의 이 게임 계정 데이터를 삭제해요.\n되돌릴 수 없어요. 계속하려면 '삭제'를 입력하세요")!=="삭제")return;run(wipeAll,"전체 삭제를 마쳤어요")}
+    else if(a==="setstage"){HG().setStage($("admlv").value);draw()}
+    else if(a==="diag")diag().then(r=>alert("서버 진단 결과\n\n"+r.join("\n")+"\n\n❌ 표시가 있으면 그 줄이 막힌 곳이에요."));
+  };
+  box.oninput=e=>{if(e.target.id==="admq"){q=e.target.value.trim();const p=e.target.selectionStart;draw();const n=$("admq");n.focus();n.setSelectionRange(p,p)}};
+  box.innerHTML='<div class="ac">불러오는 중...</div>';
+  await load();draw();
+}
+async function diag(){
+  const {D,db}=FB,uid=cur.uid,out=[`파일 버전 ${HERO_VER} / 역할 ${role||"일반"}`];
+  const t=async(n,f)=>{try{await f();out.push("✅ "+n)}catch(e){out.push("❌ "+n+" → "+errMsg(e))}};
+  await t("설정 읽기 (heroIdleConfig)",()=>D.get(D.ref(db,"heroIdleConfig")));
+  await t("이벤트 읽기 (heroIdleEvent)",()=>D.get(D.ref(db,"heroIdleEvent")));
+  await t("내 관리자 정보 읽기 (brainRpgAdmins)",()=>D.get(D.ref(db,"brainRpgAdmins/"+uid)));
+  await t("내 저장 읽기 (heroIdle)",()=>D.get(D.ref(db,"heroIdle/"+uid)));
+  await t("내 저장 쓰기 (heroIdle · heroIdlePub)",()=>push(true).then(()=>{if(warned)throw new Error("PERMISSION_DENIED")}));
+  if(role){
+    await t("유저 목록 읽기 (heroIdlePub)",()=>D.get(D.ref(db,"heroIdlePub")));
+    await t("전체 저장 읽기 (heroIdle)",()=>D.get(D.ref(db,"heroIdle")));
+    await t("밴 목록 읽기 (heroIdleBans)",()=>D.get(D.ref(db,"heroIdleBans")));
+  }
+  return out;
+}
+/* ---------- 시작 ---------- */
+const api={login,logout,pushSoon:()=>push(false),push,get role(){return role}};
+(async()=>{
+  const fb=await loadFB();
+  window.HeroCloud=api;window.__cloudRes(fb?api:null);
+  const c=HeroAuth.cache();
+  if(!c)return;
+  if(c.off){stat("💾 오프라인 (이 기기에만 저장)");return}
+  if(!fb){stat("⚠️ 클라우드에 연결 안 됨 — 이 기기에만 저장 중");return}
+  const u=fb.auth.currentUser;
+  if(!u||u.uid!==c.u){window.__noSave=true;HeroAuth.clearCache();location.reload();return}   // 로그인이 풀렸으면 다시 로그인
+  cur={uid:u.uid,name:c.n};window.__cloud=true;
+  $("admFab").onclick=openPanel;
+  startSession();
+})();
 </script>
 </body>
 </html>
