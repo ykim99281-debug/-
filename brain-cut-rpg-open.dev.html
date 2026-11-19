@@ -1505,7 +1505,7 @@ function togglePK(){if(!cloudOn){toast('PK는 클라우드 로그인 상태에�
 
 /* ================= ADMIN / EVENTS / BAN ================= */
 const SUPERMAIL="geab980ebaa85eca480@brainrpg.local";
-const BUILD=2026111901;
+const BUILD=2026111901,TAG='r7 (진단2줄·점검알림)';
 let kicked=false,CFG={};
 let banned=false,ADM={role:null},EVT={type:null,until:0,by:''},srvOff=0,unsubAll=[];
 const EVTS={xp3:{n:'경험치 3배',i:'📈'},gold3:{n:'골드 3배',i:'💰'},atk2:{n:'공격력 2배',i:'⚔️'},god:{n:'받는 피해 절반',i:'🛡️'}};
@@ -1548,7 +1548,7 @@ function evBanner(){const e=$('#evb');if((!EVT.type||EVT.until<=Date.now()+srvOf
  if(!EVT.type||EVT.until<=Date.now()+srvOff||!EVTS[EVT.type]){e.style.display='none';return}const r=Math.max(0,Math.round((EVT.until-Date.now()-srvOff)/1000));e.style.display='block';e.textContent=`🎉 ${EVTS[EVT.type].i} ${EVTS[EVT.type].n} 이벤트! 남은 ${Math.floor(r/60)}:${String(r%60).padStart(2,'0')}`}
 setInterval(evBanner,500);
 async function runDiag(){const f=FB,D=f.D,u=f.auth.currentUser.uid,out=[];const t=async(n,fn)=>{try{await fn();out.push('✅ '+n)}catch(e){out.push('❌ '+n+' → '+fbMsg(e))}};
- out.push(`버전 ${BUILD} / 최소버전 ${CFG.minVersion||'없음'} / 점검 ${CFG.maint&&CFG.maint.on?'켜짐':'꺼짐'}`);
+ out.push(`파일 ${TAG}`);out.push(`버전 ${BUILD} / 최소버전 ${CFG.minVersion||'없음'} / 점검 ${CFG.maint&&CFG.maint.on?'켜짐':'꺼짐'}`);
  await t('설정 읽기 (brainRpgConfig)',()=>D.get(D.ref(f.db,'brainRpgConfig')));
  await t('내 관리자 정보 읽기',()=>D.get(D.ref(f.db,'brainRpgAdmins/'+u)));
  await t('내 저장 읽기 (brainRpg)',()=>D.get(D.ref(f.db,'brainRpg/'+u)));
@@ -1631,7 +1631,7 @@ function title(){
  <div id="cstat" style="font-size:12px;color:#cdbdf5;min-height:1.3em">☁️ 클라우드 연결 중...</div>
  <button id="offl" style="font-size:12px;padding:6px 10px;opacity:.85">오프라인으로 시작 (이 기기에만 저장)</button>
  ${profs.length?`<div style="font-size:12px;color:#cdbdf5">이 기기의 저장된 캐릭터</div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center">${profs.map(n=>{const d=loadProfile(n);return `<button class="pf" data-n="${n.replace(/"/g,'')}" style="font-size:13px;padding:6px 10px">${n} · Lv.${d&&d.G?d.G.lv:1} ${d&&d.G?JOBNAME[d.G.job]||'':''}</button>`}).join('')}</div>`:''}</div>
- <div class="desc" style="font-size:12px;opacity:.75">☁️ 계정으로 로그인하면 <b>어느 기기에서든</b> 이어서 할 수 있어요. 처음이면 회원가입!<br>PC: WASD 이동 · 마우스 시점 · J/클릭 공격 · L 드립 · K 방어 · Space 구르기 · R 한번 더 · Q 물약 · E 대화<br>모바일: 왼쪽 드래그 이동 · 오른쪽 드래그 시점 · 오른쪽 아래 버튼</div>`;s.className='on';
+ <div class="desc" style="font-size:11px;opacity:.55">파일 ${TAG}</div><div class="desc" style="font-size:12px;opacity:.75">☁️ 계정으로 로그인하면 <b>어느 기기에서든</b> 이어서 할 수 있어요. 처음이면 회원가입!<br>PC: WASD 이동 · 마우스 시점 · J/클릭 공격 · L 드립 · K 방어 · Space 구르기 · R 한번 더 · Q 물약 · E 대화<br>모바일: 왼쪽 드래그 이동 · 오른쪽 드래그 시점 · 오른쪽 아래 버튼</div>`;s.className='on';
  const cs=t=>{const e=$('#cstat');if(e)e.textContent=t};
  fbInit().then(f=>cs(f?'☁️ 클라우드 연결됨':'⚠️ 클라우드 연결 안 됨 — 오프라인으로 시작할 수 있어요'));
  const nameOK=()=>{const n=$('#nick').value.trim();if(!n){toast('아이디를 입력해 주세요');return null}return n};
