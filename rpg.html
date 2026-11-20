@@ -1,0 +1,2101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>귀멸x주술 확장 RPG</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#07070a;color:white;overflow:hidden}button{border:0;color:white;cursor:pointer}
+#select,#game,#world{display:none;width:100vw;height:100vh}#select.active,#game.active,#world.active{display:block}
+#select{overflow:auto;padding:16px;background:linear-gradient(135deg,#050505,#3b0a0a,#111827)}
+.title{text-align:center;font-size:34px;text-shadow:0 0 12px #dc2626}.sub{text-align:center;color:#ddd}
+.box,.shop,.room,.friend,.trade,.tradeRoom,.pvp,.onlineBox,.photoBox{max-width:1180px;margin:12px auto;padding:14px;border-radius:14px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.22)}
+input,select{padding:10px;border-radius:9px;border:1px solid #555;background:#111827;color:white;margin:4px}button{padding:10px 14px;border-radius:9px;background:#1f2937;margin:4px}.red{background:#991b1b}.blue{background:#2563eb}.green{background:#16a34a}.gold{background:#b45309}.purple{background:#7e22ce}
+.user{color:#facc15;font-weight:bold;margin-top:8px}.small{font-size:13px;color:#ddd;line-height:1.5}.friendList{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:8px}.friendItem{background:#111827;border:1px solid #374151;border-radius:10px;padding:9px}.filters{text-align:center}.filters button.active{background:#dc2626}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;max-width:1180px;margin:12px auto}.card,.kat,.equip,.marketCard{background:#111827;border:1px solid #374151;border-radius:13px;padding:10px;text-align:center}.card.selected,.kat.equipped,.equip.equipped{border-color:#facc15;box-shadow:0 0 13px #facc15}.locked{filter:grayscale(1);opacity:.55}
+.face{width:118px;height:148px;margin:0 auto 9px;border-radius:14px;display:grid;place-items:center;font-size:48px;background:linear-gradient(135deg,#111827,#7f1d1d);overflow:hidden;border:1px solid rgba(255,255,255,.25)}.face img{width:100%;height:100%;object-fit:cover;display:block}.photoBox{display:none}.photoPreview{width:120px;height:120px;border-radius:14px;object-fit:cover;background:#111827;border:1px solid #475569}.photoTools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.price{color:#22c55e;font-weight:bold}.dia{color:#67e8f9;font-weight:bold}.info{max-width:920px;margin:12px auto;padding:14px;border-radius:14px;background:rgba(255,255,255,.09)}
+.start{display:block;margin:18px auto;padding:16px 48px;border-radius:999px;background:#dc2626;font-size:23px;box-shadow:0 0 18px #dc2626}.shopgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}.friendList,.tradePanel{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px}.friendItem,.tradeSlot{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:8px}.tradeReady{border-color:#22c55e;box-shadow:0 0 10px #22c55e}.tradeWarn{color:#facc15;font-weight:bold}
+#game{position:relative;background:#111}canvas{width:100%;height:100%;display:block;background:linear-gradient(#08111f,#1f0f0f)}
+.hud{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}.panel,.mid{background:rgba(0,0,0,.65);padding:10px;border-radius:12px;min-width:150px}.mid{text-align:center}.bar{height:15px;background:#333;border-radius:999px;overflow:hidden}.fill{height:100%;background:#22c55e}.efill{background:#ef4444}
+#msg{position:absolute;top:94px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.68);padding:8px 16px;border-radius:999px;color:#facc15;font-weight:bold}.back{position:absolute;top:94px;left:10px;background:#374151}
+.joy{position:absolute;left:26px;bottom:32px;width:142px;height:142px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.25);touch-action:none}.stick{position:absolute;left:50%;top:50%;width:60px;height:60px;margin:-30px;border-radius:50%;background:rgba(255,255,255,.35)}
+.btns{position:absolute;right:18px;bottom:22px;display:grid;grid-template-columns:78px 78px;gap:12px}.act{width:78px;height:78px;border-radius:50%;font-weight:bold;background:#1d4ed8}.atk{background:#b91c1c;font-size:18px}.dash{background:#111827}.cool{filter:grayscale(1);opacity:.45}
+.stat{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.stat span{background:rgba(0,0,0,.55);padding:8px 12px;border-radius:999px}
+.fx{position:absolute;pointer-events:none;font-size:56px;animation:fx .72s cubic-bezier(.2,1.4,.25,1) forwards;text-shadow:0 0 18px white,0 0 28px currentColor;z-index:12}.domainFx{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle,rgba(99,102,241,.48),rgba(0,0,0,.18),rgba(0,0,0,.82));animation:domain 1.15s ease-out forwards;z-index:8}.impactRing{position:absolute;width:90px;height:90px;border:5px solid currentColor;border-radius:50%;pointer-events:none;animation:ring .55s ease-out forwards;box-shadow:0 0 24px currentColor;z-index:11}.cutBurst{position:absolute;width:220px;height:220px;pointer-events:none;background:conic-gradient(from 45deg,transparent,currentColor,white,currentColor,transparent,transparent);clip-path:polygon(50% 0,60% 42%,100% 50%,60% 58%,50% 100%,40% 58%,0 50%,40% 42%);animation:burst .45s ease-out forwards;filter:drop-shadow(0 0 18px currentColor);z-index:10}
+.slashLine{position:absolute;height:8px;width:190px;border-radius:999px;pointer-events:none;transform-origin:left center;animation:slashLine .38s ease-out forwards;box-shadow:0 0 20px currentColor;z-index:9}
+@keyframes fx{0%{opacity:0;transform:scale(.2) rotate(-30deg)}35%{opacity:1;transform:scale(1.55) rotate(8deg)}100%{opacity:0;transform:scale(2.35) rotate(55deg)}}@keyframes domain{0%{opacity:0;transform:scale(.45)}35%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.65)}}@keyframes slashLine{0%{opacity:0;transform:scaleX(.05) rotate(var(--rot))}35%{opacity:1;transform:scaleX(1.15) rotate(var(--rot))}100%{opacity:0;transform:scaleX(1.65) rotate(var(--rot))}}@keyframes ring{0%{opacity:1;transform:scale(.25)}100%{opacity:0;transform:scale(2.8)}}@keyframes burst{0%{opacity:0;transform:scale(.2) rotate(0)}45%{opacity:.95;transform:scale(1) rotate(25deg)}100%{opacity:0;transform:scale(1.6) rotate(80deg)}}
+.screenFlash{position:absolute;inset:0;background:white;pointer-events:none;z-index:30;animation:flash .42s ease-out forwards}.spaceWarp{position:absolute;inset:-20px;pointer-events:none;z-index:14;background:radial-gradient(circle at var(--x) var(--y),rgba(168,85,247,.72),rgba(56,189,248,.24) 22%,rgba(0,0,0,.38) 45%,transparent 70%);filter:blur(2px) contrast(1.45);animation:warp 1.25s ease-out forwards}.purpleOrb{position:absolute;width:76px;height:76px;border-radius:50%;pointer-events:none;z-index:28;left:var(--sx);top:var(--sy);background:radial-gradient(circle,#fff 0 10%,#c084fc 22%,#7e22ce 52%,#111827 78%);box-shadow:0 0 26px #fff,0 0 58px #a855f7,0 0 110px #7e22ce;animation:purpleFly .9s cubic-bezier(.08,.8,.12,1) forwards}.purpleOrb::before{content:"";position:absolute;inset:-28px;border-radius:50%;border:4px solid rgba(216,180,254,.9);box-shadow:0 0 40px #a855f7;animation:orbSpin .45s linear infinite}.breathWave{position:absolute;pointer-events:none;z-index:13;font-size:120px;filter:drop-shadow(0 0 22px currentColor);animation:breathWave .9s ease-out forwards}.flamePillar{position:absolute;width:130px;height:260px;border-radius:70px 70px 20px 20px;pointer-events:none;z-index:13;background:radial-gradient(circle at 50% 85%,#fff,rgba(251,146,60,.9) 25%,rgba(220,38,38,.72) 55%,transparent 72%);filter:blur(.3px) drop-shadow(0 0 30px #fb923c);animation:flameUp .85s ease-out forwards}.thunderRay{position:absolute;height:16px;width:360px;pointer-events:none;z-index:15;transform-origin:left center;background:linear-gradient(90deg,transparent,#fff,#facc15,#fff,transparent);clip-path:polygon(0 45%,34% 45%,40% 0,50% 100%,58% 45%,100% 45%,100% 65%,62% 65%,56% 100%,47% 0,38% 65%,0 65%);filter:drop-shadow(0 0 18px #facc15);animation:thunder .55s ease-out forwards}.mistCloud{position:absolute;width:260px;height:130px;border-radius:50%;pointer-events:none;z-index:13;background:radial-gradient(circle,rgba(255,255,255,.9),rgba(153,246,228,.48),transparent 70%);filter:blur(9px);animation:mist .95s ease-out forwards}.blackFlash{position:absolute;width:230px;height:230px;pointer-events:none;z-index:18;background:radial-gradient(circle,#000 0 20%,#ef4444 24%,#000 38%,transparent 68%);clip-path:polygon(50% 0,58% 38%,100% 50%,58% 62%,50% 100%,42% 62%,0 50%,42% 38%);filter:drop-shadow(0 0 32px #ef4444);animation:blackFlash .48s ease-out forwards}.sukunaCut{position:absolute;height:5px;width:130vw;left:-15vw;top:var(--y);pointer-events:none;z-index:18;background:linear-gradient(90deg,transparent,#fff,#ef4444,#fff,transparent);box-shadow:0 0 22px #ef4444;transform:rotate(var(--rot));animation:sukunaCut .62s ease-out forwards}
+@keyframes flash{0%{opacity:0}18%{opacity:1}100%{opacity:0}}@keyframes warp{0%{opacity:0;transform:scale(.75) rotate(0deg)}35%{opacity:1;transform:scale(1.03) rotate(4deg)}100%{opacity:0;transform:scale(1.22) rotate(-6deg)}}@keyframes purpleFly{0%{opacity:0;transform:translate(0,0) scale(.25)}18%{opacity:1;transform:translate(0,0) scale(1)}80%{opacity:1;transform:translate(calc(var(--ex) - var(--sx)),calc(var(--ey) - var(--sy))) scale(1.35)}100%{opacity:0;transform:translate(calc(var(--ex) - var(--sx)),calc(var(--ey) - var(--sy))) scale(2.8)}}@keyframes orbSpin{to{transform:rotate(360deg)}}@keyframes breathWave{0%{opacity:0;transform:scale(.3) rotate(-20deg)}35%{opacity:1;transform:scale(1.05) rotate(4deg)}100%{opacity:0;transform:scale(1.9) rotate(18deg)}}@keyframes flameUp{0%{opacity:0;transform:translateY(60px) scaleY(.25)}35%{opacity:1;transform:translateY(-10px) scaleY(1)}100%{opacity:0;transform:translateY(-90px) scaleY(1.25)}}@keyframes thunder{0%{opacity:0;transform:scaleX(.05) rotate(var(--rot))}30%{opacity:1;transform:scaleX(1.15) rotate(var(--rot))}100%{opacity:0;transform:scaleX(1.55) rotate(var(--rot))}}@keyframes mist{0%{opacity:0;transform:scale(.45)}45%{opacity:1;transform:scale(1.15)}100%{opacity:0;transform:scale(1.8)}}@keyframes blackFlash{0%{opacity:0;transform:scale(.15) rotate(0)}35%{opacity:1;transform:scale(1.1) rotate(22deg)}100%{opacity:0;transform:scale(2.1) rotate(80deg)}}@keyframes sukunaCut{0%{opacity:0;transform:scaleX(.1) rotate(var(--rot))}30%{opacity:1;transform:scaleX(1) rotate(var(--rot))}100%{opacity:0;transform:scaleX(1.2) rotate(var(--rot))}}
+
+/* === 더 멋진 애니 공격 이펙트 추가 === */
+.waterDragon2{position:absolute;left:var(--sx);top:var(--sy);width:360px;height:135px;pointer-events:none;z-index:26;background:radial-gradient(circle at 88% 43%,#fff 0 4%,#7dd3fc 5%,transparent 16%),linear-gradient(100deg,transparent,#0ea5e9,#7dd3fc,white,#38bdf8,transparent);clip-path:polygon(0 55%,20% 35%,42% 58%,64% 32%,100% 46%,68% 70%,44% 48%,18% 76%);filter:drop-shadow(0 0 24px #38bdf8);transform-origin:left center;transform:rotate(var(--rot));animation:waterDragon2 .95s ease-out forwards}
+.fireDragon2{position:absolute;left:var(--sx);top:var(--sy);width:380px;height:165px;pointer-events:none;z-index:26;background:radial-gradient(circle at 88% 44%,white 0 4%,#facc15 7%,transparent 16%),linear-gradient(100deg,transparent,#dc2626,#fb923c,#fff,#f97316,transparent);clip-path:polygon(0 65%,20% 30%,36% 60%,52% 18%,67% 58%,82% 20%,100% 48%,72% 83%,56% 52%,39% 86%,25% 54%);filter:drop-shadow(0 0 30px #fb923c) drop-shadow(0 0 58px #dc2626);transform-origin:left center;transform:rotate(var(--rot));animation:fireDragon2 .9s ease-out forwards}
+.thunderStep2{position:absolute;left:var(--sx);top:var(--sy);height:24px;width:440px;pointer-events:none;z-index:28;background:linear-gradient(90deg,transparent,#fff,#facc15,#fff,#fde047,transparent);clip-path:polygon(0 45%,28% 45%,35% 0,45% 100%,55% 45%,75% 45%,81% 5%,89% 95%,95% 45%,100% 45%,100% 70%,92% 70%,85% 100%,78% 70%,58% 70%,49% 100%,40% 0,32% 70%,0 70%);filter:drop-shadow(0 0 18px #facc15) drop-shadow(0 0 38px #fff);transform-origin:left center;transform:rotate(var(--rot));animation:thunderStep2 .45s steps(2,end) forwards}
+.windStorm2{position:absolute;left:var(--x);top:var(--y);width:290px;height:290px;margin:-145px;pointer-events:none;z-index:24;border-radius:50%;background:conic-gradient(transparent,#bbf7d0,#22c55e,white,#86efac,transparent,#22c55e,transparent);mask:radial-gradient(circle,transparent 0 34%,#000 35% 62%,transparent 63%);filter:drop-shadow(0 0 24px #86efac);animation:spinStorm2 .95s ease-out forwards}
+.mistField2{position:absolute;left:var(--x);top:var(--y);width:410px;height:230px;margin:-115px -205px;pointer-events:none;z-index:24;background:radial-gradient(circle at 20% 50%,rgba(255,255,255,.92),transparent 38%),radial-gradient(circle at 55% 35%,rgba(153,246,228,.88),transparent 42%),radial-gradient(circle at 80% 58%,rgba(255,255,255,.78),transparent 34%);filter:blur(14px) drop-shadow(0 0 20px #99f6e4);animation:mist2 1.1s ease-out forwards}
+.blackFlash2{position:absolute;left:var(--x);top:var(--y);width:270px;height:270px;margin:-135px;pointer-events:none;z-index:30;background:radial-gradient(circle,#000 0 18%,#ef4444 19% 23%,#000 26% 38%,transparent 55%),conic-gradient(#000,#ef4444,#fff,#000,#ef4444,#000);clip-path:polygon(50% 0,58% 36%,100% 50%,58% 64%,50% 100%,42% 64%,0 50%,42% 36%);filter:drop-shadow(0 0 35px #ef4444) contrast(1.8);animation:blackFlash2 .58s cubic-bezier(.1,1.8,.2,1) forwards}
+.limitlessVoid2{position:absolute;inset:0;pointer-events:none;z-index:30;background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.92),rgba(56,189,248,.45) 16%,rgba(126,34,206,.34) 38%,rgba(0,0,0,.9) 72%),repeating-radial-gradient(circle at 50% 45%,transparent 0 18px,rgba(255,255,255,.18) 20px 22px);animation:void2 1.35s ease-out forwards}
+.hollowPurple2{position:absolute;width:96px;height:96px;border-radius:50%;pointer-events:none;z-index:32;left:var(--sx);top:var(--sy);background:radial-gradient(circle,#fff 0 8%,#e9d5ff 10%,#a855f7 28%,#4c1d95 58%,#020617 80%);box-shadow:0 0 30px #fff,0 0 70px #a855f7,0 0 140px #7e22ce;animation:hollowPurple2 .95s cubic-bezier(.08,.85,.12,1) forwards}.hollowPurple2:before,.hollowPurple2:after{content:"";position:absolute;inset:-35px;border-radius:50%;border:4px solid rgba(216,180,254,.9);animation:orbSpin .5s linear infinite;box-shadow:0 0 36px #a855f7}.hollowPurple2:after{inset:-55px;animation-duration:.85s;animation-direction:reverse;opacity:.55}
+.shrine2{position:absolute;inset:0;pointer-events:none;z-index:30;background:linear-gradient(rgba(127,29,29,.44),rgba(0,0,0,.8)),repeating-linear-gradient(100deg,transparent 0 30px,rgba(239,68,68,.38) 32px 36px);animation:shrine2 1.2s ease-out forwards}.sukunaCuts2{position:absolute;inset:0;pointer-events:none;z-index:31;background:linear-gradient(25deg,transparent 48%,white 49%,#ef4444 50%,white 51%,transparent 52%),linear-gradient(-18deg,transparent 46%,white 48%,#ef4444 50%,white 52%,transparent 54%),linear-gradient(78deg,transparent 47%,white 49%,#ef4444 50%,white 51%,transparent 53%);filter:drop-shadow(0 0 22px #ef4444);animation:sukunaCuts2 .72s ease-out forwards}
+@keyframes waterDragon2{0%{opacity:0;transform:rotate(var(--rot)) scaleX(.06) scaleY(.45)}30%{opacity:1;transform:rotate(var(--rot)) scaleX(1.08) scaleY(1)}100%{opacity:0;transform:rotate(var(--rot)) scaleX(1.42) scaleY(1.25)}}@keyframes fireDragon2{0%{opacity:0;transform:rotate(var(--rot)) scaleX(.06) translateY(25px)}35%{opacity:1;transform:rotate(var(--rot)) scaleX(1.12) translateY(-8px)}100%{opacity:0;transform:rotate(var(--rot)) scaleX(1.45) translateY(-55px)}}@keyframes thunderStep2{0%{opacity:0;transform:scaleX(.05) rotate(var(--rot))}30%{opacity:1;transform:scaleX(1.15) rotate(var(--rot))}100%{opacity:0;transform:scaleX(1.6) rotate(var(--rot))}}@keyframes spinStorm2{0%{opacity:0;transform:scale(.2) rotate(0)}40%{opacity:1;transform:scale(1.08) rotate(260deg)}100%{opacity:0;transform:scale(1.75) rotate(650deg)}}@keyframes mist2{0%{opacity:0;transform:scale(.45) translateX(-60px)}40%{opacity:1;transform:scale(1.08)}100%{opacity:0;transform:scale(1.6) translateX(90px)}}@keyframes blackFlash2{0%{opacity:0;transform:scale(.05) rotate(0)}25%{opacity:1;transform:scale(1.25) rotate(20deg)}100%{opacity:0;transform:scale(2.4) rotate(95deg)}}@keyframes void2{0%{opacity:0;filter:blur(12px);transform:scale(.8)}35%{opacity:1;filter:blur(0);transform:scale(1)}100%{opacity:0;filter:blur(8px);transform:scale(1.25)}}@keyframes hollowPurple2{0%{opacity:0;transform:translate(0,0) scale(.2)}15%{opacity:1;transform:translate(0,0) scale(1)}78%{opacity:1;transform:translate(calc(var(--ex) - var(--sx)),calc(var(--ey) - var(--sy))) scale(1.35)}100%{opacity:0;transform:translate(calc(var(--ex) - var(--sx)),calc(var(--ey) - var(--sy))) scale(3.2)}}@keyframes shrine2{0%{opacity:0;transform:scale(.95)}35%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.08)}}@keyframes sukunaCuts2{0%{opacity:0;transform:scale(.9) rotate(-2deg)}20%{opacity:1}100%{opacity:0;transform:scale(1.15) rotate(4deg)}}
+
+@media(max-width:700px){.title{font-size:27px}.grid{grid-template-columns:repeat(2,1fr)}.panel{min-width:115px;font-size:12px}.joy{width:125px;height:125px}.btns{grid-template-columns:68px 68px}.act{width:68px;height:68px;font-size:12px}.stat{left:40%;font-size:12px}}
+
+.onlineOk{color:#22c55e;font-weight:bold}.onlineBad{color:#f87171;font-weight:bold}.pvpCard{display:inline-block;min-width:180px;margin:6px;padding:10px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.2)}
+
+.pvpPlayers{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:8px}
+.pvpPlayer{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:8px}
+.pvpReady{border-color:#22c55e;box-shadow:0 0 10px #22c55e}
+.teamBadge{display:inline-block;padding:3px 7px;border-radius:999px;background:#7e22ce;color:white;font-size:12px}
+
+.chatBox{max-width:1180px;margin:12px auto;padding:14px;border-radius:14px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.22)}
+.chatLog{height:170px;overflow:auto;background:#0f172a;border:1px solid #334155;border-radius:10px;padding:8px;margin:8px 0}
+.chatMsg{margin:6px 0;padding:7px 9px;border-radius:9px;background:#111827}
+.chatName{color:#facc15;font-weight:bold}
+.chatSystem{color:#93c5fd}
+
+.adminName{
+  font-weight:900;
+  background:linear-gradient(90deg,#ff004c,#ff8a00,#ffe600,#00ff66,#00d5ff,#7a5cff,#ff00ea,#ff004c);
+  background-size:400% 100%;
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  animation:rainbowMove 2.2s linear infinite;
+  text-shadow:0 0 10px rgba(255,255,255,.8),0 0 18px rgba(255,0,200,.65);
+}
+.adminBadge{
+  display:inline-block;
+  padding:2px 7px;
+  border-radius:999px;
+  margin-right:5px;
+  font-size:12px;
+  color:white;
+  background:linear-gradient(90deg,#ef4444,#f59e0b,#22c55e,#06b6d4,#6366f1,#d946ef);
+  background-size:300% 100%;
+  animation:rainbowMove 2s linear infinite;
+  box-shadow:0 0 12px rgba(255,255,255,.65);
+}
+.adminBox{
+  max-width:1180px;margin:12px auto;padding:16px;border-radius:16px;
+  background:linear-gradient(135deg,rgba(127,29,29,.38),rgba(30,41,59,.72),rgba(88,28,135,.42));
+  border:1px solid rgba(255,255,255,.32);
+  box-shadow:0 0 18px rgba(255,255,255,.16), inset 0 0 22px rgba(255,255,255,.05);
+  display:none;
+}
+.adminGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:10px}
+.adminTile{background:rgba(15,23,42,.72);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:10px}
+.adminTile b{color:#facc15}
+.adminInput{width:min(360px,90%)}
+@keyframes rainbowMove{0%{background-position:0% 50%}100%{background-position:400% 50%}}
+
+#world{position:relative;background:#0b1220;overflow:hidden}
+#worldCanvas{width:100%;height:100%;display:block;background:linear-gradient(#0f172a,#14532d)}
+.worldHud{position:absolute;top:10px;left:10px;right:10px;display:flex;gap:8px;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.worldPanel{background:rgba(0,0,0,.68);padding:10px;border-radius:12px;min-width:180px;pointer-events:auto}
+.worldBtn{background:#2563eb}
+.worldBack{background:#374151}
+.worldPlace{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.65);padding:9px 14px;border-radius:999px;color:#facc15;font-weight:bold}
+.worldTip{font-size:13px;color:#ddd;line-height:1.4}
+
+.creatorWingGlow{color:#f0abfc;text-shadow:0 0 12px #fff,0 0 22px #a855f7,0 0 36px #38bdf8}
+.invisibleOn{color:#67e8f9;font-weight:bold;text-shadow:0 0 12px #67e8f9}
+
+.lockedPlace{color:#f87171;font-weight:bold;text-shadow:0 0 10px #991b1b}
+.openPlace{color:#22c55e;font-weight:bold;text-shadow:0 0 10px #22c55e}
+
+.mailBox{max-width:1180px;margin:12px auto;padding:14px;border-radius:14px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.22)}
+.mailList{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-top:8px}
+.mailItem{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:9px}
+.mailNew{border-color:#facc15;box-shadow:0 0 10px #facc15}
+
+.modName{font-weight:900;color:#60a5fa;text-shadow:0 0 10px #60a5fa,0 0 18px #2563eb}
+.modBadge{display:inline-block;padding:2px 7px;border-radius:999px;margin-right:5px;font-size:12px;color:white;background:#2563eb;box-shadow:0 0 12px #60a5fa}
+.ownerOnly{border:1px solid rgba(250,204,21,.65)!important}
+</style>
+</head>
+<body>
+<section id="select" class="active">
+<h1 class="title">⚔️ 귀멸 x 주술 확장 RPG</h1>
+<p class="sub">강화 호흡 이펙트·친구 초대·장비·코인 거래소·다이아·보스 보상·랜덤 매칭·희귀 캐릭터 거래</p>
+
+<div class="box">
+<b>계정 생성 / 로그인</b><br>
+<input id="name" placeholder="닉네임"><input id="pw" type="password" placeholder="비밀번호">
+<button class="green" onclick="createAcc()">계정 생성</button><button class="blue" onclick="login()">로그인</button><button onclick="logout()">로그아웃</button><button class="red" onclick="delAcc()">계정 삭제</button><button class="red" onclick="resetMyAccount()">내 계정 초기화</button><br>
+<span class="small">비밀번호는 6자 이상. 닉네임은 한글/영문/숫자/_ 2~12자. 로그인은 온라인 연결이 필요해요.</span>
+<div id="onlineStatus" class="small">온라인 연결 중...</div>
+<div id="user" class="user"></div>
+</div>
+
+<div id="adminBox" class="adminBox">
+<h3>🌈 제작자 관리자 패널</h3>
+<div class="user">현재 권한: <span class="adminBadge">관리자</span><span class="adminName">제작자</span></div>
+<p class="small">서버에 관리자로 등록된 계정으로 로그인했을 때만 표시됩니다. 권한은 Firebase 보안 규칙이 서버에서 검증합니다.</p>
+
+<div class="adminGrid">
+  <div class="adminTile">
+    <b>💰 내 보상</b><br>
+    <button class="gold" onclick="adminGiveMoney()">코인/다이아 지급</button>
+    <button class="purple" onclick="adminUnlockAll()">모든 캐릭터 해금</button>
+  </div>
+
+  <div class="adminTile">
+    <b>📢 전체 공지</b><br>
+    <input id="adminNoticeText" class="adminInput" placeholder="공지 내용 입력">
+    <button class="blue" onclick="adminNotice()">전체 공지 보내기</button>
+  </div>
+
+  <div class="adminTile">
+    <b>🧹 채팅 관리</b><br>
+    <button class="red" onclick="adminClearGlobalChat()">전체 채팅 삭제</button>
+  </div>
+
+  <div class="adminTile">
+    <b>👤 유저 제재</b><br>
+    <input id="adminTargetUser" class="adminInput" placeholder="대상 닉네임">
+    <button class="red" onclick="adminBanUser()">밴</button>
+    <button class="gold" onclick="adminMuteUser()">채팅 금지</button>
+    <button class="blue" onclick="adminUnbanUser()">밴 해제</button>
+    <button class="green" onclick="adminUnmuteUser()">채팅 금지 해제</button>
+    <button class="red" onclick="adminTakeAllItems()">아이템 전체 몰수</button>
+<button class="red" onclick="adminResetUser()">유저 계정 초기화</button>
+  </div>
+
+  <div class="adminTile">
+    <b>🎁 전체 유저 보상</b><br>
+    <input id="adminAllCoins" type="number" class="adminInput" placeholder="지급 코인">
+    <input id="adminAllDia" type="number" class="adminInput" placeholder="지급 다이아">
+    <button class="green" onclick="adminRewardAllUsers()">모든 계정에 지급</button>
+  </div>
+
+  <div class="adminTile" style="grid-column:1/-1">
+    <b>👥 전체 유저 목록</b><br>
+    <button class="blue" onclick="adminListUsers()">목록 불러오기</button>
+    <input id="adminUserFilter" class="adminInput" placeholder="닉네임 필터" oninput="renderAdminUserList()">
+    <div id="adminUserList" class="small">아직 조회 안 함</div>
+  </div>
+
+  <div class="adminTile">
+    <b>🔎 유저 검색</b><br>
+    <input id="adminSearchUser" class="adminInput" placeholder="닉네임 검색">
+    <button class="blue" onclick="adminSearchUser()">검색</button>
+    <div id="adminSearchResult" class="small">검색 결과 없음</div>
+  </div>
+
+
+  <div class="adminTile">
+    <b>🎯 특정 유저 지급</b><br>
+    <input id="adminGiveTarget" class="adminInput" placeholder="대상 닉네임">
+    <input id="adminGiveCoins" type="number" class="adminInput" placeholder="지급 코인">
+    <input id="adminGiveDia" type="number" class="adminInput" placeholder="지급 다이아">
+    <button class="green" onclick="adminGiveToUser()">해당 유저에게 지급</button>
+  </div>
+
+  <div class="adminTile ownerOnly">
+    <b>🛡️ 관리자 임명 (제작자 전용)</b><br>
+    <input id="adminManageUser" class="adminInput" placeholder="닉네임">
+    <button class="blue" onclick="appointAdmin()">임명</button>
+    <button class="red" onclick="removeAdmin()">해제</button>
+    <div id="adminRoleList" class="small"></div>
+  </div>
+
+  <div class="adminTile">
+    <b>🏅 직급 부여 (관리자 이상)</b><br>
+    <input id="rankTarget" class="adminInput" placeholder="대상 닉네임">
+    <select id="rankSelect"><option value="noble">🏰 하급 귀족</option><option value="knight">⚔️ 기사</option><option value="elite">🌟 상급 평민</option><option value="none">직급 해제</option></select>
+    <button class="purple" onclick="setRankUser()">적용</button>
+    <div class="small">관리자 임명은 제작자 전용(위 칸). 관리자는 귀족·기사·상급 평민만 부여할 수 있어요.</div>
+  </div>
+
+  <div class="adminTile">
+    <b>🎉 이벤트 만들기 (관리자 이상)</b><br>
+    <input id="evTitle" class="adminInput" placeholder="이벤트 이름">
+    <input id="evCoins" type="number" class="adminInput" placeholder="보상 코인">
+    <input id="evDia" type="number" class="adminInput" placeholder="보상 다이아">
+    <input id="evHours" type="number" class="adminInput" placeholder="진행 시간(시간)" value="24">
+    <select id="evMin"><option value="noble">하급 귀족 이상</option><option value="knight">기사 이상</option><option value="elite">상급 평민 이상</option></select>
+    <button class="gold" onclick="adminCreateEvent()">이벤트 열기</button>
+  </div>
+
+  <div class="adminTile">
+    <b>📊 서버 정보</b><br>
+    <button onclick="adminServerInfo()">서버 정보 보기</button>
+    <div id="adminServerInfo" class="small">아직 조회 안 함</div>
+  </div>
+</div>
+</div>
+
+<div class="room">
+<h3>📱 온라인 방 / 랜덤 매칭</h3>
+<p class="small">방 이름을 같은 것으로 입력하면 같은 방에 들어갑니다. Firebase 연결 시 다른 기기끼리 같은 방에 들어갑니다. 미연결 시 같은 브라우저 탭끼리만 테스트됩니다.</p>
+<input id="roomName" placeholder="방 이름">
+<button class="blue" onclick="joinRoom()">방 만들기/참가</button><button class="green" onclick="startOnlineRoomGame()">온라인 방장 시작</button><button class="purple" onclick="randomMatch()">랜덤 유저 매칭</button><button class="red" onclick="leaveRoom()">방 나가기</button>
+<div id="roomStatus" class="user">방 없음</div>
+
+<div class="chatBox">
+<h3>💬 전체 서버 채팅</h3>
+<p class="small">모든 서버/모든 유저가 함께 보는 전체 채팅입니다. Firebase 온라인 연결 시 다른 휴대폰과도 전체 채팅이 공유됩니다.</p>
+<div id="chatLog" class="chatLog"><div class="chatMsg chatSystem">아직 채팅 없음. 전체 서버 채팅에 메시지를 보내세요.</div></div>
+<input id="chatInput" placeholder="메시지 입력" style="width:min(520px,90%)">
+<button class="blue" onclick="sendChat()">보내기</button>
+<button onclick="clearChatLocal()">채팅창 지우기</button>
+</div>
+</div>
+
+<div class="friend">
+<h3>👥 친구 요청 / 우편함</h3>
+<p class="small">친구 추가는 바로 되는 게 아니라 상대 우편함으로 요청이 가고, 상대가 수락해야 친구가 됩니다.</p>
+<input id="friendName" placeholder="친구 닉네임">
+<button class="green" onclick="sendFriendRequest()">친구 요청 보내기</button>
+<button class="blue" onclick="checkFriendMail()">친구 요청 확인</button><button onclick="renderFriends()">친구 목록 새로고침</button>
+<div id="inviteStatus" class="user">받은 초대 없음</div>
+<div id="friendList" class="friendList"></div>
+</div>
+
+
+
+
+<div class="mailBox">
+<h3>📨 내 우편함</h3>
+<p class="small">친구 요청이 오면 여기서 수락/거절할 수 있어.</p>
+<button class="blue" onclick="checkFriendMail()">우편함 확인</button>
+<div id="friendMailList" class="mailList"><div class="mailItem">받은 친구 요청 없음</div></div>
+</div>
+<div class="box" id="eventBox">
+<h3>🎉 이벤트</h3>
+<p class="small">이벤트마다 참여 가능한 최소 직급이 있어요. 직급 순서: 👑 제작자 &gt; 🛡️ 관리자 &gt; 🏰 하급 귀족 &gt; ⚔️ 기사 &gt; 🌟 상급 평민</p>
+<div id="eventList" class="friendList"><div class="friendItem">로그인하면 이벤트가 보여요</div></div>
+</div>
+<div class="shop">
+<h3>🛡️ 장비 상점 다이아 구매</h3>
+<p class="small">장비 가격은 낮게 설정했습니다. 장비는 체력/공격력에 보너스를 줍니다. 보스와 중간보스를 깨면 다이아가 지급됩니다.</p>
+<div id="equipshop" class="shopgrid"></div>
+</div>
+
+<div class="trade">
+<h3>💱 코인 거래소 / 희귀 캐릭터 거래소</h3>
+<p class="small">코인↔다이아 교환, 희귀 캐릭터 거래 기능입니다. 실제 온라인 거래는 Firebase DB 연결 후 확장 가능합니다.</p>
+<button class="gold" onclick="coinToDia()">1000코인 → 1다이아</button>
+<button class="green" onclick="diaToCoin()">1다이아 → 800코인</button>
+<button class="purple" onclick="rareEvent()">희귀 캐릭터 뽑기 30다이아</button>
+<div id="market" class="shopgrid"></div>
+</div>
+
+
+<div class="tradeRoom">
+<h3>🤝 유저 거래 방</h3>
+<p class="small">친구나 다른 계정과 거래 방을 만들고 캐릭터·호흡 장비·장비·골드를 서로 올린 뒤 양쪽이 확정하면 교환됩니다. 골드는 현재 코인으로 처리됩니다.</p>
+<input id="tradeRoomName" placeholder="거래 방 이름">
+<input id="tradePartner" placeholder="상대 닉네임">
+<button class="blue" onclick="joinTradeRoom()">거래 방 만들기/입장</button>
+<button class="purple" onclick="inviteTradeFriend()">친구에게 거래방 초대</button>
+<button class="gold" onclick="checkTradeInvites()">거래 초대 확인</button>
+<button class="red" onclick="leaveTradeRoom()">거래 방 나가기</button>
+<div id="tradeStatus" class="user">거래 방 없음</div>
+<hr style="border-color:rgba(255,255,255,.2)">
+<select id="offerType" onchange="renderOfferSelect()">
+<option value="coins">골드/코인</option>
+<option value="char">캐릭터</option>
+<option value="katana">호흡 장비</option>
+<option value="equip">장비</option>
+</select>
+<input id="offerAmount" type="number" min="1" placeholder="골드 수량">
+<select id="offerItem"></select>
+<button class="green" onclick="setTradeOffer()">내 거래품 올리기</button>
+<button class="blue" onclick="readyTrade()">확정</button>
+<button onclick="cancelTradeReady()">확정 취소</button>
+<button class="red" onclick="clearTradeOffer()">내 거래품 비우기</button>
+<div id="tradeView" class="tradePanel"></div>
+</div>
+
+<div class="pvp">
+<h3>🏆 실전 PvP / 랭크전 최대 4명</h3>
+<div id="rankInfo" class="small"></div>
+<input id="pvpRoomName" placeholder="PvP 방 이름">
+<select id="pvpMatchMode">
+<option value="ffa">개인전 최대 4명</option>
+<option value="team">2대2 팀전</option>
+</select>
+<button class="blue" onclick="joinPvpRoom(false)">PvP 방 만들기/입장</button>
+<button class="purple" onclick="joinRankedMatch()">랭크전 매칭</button>
+<button class="green" onclick="pvpReadyToggle()">준비</button>
+<button class="gold" onclick="startPvpGame()">방장 시작</button>
+<button class="red" onclick="leavePvpRoom()">PvP 나가기</button>
+<div id="pvpStatus" class="user">PvP 방 없음</div>
+<div id="pvpPlayers" class="pvpPlayers"><div class="pvpPlayer">참가자 없음</div></div>
+<div class="small">최대 4명까지 같은 PvP 방에 들어갈 수 있습니다. 1명만 공격 대상으로 잡히고, 나머지 참가자는 전투 화면에 함께 표시됩니다.</div>
+</div>
+
+<div class="filters"><button class="active" onclick="filter('전체',this)">전체</button><button onclick="filter('귀살대',this)">귀살대</button><button onclick="filter('주',this)">주</button><button onclick="filter('오니',this)">오니</button><button onclick="filter('주술회전',this)">주술회전</button><button onclick="filter('브롤스타즈',this)">희귀</button></div>
+
+<div class="photoBox">
+<h3>🖼️ 캐릭터 선택창 실제 사진 등록</h3>
+<p class="small">각 캐릭터별 사진 URL을 붙여넣거나 이미지 파일을 선택하면 선택창 카드가 사진으로 바뀝니다. URL로 넣으면 다른 기기에서도 같은 주소를 볼 수 있고, 파일 업로드는 현재 기기에 저장됩니다.</p>
+<div class="photoTools">
+<select id="photoChar"></select>
+<input id="photoUrl" placeholder="이미지 URL 붙여넣기">
+<button class="green" onclick="setCharPhotoUrl()">URL 사진 적용</button>
+<input id="photoFile" type="file" accept="image/*" onchange="uploadCharPhoto(event)">
+<button class="red" onclick="resetCharPhoto()">사진 제거</button>
+<img id="photoPreview" class="photoPreview" alt="미리보기">
+</div>
+<div id="photoStatus" class="user">사진을 넣을 캐릭터를 선택하세요.</div>
+</div>
+<div id="grid" class="grid"></div><div id="info" class="info"></div>
+<button class="start" onclick="startGame()">🔥 전투 시작</button>
+<button class="start" style="background:#2563eb;box-shadow:0 0 18px #2563eb" onclick="startWorldMap()">🌍 월드맵 들어가기</button>
+</section>
+
+
+<section id="world">
+<canvas id="worldCanvas"></canvas>
+<div class="worldHud">
+  <div class="worldPanel">
+    <b>🌍 월드맵</b><br>
+    <span id="worldUserInfo">유저 정보</span><br><span id="worldLevelInfo">레벨 정보</span><br>
+    <span class="worldTip">조이스틱/WASD/방향키로 이동<br>같은 월드방 유저가 보임</span>
+  </div>
+  <div class="worldPanel">
+    <button class="worldBtn" onclick="joinWorldRoom()">월드방 접속</button>
+    <button class="purple" onclick="toggleFlyMode()">날기</button>
+    <button class="green" onclick="toggleInvisibleMode()">투명모드</button>
+    <button class="gold" onclick="enterWorldPlace()">지역 입장</button>
+    <button class="worldBack" onclick="backFromWorld()">선택창</button>
+    <br><input id="worldRoomName" placeholder="월드방 이름" style="width:150px">
+    <div id="worldStatus" class="user">월드방 없음</div><div id="worldPowerStatus" class="user">월드 능력: 기본</div>
+  </div>
+</div>
+<div id="worldPlace" class="worldPlace">후지카사네산 입구</div>
+<div id="worldJoy" class="joy"><div id="worldStick" class="stick"></div></div>
+</section>
+
+<section id="game">
+<canvas id="cv"></canvas>
+<div class="hud"><div class="panel"><b id="pn"></b><div class="bar"><div id="ph" class="fill"></div></div><small id="pt"></small></div><div class="mid"><b id="stage"></b><br><span id="bossType"></span><br><span id="time">00:00</span></div><div class="panel"><b id="en"></b><div class="bar"><div id="eh" class="fill efill"></div></div><small id="et"></small></div></div>
+<button class="back" onclick="back()">← 선택창</button><div id="msg"></div>
+<div id="joy" class="joy"><div id="stick" class="stick"></div></div>
+<div class="btns"><button id="s1" class="act" onclick="skill(1)">기술1</button><button id="s2" class="act" onclick="skill(2)">기술2</button><button class="act atk" onclick="attack()">공격</button><button class="act dash" onclick="dash()">회피</button></div>
+<div class="stat"><span id="coin"></span><span id="dia"></span><span id="rec"></span><span id="eq"></span></div>
+</section>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script>
+const chars=[
+{name:"카마도 탄지로",side:"귀살대",emoji:"🌊",breath:"물/해",power:8500,hp:1200,atk:70,spd:4.2,skill:["물의 호흡","히노카미 카구라"],color:"#38bdf8",price:0},
+{name:"아가츠마 젠이츠",side:"귀살대",emoji:"⚡",breath:"번개",power:7900,hp:1000,atk:88,spd:5.2,skill:["벽력일섬","초고속 베기"],color:"#facc15",price:350},
+{name:"하시비라 이노스케",side:"귀살대",emoji:"🐗",breath:"짐승",power:8000,hp:1250,atk:75,spd:4.5,skill:["짐승의 호흡","난타 베기"],color:"#93c5fd",price:350},
+{name:"토미오카 기유",side:"주",emoji:"💧",breath:"물",power:9000,hp:1350,atk:82,spd:4.4,skill:["수면베기","잔잔한 물결"],color:"#2563eb",price:900},
+{name:"렌고쿠 쿄쥬로",side:"주",emoji:"🔥",breath:"화염",power:9100,hp:1400,atk:90,spd:4.1,skill:["염호","연옥"],color:"#f97316",price:1000},
+{name:"코쵸 시노부",side:"주",emoji:"🦋",breath:"벌레",power:7600,hp:950,atk:62,spd:5.4,skill:["독 찌르기","나비 춤"],color:"#a78bfa",price:700},
+{name:"우즈이 텐겐",side:"주",emoji:"💎",breath:"소리",power:8300,hp:1350,atk:78,spd:4.7,skill:["폭음참","소리의 호흡"],color:"#e5e7eb",price:850},
+{name:"토키토 무이치로",side:"주",emoji:"🌫️",breath:"안개",power:8400,hp:1150,atk:86,spd:5.0,skill:["안개의 호흡","은신 베기"],color:"#99f6e4",price:950},
+{name:"칸로지 미츠리",side:"주",emoji:"💗",breath:"사랑",power:8650,hp:1250,atk:84,spd:4.8,skill:["사랑의 호흡","연속 채찍검"],color:"#f9a8d4",price:900},
+{name:"시나즈가와 사네미",side:"주",emoji:"🌪️",breath:"바람",power:8850,hp:1350,atk:89,spd:4.9,skill:["바람 칼날","폭풍 참격"],color:"#86efac",price:1100},
+{name:"히메지마 교메이",side:"주",emoji:"🪨",breath:"바위",power:9500,hp:1700,atk:95,spd:3.5,skill:["바위 철퇴","쇄도 강타"],color:"#a3a3a3",price:1500},
+{name:"카마도 네즈코",side:"오니",emoji:"🔥",breath:"혈귀술",power:7800,hp:1300,atk:65,spd:4.0,skill:["폭혈","혈귀 각성"],color:"#fb7185",price:250},
+{name:"아카자",side:"오니",emoji:"👊",breath:"파괴살",power:9300,hp:1600,atk:93,spd:4.8,skill:["파괴살","나침"],color:"#ef4444",price:1800},
+{name:"도우마",side:"오니",emoji:"❄️",breath:"빙결 혈귀술",power:9600,hp:1700,atk:90,spd:4.1,skill:["얼음 연꽃","냉기 폭발"],color:"#bae6fd",price:2300},
+{name:"코쿠시보",side:"오니",emoji:"🌙",breath:"달/혈귀술",power:9800,hp:1850,atk:98,spd:4.7,skill:["달의 호흡","월광 난무"],color:"#c084fc",price:3000},
+{name:"키부츠지 무잔",side:"오니",emoji:"🩸",breath:"혈귀술",power:10000,hp:2200,atk:105,spd:4.5,skill:["피의 채찍","재생 폭주"],color:"#991b1b",price:10000},
+{name:"이타도리 유지",side:"주술회전",emoji:"👊",breath:"주력",power:8800,hp:1400,atk:86,spd:4.7,skill:["흑섬","연속 타격"],color:"#fb7185",price:15000},
+{name:"고죠 사토루",side:"주술회전",emoji:"♾️",breath:"무하한",power:12000,hp:2300,atk:125,spd:5.7,skill:["무하한","허식 자"],color:"#38bdf8",price:100000},
+{name:"스쿠나",side:"주술회전",emoji:"👹",breath:"저주",power:11800,hp:2400,atk:128,spd:5.4,skill:["해","복마어주자"],color:"#dc2626",price:80000},
+{name:"옷코츠 유타",side:"주술회전",emoji:"💍",breath:"리카",power:10500,hp:2000,atk:112,spd:4.9,skill:["리카","반전술식"],color:"#a78bfa",price:35000},
+{name:"쉘리",side:"브롤스타즈",emoji:"💥",breath:"희귀",power:7000,hp:1150,atk:82,spd:4.4,skill:["산탄총","슈퍼 쉘"],color:"#c084fc",price:999999,rare:true},
+{name:"콜트",side:"브롤스타즈",emoji:"🔫",breath:"희귀",power:7200,hp:1000,atk:86,spd:4.6,skill:["쌍권총","불렛 스톰"],color:"#ef4444",price:999999,rare:true},
+{name:"스파이크",side:"브롤스타즈",emoji:"🌵",breath:"희귀",power:9000,hp:1300,atk:105,spd:4.2,skill:["가시 수류탄","선인장 폭발"],color:"#22c55e",price:999999,rare:true},
+{name:"레온",side:"브롤스타즈",emoji:"🦎",breath:"희귀",power:9300,hp:1250,atk:110,spd:5.4,skill:["표창","은신"],color:"#84cc16",price:999999,rare:true}
+];
+const katanas=[
+{name:"낡은 호흡 장비",price:0,bonus:0,emoji:"🗡️",color:"#d1d5db",fx:"기본 참격"},
+{name:"푸른 물결 호흡 장비",price:1500,bonus:28,emoji:"🌊",color:"#38bdf8",fx:"물의 호흡"},
+{name:"번개 호흡 장비",price:3500,bonus:50,emoji:"⚡",color:"#facc15",fx:"번개의 호흡"},
+{name:"화염 호흡 장비",price:8000,bonus:85,emoji:"🔥",color:"#fb923c",fx:"화염의 호흡"},
+{name:"바람 호흡 장비",price:15000,bonus:130,emoji:"🌪️",color:"#86efac",fx:"바람의 호흡"},
+{name:"안개 호흡 장비",price:30000,bonus:190,emoji:"🌫️",color:"#99f6e4",fx:"안개의 호흡"},
+{name:"태양 호흡 장비",price:70000,bonus:300,emoji:"☀️",color:"#fbbf24",fx:"히노카미 카구라"},
+{name:"전설의 해의 호흡 장비",price:200000,bonus:600,emoji:"🌅",color:"#f97316",fx:"해의 호흡"}
+];
+const equips=[
+{name:"수련복",price:3,hp:80,atk:5,emoji:"🥋"},{name:"귀살대 갑옷",price:5,hp:150,atk:10,emoji:"🛡️"},
+{name:"호흡 반지",price:8,hp:80,atk:25,emoji:"💍"},{name:"집중 목걸이",price:10,hp:120,atk:35,emoji:"📿"},
+{name:"전투 오라",price:15,hp:250,atk:55,emoji:"✨"},{name:"상현 사냥꾼 세트",price:25,hp:500,atk:90,emoji:"👑"}
+];
+const demons=[["늪의 혈귀","🕳️","#14532d"],["북의 혈귀 쿄우가이","🥁","#7c2d12"],["거미 혈귀 루이","🕷️","#64748b"],["꿈의 혈귀 엔무","💤","#7e22ce"],["상현의 육 규타로","☠️","#166534"],["상현의 오 굣코","🏺","#0891b2"],["상현의 사 한텐구","👺","#a16207"],["상현의 삼 아카자","👊","#dc2626"],["상현의 이 도우마","❄️","#38bdf8"],["상현의 일 코쿠시보","🌙","#9333ea"],["오니의 시조 무잔","🩸","#7f1d1d"],["스쿠나 레이드","⛩️","#dc2626"],["고죠 히든 보스","♾️","#38bdf8"]];
+const ranks=["브론즈","실버","골드","플래티넘","다이아","마스터","그랜드마스터","챌린저"];
+let user="guest",save={coins:0,dia:0,owned:["카마도 탄지로"],rare:[],best:1,katanas:["낡은 호흡 장비"],eq:"낡은 호흡 장비",equips:[],eqArmor:"",pvp:0,friends:[]},sel=0,curFilter="전체",coins=0,dia=0,best=1,stage=1,run=false,cv,ctx,w,h,player,enemy,last=0,startAt=0,joy={x:0,y:0,a:false},keys={},bullets=[],effects=[],c1=0,c2=0,room="",peerPlayers={},myId="P"+Math.random().toString(36).slice(2,8),chan=null,tradeRoom="";
+const $=id=>document.getElementById(id);
+
+/* === 권한 시스템: 제작자 Owner / 관리자 임명·해제 === */
+function canPunish(target){
+  if(!isStaff())return false;
+  if(isOwner(target))return false;
+  if(isModerator(target)&&!isOwner())return false;
+  return true;
+}
+function roleLabel(name){
+  name=String(name||"guest").replace(/[<>]/g,"");
+  if(isOwner(name))return `<span class="adminBadge">👑 Owner</span><span class="adminName">${name}</span>`;
+  if(isModerator(name))return `<span class="modBadge">🛡️ 관리자</span><span class="modName">${name}</span>`;
+  return name;
+}
+function adminLabel(name){return roleLabel(name)}
+function updateAdminPanel(){
+  const box=$("adminBox");
+  if(box)box.style.display=isStaff()?"block":"none";
+  const title=box&&box.querySelector("h3");
+  if(title)title.innerHTML=isOwner()?"🌈 제작자 관리자 패널":"🛡️ 관리자 패널";
+  updateAdminRoleList();
+}
+function adminGiveMoney(){
+  if(!isAdmin())return alert("관리자만 사용 가능");
+  coins=save.coins=9999999999999;
+  dia=save.dia=9999999;
+  store();
+  alert("관리자 보상 지급 완료");
+}
+function adminUnlockAll(){
+  if(!isAdmin())return alert("관리자만 사용 가능");
+  save.owned=[...new Set(chars.filter(c=>!c.rare).map(c=>c.name))];
+  save.rare=[...new Set(chars.filter(c=>c.rare).map(c=>c.name))];
+  store();
+  renderAll();
+  alert("모든 캐릭터 해금 완료");
+}
+function ak(n){return"rpgAcc_"+n}function sk(){return"rpgSave_"+user}function fresh(){return{coins:0,dia:0,owned:["카마도 탄지로"],rare:[],best:1,katanas:["낡은 호흡 장비"],eq:"낡은 호흡 장비",equips:[],eqArmor:"",pvp:0,friends:[]}}
+function norm(){save.owned??=["카마도 탄지로"];save.rare??=[];save.katanas??=["낡은 호흡 장비"];save.equips??=[];save.eq??="낡은 호흡 장비";save.dia??=0;save.pvp??=0;save.friends??=[];if(!save.owned.includes("카마도 탄지로"))save.owned.push("카마도 탄지로");coins=save.coins||0;dia=save.dia||0;best=save.best||1;ui()}
+function load(){let r=localStorage.getItem(sk());save=r?JSON.parse(r):fresh();
+setTimeout(()=>{const ci=$("chatInput");if(ci){ci.dataset.chatInputEnterHook="1";ci.addEventListener("keydown",e=>{if(e.key==="Enter")sendChat()})}},0);
+norm();updateAdminPanel();updateAdminRoleList();setTimeout(openChatChannel,700);renderAll()}
+function store(){save.coins=coins;save.dia=dia;save.best=best;localStorage.setItem(sk(),JSON.stringify(save));ui();renderAllShops()}
+function ui(){let title=isAdmin()? " 🌈 관리자":"";
+$("user").innerHTML=`${adminLabel(user)}${title} / 코인 ${coins} / 다이아 ${dia} / 캐릭터 ${save.owned.length}명 / 희귀 ${save.rare.length}명 / 최고 ${best}`;updateAdminPanel();$("rankInfo").innerHTML=`현재 PvP 점수 ${save.pvp||0}점 / 티어 <b>${rankName()}</b><br>8단계: 브론즈→실버→골드→플래티넘→다이아→마스터→그랜드마스터→챌린저`}
+function owned(c){return save.owned.includes(c.name)||save.rare.includes(c.name)}function human(c){return c.side.includes("귀살대")||c.side==="주"}function kat(){return {name:"없음",bonus:0,emoji:"",color:"#ffffff",fx:"호흡"}}function armor(){return equips.find(e=>e.name===save.eqArmor)||{hp:0,atk:0,name:"없음"}}
+function buyChar(i){let c=chars[i];if(c.rare)return alert("희귀 캐릭터는 희귀 뽑기나 거래소에서만 얻을 수 있습니다.");if(owned(c)){sel=i;renderChars();show();return}if(coins<c.price)return alert("코인 부족");coins-=c.price;save.owned.push(c.name);sel=i;store();show()}
+function filter(f,b){curFilter=f;document.querySelectorAll(".filters button").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderChars()}
+function imgKey(n){return "rpgCharImg_"+n}
+function autoPortrait(c){
+  const themes={
+    "물/해":["#0ea5e9","#f97316","水"],"물":["#2563eb","#38bdf8","水"],"번개":["#facc15","#78350f","雷"],"짐승":["#64748b","#93c5fd","獸"],"화염":["#dc2626","#fb923c","炎"],"벌레":["#7c3aed","#f0abfc","蝶"],"소리":["#e5e7eb","#a855f7","音"],"안개":["#99f6e4","#334155","霞"],"사랑":["#f472b6","#fb7185","戀"],"바람":["#22c55e","#86efac","風"],"바위":["#78716c","#d6d3d1","岩"],"혈귀술":["#991b1b","#fb7185","鬼"],"파괴살":["#ef4444","#111827","破"],"빙결 혈귀술":["#bae6fd","#0284c7","冰"],"달/혈귀술":["#7e22ce","#c084fc","月"],"주력":["#ef4444","#111827","呪"],"무하한":["#38bdf8","#7e22ce","∞"],"저주":["#dc2626","#020617","斬"],"리카":["#a78bfa","#111827","愛"],"희귀":["#22c55e","#c084fc","★"]
+  };
+  const t=themes[c.breath]||[c.color||"#64748b","#111827",c.emoji||"★"];
+  const hair=c.name.includes("고죠")?"#f8fafc":c.name.includes("스쿠나")?"#fca5a5":c.name.includes("렌고쿠")?"#fbbf24":c.name.includes("탄지로")?"#3f1d12":c.name.includes("네즈코")?"#111827":c.name.includes("젠이츠")?"#fde047":c.name.includes("이노스케")?"#334155":c.name.includes("시노부")?"#111827":"#1f2937";
+  const mark=c.name.includes("탄지로")?"✦":c.name.includes("고죠")?"◎":c.name.includes("스쿠나")?"☰":c.name.includes("네즈코")?"✿":c.name.includes("렌고쿠")?"🔥":c.emoji;
+  const svg=`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 300'>
+  <defs><linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'><stop stop-color='${t[0]}'/><stop offset='.58' stop-color='${t[1]}'/><stop offset='1' stop-color='#020617'/></linearGradient><radialGradient id='glow' cx='.5' cy='.28' r='.6'><stop stop-color='white' stop-opacity='.55'/><stop offset='.35' stop-color='${t[0]}' stop-opacity='.5'/><stop offset='1' stop-color='transparent'/></radialGradient></defs>
+  <rect width='240' height='300' rx='24' fill='url(#bg)'/><rect width='240' height='300' fill='url(#glow)'/>
+  <path d='M30 238 C70 184 170 184 210 238 L224 300 H16z' fill='#111827' opacity='.9'/>
+  <circle cx='120' cy='112' r='54' fill='#f8d7bd'/>
+  <path d='M62 105 C72 42 168 34 184 101 C154 79 104 80 62 105z' fill='${hair}'/>
+  <path d='M70 94 C88 52 151 43 181 91 C150 72 109 72 70 94z' fill='white' opacity='.12'/>
+  <circle cx='101' cy='116' r='5' fill='#0f172a'/><circle cx='139' cy='116' r='5' fill='#0f172a'/>
+  <path d='M98 146 Q120 160 142 146' stroke='#7f1d1d' stroke-width='5' fill='none' stroke-linecap='round'/>
+  <text x='120' y='52' text-anchor='middle' font-family='Arial, sans-serif' font-weight='900' font-size='34' fill='white' filter='drop-shadow(0 0 8px ${t[0]})'>${mark}</text>
+  <text x='120' y='272' text-anchor='middle' font-family='Arial, sans-serif' font-weight='900' font-size='21' fill='white'>${c.name}</text>
+  <text x='120' y='244' text-anchor='middle' font-family='Arial, sans-serif' font-weight='900' font-size='42' fill='white' opacity='.25'>${t[2]}</text>
+  <path d='M42 218 L198 158' stroke='white' stroke-width='5' opacity='.45'/><path d='M42 218 L198 158' stroke='${t[0]}' stroke-width='9' opacity='.55' stroke-linecap='round'/>
+  </svg>`;
+  return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(svg);
+}
+function getCharImg(n){let c=chars.find(x=>x.name===n);return localStorage.getItem(imgKey(n))||(c&&c.img)||autoPortrait(c||{name:n,emoji:"★",breath:"희귀",color:"#64748b"})}
+function renderCharPhotoTools(){let selBox=$("photoChar"),url=$("photoUrl"),prev=$("photoPreview");if(!selBox)return;let before=selBox.value||chars[sel]?.name;selBox.innerHTML=chars.map(c=>`<option value="${c.name}">${c.name}</option>`).join("");selBox.value=chars.some(c=>c.name===before)?before:chars[sel].name;let img=getCharImg(selBox.value);if(url)url.value=img&&img.startsWith("http")?img:"";if(prev)prev.src=img||"";let st=$("photoStatus");if(st)st.textContent=img?selBox.value+" 사진 적용됨":selBox.value+" 사진 없음"}
+function setCharPhotoUrl(){let n=$("photoChar").value,u=$("photoUrl").value.trim();if(!n)return alert("캐릭터 선택");if(!u)return alert("이미지 URL 입력");localStorage.setItem(imgKey(n),u);renderChars();renderCharPhotoTools();alert(n+" 사진 적용 완료")}
+function uploadCharPhoto(e){let n=$("photoChar").value,f=e.target.files&&e.target.files[0];if(!n||!f)return;let r=new FileReader();r.onload=()=>{localStorage.setItem(imgKey(n),r.result);renderChars();renderCharPhotoTools();alert(n+" 사진 저장 완료")};r.readAsDataURL(f)}
+function resetCharPhoto(){let n=$("photoChar").value;if(!n)return;localStorage.removeItem(imgKey(n));renderChars();renderCharPhotoTools();}
+function renderChars(){let g=$("grid");g.innerHTML="";chars.forEach((c,i)=>{if(curFilter!=="전체"&&!c.side.includes(curFilter))return;let o=owned(c),img=getCharImg(c.name);let face=img?`<img src="${img}" onerror="this.parentElement.textContent='${c.emoji}'">`:c.emoji;let d=document.createElement("div");d.className="card "+(i===sel?"selected ":"")+(o?"":"locked");d.onclick=()=>{if(o){sel=i;renderChars();show();renderCharPhotoTools()}};d.innerHTML=`<div class=face style="box-shadow:0 0 14px ${c.color}">${face}</div><b>${c.name}</b><br>${c.side}<br><small>${c.breath}</small><br><span class=price>${o?"보유중":c.rare?"희귀 전용":"가격 "+c.price+"코인"}</span><br>${o?"":`<button class=green onclick="event.stopPropagation();buyChar(${i})">${c.rare?"희귀":"구매"}</button>`}`;g.appendChild(d)})}
+function show(){let c=chars[sel];$("info").innerHTML=`<h3>${c.emoji} ${c.name}</h3><p>진영: ${c.side} / 전투력 ${c.power} / 속성: ${c.breath}</p><p>기술: ${c.skill.join(", ")}</p><p>상태: ${owned(c)?"보유중":"잠김"}</p><p>공격 방식: ${human(c)?"호흡 이펙트 공격":"고유 애니 공격"}</p><p>장비: ${save.eqArmor||"없음"}</p>`}
+function renderKat(){return}
+function buyKat(i){alert("호흡 장비 아이템은 삭제되었습니다.")}
+function renderEquip(){let e=$("equipshop");e.innerHTML=equips.map((it,i)=>{let o=save.equips.includes(it.name),eq=save.eqArmor===it.name;return`<div class="equip ${eq?"equipped":""}"><div style=font-size:34px>${it.emoji}</div><b>${it.name}</b><br>HP +${it.hp} / ATK +${it.atk}<br><span class=dia>${o?(eq?"장착중":"보유중"):"가격 "+it.price+"다이아"}</span><br><button class=purple onclick=buyEquip(${i})>${o?(eq?"장착중":"장착"):"구매"}</button></div>`}).join("")}
+function buyEquip(i){let it=equips[i],o=save.equips.includes(it.name);if(!o){if(dia<it.price)return alert("다이아 부족");dia-=it.price;save.equips.push(it.name)}save.eqArmor=it.name;store()}
+function renderMarket(){let m=$("market");m.innerHTML=chars.filter(c=>c.rare).map((c,i)=>`<div class=marketCard><div style=font-size:34px>${c.emoji}</div><b>${c.name}</b><br>희귀 캐릭터<br><span class=dia>${owned(c)?"보유/거래 가능":"미보유"}</span><br><button class=gold onclick="sellRare('${c.name}')">판매 50다이아</button></div>`).join("")}
+function renderAllShops(){renderKat();renderEquip();renderMarket();renderFriends();renderOfferSelect();renderTradeView();renderCharPhotoTools();ui()}function renderAll(){renderChars();show();renderAllShops()}
+function coinToDia(){if(coins<1000)return alert("코인 부족");coins-=1000;dia+=1;store()}function diaToCoin(){if(dia<1)return alert("다이아 부족");dia-=1;coins+=800;store()}
+function rareEvent(){if(dia<30)return alert("다이아 부족");dia-=30;let pool=chars.filter(c=>c.rare);if(Math.random()<.25){let c=pool[Math.floor(Math.random()*pool.length)];if(!save.rare.includes(c.name))save.rare.push(c.name);alert("희귀 획득! "+c.name)}else alert("실패! 다음에 다시 도전");store()}
+function sellRare(name){if(!save.rare.includes(name))return alert("보유한 희귀 캐릭터만 거래 가능");if(confirm(name+" 판매하고 50다이아를 받을까요?")){save.rare=save.rare.filter(x=>x!==name);dia+=50;store()}}
+
+function readSaveOf(n){let r=localStorage.getItem("rpgSave_"+n);return r?JSON.parse(r):fresh()}
+function writeSaveOf(n,obj){localStorage.setItem("rpgSave_"+n,JSON.stringify(obj));if(n===user){save=obj;norm();store()}}
+function trKey(){return "rpgTradeRoom_"+tradeRoom}
+function readTradeRoom(){if(!tradeRoom)return null;let r=localStorage.getItem(trKey());return r?JSON.parse(r):{room:tradeRoom,users:[],offers:{},ready:{},done:false,log:""}}
+function saveTradeRoomData(t){if(tradeRoom)localStorage.setItem(trKey(),JSON.stringify(t));renderTradeView()}
+function offerLabel(o){if(!o)return "아직 안 올림";if(o.type==="coins")return "골드/코인 "+o.amount;let names={char:"캐릭터",katana:"호흡 장비",equip:"장비"};return names[o.type]+" : "+o.item}
+function myTradeItems(type){if(type==="char")return [...new Set([...(save.owned||[]),...(save.rare||[])])];if(type==="katana")return save.katanas||[];if(type==="equip")return save.equips||[];return []}
+function renderOfferSelect(){let t=$("offerType"),item=$("offerItem"),amt=$("offerAmount");if(!t||!item||!amt)return;let type=t.value;amt.style.display=type==="coins"?"inline-block":"none";item.style.display=type==="coins"?"none":"inline-block";item.innerHTML=myTradeItems(type).map(x=>`<option value="${x}">${x}</option>`).join("")||'<option value="">거래 가능 물건 없음</option>'}
+function joinTradeRoom(){if(user==="guest")return alert("로그인 후 거래 가능");let r=$("tradeRoomName").value.trim();if(!r)return alert("거래 방 이름 입력");tradeRoom=r;let t=readTradeRoom();if(!t.users.includes(user))t.users.push(user);t.users=t.users.slice(-2);t.done=false;saveTradeRoomData(t);$("tradeStatus").textContent="거래 방 ["+tradeRoom+"] 입장 중"}
+function leaveTradeRoom(){tradeRoom="";$("tradeStatus").textContent="거래 방 없음";renderTradeView()}
+function inviteTradeFriend(){if(user==="guest")return alert("로그인 필요");let n=$("tradePartner").value.trim()||$("friendName").value.trim();if(!n)return alert("상대 닉네임 입력");if(!(save.friends||[]).includes(n))return alert("친구 목록에 있는 계정만 초대 가능");if(!tradeRoom){$("tradeRoomName").value="거래방_"+user+"_"+Date.now().toString(36).slice(-4);joinTradeRoom()}localStorage.setItem("rpgTradeInvite_"+n,JSON.stringify({from:user,room:tradeRoom,ts:Date.now()}));$("tradeStatus").textContent=n+"님에게 거래 방 ["+tradeRoom+"] 초대 전송"}
+function checkTradeInvites(){if(user==="guest")return alert("로그인 필요");let raw=localStorage.getItem("rpgTradeInvite_"+user);if(!raw){$("tradeStatus").textContent="받은 거래 초대 없음";return}let inv=JSON.parse(raw);if(Date.now()-inv.ts>1000*60*10){localStorage.removeItem("rpgTradeInvite_"+user);$("tradeStatus").textContent="거래 초대 만료";return}$("tradeStatus").innerHTML=`${inv.from}님의 거래 방 [${inv.room}] 초대 <button class=green onclick="acceptTradeInvite('${inv.room}')">입장</button>`}
+function acceptTradeInvite(r){$("tradeRoomName").value=r;joinTradeRoom();localStorage.removeItem("rpgTradeInvite_"+user)}
+function setTradeOffer(){if(!tradeRoom)return alert("거래 방에 먼저 입장하세요");let t=readTradeRoom(),type=$("offerType").value,o={type};if(type==="coins"){let a=Math.floor(Number($("offerAmount").value));if(!a||a<1)return alert("골드/코인 수량 입력");if(coins<a)return alert("코인 부족");o.amount=a}else{let item=$("offerItem").value;if(!item)return alert("거래할 물건 없음");if(!myTradeItems(type).includes(item))return alert("보유하지 않은 물건입니다");o.item=item}if(!t.users.includes(user))t.users.push(user);t.offers[user]=o;t.ready[user]=false;saveTradeRoomData(t);$("tradeStatus").textContent="내 거래품을 올렸습니다. 상대도 올린 뒤 확정하세요."}
+function clearTradeOffer(){if(!tradeRoom)return;let t=readTradeRoom();delete t.offers[user];t.ready[user]=false;saveTradeRoomData(t)}
+function cancelTradeReady(){if(!tradeRoom)return;let t=readTradeRoom();t.ready[user]=false;saveTradeRoomData(t)}
+function hasOffer(n,o){let s=readSaveOf(n);if(o.type==="coins")return (s.coins||0)>=o.amount;if(o.type==="char")return (s.owned||[]).includes(o.item)||(s.rare||[]).includes(o.item);if(o.type==="katana")return (s.katanas||[]).includes(o.item);if(o.type==="equip")return (s.equips||[]).includes(o.item);return false}
+function removeOffer(n,o){let s=readSaveOf(n);if(o.type==="coins")s.coins=(s.coins||0)-o.amount;if(o.type==="char"){s.owned=(s.owned||[]).filter(x=>x!==o.item);s.rare=(s.rare||[]).filter(x=>x!==o.item);if(!(s.owned||[]).length&&!(s.rare||[]).length)s.owned=["카마도 탄지로"]}if(o.type==="katana"){s.katanas=(s.katanas||[]).filter(x=>x!==o.item);if(s.eq===o.item)s.eq=s.katanas[0]||"낡은 호흡 장비";if(!s.katanas.length)s.katanas=["낡은 호흡 장비"]}if(o.type==="equip"){s.equips=(s.equips||[]).filter(x=>x!==o.item);if(s.eqArmor===o.item)s.eqArmor=""}writeSaveOf(n,s)}
+function addOffer(n,o){let s=readSaveOf(n);if(o.type==="coins")s.coins=(s.coins||0)+o.amount;if(o.type==="char"){let c=chars.find(x=>x.name===o.item);let arr=c&&c.rare?"rare":"owned";s[arr]??=[];if(!s[arr].includes(o.item))s[arr].push(o.item)}if(o.type==="katana"){s.katanas??=[];if(!s.katanas.includes(o.item))s.katanas.push(o.item)}if(o.type==="equip"){s.equips??=[];if(!s.equips.includes(o.item))s.equips.push(o.item)}writeSaveOf(n,s)}
+function readyTrade(){if(!tradeRoom)return alert("거래 방에 먼저 입장하세요");let t=readTradeRoom();let users=t.users.filter(Boolean).slice(0,2);if(users.length<2)return alert("상대가 거래 방에 들어와야 합니다");if(!t.offers[user])return alert("내 거래품을 먼저 올리세요");t.ready[user]=true;let other=users.find(x=>x!==user);if(other&&t.ready[other]&&t.offers[other]){let a=user,b=other,oa=t.offers[a],ob=t.offers[b];if(!hasOffer(a,oa)||!hasOffer(b,ob)){t.ready={};t.log="거래 실패: 한쪽이 물건이나 골드가 부족합니다.";saveTradeRoomData(t);return alert(t.log)}removeOffer(a,oa);removeOffer(b,ob);addOffer(a,ob);addOffer(b,oa);t.log=`거래 완료! ${a} ↔ ${b}`;t.offers={};t.ready={};t.done=true;saveTradeRoomData(t);alert(t.log);load()}else{saveTradeRoomData(t);$("tradeStatus").textContent="내 확정 완료. 상대 확정을 기다리는 중"}}
+function renderTradeView(){let v=$("tradeView");if(!v)return;if(!tradeRoom){v.innerHTML='<div class="tradeSlot">거래 방에 입장하면 상태가 표시됩니다.</div>';renderOfferSelect();return}let t=readTradeRoom();let users=t.users.filter(Boolean);let html=users.map(n=>`<div class="tradeSlot ${t.ready[n]?"tradeReady":""}"><b>${n===user?"나":n}</b><br>${offerLabel(t.offers[n])}<br>${t.ready[n]?"✅ 확정":"⏳ 미확정"}</div>`).join("");if(users.length<2)html+='<div class="tradeSlot tradeWarn">상대가 아직 입장하지 않았습니다.</div>';if(t.log)html+=`<div class="tradeSlot">${t.log}</div>`;v.innerHTML=html}
+function rankName(){let p=save.pvp||0;return ranks[Math.max(0,Math.min(7,Math.floor(p/100)))]}function pvpWin(){save.pvp=(save.pvp||0)+20;store()}function pvpLose(){save.pvp=Math.max(0,(save.pvp||0)-10);store()}
+function allAccounts(){let a=[];for(let i=0;i<localStorage.length;i++){let k=localStorage.key(i);if(k&&k.startsWith("rpgAcc_"))a.push(k.replace("rpgAcc_",""))}return a}
+
+/* === 친구 요청 우편함 시스템 === */
+function mailKey(n){return "rpgFriendMail_"+n}
+function readFriendMail(n=user){
+  try{return JSON.parse(localStorage.getItem(mailKey(n))||"[]")}catch(e){return []}
+}
+function writeFriendMail(n,list){
+  localStorage.setItem(mailKey(n),JSON.stringify(list||[]));
+}
+function sendFriendRequest(){
+  if(user==="guest")return alert("로그인 후 친구 요청 가능");
+  const n=$("friendName").value.trim();
+  if(!n)return alert("상대 닉네임을 입력해.");
+  if(n===user)return alert("자기 자신에게는 친구 요청을 보낼 수 없어.");
+  if((save.friends||[]).includes(n))return alert("이미 친구야.");
+  if(!localStorage.getItem(ak(n)) && !(online&&db))return alert("없는 계정이야. 상대가 먼저 계정을 만들어야 해.");
+  const req={type:"friendRequest",from:user,to:n,ts:Date.now(),status:"pending"};
+  if(online&&db){
+    dbRef("mails/"+safeKey(n)+"/friendRequests").push(req);
+    alert(n+"에게 온라인 친구 요청을 보냈어.");
+  }else{
+    let mail=readFriendMail(n);
+    if(mail.some(x=>x.from===user&&x.status==="pending"))return alert("이미 보낸 요청이 있어.");
+    mail.push(req);
+    writeFriendMail(n,mail);
+    alert(n+"의 우편함으로 친구 요청을 보냈어.");
+  }
+}
+function checkFriendMail(){
+  if(user==="guest")return alert("로그인 후 확인 가능");
+  const box=$("friendMailList");
+  if(!box)return;
+  if(online&&db){
+    dbRef("mails/"+safeKey(user)+"/friendRequests").once("value").then(snap=>{
+      const val=snap.val()||{};
+      const arr=Object.keys(val).map(k=>Object.assign({},val[k],{key:k}));
+      renderFriendMail(arr,true);
+    });
+  }else{
+    renderFriendMail(readFriendMail(user),false);
+  }
+}
+function renderFriendMail(arr,onlineMail=false){
+  const box=$("friendMailList");
+  if(!box)return;
+  const pending=(arr||[]).filter(x=>x.status==="pending");
+  if(!pending.length){box.innerHTML='<div class="mailItem">받은 친구 요청 없음</div>';return}
+  box.innerHTML=pending.map((m,i)=>`<div class="mailItem mailNew">
+    <b>📩 ${m.from}</b> 님이 친구 요청을 보냈어.<br>
+    <small>${new Date(m.ts||Date.now()).toLocaleString()}</small><br>
+    <button class="green" onclick="acceptFriendRequest('${m.from}','${m.key||i}',${onlineMail})">수락</button>
+    <button class="red" onclick="rejectFriendRequest('${m.from}','${m.key||i}',${onlineMail})">거절</button>
+  </div>`).join("");
+}
+function addFriendLocal(a,b){
+  let sa;
+  try{sa=JSON.parse(localStorage.getItem("rpgSave_"+a)||"null")||fresh()}catch(e){sa=fresh()}
+  sa.friends=sa.friends||[];
+  if(!sa.friends.includes(b))sa.friends.push(b);
+  localStorage.setItem("rpgSave_"+a,JSON.stringify(sa));
+  if(a===user){save=sa;norm();store()}
+}
+function acceptFriendRequest(from,key,onlineMail=false){
+  if(user==="guest")return;
+  addFriendLocal(user,from);
+  addFriendLocal(from,user);
+  if(onlineMail&&online&&db){
+    dbRef("mails/"+safeKey(user)+"/friendRequests/"+key).update({status:"accepted"});
+    dbRef("mails/"+safeKey(from)+"/notices").push({from:user,msg:user+"님이 친구 요청을 수락했습니다.",ts:Date.now()});
+  }else{
+    let mail=readFriendMail(user);
+    mail=mail.map((m,i)=>String(i)===String(key)?Object.assign({},m,{status:"accepted"}):m);
+    writeFriendMail(user,mail);
+  }
+  alert(from+"님과 친구가 됐어.");
+  renderFriends();
+  checkFriendMail();
+}
+function rejectFriendRequest(from,key,onlineMail=false){
+  if(onlineMail&&online&&db){
+    dbRef("mails/"+safeKey(user)+"/friendRequests/"+key).update({status:"rejected"});
+  }else{
+    let mail=readFriendMail(user);
+    mail=mail.map((m,i)=>String(i)===String(key)?Object.assign({},m,{status:"rejected"}):m);
+    writeFriendMail(user,mail);
+  }
+  alert("친구 요청을 거절했어.");
+  checkFriendMail();
+}
+
+function renderFriends(){let f=$("friendList");if(!f)return;let arr=save.friends||[];if(user==="guest"){f.innerHTML='<div class="friendItem">로그인 후 친구 기능 사용 가능</div>';return}if(!arr.length){f.innerHTML='<div class="friendItem">친구가 없습니다. 친구 요청을 보내고 상대가 수락해야 추가됩니다.</div>';return}f.innerHTML=arr.map(n=>`<div class="friendItem"><b>👤 ${n}</b><br><button class=blue onclick="inviteFriend('${n}')">방으로 초대</button><button class=red onclick="removeFriend('${n}')">삭제</button></div>`).join("")}
+function addFriend(){sendFriendRequest()}
+function removeFriend(n){save.friends=(save.friends||[]).filter(x=>x!==n);store()}
+function inviteFriend(n){if(user==="guest")return alert("로그인 필요");if(!(save.friends||[]).includes(n))return alert("친구 목록에 있는 계정만 초대 가능");if(!room){$("roomName").value="친구방_"+user+"_"+Date.now().toString(36).slice(-4);joinRoom()}let inv={from:user,room:room,ts:Date.now()};localStorage.setItem("rpgInvite_"+n,JSON.stringify(inv));$("inviteStatus").textContent=n+"님에게 ["+room+"] 방 초대 전송";alert(n+"님을 방으로 초대했습니다.")}
+function checkInvites(){if(user==="guest")return alert("로그인 필요");let raw=localStorage.getItem("rpgInvite_"+user);if(!raw){$("inviteStatus").textContent="받은 초대 없음";return}let inv=JSON.parse(raw);if(Date.now()-inv.ts>1000*60*10){localStorage.removeItem("rpgInvite_"+user);$("inviteStatus").textContent="초대가 만료되었습니다.";return}$("inviteStatus").innerHTML=`${inv.from}님의 방 [${inv.room}] 초대 <button class=green onclick="acceptInvite('${inv.room}')">참가</button>`}
+function acceptInvite(r){$("roomName").value=r;joinRoom();localStorage.removeItem("rpgInvite_"+user);$("inviteStatus").textContent="초대받은 방 ["+r+"] 참가 완료"}
+function joinRoom(){let r=$("roomName").value.trim();if(!r)return alert("방 이름 입력");leaveRoom(false);room=r;chan=new BroadcastChannel("anime_rpg_room_"+room);chan.onmessage=e=>{let m=e.data;if(!m||m.id===myId)return;if(m.type==="state"){peerPlayers[m.id]=m;peerPlayers[m.id].lastSeen=Date.now()}if(m.type==="leave")delete peerPlayers[m.id]};$("roomStatus").textContent="방 ["+room+"] 참가 중";openChatChannel()}function leaveRoom(show=true){if(chan){chan.postMessage({type:"leave",id:myId});chan.close()}chan=null,tradeRoom="";room="";peerPlayers={};if(show)$("roomStatus").textContent="방 없음";addChatMessage("system","방에서 나갔습니다. 전체 채팅은 유지됩니다.",true)}function randomMatch(){let r="랜덤방_"+(Math.floor(Date.now()/30000)%100);$("roomName").value=r;joinRoom();$("roomStatus").textContent="랜덤 매칭 대기/참가: "+r}
+function sendState(){if(chan&&player)chan.postMessage({type:"state",id:myId,name:user,emoji:player.emoji,color:player.color,x:player.x,y:player.y,char:player.name})}
+
+/* === 전체 서버 채팅 시스템 === */
+let chatChan=null,chatMessages=[],globalChatOpened=false;
+function addChatMessage(name,msg,system=false,admin=false){
+ const log=$("chatLog");
+ if(!log)return;
+ if(log.children.length===1 && log.textContent.includes("아직 채팅 없음"))log.innerHTML="";
+ const div=document.createElement("div");
+ div.className="chatMsg"+(system?" chatSystem":"");
+ const safeName=String(name||"system").replace(/[<>]/g,"");
+ const safeMsg=String(msg||"").replace(/[<>]/g,"");
+ const shownName=(isOwner(name)||isModerator(name)||admin)?adminLabel(name):`<span class="chatName">${safeName}</span>`;
+ div.innerHTML=system?safeMsg:`${shownName} : ${safeMsg}`;
+ log.appendChild(div);
+ while(log.children.length>80)log.removeChild(log.firstChild);
+ log.scrollTop=log.scrollHeight;
+}
+function openChatChannel(){
+ if(globalChatOpened)return;
+ globalChatOpened=true;
+ if(chatChan){chatChan.close();chatChan=null}
+ if(online&&db){
+   dbRef("globalChat").limitToLast(80).off();
+   dbRef("globalChat").limitToLast(80).on("child_added",snap=>{
+     const m=snap.val();
+     if(!m)return;
+     addChatMessage(m.name,m.msg,false,m.admin);
+   });
+   addChatMessage("system","전체 서버 채팅 온라인 연결됨",true);
+ }else if(typeof BroadcastChannel!=="undefined"){
+   chatChan=new BroadcastChannel("global_server_chat");
+   chatChan.onmessage=e=>{
+     const m=e.data;
+     if(!m)return;
+     addChatMessage(m.name,m.msg,false,m.admin);
+   };
+   addChatMessage("system","로컬 전체 채팅 연결됨. Firebase 연결 전에는 같은 브라우저끼리만 보입니다.",true);
+ }else{
+   addChatMessage("system","채팅 준비 완료",true);
+ }
+}
+function sendChat(){
+ if(isBanned())return alert("밴된 계정은 채팅할 수 없어.");
+ if(isMuted())return alert("채팅 금지 상태야.");
+ const input=$("chatInput");
+ if(!input)return;
+ const msg=input.value.trim();
+ if(!msg)return;
+ const payload={name:user||"guest",msg:msg,ts:Date.now(),admin:isStaff()};
+ openChatChannel();
+ if(online&&db){
+   dbRef("globalChat").push(payload);
+ }else if(chatChan){
+   chatChan.postMessage(payload);
+   addChatMessage(payload.name,payload.msg,false);
+ }else{
+   addChatMessage(payload.name,payload.msg,false);
+ }
+ input.value="";
+}
+function clearChatLocal(){
+ const log=$("chatLog");
+ if(log)log.innerHTML='<div class="chatMsg chatSystem">채팅창을 비웠습니다.</div>';
+}
+
+
+/* === 월드맵 시스템 === */
+let worldRun=false,worldCanvas=null,wctx=null,ww=0,wh=0,worldLast=0;
+let worldPlayer={x:520,y:420,spd:260,level:1};let currentWorldPlace=null,dungeonPlace=null;let flyMode=false,invisibleMode=false;
+let worldRoom="",worldChan=null,worldPeers={},worldJoy={x:0,y:0,a:false};
+const worldPlaces=[
+ {name:"후지카사네산 입구",x:520,y:420,r:130,level:1,color:"#14532d",emoji:"🏔️",desc:"초보자 수련 지역"},
+ {name:"나타구모산",x:1180,y:520,r:150,level:5,color:"#166534",emoji:"🕷️",desc:"거미 혈귀 지역"},
+ {name:"아사쿠사",x:1850,y:380,r:145,level:8,color:"#334155",emoji:"🏙️",desc:"도시 조사 지역"},
+ {name:"츠즈미 저택",x:2450,y:760,r:140,level:10,color:"#7c2d12",emoji:"🥁",desc:"북의 혈귀 지역"},
+ {name:"무한열차",x:820,y:1180,r:155,level:15,color:"#78350f",emoji:"🚂",desc:"꿈 혈귀 보스 지역"},
+ {name:"요시와라 유곽",x:1650,y:1280,r:165,level:20,color:"#7f1d1d",emoji:"🏮",desc:"상현의 육 지역"},
+ {name:"도공 마을",x:2700,y:1420,r:160,level:25,color:"#475569",emoji:"⚒️",desc:"장비 강화 지역"},
+ {name:"무한성",x:3450,y:980,r:190,level:35,color:"#312e81",emoji:"🏯",desc:"상현 집결 지역"},
+ {name:"주술고전",x:3920,y:420,r:170,level:40,color:"#1e3a8a",emoji:"⛩️",desc:"주술회전 시작 지역"},
+ {name:"시부야",x:4380,y:1180,r:185,level:50,color:"#334155",emoji:"🌆",desc:"주술회전 대형 전투 지역"},
+ {name:"사멸회유 결계",x:5050,y:720,r:190,level:60,color:"#581c87",emoji:"🌀",desc:"고난도 주술 지역"},
+ {name:"상현 레이드",x:5520,y:1420,r:200,level:70,color:"#581c87",emoji:"👹",desc:"상현 보스 레이드"},
+ {name:"스쿠나 영역",x:6320,y:620,r:215,level:85,color:"#7f1d1d",emoji:"⛩️",desc:"최상위 주술 보스"},
+ {name:"최종 무잔전",x:6900,y:1480,r:230,level:100,color:"#020617",emoji:"🩸",desc:"최종 보스 지역"}
+];
+const WORLD_W=7400,WORLD_H=2200;
+function startWorldMap(){
+ if(!owned(chars[sel]))return alert("먼저 캐릭터를 선택/구매해.");
+ $("select").classList.remove("active");
+ $("game").classList.remove("active");
+ $("world").classList.add("active");
+ worldCanvas=$("worldCanvas");wctx=worldCanvas.getContext("2d");
+ resizeWorld();
+ addEventListener("resize",resizeWorld);
+ worldRun=true;worldLast=performance.now();updateWorldPowerStatus();
+ if(!$("worldRoomName").value)$("worldRoomName").value="공용월드";
+ joinWorldRoom();
+ requestAnimationFrame(worldLoop);
+}
+function backFromWorld(){
+ worldRun=false;
+ $("world").classList.remove("active");
+ $("select").classList.add("active");
+}
+function resizeWorld(){ww=worldCanvas.width=innerWidth;wh=worldCanvas.height=innerHeight}
+function joinWorldRoom(){
+ let r=($("worldRoomName")&&$("worldRoomName").value.trim())||"공용월드";
+ worldRoom=r;
+ if(worldChan){worldChan.close();worldChan=null}
+ worldPeers={};
+ if(online&&db){
+   const ref=dbRef("worldRooms/"+safeKey(worldRoom)+"/players/"+myId);
+   ref.set(worldState());
+   ref.onDisconnect().remove();
+   dbRef("worldRooms/"+safeKey(worldRoom)+"/players").on("value",snap=>{
+     let val=snap.val()||{};
+     worldPeers={};
+     Object.keys(val).forEach(id=>{if(id!==myId)worldPeers[id]=val[id]});
+   });
+   $("worldStatus").textContent="온라인 월드방 ["+worldRoom+"] / 넓은 월드";
+ }else if(typeof BroadcastChannel!=="undefined"){
+   worldChan=new BroadcastChannel("world_"+worldRoom);
+   worldChan.onmessage=e=>{
+     let m=e.data;if(!m||m.id===myId)return;
+     if(m.type==="worldState"){worldPeers[m.id]=m;worldPeers[m.id].lastSeen=Date.now()}
+     if(m.type==="worldLeave")delete worldPeers[m.id];
+   };
+   $("worldStatus").textContent="로컬 월드방 ["+worldRoom+"] / 넓은 월드";
+ }
+}
+
+function canUseWorldAdminPower(){
+ return typeof isAdmin==="function" ? isAdmin() : user==="제작자";
+}
+
+function worldLevel(){
+  // 최고 스테이지 기반 월드 레벨. 스테이지 1이면 Lv.1, 스테이지가 오를수록 월드 입장 가능 지역 증가.
+  let lv=Math.max(1,Math.floor((save.best||1)));
+  if(canUseWorldAdminPower())lv=999;
+  return lv;
+}
+function canEnterPlace(p){
+  return worldLevel()>=p.level || canUseWorldAdminPower();
+}
+function tryEnterPlace(p){
+  if(!p)return;
+  if(canEnterPlace(p)){
+    $("worldPlace").innerHTML=`<span class="openPlace">${p.emoji} ${p.name} 입장 가능 / 필요 Lv.${p.level}</span>`;
+  }else{
+    $("worldPlace").innerHTML=`<span class="lockedPlace">🔒 ${p.name} 잠김 / 필요 Lv.${p.level} / 현재 Lv.${worldLevel()}</span>`;
+    // 잠긴 지역 중심부까지 못 들어가게 살짝 밀어냄
+    let dx=worldPlayer.x-p.x,dy=worldPlayer.y-p.y,l=Math.hypot(dx,dy)||1;
+    if(Math.hypot(dx,dy)<p.r*.72){
+      worldPlayer.x=p.x+dx/l*p.r*.72;
+      worldPlayer.y=p.y+dy/l*p.r*.72;
+    }
+  }
+}
+
+function toggleFlyMode(){
+ if(!canUseWorldAdminPower())return alert("제작자만 날 수 있어.");
+ flyMode=!flyMode;
+ updateWorldPowerStatus();
+}
+function toggleInvisibleMode(){
+ if(!canUseWorldAdminPower())return alert("제작자만 투명모드를 쓸 수 있어.");
+ invisibleMode=!invisibleMode;
+ updateWorldPowerStatus();
+}
+function updateWorldPowerStatus(){
+ const el=$("worldPowerStatus");
+ if(!el)return;
+ if(!canUseWorldAdminPower()){
+   el.textContent="월드 능력: 일반 유저";
+   return;
+ }
+ el.innerHTML=`<span class="creatorWingGlow">🪽 제작자 비행 ${flyMode?"ON":"OFF"}</span> / <span class="${invisibleMode?"invisibleOn":""}">투명 ${invisibleMode?"ON":"OFF"}</span>`;
+}
+
+function worldState(){
+ let c=chars[sel];
+ return {type:"worldState",id:myId,name:user,char:c.name,emoji:c.emoji,color:c.color,x:worldPlayer.x,y:worldPlayer.y,fly:flyMode,admin:canUseWorldAdminPower(),invisible:invisibleMode,ts:Date.now()};
+}
+function sendWorldState(){
+ if(!worldRun||!worldRoom)return;
+ let st=worldState();
+ if(online&&db)dbRef("worldRooms/"+safeKey(worldRoom)+"/players/"+myId).update(st);
+ else if(worldChan)worldChan.postMessage(st);
+}
+function worldLoop(t){
+ if(!worldRun)return;
+ let dt=Math.min(.033,(t-worldLast)/1000);worldLast=t;
+ updateWorld(dt);drawWorld();requestAnimationFrame(worldLoop);
+}
+function updateWorld(dt){
+ let vx=worldJoy.x,vy=worldJoy.y;
+ if(keys.a||keys.ArrowLeft)vx=-1;if(keys.d||keys.ArrowRight)vx=1;if(keys.w||keys.ArrowUp)vy=-1;if(keys.s||keys.ArrowDown)vy=1;
+ let l=Math.hypot(vx,vy)||1;
+ let actualSpd=worldPlayer.spd*(flyMode&&canUseWorldAdminPower()?2.1:1);worldPlayer.x+=vx/l*actualSpd*dt;
+ worldPlayer.y+=vy/l*actualSpd*dt;
+ worldPlayer.x=Math.max(60,Math.min(WORLD_W-60,worldPlayer.x));
+ worldPlayer.y=Math.max(60,Math.min(WORLD_H-60,worldPlayer.y));
+ let near=nearestPlace();
+ currentWorldPlace=near;
+ if(near)tryEnterPlace(near);else $("worldPlace").textContent="월드 이동 중";
+ $("worldUserInfo").innerHTML=`${user} / ${chars[sel].name}${canUseWorldAdminPower()?" / 🪽 관리자":""}`;
+ $("worldLevelInfo").innerHTML=`월드 Lv.${worldLevel()} / 최고 스테이지 ${save.best||1}`;
+ updateWorldPowerStatus();
+ sendWorldState();
+}
+function nearestPlace(){
+ let best=null,bd=99999;
+ worldPlaces.forEach(p=>{let d=Math.hypot(worldPlayer.x-p.x,worldPlayer.y-p.y);if(d<p.r&&d<bd){best=p;bd=d}});
+ return best;
+}
+function camera(){
+ return {x:Math.max(0,Math.min(WORLD_W-ww,worldPlayer.x-ww/2)),y:Math.max(0,Math.min(WORLD_H-wh,worldPlayer.y-wh/2))};
+}
+function drawWorld(){
+ let cam=camera();
+ wctx.clearRect(0,0,ww,wh);
+ let g=wctx.createLinearGradient(0,0,0,wh);g.addColorStop(0,"#0f172a");g.addColorStop(1,"#14532d");wctx.fillStyle=g;wctx.fillRect(0,0,ww,wh);
+ // grid roads
+ wctx.strokeStyle="rgba(255,255,255,.08)";wctx.lineWidth=2;
+ for(let x=0;x<WORLD_W;x+=160){wctx.beginPath();wctx.moveTo(x-cam.x,0-cam.y);wctx.lineTo(x-cam.x,WORLD_H-cam.y);wctx.stroke()}
+ for(let y=0;y<WORLD_H;y+=160){wctx.beginPath();wctx.moveTo(0-cam.x,y-cam.y);wctx.lineTo(WORLD_W-cam.x,y-cam.y);wctx.stroke()}
+ // places
+ worldPlaces.forEach(p=>{
+   let x=p.x-cam.x,y=p.y-cam.y;
+   let open=canEnterPlace(p);
+   wctx.save();wctx.globalAlpha=open?.92:.48;
+   wctx.beginPath();wctx.fillStyle=p.color;wctx.shadowColor=open?p.color:"#991b1b";wctx.shadowBlur=open?26:10;wctx.arc(x,y,p.r,0,Math.PI*2);wctx.fill();wctx.shadowBlur=0;
+   wctx.strokeStyle=open?"rgba(255,255,255,.55)":"rgba(248,113,113,.75)";
+   wctx.lineWidth=open?3:5;
+   wctx.stroke();
+   wctx.font="48px Arial";wctx.textAlign="center";wctx.fillText(open?p.emoji:"🔒",x,y+10);
+   wctx.fillStyle=open?"white":"#fca5a5";wctx.font="bold 18px Arial";wctx.fillText(p.name,x,y+p.r+24);
+   wctx.font="bold 14px Arial";wctx.fillText("필요 Lv."+p.level,x,y+p.r+45);
+   wctx.font="12px Arial";wctx.fillText(p.desc||"",x,y+p.r+63);
+   wctx.restore();
+ });
+ // peers
+ Object.keys(worldPeers).forEach(id=>{
+   let p=worldPeers[id];if(!p)return;
+   if(p.lastSeen&&Date.now()-p.lastSeen>5000){delete worldPeers[id];return}
+   if(!p.invisible)drawWorldChar(p.x-cam.x,p.y-cam.y,p.emoji||"🙂",p.name||"user",p.color||"#60a5fa",true,p.fly,p.admin,p.invisible);
+ });
+ let c=chars[sel];
+ drawWorldChar(worldPlayer.x-cam.x,worldPlayer.y-cam.y,c.emoji,user+" / "+c.name,c.color,false,flyMode,canUseWorldAdminPower(),invisibleMode);
+}
+function drawWorldChar(x,y,emoji,name,color,peer,fly=false,admin=false,invis=false){
+ wctx.save();
+ wctx.globalAlpha=invis?.28:(peer?.74:1);
+ if(fly||admin){
+   wctx.font="38px Arial";
+   wctx.textAlign="center";
+   wctx.fillStyle="#e9d5ff";
+   wctx.shadowColor="#a855f7";
+   wctx.shadowBlur=22;
+   wctx.fillText("🪽",x-38,y+6);
+   wctx.fillText("🪽",x+38,y+6);
+   wctx.shadowBlur=0;
+ }
+ wctx.beginPath();
+ wctx.fillStyle=color;
+ wctx.shadowColor=invis?"#67e8f9":color;
+ wctx.shadowBlur=invis?28:18;
+ wctx.arc(x,y,30,0,Math.PI*2);
+ wctx.fill();
+ wctx.shadowBlur=0;
+ wctx.font="28px Arial";
+ wctx.textAlign="center";
+ wctx.fillText(invis?"👻":emoji,x,y+9);
+ wctx.fillStyle=admin?"#f0abfc":(peer?"#bfdbfe":"#facc15");
+ wctx.font="bold 13px Arial";
+ wctx.fillText((admin?"🌈 관리자 ":"")+name+(invis?" / 투명":fly?" / 비행":""),x,y-42);
+ wctx.restore();
+}
+// world joystick
+setTimeout(()=>{
+ const je=$("worldJoy"),st=$("worldStick"); if(!je||!st)return;
+ function jm(x,y){let r=je.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,xx=x-cx,yy=y-cy,lim=r.width/2-31,len=Math.hypot(xx,yy);if(len>lim){xx=xx/len*lim;yy=yy/len*lim}st.style.transform=`translate(${xx}px,${yy}px)`;worldJoy.x=xx/lim;worldJoy.y=yy/lim}
+ je.addEventListener("touchstart",e=>{worldJoy.a=true;jm(e.touches[0].clientX,e.touches[0].clientY)},{passive:false});
+ je.addEventListener("touchmove",e=>{e.preventDefault();jm(e.touches[0].clientX,e.touches[0].clientY)},{passive:false});
+ je.addEventListener("touchend",()=>{worldJoy.a=false;worldJoy.x=worldJoy.y=0;st.style.transform="translate(0,0)"});
+ je.addEventListener("mousedown",e=>{worldJoy.a=true;jm(e.clientX,e.clientY)});
+ addEventListener("mousemove",e=>{if(worldJoy.a)jm(e.clientX,e.clientY)});
+ addEventListener("mouseup",()=>{worldJoy.a=false;worldJoy.x=worldJoy.y=0;st.style.transform="translate(0,0)"});
+},500);
+
+
+function enterWorldPlace(){
+  if(!currentWorldPlace)return alert("입장할 지역 위로 이동해.");
+  if(!canEnterPlace(currentWorldPlace))return alert(`${currentWorldPlace.name}은 Lv.${currentWorldPlace.level} 이상 입장 가능해. 현재 Lv.${worldLevel()}`);
+  dungeonPlace=currentWorldPlace;
+  stage=Math.max(save.best||1,currentWorldPlace.level);
+  $("world").classList.remove("active");
+  $("game").classList.add("active");
+  cv=$("cv");ctx=cv.getContext("2d");resize();addEventListener("resize",resize);
+  setupDungeonBattle(currentWorldPlace);
+  run=true;last=performance.now();startAt=Date.now();
+  requestAnimationFrame(loop);
+}
+function setupDungeonBattle(place){
+  let c=chars[sel],ar=armor();
+  player={x:w*.25,y:h*.62,r:34,hp:c.hp+ar.hp,max:c.hp+ar.hp,atk:c.atk+ar.atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:false,inv:0};
+  let diff=Math.max(1,place.level);
+  let boss=place.level>=70 || place.name.includes("무잔") || place.name.includes("스쿠나") || place.name.includes("상현");
+  let demonName=boss?place.name+" 보스":place.name+" 혈귀";
+  let eh=(900+diff*420)*(boss?2.2:1.35);
+  enemy={x:w*.72,y:h*.62,r:boss?52:40,hp:eh,max:eh,atk:(35+diff*13)*(boss?1.65:1.2),spd:1.55+diff*.025,name:demonName,emoji:place.emoji,color:place.color};
+  bullets=[];effects=[];c1=c2=0;
+  msg(`입장: ${place.name} / 필요 Lv.${place.level} / ${boss?"보스전":"어려운 전투장"}`);
+  hud();
+}
+
+
+
+function startGame(){if(isBanned())return alert("밴된 계정은 게임을 시작할 수 없어.");let c=chars[sel];if(!owned(c))return alert("구매하지 않은 캐릭터입니다.");$("select").classList.remove("active");$("game").classList.add("active");cv=$("cv");ctx=cv.getContext("2d");resize();addEventListener("resize",resize);stage=save.best||1;coins=save.coins||0;dia=save.dia||0;setup();run=true;last=performance.now();startAt=Date.now();requestAnimationFrame(loop)}
+function back(){run=false;dungeonPlace=null;$("game").classList.remove("active");$("select").classList.add("active")}
+function resize(){w=cv.width=innerWidth;h=cv.height=innerHeight}
+function bossKind(){if(stage%10===0)return"최종보스";if(stage%5===0)return"중간보스";return"일반 혈귀"}
+function setup(){let c=chars[sel],kb=0,ar=armor();player={x:w*.25,y:h*.62,r:34,hp:c.hp+ar.hp,max:c.hp+ar.hp,atk:c.atk+ar.atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:false,inv:0};let idx=Math.min(demons.length-1,Math.floor((stage-1)/2));if(stage%10===0)idx=Math.min(demons.length-1,10+Math.floor(stage/30));else if(stage%5===0)idx=Math.min(demons.length-1,4+Math.floor(stage/10));let d=demons[idx];let mult=stage%10===0?2.1:stage%5===0?1.55:1;let eh=(650+stage*260+Math.floor(stage/3)*180)*mult;enemy={x:w*.72,y:h*.62,r:stage%10===0?48:stage%5===0?42:36,hp:eh,max:eh,atk:(26+stage*9)*mult,spd:1.45+stage*.16,name:d[0],emoji:d[1],color:d[2]};bullets=[];effects=[];c1=c2=0;msg(`스테이지 ${stage} ${bossKind()} : ${enemy.name}`);hud()}
+function hud(){$("pn").textContent=player.name;$("en").textContent=enemy.name;$("stage").textContent="스테이지 "+stage;$("bossType").textContent=bossKind();$("coin").textContent="코인 "+coins;$("dia").textContent="다이아 "+dia;$("rec").textContent="최고 "+best;$("eq").textContent=player.isSword?save.eq:player.breath;$("ph").style.width=Math.max(0,player.hp/player.max*100)+"%";$("eh").style.width=Math.max(0,enemy.hp/enemy.max*100)+"%";$("pt").textContent=Math.floor(Math.max(0,player.hp))+" / "+player.max;$("et").textContent=Math.floor(Math.max(0,enemy.hp))+" / "+Math.floor(enemy.max)}
+function msg(t){$("msg").textContent=t;clearTimeout($("msg")._t);$("msg").style.display="block";$("msg")._t=setTimeout(()=>$("msg").style.display="none",1600)}
+function loop(n){if(!run)return;let dt=Math.min(.033,(n-last)/1000);last=n;upd(dt);draw();requestAnimationFrame(loop)}
+function upd(dt){let vx=joy.x,vy=joy.y;if(keys.a||keys.ArrowLeft)vx=-1;if(keys.d||keys.ArrowRight)vx=1;if(keys.w||keys.ArrowUp)vy=-1;if(keys.s||keys.ArrowDown)vy=1;let l=Math.hypot(vx,vy)||1;player.x+=vx/l*player.spd*90*dt;player.y+=vy/l*player.spd*90*dt;player.x=Math.max(34,Math.min(w-34,player.x));player.y=Math.max(h*.25,Math.min(h-54,player.y));let dx=player.x-enemy.x,dy=player.y-enemy.y,dl=Math.hypot(dx,dy)||1;enemy.x+=dx/dl*enemy.spd*70*dt;enemy.y+=dy/dl*enemy.spd*70*dt;if(dl<player.r+enemy.r+6&&player.inv<=0){player.hp-=enemy.atk*dt*7;player.inv=.25;effects.push([player.x,player.y,.25,"#ef4444","피격"])}player.inv-=dt;c1-=dt;c2-=dt;bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(Math.hypot(b.x-enemy.x,b.y-enemy.y)<enemy.r+b.r){enemy.hp-=b.dmg;b.life=0;effects.push([enemy.x,enemy.y,.35,b.color,Math.floor(b.dmg)])}});bullets=bullets.filter(b=>b.life>0);effects.forEach(e=>e[2]-=dt);effects=effects.filter(e=>e[2]>0);if(enemy.hp<=0){
+let baseLevel=dungeonPlace?dungeonPlace.level:stage;
+let rw=40+baseLevel*22+(stage%5===0?150:0)+(stage%10===0?300:0)+(dungeonPlace?baseLevel*10:0);
+let dr=(stage%10===0?10:stage%5===0?4:0)+(dungeonPlace?Math.max(1,Math.floor(baseLevel/10)):0);
+coins+=rw;dia+=dr;stage++;best=Math.max(best,stage,baseLevel+1);save.coins=coins;save.dia=dia;save.best=best;store();msg(`승리! ${rw}코인 ${dr}다이아`);
+if(dungeonPlace){let p=dungeonPlace;dungeonPlace=null;setTimeout(()=>{run=false;$("game").classList.remove("active");$("world").classList.add("active");worldRun=true;requestAnimationFrame(worldLoop);},900)}
+else setup()
+}if(player.hp<=0){msg("패배! 선택창으로");run=false;setTimeout(back,1000)}hud();sendState();$("s1").classList.toggle("cool",c1>0);$("s2").classList.toggle("cool",c2>0);let s=Math.floor((Date.now()-startAt)/1000);$("time").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function draw(){ctx.clearRect(0,0,w,h);let g=ctx.createLinearGradient(0,0,0,h);g.addColorStop(0,"#08111f");g.addColorStop(1,"#1f0f0f");ctx.fillStyle=g;ctx.fillRect(0,0,w,h);ctx.fillStyle="rgba(0,0,0,.25)";ctx.fillRect(0,h*.72,w,h*.28);drawC(player);drawC(enemy);drawPeers();drawOtherPvpPlayers();bullets.forEach(b=>{ctx.beginPath();ctx.fillStyle=b.color;ctx.shadowColor=b.color;ctx.shadowBlur=18;ctx.arc(b.x,b.y,b.r,0,7);ctx.fill();ctx.shadowBlur=0});effects.forEach(e=>{ctx.fillStyle=e[3];ctx.globalAlpha=Math.max(0,e[2]*3);ctx.font="bold 24px Arial";ctx.textAlign="center";ctx.fillText(e[4],e[0],e[1]-45-e[2]*20);ctx.globalAlpha=1})}
+
+function drawOtherPvpPlayers(){
+ if(!pvpMode||!pvpData||!pvpData.players||!ctx)return;
+ Object.keys(pvpData.players).filter(id=>id!==myId&&id!==pvpOpponentId).slice(0,2).forEach((id,i)=>{
+   let p=pvpData.players[id];
+   let px=p.x||w*(.38+i*.16), py=p.y||h*.72;
+   ctx.save();
+   ctx.globalAlpha=.74;
+   ctx.beginPath();
+   ctx.fillStyle=p.color||'#60a5fa';
+   ctx.shadowColor=p.color||'#60a5fa';
+   ctx.shadowBlur=16;
+   ctx.arc(px,py,30,0,Math.PI*2);
+   ctx.fill();
+   ctx.shadowBlur=0;
+   ctx.font='28px Arial';
+   ctx.textAlign='center';
+   ctx.fillText(p.emoji||'🙂',px,py+9);
+   ctx.fillStyle='#bfdbfe';
+   ctx.font='12px Arial';
+   ctx.fillText('PvP: '+(p.name||id),px,py-42);
+   ctx.restore();
+ });
+}
+
+function drawC(o){ctx.beginPath();ctx.fillStyle=o.color;ctx.shadowColor=o.color;ctx.shadowBlur=18;ctx.arc(o.x,o.y,o.r,0,7);ctx.fill();ctx.shadowBlur=0;ctx.font="30px Arial";ctx.textAlign="center";ctx.fillText(o.emoji,o.x,o.y+10);if(o.isSword){let k=kat();ctx.save();ctx.translate(o.x+24,o.y+8);ctx.rotate(-0.8);ctx.strokeStyle=k.color;ctx.lineWidth=5;ctx.shadowColor=k.color;ctx.shadowBlur=14;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(38,-8);ctx.stroke();ctx.fillStyle=k.color;ctx.font="18px Arial";ctx.fillText(k.emoji,44,-8);ctx.restore()}ctx.fillStyle="white";ctx.font="13px Arial";ctx.fillText(o.name,o.x,o.y-o.r-12)}
+function drawPeers(){let now=Date.now();Object.keys(peerPlayers).forEach(id=>{let p=peerPlayers[id];if(now-p.lastSeen>4000){delete peerPlayers[id];return}ctx.save();ctx.globalAlpha=.72;ctx.beginPath();ctx.fillStyle=p.color;ctx.arc(p.x,p.y,30,0,7);ctx.fill();ctx.font="27px Arial";ctx.textAlign="center";ctx.fillText(p.emoji,p.x,p.y+9);ctx.fillStyle="#bfdbfe";ctx.font="12px Arial";ctx.fillText("친구: "+p.name,p.x,p.y-42);ctx.restore()})}
+function anime(t,x,y,c){let e=document.createElement("div");e.className="fx";e.textContent=t;e.style.left=x-25+"px";e.style.top=y-25+"px";e.style.color=c;document.body.appendChild(e);setTimeout(()=>e.remove(),650)}
+function impactRing(x,y,c){let e=document.createElement("div");e.className="impactRing";e.style.left=x-45+"px";e.style.top=y-45+"px";e.style.color=c;document.body.appendChild(e);setTimeout(()=>e.remove(),600)}
+function burstAnime(x,y,c){let e=document.createElement("div");e.className="cutBurst";e.style.left=x-110+"px";e.style.top=y-110+"px";e.style.color=c;document.body.appendChild(e);setTimeout(()=>e.remove(),500)}
+function slashAnime(x1,y1,x2,y2,c){let dx=x2-x1,dy=y2-y1,rot=Math.atan2(dy,dx)+"rad";let e=document.createElement("div");e.className="slashLine";e.style.left=x1+"px";e.style.top=y1+"px";e.style.color=c;e.style.background=`linear-gradient(90deg,transparent,${c},white)`;e.style.setProperty("--rot",rot);document.body.appendChild(e);setTimeout(()=>e.remove(),450)}
+function domainAnime(label,color){let d=document.createElement("div");d.className="domainFx";document.body.appendChild(d);setTimeout(()=>d.remove(),1150);impactRing(innerWidth/2,innerHeight*.45,color);burstAnime(innerWidth/2,innerHeight*.45,color);anime(label,innerWidth/2,innerHeight*.38,color)}
+function flashScreen(){let e=document.createElement("div");e.className="screenFlash";document.body.appendChild(e);setTimeout(()=>e.remove(),460)}
+function spaceWarp(x,y){let e=document.createElement("div");e.className="spaceWarp";e.style.setProperty("--x",x+"px");e.style.setProperty("--y",y+"px");document.body.appendChild(e);setTimeout(()=>e.remove(),1300)}
+function purpleOrb(x1,y1,x2,y2){let e=document.createElement("div");e.className="purpleOrb";e.style.setProperty("--sx",(x1-38)+"px");e.style.setProperty("--sy",(y1-38)+"px");e.style.setProperty("--ex",(x2-38)+"px");e.style.setProperty("--ey",(y2-38)+"px");document.body.appendChild(e);setTimeout(()=>{impactRing(x2,y2,"#c084fc");burstAnime(x2,y2,"#a855f7");e.remove()},900)}
+function elemFx(cls,x,y,color,txt=""){let e=document.createElement("div");e.className=cls;e.textContent=txt;e.style.left=x+"px";e.style.top=y+"px";e.style.color=color;document.body.appendChild(e);setTimeout(()=>e.remove(),1100)}
+function thunderRay(x1,y1,x2,y2){let dx=x2-x1,dy=y2-y1,rot=Math.atan2(dy,dx)+"rad";let e=document.createElement("div");e.className="thunderRay";e.style.left=x1+"px";e.style.top=y1+"px";e.style.setProperty("--rot",rot);document.body.appendChild(e);setTimeout(()=>e.remove(),650)}
+function sukunaCuts(){for(let i=0;i<7;i++){setTimeout(()=>{let e=document.createElement("div");e.className="sukunaCut";e.style.setProperty("--y",(innerHeight*(.25+Math.random()*.5))+"px");e.style.setProperty("--rot",(-18+Math.random()*36)+"deg");document.body.appendChild(e);setTimeout(()=>e.remove(),700)},i*70)}}
+function breathFx(c){if(!human(c))return c.color;if(c.breath.includes("물"))return"#38bdf8";if(c.breath.includes("번개"))return"#facc15";if(c.breath.includes("화염"))return"#fb923c";if(c.breath.includes("바람"))return"#86efac";if(c.breath.includes("안개"))return"#99f6e4";if(c.breath.includes("벌레"))return"#a78bfa";if(c.breath.includes("사랑"))return"#f9a8d4";if(c.breath.includes("바위"))return"#a3a3a3";return kat().color}
+
+function addFx2(cls,props={},life=1200){let e=document.createElement("div");e.className=cls;for(let k in props){if(k==="color")e.style.color=props[k];else e.style.setProperty(k,props[k])}document.body.appendChild(e);setTimeout(()=>e.remove(),life);return e}
+function rot2(x1,y1,x2,y2){return Math.atan2(y2-y1,x2-x1)+"rad"}
+function flash2(c="rgba(255,255,255,.72)"){let e=document.createElement("div");e.className="screenFlash";e.style.background=c;document.body.appendChild(e);setTimeout(()=>e.remove(),430)}
+function dragon2(kind,x1,y1,x2,y2,color){addFx2(kind==="fire"?"fireDragon2":"waterDragon2",{"--sx":x1+"px","--sy":(y1-65)+"px","--rot":rot2(x1,y1,x2,y2),color},980);impactRing(x2,y2,color)}
+function thunder2(x1,y1,x2,y2){addFx2("thunderStep2",{"--sx":x1+"px","--sy":(y1-10)+"px","--rot":rot2(x1,y1,x2,y2),color:"#facc15"},600);flash2("rgba(250,204,21,.55)")}
+function kimetsuFx(c,strong=false){let color=breathFx(c),b=c.breath||"";if(b.includes("물")||b.includes("해")){dragon2((strong||c.skill.join(" ").includes("히노")||b.includes("해"))?"fire":"water",player.x,player.y,enemy.x,enemy.y,(strong||b.includes("해"))?"#f97316":color)}else if(b.includes("화염")){dragon2("fire",player.x,player.y,enemy.x,enemy.y,"#fb923c")}else if(b.includes("번개")){thunder2(player.x,player.y,enemy.x,enemy.y)}else if(b.includes("안개")){addFx2("mistField2",{"--x":enemy.x+"px","--y":enemy.y+"px",color},1200);slashAnime(player.x,player.y,enemy.x,enemy.y,color)}else if(b.includes("바람")){addFx2("windStorm2",{"--x":enemy.x+"px","--y":enemy.y+"px",color},1000);for(let i=0;i<5;i++)setTimeout(()=>slashAnime(player.x-40+i*18,player.y-35,enemy.x+30,enemy.y+30,color),i*55)}else if(b.includes("벌레")){addFx2("mistField2",{"--x":enemy.x+"px","--y":enemy.y+"px",color:"#c084fc"},850);anime("🦋毒",enemy.x,enemy.y,"#c084fc")}else if(b.includes("사랑")){slashAnime(player.x,player.y,enemy.x,enemy.y,"#f9a8d4");anime("戀",enemy.x,enemy.y,"#f9a8d4")}else if(b.includes("바위")){burstAnime(enemy.x,enemy.y,"#a3a3a3");impactRing(enemy.x,enemy.y,"#a3a3a3")}else{slashAnime(player.x,player.y,enemy.x,enemy.y,color);burstAnime(enemy.x,enemy.y,color)}if(strong){impactRing(enemy.x,enemy.y,color);burstAnime(enemy.x,enemy.y,color);anime(c.breath+" 필살",enemy.x,enemy.y,color)}}
+function jujutsuFx(c,n){let label=c.skill[n-1],color=c.color;if(c.name.includes("고죠")&&n===2){flash2("rgba(147,197,253,.75)");addFx2("limitlessVoid2",{},1450);setTimeout(()=>addFx2("hollowPurple2",{"--sx":(player.x-48)+"px","--sy":(player.y-48)+"px","--ex":(enemy.x-48)+"px","--ey":(enemy.y-48)+"px"},1150),260);anime("無量空処",innerWidth/2,innerHeight*.34,"#93c5fd");return true}if(c.name.includes("고죠")){addFx2("hollowPurple2",{"--sx":(player.x-48)+"px","--sy":(player.y-48)+"px","--ex":(enemy.x-48)+"px","--ey":(enemy.y-48)+"px"},1050);return true}if(c.name.includes("스쿠나")&&n===2){flash2("rgba(239,68,68,.65)");addFx2("shrine2",{},1300);addFx2("sukunaCuts2",{},900);anime("伏魔御厨子",innerWidth/2,innerHeight*.34,"#ef4444");return true}if(c.name.includes("스쿠나")){addFx2("sukunaCuts2",{},800);flash2("rgba(239,68,68,.45)");return true}if(c.name.includes("이타도리")){addFx2("blackFlash2",{"--x":enemy.x+"px","--y":enemy.y+"px"},700);flash2("rgba(239,68,68,.8)");anime("黒閃",enemy.x,enemy.y,"#ef4444");return true}domainAnime(label,color);return true}
+function attack(){let c=chars[sel],h=human(c),k=kat(),color=h?breathFx(c):player.color,d=player.atk*(.8+Math.random()*.4),dist=Math.hypot(player.x-enemy.x,player.y-enemy.y);if(dist<105){enemy.hp-=d;effects.push([enemy.x,enemy.y,.35,color,Math.floor(d)]);impactRing(enemy.x,enemy.y,color);if(h){kimetsuFx(c,false);anime(k.emoji,enemy.x,enemy.y,color)}else if(c.side==="주술회전"){jujutsuFx(c,1)}else{anime(c.side==="브롤스타즈"?"💥":"🩸",enemy.x,enemy.y,color)}}else msg("가까이 가세요")}
+function skill(n){let c=chars[sel];if(n===1&&c1>0)return;if(n===2&&c2>0)return;let dx=enemy.x-player.x,dy=enemy.y-player.y,l=Math.hypot(dx,dy)||1,h=human(c),color=h?breathFx(c):c.color,label=c.skill[n-1];if(n===1){c1=3;bullets.push({x:player.x,y:player.y,r:h?12:22,vx:dx/l*610,vy:dy/l*610,dmg:player.atk*2.2,life:1.15,color});if(h){kimetsuFx(c,false);impactRing(player.x,player.y,color);anime(c.breath+" "+kat().emoji,player.x,player.y,color)}else if(c.side==="주술회전")jujutsuFx(c,1);else anime(label,player.x,player.y,color);msg(label)}else{c2=6;let mult=c.name.includes("고죠")?5.6:(h?3.6:c.side==="주술회전"?4.2:c.side==="브롤스타즈"?3.9:3.8);enemy.hp-=player.atk*mult;effects.push([enemy.x,enemy.y,.75,color,h?"호흡 필살":c.side==="주술회전"?"영역":c.side==="브롤스타즈"?"슈퍼":"혈귀술"]);impactRing(enemy.x,enemy.y,color);burstAnime(enemy.x,enemy.y,color);if(h){slashAnime(player.x-40,player.y-20,enemy.x+40,enemy.y+20,color);slashAnime(player.x+40,player.y+25,enemy.x-40,enemy.y-25,color);kimetsuFx(c,true)}else if(c.side==="주술회전")jujutsuFx(c,2);else domainAnime(label,color);msg(label)}}
+function dash(){let dx=joy.x||((enemy.x<player.x)?1:-1),dy=joy.y||0,l=Math.hypot(dx,dy)||1;player.x+=dx/l*120;player.y+=dy/l*120;player.inv=.6;msg("회피")}
+addEventListener("keydown",e=>{keys[e.key]=true;if(e.key===" ")attack();if(e.key==="1")skill(1);if(e.key==="2")skill(2)});addEventListener("keyup",e=>keys[e.key]=false);
+const je=$("joy"),st=$("stick");function jm(x,y){let r=je.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,xx=x-cx,yy=y-cy,lim=r.width/2-31,len=Math.hypot(xx,yy);if(len>lim){xx=xx/len*lim;yy=yy/len*lim}st.style.transform=`translate(${xx}px,${yy}px)`;joy.x=xx/lim;joy.y=yy/lim}
+je.addEventListener("touchstart",e=>{joy.a=true;jm(e.touches[0].clientX,e.touches[0].clientY)},{passive:false});je.addEventListener("touchmove",e=>{e.preventDefault();jm(e.touches[0].clientX,e.touches[0].clientY)},{passive:false});je.addEventListener("touchend",()=>{joy.a=false;joy.x=joy.y=0;st.style.transform="translate(0,0)"});je.addEventListener("mousedown",e=>{joy.a=true;jm(e.clientX,e.clientY)});addEventListener("mousemove",e=>{if(joy.a)jm(e.clientX,e.clientY)});addEventListener("mouseup",()=>{joy.a=false;joy.x=joy.y=0;st.style.transform="translate(0,0)"});
+setInterval(()=>{if(user!=="guest"){renderTradeView()}},3000);
+
+
+/* === 온라인 Firebase + 진짜 PvP 랭크전 확장 === */
+let fbApp=null,db=null,online=false,roomSub=null,pvpSub=null,pvpRoom="",pvpMode=false,pvpData={players:{},hits:{},ended:false},lastHitSeen=0,pvpMyHp=1600,pvpMaxHp=1600,pvpOpponentId="",ranked=false,pvpHostId="",pvpAutoStartedKey="";
+const DEFAULT_FIREBASE_CONFIG={apiKey:"AIzaSyDgcof8nH7bB9JcELfb6KVdyO1FJoF_c4o",authDomain:"project-786867319314566748.firebaseapp.com",databaseURL:"https://project-786867319314566748-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"project-786867319314566748",storageBucket:"project-786867319314566748.firebasestorage.app",messagingSenderId:"792444845215",appId:"1:792444845215:web:ee7cdda26d468d7172f6aa"};
+function safeKey(x){return String(x||"").replace(/[.#$\[\]/]/g,"_")}
+function fbPath(...a){return a.map(safeKey).join('/')}
+function loadFirebaseConfig(){let v=localStorage.getItem('animeRpgFirebaseConfig')||JSON.stringify(DEFAULT_FIREBASE_CONFIG,null,2);if($('fbConfig'))$('fbConfig').value=v;return v}
+function connectFirebase(silent=false){try{let raw=($('fbConfig')&&$('fbConfig').value.trim())||loadFirebaseConfig()||JSON.stringify(DEFAULT_FIREBASE_CONFIG);let cfg=typeof raw==='string'?JSON.parse(raw):raw;if(!cfg.databaseURL)cfg.databaseURL=DEFAULT_FIREBASE_CONFIG.databaseURL;if(!firebase.apps.length)fbApp=firebase.initializeApp(cfg);else fbApp=firebase.app();db=firebase.database();online=true;localStorage.setItem('animeRpgFirebaseConfig',JSON.stringify(cfg,null,2));if($('fbConfig'))$('fbConfig').value=JSON.stringify(cfg,null,2);$('onlineStatus').innerHTML='<span class=onlineOk>온라인 자동 연결됨</span> / 다른 기기 친구·방·PvP 가능';if(user!=='guest'){onlineRegisterUser();listenOnlineInvites();syncOnlineSave();}if(!silent)alert('온라인 연결 완료');}catch(e){online=false;$('onlineStatus').innerHTML='<span class=onlineBad>연결 실패:</span> '+e.message;if(!silent)alert('Firebase 연결 실패: '+e.message)}}
+function disconnectFirebase(){online=false;db=null;if(roomSub)roomSub.off();if(pvpSub)pvpSub.off();$('onlineStatus').textContent='온라인 꺼짐: 같은 브라우저 테스트만 가능'}
+function onlineRegisterUser(){if(!online||!db||user==='guest')return;dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});}
+
+async function syncOnlineSave(){if(!online||!db||user==='guest')return;let ref=dbRef('saves/'+safeKey(user));let snap=await ref.get();if(snap.exists()){let remote=snap.val();if(remote&&typeof remote==='object'){save={...fresh(),...remote};norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();}}
+else{await ref.set({...save,updatedAt:Date.now()});}}
+async function pushOnlineSave(){if(!online||!db||user==='guest')return;await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:Date.now()});await dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});}
+const _oldStore=store;store=function(){_oldStore();onlineRegisterUser();pushOnlineSave();}
+function listenOnlineInvites(){if(!online||!db||user==='guest')return;dbRef('invites/'+safeKey(user)).limitToLast(1).on('child_added',snap=>{let inv=snap.val();if(!inv||Date.now()-inv.ts>600000)return;if(inv.type==='room')$('inviteStatus').innerHTML=`${inv.from}님의 방 [${inv.room}] 초대 <button class=green onclick="acceptInvite('${inv.room}')">참가</button>`;if(inv.type==='trade')$('tradeStatus').innerHTML=`${inv.from}님의 거래 방 [${inv.room}] 초대 <button class=green onclick="acceptTradeInvite('${inv.room}')">입장</button>`;})}
+function getLocalAcc(n){return localStorage.getItem(ak(n))}
+addFriend=async function(){if(user==='guest')return alert('로그인 후 친구 추가 가능');let n=$('friendName').value.trim();if(!n)return alert('친구 닉네임 입력');if(n===user)return alert('자기 자신은 친구 추가할 수 없습니다.');if(online&&db){let snap=await dbRef('users/'+safeKey(n)).get();if(!snap.exists())return alert('온라인에 없는 계정입니다. 상대도 이 파일에서 온라인 연결 후 계정을 만들거나 로그인해야 합니다.');}
+else if(!getLocalAcc(n))return alert('없는 계정입니다. 온라인 연결 없이는 같은 브라우저에 만든 계정만 추가됩니다.');save.friends??=[];if(save.friends.includes(n))return alert('이미 친구입니다.');save.friends.push(n);store();alert(n+' 친구 추가 완료')}
+inviteFriend=function(n){if(user==='guest')return alert('로그인 필요');if(!(save.friends||[]).includes(n))return alert('친구 목록에 있는 계정만 초대 가능');if(!room){$('roomName').value='친구방_'+user+'_'+Date.now().toString(36).slice(-4);joinRoom()}let inv={type:'room',from:user,room:room,ts:Date.now()};if(online&&db)dbRef('invites/'+safeKey(n)).push(inv);else localStorage.setItem('rpgInvite_'+n,JSON.stringify(inv));$('inviteStatus').textContent=n+'님에게 ['+room+'] 방 초대 전송';}
+inviteTradeFriend=function(){if(user==='guest')return alert('로그인 필요');let n=$('tradePartner').value.trim()||$('friendName').value.trim();if(!n)return alert('상대 닉네임 입력');if(!(save.friends||[]).includes(n))return alert('친구 목록에 있는 계정만 초대 가능');if(!tradeRoom){$('tradeRoomName').value='거래방_'+user+'_'+Date.now().toString(36).slice(-4);joinTradeRoom()}let inv={type:'trade',from:user,room:tradeRoom,ts:Date.now()};if(online&&db)dbRef('invites/'+safeKey(n)).push(inv);else localStorage.setItem('rpgTradeInvite_'+n,JSON.stringify(inv));$('tradeStatus').textContent=n+'님에게 거래 방 ['+tradeRoom+'] 초대 전송'}
+joinRoom=function(){let r=$('roomName').value.trim();if(!r)return alert('방 이름 입력');leaveRoom(false);room=r;peerPlayers={};if(online&&db){let ref=dbRef('rooms/'+safeKey(room)+'/players');roomSub=ref;ref.on('value',snap=>{let data=snap.val()||{};peerPlayers={};Object.keys(data).forEach(id=>{if(id!==myId){peerPlayers[id]=data[id];peerPlayers[id].lastSeen=Date.now()}})});dbRef('rooms/'+safeKey(room)+'/players/'+myId).onDisconnect().remove();$('roomStatus').innerHTML='온라인 방 ['+room+'] 참가 중';}
+else{chan=new BroadcastChannel('anime_rpg_room_'+room);chan.onmessage=e=>{let m=e.data;if(!m||m.id===myId)return;if(m.type==='state'){peerPlayers[m.id]=m;peerPlayers[m.id].lastSeen=Date.now()}if(m.type==='leave')delete peerPlayers[m.id]};$('roomStatus').textContent='로컬 방 ['+room+'] 참가 중'} }
+leaveRoom=function(show=true){if(chan){chan.postMessage({type:'leave',id:myId});chan.close()}if(roomSub&&online&&db){dbRef('rooms/'+safeKey(room)+'/players/'+myId).remove();roomSub.off();}chan=null;roomSub=null;room='';peerPlayers={};if(show)$('roomStatus').textContent='방 없음'}
+sendState=function(){if(!player)return;let st={type:'state',id:myId,name:user,emoji:player.emoji,color:player.color,x:player.x,y:player.y,char:player.name,hp:pvpMode?pvpMyHp:player.hp,ts:Date.now()};if(online&&db&&room)dbRef('rooms/'+safeKey(room)+'/players/'+myId).set(st);else if(chan)chan.postMessage(st);if(pvpMode&&online&&db&&pvpRoom)dbRef('pvpRooms/'+safeKey(pvpRoom)+'/players/'+myId).update(st)}
+function pvpRankScore(){return save.pvp||0}function rankNameByScore(p){return ranks[Math.max(0,Math.min(7,Math.floor((p||0)/100)))]}
+rankName=function(){return rankNameByScore(save.pvp||0)}
+function updateRank(delta){save.pvp=Math.max(0,(save.pvp||0)+delta);store();ui();}
+function pvpRoomRef(){return dbRef('pvpRooms/'+safeKey(pvpRoom))}
+function pvpIsHost(){return pvpHostId===myId}
+function joinPvpRoom(isRanked=false){
+ if(user==='guest')return alert('로그인 필요');
+ let r=$('pvpRoomName').value.trim();
+ if(!r)r=(isRanked?'랭크_':'pvp_')+Math.floor(Date.now()/15000);
+ $('pvpRoomName').value=r;
+ if(!online||!db)return alert('다른 기기 PvP는 Firebase 온라인 연결이 필요합니다. 위 Firebase 연결을 먼저 해주세요.');
+ leavePvpRoom(false);pvpRoom=r;ranked=isRanked;pvpMode=false;pvpAutoStartedKey='';pvpData={players:{},hits:{},ended:false};
+ let c=chars[sel];pvpSub=pvpRoomRef();
+ pvpSub.once('value').then(snap=>{
+   let data=snap.val()||{};
+   let ps=data.players||{};
+   let host=data.host||Object.keys(ps)[0]||myId;
+   pvpHostId=host;
+   if(!ps[myId] && Object.keys(ps).length>=4){alert('이 PvP 방은 이미 4명입니다.');return;}
+   let updates={};
+   if(!data.host)updates.host=host;
+   updates.mode=($('pvpMatchMode')&&$('pvpMatchMode').value)||data.mode||'ffa';
+   updates['players/'+myId]={id:myId,name:user,char:c.name,emoji:c.emoji,color:c.color,x:innerWidth*.25,y:innerHeight*.62,hp:pvpMyHp,max:pvpMaxHp,rank:save.pvp||0,ready:false,team:'',ts:Date.now()};
+   if(data.status==='playing'||data.status==='started'){updates.status='waiting';updates.gameStart=null;updates.hits=null;updates.result=null;}
+   pvpSub.update(updates);
+   pvpSub.child('players/'+myId).onDisconnect().remove();
+   pvpSub.on('value',snap=>{
+     pvpData=snap.val()||{players:{},hits:{}};
+     pvpHostId=pvpData.host||pvpHostId||myId;
+     let ids=Object.keys(pvpData.players||{}).filter(id=>id!==myId);
+     pvpOpponentId=ids[0]||'';
+     renderPvpStatus();
+     if(pvpMode)applyPvpHits();
+     if(pvpData.gameStart&&pvpData.gameStart.status==='start'&&!pvpMode){
+       let key=String(pvpData.gameStart.startedAt||'start');
+       if(pvpAutoStartedKey!==key){pvpAutoStartedKey=key;startPvpLocal(true);}
+     }
+   });
+   renderPvpStatus();
+   if(pvpIsHost())$('pvpStatus').innerHTML+=' <br><b>방장입니다. 친구가 들어오면 방장 시작을 누르세요.</b>';
+ });
+}
+function joinRankedMatch(){if(user==='guest')return alert('로그인 필요');let bucket=Math.floor(Date.now()/20000);$('pvpRoomName').value='랭크전_'+bucket;joinPvpRoom(true)}
+function leavePvpRoom(show=true){if(pvpSub&&online&&db){dbRef('pvpRooms/'+safeKey(pvpRoom)+'/players/'+myId).remove();pvpSub.off()}pvpSub=null;pvpRoom='';pvpMode=false;pvpOpponentId='';pvpHostId='';pvpAutoStartedKey='';if(show&&$('pvpStatus'))$('pvpStatus').textContent='PvP 방 없음'}
+function pvpTeamOf(i){return i%2===0?'A팀':'B팀'}
+function renderPvpStatus(){
+ let el=$('pvpStatus'), list=$('pvpPlayers');
+ if(!el)return;
+ let ps=pvpData.players||{};
+ let ids=Object.keys(ps).slice(0,4);
+ let mode=pvpData.mode||(($('pvpMatchMode')&&$('pvpMatchMode').value)||'ffa');
+ let cards=ids.map((id,i)=>{
+   let p=ps[id];
+   let team=mode==='team'?pvpTeamOf(i):'개인전';
+   return `<div class="pvpPlayer ${p.ready?'pvpReady':''}">
+     <span class="teamBadge">${team}</span><br>
+     <b>${id===pvpHostId?'👑 ':''}${p.emoji||'🙂'} ${p.name}</b><br>
+     캐릭터: ${p.char||''}<br>
+     랭크: ${rankNameByScore(p.rank||0)}<br>
+     ${p.ready?'✅ 준비 완료':'⏳ 준비 전'}
+   </div>`;
+ }).join('');
+ if(list)list.innerHTML=cards||'<div class="pvpPlayer">참가자 없음</div>';
+ let state=pvpData.gameStart&&pvpData.gameStart.status==='start'?'전투 시작됨':(ids.length<2?'친구 대기 중':'시작 가능');
+ el.innerHTML=`${ranked?'랭크전':'PvP'} 방 [${pvpRoom}] / 인원 ${ids.length}/4 / ${state}<br>${pvpIsHost()?'👑 방장: 시작 버튼을 누르면 모두 같이 시작합니다.':'방장이 시작하면 자동으로 전투 화면으로 들어갑니다.'}`;
+}
+function pvpReadyToggle(){
+ if(!pvpRoom||!online||!db)return alert('PvP 방에 먼저 들어가세요.');
+ let cur=(pvpData.players&&pvpData.players[myId]&&pvpData.players[myId].ready)||false;
+ dbRef('pvpRooms/'+safeKey(pvpRoom)+'/players/'+myId).update({
+   ready:!cur,
+   char:chars[sel].name,
+   emoji:chars[sel].emoji,
+   color:chars[sel].color,
+   ts:Date.now()
+ });
+}
+function startPvpGame(){
+ if(!pvpRoom)return alert('먼저 PvP 방이나 랭크전에 입장하세요.');
+ let ps=pvpData.players||{};
+ let ids=Object.keys(ps).slice(0,4);if(ids.length<2)return alert('친구가 아직 안 들어왔습니다. 친구가 같은 PvP 방 이름으로 참가해야 합니다.');if(ids.some(id=>!ps[id].ready))return alert('모든 참가자가 준비해야 시작할 수 있습니다.');
+ if(!pvpIsHost())return alert('방장만 시작할 수 있습니다. 방장이 시작하면 자동으로 같이 시작됩니다.');
+ let c=chars[sel];if(!owned(c))return alert('구매하지 않은 캐릭터입니다.');
+ pvpRoomRef().update({status:'playing',gameStart:{status:'start',host:myId,startedAt:Date.now()},hits:null,result:null});
+ startPvpLocal(false);
+}
+function startPvpLocal(fromRemote){
+ if(!pvpRoom)return alert('먼저 PvP 방이나 랭크전에 입장하세요.');
+ let ps=pvpData.players||{};
+ if(Object.keys(ps).length<2){if(!fromRemote)alert('상대가 들어와야 시작할 수 있습니다.');return;}
+ let c=chars[sel];if(!owned(c))return alert('구매하지 않은 캐릭터입니다.');
+ $('select').classList.remove('active');$('game').classList.add('active');cv=$('cv');ctx=cv.getContext('2d');resize();addEventListener('resize',resize);
+ pvpMode=true;pvpMyHp=c.hp+armor().hp+500;pvpMaxHp=pvpMyHp;
+ let op=ps[pvpOpponentId]||{};
+ player={x:w*.25,y:h*.62,r:34,hp:pvpMyHp,max:pvpMaxHp,atk:c.atk+(human(c)?kat().bonus:0)+armor().atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:human(c),inv:0};
+ enemy={x:w*.72,y:h*.62,r:34,hp:op.hp||pvpMyHp,max:op.max||pvpMyHp,atk:0,spd:0,name:op.name||'상대',emoji:op.emoji||'❔',color:op.color||'#fff'};
+ bullets=[];effects=[];c1=c2=0;run=true;last=performance.now();startAt=Date.now();
+ pvpRoomRef().child('players/'+myId).update({ready:true,hp:pvpMyHp,max:pvpMaxHp,x:player.x,y:player.y,started:true});
+ msg('PvP 전투 시작! 상대를 쓰러뜨리세요');requestAnimationFrame(loop)
+}
+function applyPvpHits(){let hits=pvpData.hits||{};Object.entries(hits).forEach(([hid,h])=>{if(h.to===myId&&!h.seen){pvpMyHp=Math.max(0,pvpMyHp-(h.dmg||0));if(player){player.hp=pvpMyHp;effects.push([player.x,player.y,.45,h.color||'#ef4444','-'+Math.floor(h.dmg||0)]);impactRing(player.x,player.y,h.color||'#ef4444')}dbRef('pvpRooms/'+safeKey(pvpRoom)+'/hits/'+hid+'/seen').set(true);if(pvpMyHp<=0)finishPvp(false);}})}
+function sendPvpDamage(dmg,color){if(!pvpMode||!online||!db||!pvpOpponentId)return;dbRef('pvpRooms/'+safeKey(pvpRoom)+'/hits').push({from:myId,to:pvpOpponentId,dmg:Math.floor(dmg),color:color,ts:Date.now(),seen:false});}
+function finishPvp(win){if(!pvpMode)return;pvpMode=false;run=false;let delta=ranked?(win?30:-25):(win?10:-5);updateRank(delta);pvpRoomRef().child('result').push({name:user,win,delta,score:save.pvp,ts:Date.now()});alert((win?'승리! ':'패배! ')+(ranked?'랭크 ':'PvP ')+'점수 '+(delta>0?'+':'')+delta);back();}
+const _baseUpd=upd;upd=function(dt){if(!pvpMode){_baseUpd(dt);return}let vx=joy.x,vy=joy.y;if(keys.a||keys.ArrowLeft)vx=-1;if(keys.d||keys.ArrowRight)vx=1;if(keys.w||keys.ArrowUp)vy=-1;if(keys.s||keys.ArrowDown)vy=1;let l=Math.hypot(vx,vy)||1;player.x+=vx/l*player.spd*90*dt;player.y+=vy/l*player.spd*90*dt;player.x=Math.max(34,Math.min(w-34,player.x));player.y=Math.max(h*.25,Math.min(h-54,player.y));let op=(pvpData.players||{})[pvpOpponentId];if(op){enemy.x=op.x||enemy.x;enemy.y=op.y||enemy.y;enemy.hp=op.hp??enemy.hp;enemy.max=op.max??enemy.max;enemy.name=op.name||enemy.name;enemy.emoji=op.emoji||enemy.emoji;enemy.color=op.color||enemy.color;if(enemy.hp<=0)finishPvp(true)}player.hp=pvpMyHp;player.inv-=dt;c1-=dt;c2-=dt;bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(Math.hypot(b.x-enemy.x,b.y-enemy.y)<enemy.r+b.r){sendPvpDamage(b.dmg,b.color);b.life=0;effects.push([enemy.x,enemy.y,.35,b.color,Math.floor(b.dmg)])}});bullets=bullets.filter(b=>b.life>0);effects.forEach(e=>e[2]-=dt);effects=effects.filter(e=>e[2]>0);if(pvpMyHp<=0)finishPvp(false);hud();sendState();$('s1').classList.toggle('cool',c1>0);$('s2').classList.toggle('cool',c2>0);let s=Math.floor((Date.now()-startAt)/1000);$('time').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+const _baseHud=hud;hud=function(){_baseHud();if(pvpMode){$('stage').textContent=ranked?'랭크전':'PvP';$('bossType').textContent='상대 유저 전투';$('coin').textContent='내 랭크 '+(save.pvp||0);$('dia').textContent=rankName();$('rec').textContent='승리 +30 / 패배 -25';}}
+const _baseAttack=attack;attack=function(){if(!pvpMode){_baseAttack();return}let c=chars[sel],h=human(c),k=kat(),color=h?breathFx(c):player.color,d=player.atk*(.8+Math.random()*.4),dist=Math.hypot(player.x-enemy.x,player.y-enemy.y);if(dist<115){sendPvpDamage(d,color);effects.push([enemy.x,enemy.y,.35,color,Math.floor(d)]);impactRing(enemy.x,enemy.y,color);if(h){kimetsuFx(c,false);anime(k.emoji,enemy.x,enemy.y,color)}else if(c.side==='주술회전')jujutsuFx(c,1);else anime('💥',enemy.x,enemy.y,color)}else msg('상대에게 가까이 가세요')}
+const _baseSkill=skill;skill=function(n){if(!pvpMode){_baseSkill(n);return}let c=chars[sel];if(n===1&&c1>0)return;if(n===2&&c2>0)return;let dx=enemy.x-player.x,dy=enemy.y-player.y,l=Math.hypot(dx,dy)||1,h=human(c),color=h?breathFx(c):c.color,label=c.skill[n-1];if(n===1){c1=3;bullets.push({x:player.x,y:player.y,r:h?12:22,vx:dx/l*610,vy:dy/l*610,dmg:player.atk*2.0,life:1.15,color});if(h)kimetsuFx(c,false);else if(c.side==='주술회전')jujutsuFx(c,1);msg(label)}else{c2=6;let dmg=player.atk*(c.name.includes('고죠')?4.5:(h?3.2:3.8));sendPvpDamage(dmg,color);effects.push([enemy.x,enemy.y,.75,color,'필살']);if(h)kimetsuFx(c,true);else if(c.side==='주술회전')jujutsuFx(c,2);else domainAnime(label,color);msg(label)}}
+
+
+// === 온라인 일반 방: 방장 시작 기능 ===
+let roomHostId='', roomData={}, roomAutoStartedKey='';
+function ensurePlayableSelection(){
+  if(!owned(chars[sel])){
+    let i=chars.findIndex(c=>owned(c));
+    if(i>=0) sel=i;
+  }
+}
+function renderOnlineRoomStatus(){
+  let el=$('roomStatus'); if(!el) return;
+  if(!room){el.textContent='방 없음';return;}
+  let ps=(roomData&&roomData.players)||{};
+  let ids=Object.keys(ps);
+  let names=ids.map(id=>`${id===roomHostId?'👑 ':''}${ps[id].name||id}`).join(', ') || '대기 중';
+  let state=(roomData&&roomData.gameStart&&roomData.gameStart.status==='start')?'전투 시작됨':'대기 중';
+  el.innerHTML=`온라인 방 [${room}] / ${state}<br>참가자: ${names}<br>${roomHostId===myId?'👑 방장입니다. 친구가 들어오면 온라인 방장 시작을 누르세요.':'방장이 온라인 방장 시작을 누르면 자동으로 전투가 시작됩니다.'}`;
+}
+function startOnlineRoomLocal(fromRemote=false){
+  ensurePlayableSelection();
+  if(!owned(chars[sel])) return alert('전투 가능한 캐릭터가 없습니다.');
+  if($('game').classList.contains('active')) return;
+  startGame();
+  msg(fromRemote?'방장이 시작했습니다!':'온라인 방 전투 시작!');
+}
+function startOnlineRoomGame(){
+  if(user==='guest') return alert('로그인 후 사용하세요.');
+  if(!room) return alert('먼저 온라인 방에 들어가세요.');
+  if(online&&db){
+    if(roomHostId && roomHostId!==myId) return alert('방장만 시작할 수 있습니다. 방장이 시작하면 자동으로 같이 시작됩니다.');
+    dbRef('rooms/'+safeKey(room)).update({
+      host: myId,
+      status: 'playing',
+      gameStart: {status:'start',host:myId,startedAt:Date.now()}
+    });
+    startOnlineRoomLocal(false);
+  }else{
+    if(chan) chan.postMessage({type:'roomStart',id:myId,startedAt:Date.now()});
+    startOnlineRoomLocal(false);
+  }
+}
+joinRoom=function(){
+  let r=$('roomName').value.trim();
+  if(!r) return alert('방 이름 입력');
+  leaveRoom(false); room=r; peerPlayers={}; roomData={}; roomHostId=''; roomAutoStartedKey='';
+  if(online&&db){
+    let base=dbRef('rooms/'+safeKey(room)); roomSub=base;
+    base.once('value').then(snap=>{
+      let data=snap.val()||{}; let ps=data.players||{};
+      let host=data.host||Object.keys(ps)[0]||myId; roomHostId=host;
+      let c=chars[sel]||chars[0];
+      let updates={}; if(!data.host) updates.host=host; if(!data.status) updates.status='waiting';
+      updates['players/'+myId]={id:myId,name:user,emoji:c.emoji,color:c.color,char:c.name,x:innerWidth*.25,y:innerHeight*.62,hp:0,ts:Date.now()};
+      base.update(updates);
+      base.child('players/'+myId).onDisconnect().remove();
+    });
+    base.on('value',snap=>{
+      roomData=snap.val()||{}; roomHostId=roomData.host||roomHostId||myId;
+      let ps=roomData.players||{}; peerPlayers={};
+      Object.keys(ps).forEach(id=>{ if(id!==myId){ peerPlayers[id]=ps[id]; peerPlayers[id].lastSeen=Date.now(); } });
+      renderOnlineRoomStatus();
+      let gs=roomData.gameStart;
+      if(gs&&gs.status==='start'){
+        let key=String(gs.startedAt||'start');
+        if(roomAutoStartedKey!==key){ roomAutoStartedKey=key; startOnlineRoomLocal(true); }
+      }
+    });
+  }else{
+    roomHostId=myId;
+    chan=new BroadcastChannel('anime_rpg_room_'+room);
+    chan.onmessage=e=>{let m=e.data;if(!m||m.id===myId)return;if(m.type==='state'){peerPlayers[m.id]=m;peerPlayers[m.id].lastSeen=Date.now()}if(m.type==='leave')delete peerPlayers[m.id];if(m.type==='roomStart')startOnlineRoomLocal(true)};
+    $('roomStatus').innerHTML='로컬 방 ['+room+'] 참가 중<br>온라인 연결이 없으면 같은 브라우저 탭끼리만 됩니다.';
+  }
+}
+leaveRoom=function(show=true){
+  if(chan){chan.postMessage({type:'leave',id:myId});chan.close()}
+  if(roomSub&&online&&db&&room){dbRef('rooms/'+safeKey(room)+'/players/'+myId).remove();roomSub.off();}
+  chan=null;roomSub=null;room='';peerPlayers={};roomData={};roomHostId='';roomAutoStartedKey='';
+  if(show)$('roomStatus').textContent='방 없음';
+}
+
+
+/* === 온라인 거래방 실시간 입장 표시 + 동기화 수정 === */
+let onlineTradeRoomData=null, onlineTradeSub=null, onlineTradeLastUsers='';
+function tradeRoomBase(){return online&&db&&tradeRoom?dbRef('tradeRooms/'+safeKey(tradeRoom)):null}
+function tradeUserProfile(){let c=chars[sel]||chars[0];return {name:user,id:myId,char:c.name,emoji:c.emoji,rank:rankName(),ts:Date.now()}}
+function tradeUserNames(t){return Object.keys((t&&t.users)||{}).filter(Boolean)}
+function tradeOfferLabel(o){return offerLabel(o)}
+function renderTradeStatusOnline(t){
+  if(!tradeRoom||!$('tradeStatus'))return;
+  let names=tradeUserNames(t);
+  let count=names.length;
+  let others=names.filter(n=>n!==user);
+  let roomOwner=t.host||names[0]||user;
+  let msg=`거래 방 [${tradeRoom}] / 인원 ${count}/2<br>참가자: ${names.map(n=>(n===roomOwner?'👑 ':'')+(n===user?'나':n)).join(', ')||'대기 중'}`;
+  if(others.length)msg+=`<br><span class=onlineOk>${others[0]}님이 거래방에 입장했습니다. 거래 가능!</span>`;
+  else msg+=`<br><span class=tradeWarn>상대가 아직 입장하지 않았습니다.</span>`;
+  $('tradeStatus').innerHTML=msg;
+}
+const _localRenderTradeView=renderTradeView;
+renderTradeView=function(){
+  let v=$('tradeView'); if(!v)return;
+  if(online&&db&&tradeRoom){
+    let t=onlineTradeRoomData||{users:{},offers:{},ready:{},log:''};
+    let names=tradeUserNames(t);
+    let html=`<div class="tradeSlot ${names.length>=2?'tradeReady':'tradeWarn'}"><b>입장 상태</b><br>${names.length}/2명<br>${names.length>=2?'✅ 상대 입장 완료':'⏳ 상대 대기 중'}</div>`;
+    html+=names.map(n=>{
+      let u=(t.users||{})[n]||{};
+      return `<div class="tradeSlot ${(t.ready||{})[n]?'tradeReady':''}"><b>${n===user?'나':n}</b> ${u.emoji||''}<br>캐릭터: ${u.char||'-'}<br>티어: ${u.rank||'-'}<br>거래품: ${tradeOfferLabel((t.offers||{})[n])}<br>${(t.ready||{})[n]?'✅ 확정':'⏳ 미확정'}</div>`;
+    }).join('');
+    if(names.length<2)html+='<div class="tradeSlot tradeWarn">친구가 들어오면 자동으로 2/2 표시됩니다.</div>';
+    if((t.log||'').length)html+=`<div class="tradeSlot">${t.log}</div>`;
+    v.innerHTML=html;renderOfferSelect();return;
+  }
+  _localRenderTradeView();
+}
+async function joinTradeRoomOnline(){
+  if(user==='guest')return alert('로그인 후 거래 가능');
+  let r=$('tradeRoomName').value.trim(); if(!r)return alert('거래 방 이름 입력');
+  leaveTradeRoom(false); tradeRoom=r; onlineTradeRoomData=null; onlineTradeLastUsers='';
+  let base=tradeRoomBase();
+  let snap=await base.get(); let data=snap.val()||{};
+  let updates={}; if(!data.host)updates.host=user; if(!data.createdAt)updates.createdAt=Date.now();
+  updates['users/'+safeKey(user)]=tradeUserProfile(); updates['done']=false;
+  await base.update(updates);
+  base.child('users/'+safeKey(user)).onDisconnect().remove();
+  onlineTradeSub=base;
+  base.on('value',snap=>{
+    onlineTradeRoomData=snap.val()||{users:{},offers:{},ready:{}};
+    let names=tradeUserNames(onlineTradeRoomData).join('|');
+    if(onlineTradeLastUsers && names!==onlineTradeLastUsers){
+      let prev=onlineTradeLastUsers.split('|').filter(Boolean); let now=names.split('|').filter(Boolean);
+      let joined=now.find(x=>!prev.includes(x)&&x!==user); if(joined) $('tradeStatus').innerHTML=`<span class=onlineOk>${joined}님이 거래방에 입장했습니다!</span>`;
+    }
+    onlineTradeLastUsers=names;
+    renderTradeStatusOnline(onlineTradeRoomData); renderTradeView();
+  });
+  $('tradeStatus').innerHTML=`거래 방 [${tradeRoom}] 입장 완료 / 인원 확인 중...`;
+}
+const _localJoinTradeRoom=joinTradeRoom;
+joinTradeRoom=function(){if(online&&db)return joinTradeRoomOnline();return _localJoinTradeRoom();}
+const _localLeaveTradeRoom=leaveTradeRoom;
+leaveTradeRoom=function(show=true){
+  if(onlineTradeSub&&online&&db&&tradeRoom){dbRef('tradeRooms/'+safeKey(tradeRoom)+'/users/'+safeKey(user)).remove();onlineTradeSub.off();}
+  onlineTradeSub=null;onlineTradeRoomData=null;onlineTradeLastUsers='';
+  if(online&&db){tradeRoom=''; if(show)$('tradeStatus').textContent='거래 방 없음'; renderTradeView(); return;}
+  _localLeaveTradeRoom(show);
+}
+acceptTradeInvite=function(r){$('tradeRoomName').value=r;joinTradeRoom();if(online&&db)dbRef('invites/'+safeKey(user)).remove();else localStorage.removeItem('rpgTradeInvite_'+user)}
+inviteTradeFriend=function(){
+  if(user==='guest')return alert('로그인 필요');
+  let n=$('tradePartner').value.trim()||$('friendName').value.trim(); if(!n)return alert('상대 닉네임 입력');
+  if(!(save.friends||[]).includes(n))return alert('친구 목록에 있는 계정만 초대 가능');
+  if(!tradeRoom){$('tradeRoomName').value='거래방_'+user+'_'+Date.now().toString(36).slice(-4);joinTradeRoom()}
+  let inv={type:'trade',from:user,room:tradeRoom,ts:Date.now()};
+  if(online&&db)dbRef('invites/'+safeKey(n)).push(inv);else localStorage.setItem('rpgTradeInvite_'+n,JSON.stringify(inv));
+  $('tradeStatus').textContent=n+'님에게 거래 방 ['+tradeRoom+'] 초대 전송';
+}
+const _localSetTradeOffer=setTradeOffer;
+setTradeOffer=async function(){
+  if(!(online&&db))return _localSetTradeOffer();
+  if(!tradeRoom)return alert('거래 방에 먼저 입장하세요');
+  let type=$('offerType').value,o={type};
+  if(type==='coins'){let a=Math.floor(Number($('offerAmount').value));if(!a||a<1)return alert('골드/코인 수량 입력');if(coins<a)return alert('코인 부족');o.amount=a;}
+  else{let item=$('offerItem').value;if(!item)return alert('거래할 물건 없음');if(!myTradeItems(type).includes(item))return alert('보유하지 않은 물건입니다');o.item=item;}
+  await tradeRoomBase().update({['users/'+safeKey(user)]:tradeUserProfile(),['offers/'+safeKey(user)]:o,['ready/'+safeKey(user)]:false,done:false,log:''});
+  $('tradeStatus').textContent='내 거래품을 올렸습니다. 상대도 올린 뒤 확정하세요.';
+}
+clearTradeOffer=async function(){if(!(online&&db)){let t=readTradeRoom();delete t.offers[user];t.ready[user]=false;saveTradeRoomData(t);return;}if(!tradeRoom)return;await tradeRoomBase().update({['offers/'+safeKey(user)]:null,['ready/'+safeKey(user)]:false});}
+cancelTradeReady=async function(){if(!(online&&db)){let t=readTradeRoom();t.ready[user]=false;saveTradeRoomData(t);return;}if(!tradeRoom)return;await tradeRoomBase().child('ready/'+safeKey(user)).set(false);}
+async function onlineReadSave(n){let snap=await dbRef('saves/'+safeKey(n)).get();return snap.exists()?{...fresh(),...snap.val()}:fresh()}
+async function onlineWriteSave(n,s){await dbRef('saves/'+safeKey(n)).set({...s,updatedAt:Date.now()});if(n===user){save=s;norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();}}
+function hasOfferInSave(s,o){if(o.type==='coins')return (s.coins||0)>=o.amount;if(o.type==='char')return (s.owned||[]).includes(o.item)||(s.rare||[]).includes(o.item);if(o.type==='katana')return (s.katanas||[]).includes(o.item);if(o.type==='equip')return (s.equips||[]).includes(o.item);return false}
+function removeOfferFromSave(s,o){if(o.type==='coins')s.coins=(s.coins||0)-o.amount;if(o.type==='char'){s.owned=(s.owned||[]).filter(x=>x!==o.item);s.rare=(s.rare||[]).filter(x=>x!==o.item);if(!(s.owned||[]).length&&!(s.rare||[]).length)s.owned=['카마도 탄지로']}if(o.type==='katana'){s.katanas=(s.katanas||[]).filter(x=>x!==o.item);if(s.eq===o.item)s.eq=s.katanas[0]||'낡은 호흡 장비';if(!s.katanas.length)s.katanas=['낡은 호흡 장비']}if(o.type==='equip'){s.equips=(s.equips||[]).filter(x=>x!==o.item);if(s.eqArmor===o.item)s.eqArmor=''}return s}
+function addOfferToSave(s,o){if(o.type==='coins')s.coins=(s.coins||0)+o.amount;if(o.type==='char'){let c=chars.find(x=>x.name===o.item);let arr=c&&c.rare?'rare':'owned';s[arr]??=[];if(!s[arr].includes(o.item))s[arr].push(o.item)}if(o.type==='katana'){s.katanas??=[];if(!s.katanas.includes(o.item))s.katanas.push(o.item)}if(o.type==='equip'){s.equips??=[];if(!s.equips.includes(o.item))s.equips.push(o.item)}return s}
+const _localReadyTrade=readyTrade;
+readyTrade=async function(){
+  if(!(online&&db))return _localReadyTrade();
+  if(!tradeRoom)return alert('거래 방에 먼저 입장하세요');
+  let ref=tradeRoomBase(); let snap=await ref.get(); let t=snap.val()||{}; let names=tradeUserNames(t).slice(0,2);
+  if(names.length<2)return alert('상대가 거래 방에 들어와야 합니다');
+  if(!((t.offers||{})[user]))return alert('내 거래품을 먼저 올리세요');
+  await ref.child('ready/'+safeKey(user)).set(true);
+  snap=await ref.get(); t=snap.val()||{}; names=tradeUserNames(t).slice(0,2);
+  let other=names.find(n=>n!==user);
+  if(other && (t.ready||{})[other] && (t.offers||{})[other]){
+    if(t.done)return;
+    let oa=t.offers[user], ob=t.offers[other];
+    let sa=await onlineReadSave(user), sb=await onlineReadSave(other);
+    if(!hasOfferInSave(sa,oa)||!hasOfferInSave(sb,ob)){await ref.update({ready:{},log:'거래 실패: 한쪽이 물건이나 골드가 부족합니다.'});return alert('거래 실패: 한쪽이 물건이나 골드가 부족합니다.');}
+    sa=addOfferToSave(removeOfferFromSave(sa,oa),ob); sb=addOfferToSave(removeOfferFromSave(sb,ob),oa);
+    await onlineWriteSave(user,sa); await onlineWriteSave(other,sb);
+    await ref.update({offers:{},ready:{},done:true,log:`거래 완료! ${user} ↔ ${other}`});
+    alert('거래 완료!');
+  }else $('tradeStatus').textContent='내 확정 완료. 상대 확정을 기다리는 중';
+}
+
+
+
+/* === 온라인 협동 플레이: 화면·보스체력·스테이지·공격 공유 === */
+let coopMode=false, coopSeenHits={}, coopRewarded={}, coopLastEnemyWrite=0, coopLastStage=0;
+function coopRoomRef(){return online&&db&&room?dbRef('rooms/'+safeKey(room)):null}
+function makeCoopEnemyData(st){
+  let idx=Math.min(demons.length-1,Math.floor((st-1)/2));
+  if(st%10===0)idx=Math.min(demons.length-1,10+Math.floor(st/30));
+  else if(st%5===0)idx=Math.min(demons.length-1,4+Math.floor(st/10));
+  let d=demons[idx], mult=st%10===0?2.35:st%5===0?1.75:1.18;
+  let max=Math.floor((780+st*320+Math.floor(st/3)*220)*mult);
+  return {name:d[0],emoji:d[1],color:d[2],hp:max,max:max,x:Math.floor(innerWidth*.72),y:Math.floor(innerHeight*.62),r:st%10===0?52:st%5===0?45:38,stage:st,updatedAt:Date.now()};
+}
+function coopBossKind(st){if(st%10===0)return '협동 최종보스'; if(st%5===0)return '협동 중간보스'; return '협동 일반 혈귀'}
+function coopRewardFor(st){return {coins:70+st*22+(st%5===0?220:0)+(st%10===0?500:0),dia:st%10===0?12:(st%5===0?5:0)}}
+function ensureCoopSaveFields(){save.coopRewards??={};}
+function applyCoopRoomData(){
+  if(!coopMode||!roomData||!roomData.coop)return;
+  let c=roomData.coop, e=c.enemy||makeCoopEnemyData(c.stage||1);
+  if(enemy){enemy.name=e.name;enemy.emoji=e.emoji;enemy.color=e.color;enemy.hp=e.hp;enemy.max=e.max;enemy.x=e.x||enemy.x;enemy.y=e.y||enemy.y;enemy.r=e.r||enemy.r;}
+  stage=c.stage||stage;
+  if(coopLastStage!==stage){coopLastStage=stage;msg('협동 스테이지 '+stage+' 시작!');}
+  processCoopHits(c.hits||{});
+  processCoopReward(c.rewardStage,c.rewardKey);
+}
+function processCoopHits(hits){
+  Object.entries(hits||{}).forEach(([id,h])=>{
+    if(coopSeenHits[id])return; coopSeenHits[id]=true;
+    if(!enemy)return;
+    let ex=h.ex||enemy.x, ey=h.ey||enemy.y, color=h.color||'#facc15';
+    effects.push([ex,ey,.55,color,(h.fromName||'친구')+' '+Math.floor(h.dmg||0)]);
+    impactRing(ex,ey,color);
+    if(h.fx==='gojo')purpleHollow(player?player.x:innerWidth*.25,player?player.y:innerHeight*.55,ex,ey);
+    else if(h.fx==='sukuna')sukunaFx(ex,ey);
+    else if(h.fx==='kimetsu')slashAnime((h.px||ex)-60,(h.py||ey)-20,ex,ey,color);
+  });
+}
+function processCoopReward(clearStage,rewardKey){
+  if(!clearStage||!rewardKey||user==='guest')return;
+  ensureCoopSaveFields();
+  let key=room+'_'+rewardKey;
+  if(save.coopRewards[key])return;
+  save.coopRewards[key]=true;
+  let r=coopRewardFor(clearStage);
+  coins+=r.coins; dia+=r.dia; best=Math.max(best,clearStage+1);
+  save.coins=coins; save.dia=dia; save.best=best;
+  store(); msg(`협동 클리어! ${r.coins}코인 ${r.dia}다이아`);
+}
+async function initCoopRoomStart(){
+  let st=Math.max(1,best||1);
+  let coop={stage:st,enemy:makeCoopEnemyData(st),hits:null,rewardStage:0,rewardKey:'',startedAt:Date.now()};
+  await coopRoomRef().update({host:myId,status:'playing',gameStart:{status:'start',host:myId,startedAt:Date.now(),mode:'coop'},coop});
+}
+startOnlineRoomGame=async function(){
+  if(user==='guest')return alert('로그인 후 사용하세요.');
+  if(!room)return alert('먼저 온라인 방에 들어가세요.');
+  if(!(online&&db)){
+    if(chan)chan.postMessage({type:'roomStart',id:myId,startedAt:Date.now()});
+    startOnlineRoomLocal(false);return;
+  }
+  if(roomHostId&&roomHostId!==myId)return alert('방장만 시작할 수 있습니다. 방장이 시작하면 같이 시작됩니다.');
+  await initCoopRoomStart();
+  startOnlineRoomLocal(false);
+}
+startOnlineRoomLocal=function(fromRemote=false){
+  ensurePlayableSelection();
+  if(!owned(chars[sel]))return alert('전투 가능한 캐릭터가 없습니다.');
+  if($('game').classList.contains('active'))return;
+  $('select').classList.remove('active');$('game').classList.add('active');
+  cv=$('cv');ctx=cv.getContext('2d');resize();addEventListener('resize',resize);
+  coopMode=!!(online&&db&&room); pvpMode=false; coopSeenHits={}; coopRewarded={}; coopLastStage=0;
+  let c=chars[sel], ar=armor(), kb=human(c)?kat().bonus:0;
+  let coop=(roomData&&roomData.coop)||{}; stage=coop.stage||best||1;
+  player={x:w*.25+Math.random()*50,y:h*.62,r:34,hp:c.hp+ar.hp+250,max:c.hp+ar.hp+250,atk:c.atk+kb+ar.atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:human(c),inv:0};
+  let ed=(coop.enemy)||makeCoopEnemyData(stage);
+  enemy={x:ed.x||w*.72,y:ed.y||h*.62,r:ed.r||40,hp:ed.hp,max:ed.max,atk:0,spd:0,name:ed.name,emoji:ed.emoji,color:ed.color};
+  bullets=[];effects=[];c1=c2=0;run=true;last=performance.now();startAt=Date.now();
+  if(coopMode)coopRoomRef().child('players/'+myId).update({started:true,hp:player.hp,max:player.max,x:player.x,y:player.y,char:player.name,emoji:player.emoji,color:player.color,name:user,ts:Date.now()});
+  msg(fromRemote?'방장이 협동 전투를 시작했습니다!':'협동 전투 시작! 보스 체력/스테이지 공유');
+  requestAnimationFrame(loop);
+}
+async function sendCoopDamage(dmg,color,fx,label){
+  if(!coopMode||!online||!db||!room||!enemy)return;
+  let hit={from:myId,fromName:user,dmg:Math.floor(dmg),color,fx:fx||'',label:label||'',px:player.x,py:player.y,ex:enemy.x,ey:enemy.y,ts:Date.now()};
+  await coopRoomRef().child('coop/hits').push(hit);
+  await coopRoomRef().child('coop').transaction(coop=>{
+    if(!coop)return coop;
+    let st=coop.stage||1, e=coop.enemy||makeCoopEnemyData(st);
+    e.hp=Math.max(0,(e.hp||e.max||1)-Math.floor(dmg));
+    if(e.hp<=0){
+      let cleared=st, next=st+1, key=String(Date.now())+'_'+Math.random().toString(36).slice(2,6);
+      coop.rewardStage=cleared; coop.rewardKey=key; coop.stage=next; coop.enemy=makeCoopEnemyData(next); coop.lastClearBy=user; coop.lastClearAt=Date.now();
+    }else{e.updatedAt=Date.now(); coop.enemy=e;}
+    return coop;
+  });
+}
+function updateCoopPlayerState(){
+  if(!coopMode||!online||!db||!room||!player)return;
+  dbRef('rooms/'+safeKey(room)+'/players/'+myId).update({x:player.x,y:player.y,hp:player.hp,max:player.max,char:player.name,emoji:player.emoji,color:player.color,name:user,ts:Date.now()});
+}
+function hostUpdateCoopEnemy(dt){
+  if(!coopMode||roomHostId!==myId||!enemy)return;
+  let targets=[player,...Object.values(peerPlayers||{})].filter(Boolean);
+  let target=targets.sort((a,b)=>Math.hypot((a.x||0)-enemy.x,(a.y||0)-enemy.y)-Math.hypot((b.x||0)-enemy.x,(b.y||0)-enemy.y))[0]||player;
+  let dx=(target.x||enemy.x)-enemy.x,dy=(target.y||enemy.y)-enemy.y,dl=Math.hypot(dx,dy)||1;
+  enemy.x+=dx/dl*(1.35+stage*.06)*70*dt; enemy.y+=dy/dl*(1.35+stage*.06)*70*dt;
+  if(Date.now()-coopLastEnemyWrite>120){coopLastEnemyWrite=Date.now();coopRoomRef().child('coop/enemy').update({x:enemy.x,y:enemy.y,hp:enemy.hp,max:enemy.max,updatedAt:Date.now()});}
+}
+const _prevUpdForCoop=upd;
+upd=function(dt){
+  if(!coopMode){_prevUpdForCoop(dt);return;}
+  applyCoopRoomData();
+  let vx=joy.x,vy=joy.y;if(keys.a||keys.ArrowLeft)vx=-1;if(keys.d||keys.ArrowRight)vx=1;if(keys.w||keys.ArrowUp)vy=-1;if(keys.s||keys.ArrowDown)vy=1;
+  let l=Math.hypot(vx,vy)||1;player.x+=vx/l*player.spd*90*dt;player.y+=vy/l*player.spd*90*dt;player.x=Math.max(34,Math.min(w-34,player.x));player.y=Math.max(h*.25,Math.min(h-54,player.y));
+  hostUpdateCoopEnemy(dt);
+  let dl=Math.hypot(player.x-enemy.x,player.y-enemy.y); if(dl<player.r+enemy.r+6&&player.inv<=0){player.hp=Math.max(0,player.hp-(26+stage*8)*dt*7);player.inv=.4;effects.push([player.x,player.y,.35,'#ef4444','피격']);}
+  player.inv-=dt;c1-=dt;c2-=dt;
+  bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(Math.hypot(b.x-enemy.x,b.y-enemy.y)<enemy.r+b.r){sendCoopDamage(b.dmg,b.color,b.fx||'','탄환');b.life=0;effects.push([enemy.x,enemy.y,.35,b.color,Math.floor(b.dmg)]);}});
+  bullets=bullets.filter(b=>b.life>0);effects.forEach(e=>e[2]-=dt);effects=effects.filter(e=>e[2]>0);
+  if(player.hp<=0){player.hp=1;msg('쓰러졌지만 협동 모드라 1 HP로 버팁니다!');}
+  hud();updateCoopPlayerState();$('s1').classList.toggle('cool',c1>0);$('s2').classList.toggle('cool',c2>0);let s=Math.floor((Date.now()-startAt)/1000);$('time').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+}
+const _prevHudForCoop=hud;
+hud=function(){_prevHudForCoop();if(coopMode){$('stage').textContent='협동 스테이지 '+stage;$('bossType').textContent=coopBossKind(stage);$('coin').textContent='코인 '+coins;$('dia').textContent='다이아 '+dia;$('rec').textContent='공유 보스 HP';}}
+const _prevAttackForCoop=attack;
+attack=function(){
+  if(!coopMode){_prevAttackForCoop();return;}
+  let c=chars[sel],h=human(c),k=kat(),color=h?breathFx(c):player.color,d=player.atk*(.85+Math.random()*.45),dist=Math.hypot(player.x-enemy.x,player.y-enemy.y);
+  if(dist<120){sendCoopDamage(d,color,h?'kimetsu':(c.name.includes('스쿠나')?'sukuna':''),'공격');effects.push([enemy.x,enemy.y,.35,color,Math.floor(d)]);impactRing(enemy.x,enemy.y,color);if(h){kimetsuFx(c,false);anime(k.emoji,enemy.x,enemy.y,color)}else if(c.side==='주술회전')jujutsuFx(c,1);else anime('💥',enemy.x,enemy.y,color)}else msg('보스에게 가까이 가세요');
+}
+const _prevSkillForCoop=skill;
+skill=function(n){
+  if(!coopMode){_prevSkillForCoop(n);return;}
+  let c=chars[sel];if(n===1&&c1>0)return;if(n===2&&c2>0)return;let dx=enemy.x-player.x,dy=enemy.y-player.y,l=Math.hypot(dx,dy)||1,h=human(c),color=h?breathFx(c):c.color,label=c.skill[n-1];
+  if(n===1){c1=3;bullets.push({x:player.x,y:player.y,r:h?12:22,vx:dx/l*610,vy:dy/l*610,dmg:player.atk*2.25,life:1.15,color,fx:h?'kimetsu':(c.name.includes('스쿠나')?'sukuna':'')});if(h)kimetsuFx(c,false);else if(c.side==='주술회전')jujutsuFx(c,1);msg(label)}
+  else{c2=6;let fx=c.name.includes('고죠')?'gojo':(c.name.includes('스쿠나')?'sukuna':(h?'kimetsu':''));let dmg=player.atk*(c.name.includes('고죠')?5.2:(h?3.8:4.2));sendCoopDamage(dmg,color,fx,label);effects.push([enemy.x,enemy.y,.75,color,'협동 필살']);if(h)kimetsuFx(c,true);else if(c.side==='주술회전')jujutsuFx(c,2);else domainAnime(label,color);msg(label)}
+}
+const _prevBackForCoop=back;
+back=function(){coopMode=false;_prevBackForCoop();}
+
+setInterval(()=>{if(user!=='guest'&&online)onlineRegisterUser()},10000);
+loadFirebaseConfig();
+setTimeout(()=>connectFirebase(true),500);
+
+
+
+/* ===== 자연스러운 캐릭터 모델 / 걷기·공격 모션 업그레이드 ===== */
+function charProfile(name){
+  let base={hair:'#111827',coat:'#1f2937',pants:'#111827',skin:'#f3c6a8',accent:'#e5e7eb',eye:'#111827',weapon:'sword'};
+  if(name.includes('탄지로'))return {...base,hair:'#3f1d1d',coat:'#14532d',accent:'#22c55e',mark:'#7f1d1d'};
+  if(name.includes('젠이츠'))return {...base,hair:'#facc15',coat:'#f59e0b',accent:'#fff7ad'};
+  if(name.includes('이노스케'))return {...base,hair:'#6b7280',coat:'#6b4423',accent:'#93c5fd',boar:true};
+  if(name.includes('기유'))return {...base,hair:'#111827',coat:'#1e3a8a',accent:'#60a5fa'};
+  if(name.includes('렌고쿠'))return {...base,hair:'#facc15',coat:'#b91c1c',accent:'#fb923c'};
+  if(name.includes('시노부'))return {...base,hair:'#111827',coat:'#581c87',accent:'#c4b5fd'};
+  if(name.includes('우즈이'))return {...base,hair:'#e5e7eb',coat:'#334155',accent:'#f8fafc'};
+  if(name.includes('무이치로'))return {...base,hair:'#99f6e4',coat:'#164e63',accent:'#ccfbf1'};
+  if(name.includes('미츠리'))return {...base,hair:'#f9a8d4',coat:'#166534',accent:'#fef3c7'};
+  if(name.includes('사네미'))return {...base,hair:'#e5e7eb',coat:'#14532d',accent:'#86efac'};
+  if(name.includes('교메이'))return {...base,hair:'#1f2937',coat:'#44403c',accent:'#a3a3a3'};
+  if(name.includes('네즈코'))return {...base,hair:'#3f1d1d',coat:'#be123c',accent:'#fb7185',demon:true};
+  if(name.includes('아카자'))return {...base,hair:'#fb7185',coat:'#0369a1',accent:'#ef4444',demon:true,weapon:'fist'};
+  if(name.includes('도우마'))return {...base,hair:'#f8fafc',coat:'#7c2d12',accent:'#bae6fd',demon:true,weapon:'fan'};
+  if(name.includes('코쿠시보'))return {...base,hair:'#312e81',coat:'#581c87',accent:'#c084fc',demon:true,weapon:'moon'};
+  if(name.includes('무잔'))return {...base,hair:'#111827',coat:'#27272a',accent:'#991b1b',demon:true,weapon:'whip'};
+  if(name.includes('고죠'))return {...base,hair:'#f8fafc',coat:'#0f172a',accent:'#38bdf8',eye:'#38bdf8',jjk:'gojo',weapon:'curse'};
+  if(name.includes('스쿠나'))return {...base,hair:'#fda4af',coat:'#3f1d1d',accent:'#dc2626',jjk:'sukuna',weapon:'curse'};
+  if(name.includes('이타도리'))return {...base,hair:'#fb7185',coat:'#111827',accent:'#ef4444',jjk:'itadori',weapon:'fist'};
+  if(name.includes('옷코츠'))return {...base,hair:'#111827',coat:'#0f172a',accent:'#a78bfa',jjk:'yuta',weapon:'sword'};
+  if(name.includes('쉘리'))return {...base,hair:'#7c3aed',coat:'#7e22ce',accent:'#c084fc',weapon:'gun'};
+  if(name.includes('콜트'))return {...base,hair:'#ef4444',coat:'#1d4ed8',accent:'#fca5a5',weapon:'gun'};
+  if(name.includes('스파이크'))return {...base,hair:'#22c55e',coat:'#15803d',accent:'#bbf7d0',cactus:true,weapon:'bomb'};
+  if(name.includes('레온'))return {...base,hair:'#84cc16',coat:'#365314',accent:'#bef264',lizard:true,weapon:'star'};
+  return base;
+}
+function roundRectPath(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function drawLimb(x1,y1,x2,y2,color,width){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();}
+function drawAnimeCharacter(o,opt={}){
+  if(!o)return;
+  let now=performance.now()/1000, px=o._px??o.x, py=o._py??o.y, speed=Math.hypot((o.x-px),(o.y-py));
+  o._px=o.x;o._py=o.y;
+  let moving=speed>.25, bob=moving?Math.sin(now*12+(o.x||0)*.03)*4:Math.sin(now*3)*1.4, leg=Math.sin(now*12+(o.x||0)*.03)*(moving?9:2);
+  let action=(o.actionUntil&&Date.now()<o.actionUntil)?o.action:''; if(opt.peer&&o.action)action=o.action;
+  let p=charProfile(o.char||o.name||''), scale=(o.r||34)/34;
+  ctx.save();ctx.translate(o.x,o.y+bob);ctx.scale(scale,scale);
+  if(o.inv>0)ctx.globalAlpha=.72;
+  ctx.fillStyle='rgba(0,0,0,.35)';ctx.beginPath();ctx.ellipse(0,34,28,8,0,0,Math.PI*2);ctx.fill();
+  if(p.jjk==='gojo'){ctx.strokeStyle='rgba(56,189,248,.55)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-10,42+Math.sin(now*5)*4,0,Math.PI*2);ctx.stroke();}
+  if(p.jjk==='sukuna'){ctx.strokeStyle='rgba(220,38,38,.5)';ctx.lineWidth=2;for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(0,-8,36+i*8,now+i,now+Math.PI+i);ctx.stroke();}}
+  if(p.demon){ctx.shadowColor=p.accent;ctx.shadowBlur=16;}
+  /* legs */
+  drawLimb(-9,18,-15+leg*.35,34,p.pants,8);drawLimb(9,18,15-leg*.35,34,p.pants,8);
+  /* coat/body */
+  ctx.shadowBlur=0;ctx.fillStyle=p.coat;roundRectPath(-17,-5,34,30,9);ctx.fill();
+  ctx.fillStyle=p.accent;roundRectPath(-20,-2,9,27,5);ctx.fill();roundRectPath(11,-2,9,27,5);ctx.fill();
+  if((o.name||'').includes('탄지로')){ctx.strokeStyle='#111827';ctx.lineWidth=2;for(let yy=0;yy<22;yy+=9){ctx.beginPath();ctx.moveTo(-16,yy);ctx.lineTo(16,yy);ctx.stroke()}for(let xx=-12;xx<16;xx+=10){ctx.beginPath();ctx.moveTo(xx,-3);ctx.lineTo(xx,24);ctx.stroke()}}
+  if((o.name||'').includes('젠이츠')){ctx.fillStyle='rgba(255,255,255,.65)';for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(-15+i*7,2);ctx.lineTo(-10+i*7,12);ctx.lineTo(-18+i*7,12);ctx.fill();}}
+  /* arms */
+  let atk=action==='atk'||action==='skill', dash=action==='dash';
+  let armSwing=moving?Math.sin(now*12)*6:0;
+  drawLimb(-16,2,-28,13-armSwing,p.coat,7);
+  drawLimb(16,2,atk?32:28,atk?-11:13+armSwing,p.coat,7);
+  /* weapon */
+  if(p.weapon==='sword'||o.isSword){let kc=(typeof kat==='function'?kat().color:p.accent);ctx.save();ctx.translate(atk?25:20,atk?-12:8);ctx.rotate(atk?-1.25:-.62);ctx.strokeStyle=kc;ctx.lineWidth=4;ctx.shadowColor=kc;ctx.shadowBlur=16;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(44,-4);ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle='#d1d5db';ctx.fillRect(-4,-3,10,6);ctx.restore();}
+  if(p.weapon==='gun'){ctx.fillStyle='#111827';roundRectPath(18,-6,24,10,3);ctx.fill();ctx.fillStyle=p.accent;ctx.fillRect(38,-4,8,4)}
+  if(p.weapon==='fist'){ctx.fillStyle=p.accent;ctx.beginPath();ctx.arc(atk?34:25,atk?-12:11,8,0,7);ctx.fill();}
+  if(p.weapon==='curse'){ctx.strokeStyle=p.accent;ctx.lineWidth=3;ctx.beginPath();ctx.arc(atk?31:24,atk?-13:7,12,0,7);ctx.stroke();}
+  /* neck/head */
+  ctx.fillStyle=p.skin;ctx.fillRect(-5,-12,10,9);ctx.beginPath();ctx.arc(0,-26,17,0,Math.PI*2);ctx.fill();
+  /* hair */
+  ctx.fillStyle=p.hair;ctx.beginPath();ctx.arc(0,-33,18,Math.PI*.95,Math.PI*2.08);ctx.fill();
+  for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(i*7,-37);ctx.lineTo(i*7+5,-20);ctx.lineTo(i*7-5,-22);ctx.fill();}
+  if(p.boar){ctx.fillStyle='#6b7280';ctx.beginPath();ctx.arc(0,-26,19,0,7);ctx.fill();ctx.fillStyle='#f9fafb';ctx.beginPath();ctx.arc(-7,-28,4,0,7);ctx.arc(7,-28,4,0,7);ctx.fill();ctx.fillStyle='#111827';ctx.fillRect(-12,-23,24,4)}
+  else if(p.cactus){ctx.fillStyle='#22c55e';ctx.beginPath();ctx.arc(0,-26,19,0,7);ctx.fill();ctx.fillStyle='#bbf7d0';for(let i=0;i<6;i++){ctx.fillRect(-10+i*4,-40+Math.sin(i)*8,2,7)}}
+  else if(p.lizard){ctx.fillStyle='#365314';ctx.beginPath();ctx.arc(0,-26,19,0,7);ctx.fill();ctx.fillStyle='#bef264';ctx.fillRect(-18,-33,36,8)}
+  /* face / special */
+  if(p.jjk==='gojo'){ctx.fillStyle='#020617';roundRectPath(-15,-30,30,8,4);ctx.fill();ctx.strokeStyle='#38bdf8';ctx.lineWidth=1.5;ctx.stroke();}
+  else{ctx.fillStyle=p.eye;ctx.beginPath();ctx.arc(-6,-27,2.3,0,7);ctx.arc(6,-27,2.3,0,7);ctx.fill();}
+  if(p.jjk==='sukuna'){ctx.strokeStyle='#7f1d1d';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(-12,-31);ctx.lineTo(-4,-23);ctx.moveTo(12,-31);ctx.lineTo(4,-23);ctx.stroke();}
+  if(p.mark){ctx.fillStyle=p.mark;ctx.beginPath();ctx.arc(-12,-34,4,0,7);ctx.fill();}
+  /* action trail */
+  if(atk){ctx.strokeStyle=p.accent;ctx.lineWidth=3;ctx.globalAlpha=.85;ctx.beginPath();ctx.arc(18,-4,37,-1.2,.7);ctx.stroke();ctx.globalAlpha=1;}
+  if(dash){ctx.globalAlpha=.35;ctx.fillStyle=p.accent;for(let i=1;i<4;i++){ctx.beginPath();ctx.ellipse(-i*16,12,10,4,0,0,7);ctx.fill();}ctx.globalAlpha=1;}
+  ctx.fillStyle=opt.peer?'#bfdbfe':'white';ctx.font='bold 12px Arial';ctx.textAlign='center';ctx.fillText(opt.peer?'친구: '+(o.name||''):(o.name||''),0,-52);
+  ctx.restore();
+}
+/* 기존 원형 이모지 캐릭터 대신 자연스러운 벡터 캐릭터로 교체 */
+drawC=function(o){drawAnimeCharacter(o,{peer:false});}
+drawPeers=function(){let now=Date.now();Object.keys(peerPlayers||{}).forEach(id=>{let p=peerPlayers[id];if(now-(p.lastSeen||p.ts||0)>6000){delete peerPlayers[id];return;}p.dx??=p.x;p.dy??=p.y;p.dx+=(p.x-p.dx)*.22;p.dy+=(p.y-p.dy)*.22;drawAnimeCharacter({...p,x:p.dx,y:p.dy,r:30,char:p.char||p.name,action:p.action,actionUntil:p.actionUntil||0},{peer:true});});}
+const _charOldSendState=sendState;
+sendState=function(){if(player){player.actionUntil??=0;}if(chan&&player)chan.postMessage({type:'state',id:myId,name:user,emoji:player.emoji,color:player.color,x:player.x,y:player.y,char:player.name,action:player.action||'',actionUntil:player.actionUntil||0});if(typeof _charOldSendState==='function'&&!chan)_charOldSendState();}
+const _charOldCoopUpdate=updateCoopPlayerState;
+updateCoopPlayerState=function(){if(!coopMode||!online||!db||!room||!player){if(typeof _charOldCoopUpdate==='function')_charOldCoopUpdate();return;}dbRef('rooms/'+safeKey(room)+'/players/'+myId).update({x:player.x,y:player.y,hp:player.hp,max:player.max,char:player.name,emoji:player.emoji,color:player.color,name:user,action:player.action||'',actionUntil:player.actionUntil||0,ts:Date.now()});}
+function setAction(a,ms){if(player){player.action=a;player.actionUntil=Date.now()+ms;}}
+const _charOldAttack=attack;attack=function(){setAction('atk',420);return _charOldAttack();}
+const _charOldSkill=skill;skill=function(n){setAction('skill',n===2?900:520);return _charOldSkill(n);}
+const _charOldDash=dash;dash=function(){setAction('dash',380);return _charOldDash();}
+
+
+/* =====================================================================
+   보안 레이어: Firebase Auth 로그인 + 서버(보안 규칙) 기반 권한
+   - 비밀번호는 Firebase Auth가 해시로 보관 (DB/localStorage에 저장 안 함)
+   - 관리자/밴/채팅금지는 DB(anime/admins, anime/staff, anime/bans, anime/mutes)가 기준
+   - 모든 게임 데이터는 anime/ 아래에 저장 (다른 앱과 경로 충돌 없음)
+   ===================================================================== */
+const NICK_RE=/^[가-힣A-Za-z0-9_]{2,12}$/;
+const RESERVED_NICKS=["제작자","운영자","관리자","system","guest"];
+let auth=null,myAdminRole='',staffMap={},banMap={},muteMap={},authBusy=false,serverSubs=[],mySavePushes=new Set(),mySaveRef=null,acceptRef=null,lastDeniedAlert=0;
+
+function dbRef(p){return db.ref('anime/'+p)}
+function cyrb128(str){let h1=1779033703,h2=3144134277,h3=1013904242,h4=2773480762;for(let i=0,k;i<str.length;i++){k=str.charCodeAt(i);h1=h2^Math.imul(h1^k,597399067);h2=h3^Math.imul(h2^k,2869860233);h3=h4^Math.imul(h3^k,951274213);h4=h1^Math.imul(h4^k,2716044179)}h1=Math.imul(h3^(h1>>>18),597399067);h2=Math.imul(h4^(h2>>>22),2869860233);h3=Math.imul(h1^(h3>>>17),951274213);h4=Math.imul(h2^(h4>>>19),2716044179);return[(h1^h2^h3^h4)>>>0,(h2^h1)>>>0,(h3^h1)>>>0,(h4^h1)>>>0]}
+function nickEmail(n){return'u'+cyrb128('anime-rpg:'+n).map(x=>x.toString(16).padStart(8,'0')).join('')+'@anime-rpg.local'}
+function setOnlineStatus(html){const e=$('onlineStatus');if(e)e.innerHTML=html}
+function authErr(e){
+  const m={'auth/email-already-in-use':'이미 있는 닉네임이에요.','auth/invalid-credential':'닉네임 또는 비밀번호가 틀렸어요.','auth/wrong-password':'닉네임 또는 비밀번호가 틀렸어요.','auth/user-not-found':'닉네임 또는 비밀번호가 틀렸어요.','auth/weak-password':'비밀번호는 6자 이상이어야 해요.','auth/operation-not-allowed':'Firebase 콘솔 > Authentication에서 "이메일/비밀번호" 로그인을 켜야 해요.','auth/too-many-requests':'시도가 너무 많아요. 잠시 후 다시 해주세요.','auth/network-request-failed':'네트워크 오류예요.'};
+  alert(m[e&&e.code]||('오류: '+((e&&e.message)||e)));
+}
+addEventListener('unhandledrejection',e=>{
+  const msg=String((e.reason&&e.reason.message)||e.reason||'');
+  if(/permission_denied/i.test(msg)){e.preventDefault();if(Date.now()-lastDeniedAlert>5000){lastDeniedAlert=Date.now();alert('권한이 없거나 로그인이 필요한 기능이에요.')}}
+});
+
+/* ---------- 권한 (서버 값 기준) ---------- */
+function isOwner(n=user){return n===user?myAdminRole==='owner':staffMap[n]==='owner'}
+function isModerator(n=user){return n===user?myAdminRole==='mod':staffMap[n]==='mod'}
+function isStaff(n=user){return isOwner(n)||isModerator(n)}
+function isAdmin(){return isStaff()}
+function isBanned(n=user){return !!banMap[n]}
+function isMuted(n=user){return !!muteMap[n]}
+adminLabel=roleLabel;
+function updateAdminRoleList(){
+  const box=$("adminRoleList");
+  if(box)box.innerHTML="현재 관리자: "+Object.keys(staffMap).sort((a,b)=>rankLevel(a)-rankLevel(b)).map(n=>`<span class="modBadge">${(RANKS[staffMap[n]]||{label:'직급'}).label} ${n}</span>`).join(" ");
+}
+function updateAdminPanel(){
+  const box=$("adminBox");
+  if(box)box.style.display=isStaff()?"block":"none";
+  const title=box&&box.querySelector("h3");
+  if(title)title.innerHTML=isOwner()?"🌈 제작자 관리자 패널":"🛡️ 관리자 패널";
+  updateAdminRoleList();
+}
+
+/* ---------- 서버 리스너 ---------- */
+function startServerListeners(){
+  stopServerListeners();
+  const add=(r,fn)=>{r.on('value',fn);serverSubs.push(r)};
+  add(dbRef('staff'),s=>{staffMap=s.val()||{};updateAdminPanel();ui();renderEvents()});
+  add(dbRef('bans'),s=>{banMap=s.val()||{};if(user!=='guest'&&banMap[user]){alert('이 계정은 밴되었습니다.');logout()}});
+  add(dbRef('mutes'),s=>{muteMap=s.val()||{}});
+  add(dbRef('events').limitToLast(20),s=>{eventsCache=s.val()||{};renderEvents()});
+}
+function stopServerListeners(){
+  serverSubs.forEach(r=>r.off());serverSubs=[];
+  if(mySaveRef){mySaveRef.off();mySaveRef=null}
+  if(acceptRef){acceptRef.off();acceptRef=null}
+}
+
+/* ---------- 세이브 동기화 (본인 세이브만 씀) ---------- */
+pushOnlineSave=async function(){
+  if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;
+  const t=Date.now();mySavePushes.add(t);if(mySavePushes.size>50)mySavePushes.delete(mySavePushes.values().next().value);
+  await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:t});
+  await dbRef('users/'+safeKey(user)).update({name:user,ts:t,pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});
+};
+onlineRegisterUser=function(){if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'})};
+syncOnlineSave=async function(){
+  if(!online||!db||user==='guest')return;
+  const ref=dbRef('saves/'+safeKey(user));
+  const snap=await ref.get();
+  if(snap.exists()){const r=snap.val();if(r&&typeof r==='object'){save={...fresh(),...r};norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll()}}
+  else await pushOnlineSave();
+  // 관리자가 내 세이브를 바꾸면(코인 지급/몰수/초기화) 바로 반영
+  mySaveRef=ref;
+  ref.on('value',s=>{
+    const r=s.val();
+    if(!r||mySavePushes.has(r.updatedAt))return;
+    save={...fresh(),...r};norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();
+  });
+};
+onlineReadSave=async function(n){const s=await dbRef('saves/'+safeKey(n)).get();return s.exists()?{...fresh(),...s.val()}:fresh()};
+onlineWriteSave=async function(n,s){if(n!==user)throw new Error('다른 유저의 세이브는 직접 쓸 수 없어요.');save=s;norm();localStorage.setItem(sk(),JSON.stringify(save));await pushOnlineSave();renderAll()};
+
+/* ---------- Firebase 연결 / 로그인 ---------- */
+connectFirebase=function(silent=false){
+  try{
+    if(!firebase.apps.length)fbApp=firebase.initializeApp(DEFAULT_FIREBASE_CONFIG);else fbApp=firebase.app();
+    db=firebase.database();auth=firebase.auth();online=true;
+    try{localStorage.removeItem('animeRpgFirebaseConfig')}catch(e){}
+    setOnlineStatus('<span class="onlineOk">온라인 연결됨</span> · 로그인하면 친구/방/PvP/거래 사용 가능');
+    auth.onAuthStateChanged(async u=>{
+      if(authBusy||!u||user!=='guest')return;
+      try{const nm=(await dbRef('uids/'+u.uid).get()).val();if(nm){$('name').value=nm;await finishLogin(nm,u.uid)}}catch(e){console.warn(e)}
+    });
+    if(!silent)alert('온라인 연결 완료');
+  }catch(e){online=false;setOnlineStatus('<span class="onlineBad">연결 실패:</span> '+e.message);if(!silent)alert('Firebase 연결 실패: '+e.message)}
+};
+disconnectFirebase=function(){online=false;stopServerListeners();db=null;setOnlineStatus('온라인 꺼짐')};
+
+async function finishLogin(n,uid){
+  user=n;myId=uid;
+  startServerListeners();
+  myAdminRole=((await dbRef('admins/'+uid).get()).val())||'';
+  if((await dbRef('bans/'+safeKey(n)).get()).exists()){await auth.signOut();resetToGuest();alert('이 계정은 밴되었습니다.');return false}
+  load();
+  await syncOnlineSave();
+  onlineRegisterUser();
+  listenOnlineInvites();
+  listenFriendAccepts();
+  checkFriendMail();
+  updateAdminPanel();
+  setOnlineStatus(`<span class="onlineOk">온라인 · ${n} 로그인됨</span>`);
+  return true;
+}
+function resetToGuest(){stopServerListeners();user='guest';myAdminRole='';myId='P'+Math.random().toString(36).slice(2,8);save=fresh();norm();updateAdminPanel();renderAll();renderEvents()}
+
+createAcc=async function(){
+  if(!online||!auth)return alert('온라인 연결이 필요해요. 잠시 후 다시 시도하세요.');
+  const n=$('name').value.trim(),p=$('pw').value;
+  if(!NICK_RE.test(n))return alert('닉네임은 한글/영문/숫자/_ 로 2~12자만 가능해요.');
+  if(RESERVED_NICKS.includes(n.toLowerCase())||RESERVED_NICKS.includes(n))return alert('사용할 수 없는 닉네임이에요.');
+  if(p.length<6)return alert('비밀번호는 6자 이상이어야 해요.');
+  authBusy=true;
+  try{
+    const cred=await auth.createUserWithEmailAndPassword(nickEmail(n),p);
+    const uid=cred.user.uid;
+    try{await dbRef('names/'+n).set(uid);await dbRef('uids/'+uid).set(n)}
+    catch(e){await dbRef('names/'+n).remove().catch(()=>{});await cred.user.delete().catch(()=>{});throw e}
+    localStorage.setItem('rpgSave_'+n,JSON.stringify(fresh()));
+    if(await finishLogin(n,uid))alert('계정 생성 완료! 로그인되었습니다.');
+  }catch(e){authErr(e)}finally{authBusy=false}
+};
+login=async function(){
+  if(!online||!auth)return alert('온라인 연결이 필요해요. 잠시 후 다시 시도하세요.');
+  const n=$('name').value.trim(),p=$('pw').value;
+  if(!n||!p)return alert('닉네임과 비밀번호를 입력하세요.');
+  authBusy=true;
+  try{
+    const cred=await auth.signInWithEmailAndPassword(nickEmail(n),p);
+    const nm=(await dbRef('uids/'+cred.user.uid).get()).val();
+    if(nm!==n){await auth.signOut();return alert('닉네임 또는 비밀번호가 틀렸어요.')}
+    if(await finishLogin(n,cred.user.uid))alert('로그인 성공');
+  }catch(e){authErr(e)}finally{authBusy=false}
+};
+logout=async function(){authBusy=true;try{if(auth)await auth.signOut()}catch(e){}authBusy=false;resetToGuest();setOnlineStatus('<span class="onlineOk">온라인 연결됨</span> · 로그아웃됨')};
+delAcc=async function(){
+  if(!online||!auth)return alert('온라인 연결이 필요해요.');
+  const n=$('name').value.trim(),p=$('pw').value;
+  if(!n||!p)return alert('삭제할 계정의 닉네임과 비밀번호를 입력하세요.');
+  if(staffMap[n])return alert('관리자/제작자 계정은 권한을 먼저 해제해야 삭제할 수 있어요.');
+  if(!confirm('정말 삭제할까요? 되돌릴 수 없어요.'))return;
+  authBusy=true;
+  try{
+    const cred=await auth.signInWithEmailAndPassword(nickEmail(n),p),uid=cred.user.uid;
+    if((await dbRef('uids/'+uid).get()).val()!==n){await auth.signOut();return alert('닉네임 또는 비밀번호가 틀렸어요.')}
+    for(const path of['saves/'+n,'users/'+n,'mails/'+n,'invites/'+n,'uids/'+uid,'names/'+n])await dbRef(path).remove().catch(()=>{});
+    await cred.user.delete();
+    localStorage.removeItem('rpgSave_'+n);
+    if(user===n)resetToGuest();
+    alert('삭제 완료');
+  }catch(e){authErr(e)}finally{authBusy=false}
+};
+resetSaveData=()=>fresh();
+resetMyAccount=function(){
+  if(user==="guest")return alert("로그인 후 초기화 가능해.");
+  if(!confirm("내 계정 데이터를 초기화할까? 코인, 다이아, 캐릭터, 장비, 친구, 최고기록이 초기화돼."))return;
+  save=fresh();coins=0;dia=0;best=1;norm();store();renderAll();alert("내 계정 초기화 완료");
+};
+
+/* ---------- 채팅 ---------- */
+addChatMessage=function(name,msg,system=false,admin=false){
+  const log=$("chatLog");if(!log)return;
+  const div=document.createElement("div");
+  div.className="chatMsg"+(system?" chatSystem":"");
+  const safeName=String(name||"system").replace(/[<>&"']/g,""),safeMsg=String(msg||"").replace(/[<>]/g,"");
+  const shownName=(rankOf(name)||admin)?adminLabel(name):`<span class="chatName">${safeName}</span>`;
+  div.innerHTML=system?safeMsg:`${shownName} : ${safeMsg}`;
+  log.appendChild(div);
+  while(log.children.length>80)log.removeChild(log.firstChild);
+  log.scrollTop=log.scrollHeight;
+};
+sendChat=function(){
+  if(user==='guest')return alert('로그인 후 채팅할 수 있어요.');
+  if(isBanned())return alert('밴된 계정은 채팅할 수 없어.');
+  if(isMuted())return alert('채팅 금지 상태야.');
+  const input=$('chatInput');if(!input)return;
+  const msg=input.value.trim().slice(0,200);if(!msg)return;
+  openChatChannel();
+  dbRef('globalChat').push({name:user,msg,ts:Date.now(),admin:isStaff()});
+  input.value='';
+};
+
+/* ---------- 친구 (각자 자기 세이브만 수정) ---------- */
+sendFriendRequest=async function(){
+  if(user==='guest')return alert('로그인 후 친구 요청 가능');
+  const n=$('friendName').value.trim();
+  if(!n)return alert('상대 닉네임을 입력해.');
+  if(n===user)return alert('자기 자신에게는 친구 요청을 보낼 수 없어.');
+  if((save.friends||[]).includes(n))return alert('이미 친구야.');
+  if(!(await dbRef('names/'+safeKey(n)).get()).exists())return alert('없는 계정이야.');
+  await dbRef('mails/'+safeKey(n)+'/friendRequests').push({type:'friendRequest',from:user,to:n,ts:Date.now(),status:'pending'});
+  alert(n+'에게 친구 요청을 보냈어.');
+};
+checkFriendMail=function(){
+  if(user==='guest'||!online||!db)return;
+  dbRef('mails/'+safeKey(user)+'/friendRequests').once('value').then(snap=>{
+    const val=snap.val()||{};
+    renderFriendMail(Object.keys(val).map(k=>Object.assign({},val[k],{key:k})),true);
+  });
+};
+acceptFriendRequest=function(from,key){
+  if(user==='guest')return;
+  save.friends??=[];if(!save.friends.includes(from))save.friends.push(from);
+  store();
+  dbRef('mails/'+safeKey(user)+'/friendRequests/'+key).update({status:'accepted'});
+  dbRef('mails/'+safeKey(from)+'/accepted').push({by:user,ts:Date.now()});
+  alert(from+'님과 친구가 됐어.');renderFriends();checkFriendMail();
+};
+rejectFriendRequest=function(from,key){
+  dbRef('mails/'+safeKey(user)+'/friendRequests/'+key).update({status:'rejected'});
+  alert('친구 요청을 거절했어.');checkFriendMail();
+};
+function listenFriendAccepts(){
+  if(acceptRef){acceptRef.off();acceptRef=null}
+  if(!online||!db||user==='guest')return;
+  acceptRef=dbRef('mails/'+safeKey(user)+'/accepted');
+  acceptRef.on('child_added',snap=>{
+    const m=snap.val();
+    if(m&&m.by&&m.by!==user){save.friends??=[];if(!save.friends.includes(m.by)){save.friends.push(m.by);store();renderFriends()}}
+    snap.ref.remove();
+  });
+}
+
+/* ---------- 거래: 각자 자기 세이브만 수정 (상대 세이브를 직접 쓰지 않음) ---------- */
+let tradeSettling=false,tradeHandled=new Set();
+const _joinTradeRoomOnline0=joinTradeRoomOnline;
+joinTradeRoomOnline=async function(){
+  await _joinTradeRoomOnline0();
+  const base=tradeRoomBase();if(!base)return;
+  base.on('value',s=>settleTrade(s.val()));
+};
+readyTrade=async function(){
+  if(!(online&&db))return _localReadyTrade();
+  if(!tradeRoom)return alert('거래 방에 먼저 입장하세요');
+  const ref=tradeRoomBase();
+  let t=(await ref.get()).val()||{};const names=tradeUserNames(t).slice(0,2);
+  if(names.length<2)return alert('상대가 거래 방에 들어와야 합니다');
+  const mine=(t.offers||{})[user];
+  if(!mine)return alert('내 거래품을 먼저 올리세요');
+  if(!hasOfferInSave(save,mine))return alert('올린 물건/골드가 부족해요. 다시 올려주세요.');
+  await ref.child('ready/'+safeKey(user)).set(true);
+  t=(await ref.get()).val()||{};
+  const other=names.find(n=>n!==user);
+  if(other&&(t.ready||{})[other]&&(t.offers||{})[other]&&!t.deal){
+    const deal={id:Date.now()+'_'+Math.random().toString(36).slice(2,7),a:user,b:other,oa:t.offers[user],ob:t.offers[other]};
+    const r=await ref.child('deal').transaction(cur=>cur||deal);
+    if(r.committed)await ref.update({ready:null,done:false,log:'거래 진행 중...'});
+  }else $('tradeStatus').textContent='내 확정 완료. 상대 확정을 기다리는 중';
+};
+async function settleTrade(t){
+  const ref=tradeRoomBase();
+  if(!t||!ref||user==='guest')return;
+  const d=t.deal;
+  if(!d){return}
+  if(d.a!==user&&d.b!==user)return;
+  const dealt=t.dealt||{};
+  // 양쪽 모두 처리되면 정리
+  if(dealt[d.a]&&dealt[d.b]&&!tradeHandled.has('fin'+d.id)){
+    tradeHandled.add('fin'+d.id);
+    const ok=dealt[d.a]==='ok'&&dealt[d.b]==='ok';
+    await ref.update({deal:null,dealt:null,offers:null,ready:null,done:ok,log:ok?`거래 완료! ${d.a} ↔ ${d.b}`:'거래 실패: 한쪽이 물건이나 골드가 부족합니다.'});
+    if(ok)alert('거래 완료!');
+    return;
+  }
+  if(dealt[user]||tradeHandled.has(d.id)||tradeSettling)return;
+  tradeHandled.add(d.id);tradeSettling=true;
+  try{
+    const mine=d.a===user?d.oa:d.ob,theirs=d.a===user?d.ob:d.oa;
+    if(!hasOfferInSave(save,mine)){await ref.child('dealt/'+safeKey(user)).set('fail');return}
+    save=addOfferToSave(removeOfferFromSave(JSON.parse(JSON.stringify(save)),mine),theirs);
+    norm();store();
+    await ref.child('dealt/'+safeKey(user)).set('ok');
+  }finally{tradeSettling=false}
+}
+
+/* ---------- 관리자 기능 (서버 DB 기준, 권한은 보안 규칙이 검증) ---------- */
+async function nickExists(n){return (await dbRef('names/'+safeKey(n)).get()).exists()}
+async function adminReadSave(n){const s=await dbRef('saves/'+safeKey(n)).get();return s.exists()?{...fresh(),...s.val()}:fresh()}
+async function adminWriteSave(n,s){
+  if(n===user){save=s;norm();store();renderAll();return}
+  await dbRef('saves/'+safeKey(n)).set({...s,updatedAt:Date.now()});
+}
+adminNoticeTextAuto=function(t){
+  openChatChannel();
+  dbRef('globalChat').push({name:user,msg:'📢 관리자: '+t,ts:Date.now(),admin:true,notice:true});
+};
+adminNotice=function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const t=($('adminNoticeText')&&$('adminNoticeText').value.trim())||'관리자 공지입니다.';
+  openChatChannel();
+  dbRef('globalChat').push({name:user,msg:'📢 공지: '+t,ts:Date.now(),admin:true,notice:true});
+};
+adminTarget=function(){
+  const n=$('adminTargetUser')&&$('adminTargetUser').value.trim();
+  if(!n){alert('대상 닉네임을 입력해.');return ''}
+  if(!canPunish(n)){alert('이 계정은 현재 권한으로 제재할 수 없어.');return ''}
+  return n;
+};
+async function adminSetFlag(node,on,label){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const n=adminTarget();if(!n)return;
+  if(!(await nickExists(n)))return alert('없는 계정이야.');
+  await dbRef(node+'/'+safeKey(n)).set(on?true:null);
+  adminNoticeTextAuto(n+' 계정 '+label);
+  alert(n+' '+label+' 완료');
+}
+adminBanUser=()=>adminSetFlag('bans',true,'밴');
+adminUnbanUser=()=>adminSetFlag('bans',false,'밴 해제');
+adminMuteUser=()=>adminSetFlag('mutes',true,'채팅 금지');
+adminUnmuteUser=()=>adminSetFlag('mutes',false,'채팅 금지 해제');
+adminTakeAllItems=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const n=adminTarget();if(!n)return;
+  if(!(await nickExists(n)))return alert('없는 계정이야.');
+  if(!confirm(n+'의 아이템/코인/다이아/희귀 캐릭터를 전부 뺏을까?'))return;
+  await adminWriteSave(n,fresh());
+  adminNoticeTextAuto(n+' 계정의 아이템을 전체 몰수했습니다.');alert(n+' 아이템 전체 몰수 완료');
+};
+adminResetUser=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const n=adminTarget();if(!n)return;
+  if(!(await nickExists(n)))return alert('없는 계정이야.');
+  if(!confirm(n+' 계정 데이터를 완전 초기화할까?'))return;
+  await adminWriteSave(n,fresh());
+  adminNoticeTextAuto(n+' 계정 데이터가 관리자에 의해 초기화되었습니다.');alert(n+' 계정 초기화 완료');
+};
+adminGiveToUser=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const n=($('adminGiveTarget')&&$('adminGiveTarget').value.trim())||'';
+  const c=Math.max(0,Math.floor(Number(($('adminGiveCoins')&&$('adminGiveCoins').value)||0)));
+  const d=Math.max(0,Math.floor(Number(($('adminGiveDia')&&$('adminGiveDia').value)||0)));
+  if(!n)return alert('대상 닉네임을 입력해.');
+  if(!c&&!d)return alert('지급할 코인이나 다이아를 입력해.');
+  if(!(await nickExists(n)))return alert('없는 계정이야.');
+  if(n!==user&&!canPunish(n))return alert('이 계정에는 현재 권한으로 지급할 수 없어.');
+  const s=await adminReadSave(n);s.coins=(s.coins||0)+c;s.dia=(s.dia||0)+d;
+  await adminWriteSave(n,s);
+  adminNoticeTextAuto(`${n}님에게 코인 ${c}, 다이아 ${d} 지급`);alert(`${n}에게 지급 완료!`);
+};
+adminRewardAllUsers=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const c=Math.max(0,Math.floor(Number(($('adminAllCoins')&&$('adminAllCoins').value)||0)));
+  const d=Math.max(0,Math.floor(Number(($('adminAllDia')&&$('adminAllDia').value)||0)));
+  if(!c&&!d)return alert('지급할 코인이나 다이아를 입력해.');
+  const names=Object.keys((await dbRef('users').get()).val()||{});
+  let ok=0;
+  for(const n of names){
+    if(n!==user&&!canPunish(n))continue;
+    try{const s=await adminReadSave(n);s.coins=(s.coins||0)+c;s.dia=(s.dia||0)+d;await adminWriteSave(n,s);ok++}catch(e){console.warn(n,e)}
+  }
+  adminNoticeTextAuto(`모든 유저에게 코인 ${c}, 다이아 ${d} 지급`);alert(`${ok}개 계정에 보상 지급 완료`);
+};
+adminSearchUser=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const n=($('adminSearchUser')&&$('adminSearchUser').value.trim())||'',box=$('adminSearchResult');
+  if(!box)return;
+  if(!n){box.textContent='닉네임을 입력해.';return}
+  if(!(await nickExists(n))){box.textContent=n+': 계정 없음';return}
+  const s=await adminReadSave(n),esc=x=>String(x).replace(/[<>&"']/g,'');
+  box.innerHTML=`<b>${esc(n)}</b><br>상태: ${isBanned(n)?'🚫 밴':'정상'} / ${isMuted(n)?'🔇 채팅금지':'채팅 가능'}<br>코인: ${s.coins||0}<br>다이아: ${s.dia||0}<br>캐릭터: ${(s.owned||[]).length}명 / 희귀: ${(s.rare||[]).length}명<br>최고 스테이지: ${s.best||1}`;
+};
+adminServerInfo=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const names=Object.keys((await dbRef('users').get()).val()||{}),box=$('adminServerInfo');
+  if(box)box.innerHTML=`전체 계정: ${names.length}개<br>밴 계정: ${Object.keys(banMap).length}개<br>채팅 금지: ${Object.keys(muteMap).length}개<br>관리자: ${Object.keys(staffMap).length}명`;
+};
+adminClearGlobalChat=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  if(!confirm('전체 채팅을 삭제할까요?'))return;
+  await dbRef('globalChat').remove();
+  clearChatLocal();addChatMessage('system','관리자가 전체 채팅을 삭제했습니다.',true);
+};
+async function appointAdmin(){
+  if(!isOwner())return alert('제작자만 관리자 임명 가능');
+  const n=($('adminManageUser')&&$('adminManageUser').value.trim())||'';
+  if(!n)return alert('임명할 닉네임을 입력해.');
+  const uid=(await dbRef('names/'+safeKey(n)).get()).val();
+  if(!uid)return alert('없는 계정이야.');
+  if(uid===auth.currentUser.uid)return alert('이미 제작자야.');
+  await dbRef('admins/'+uid).set('mod');await dbRef('staff/'+safeKey(n)).set('mod');
+  adminNoticeTextAuto(n+'님이 관리자로 임명되었습니다.');alert(n+' 관리자 임명 완료');
+}
+async function removeAdmin(){
+  if(!isOwner())return alert('제작자만 관리자 해제 가능');
+  const n=($('adminManageUser')&&$('adminManageUser').value.trim())||'';
+  if(!n)return alert('해제할 닉네임을 입력해.');
+  const uid=(await dbRef('names/'+safeKey(n)).get()).val();
+  if(!uid||staffMap[n]!=='mod')return alert('관리자로 등록된 계정이 아니야.');
+  await dbRef('admins/'+uid).remove();await dbRef('staff/'+safeKey(n)).remove();
+  adminNoticeTextAuto(n+'님의 관리자 권한이 해제되었습니다.');alert(n+' 관리자 해제 완료');
+}
+
+
+/* ---------- 제작자/관리자: 전체 유저 목록 ---------- */
+let adminUsersCache={};
+adminListUsers=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const box=$('adminUserList');if(box)box.textContent='불러오는 중...';
+  adminUsersCache=(await dbRef('users').get()).val()||{};
+  renderAdminUserList();
+};
+renderAdminUserList=function(){
+  const box=$('adminUserList');if(!box)return;
+  const esc=x=>String(x==null?'':x).replace(/[<>&"']/g,'');
+  const f=(($('adminUserFilter')&&$('adminUserFilter').value)||'').trim().toLowerCase();
+  const names=Object.keys(adminUsersCache).filter(n=>!f||n.toLowerCase().includes(f)).sort((a,b)=>(adminUsersCache[b].pvp||0)-(adminUsersCache[a].pvp||0));
+  if(!names.length){box.textContent=Object.keys(adminUsersCache).length?'검색 결과 없음':'유저 없음';return}
+  box.innerHTML=`총 ${Object.keys(adminUsersCache).length}명 (표시 ${names.length}명)<div class="friendList">`+names.map(n=>{
+    const u=adminUsersCache[n]||{};
+    const role=staffMap[n]==='owner'?'👑 제작자':staffMap[n]==='mod'?'🛡️ 관리자':'';
+    const st=[isBanned(n)?'🚫 밴':'',isMuted(n)?'🔇 채팅금지':''].filter(Boolean).join(' ');
+    return `<div class="friendItem"><b>${esc(n)}</b> ${role}<br>${esc(u.char||'-')} / ${esc(u.rank||'-')} (${u.pvp||0}점)<br>마지막 접속: ${u.ts?new Date(u.ts).toLocaleString():'-'}<br>${st}<br><button class="blue" onclick="adminPickUser('${esc(n)}')">선택</button></div>`;
+  }).join('')+'</div>';
+};
+adminPickUser=function(n){
+  ['adminTargetUser','adminGiveTarget','adminSearchUser'].forEach(id=>{const e=$(id);if(e)e.value=n});
+  adminSearchUser();
+};
+
+/* ---------- 직급 체계: 1제작자 > 2관리자 > 3하급 귀족 > 4기사 > 5상급 평민 ---------- */
+const RANKS={owner:{lv:1,label:'👑 제작자'},mod:{lv:2,label:'🛡️ 관리자'},noble:{lv:3,label:'🏰 하급 귀족',color:'#c084fc'},knight:{lv:4,label:'⚔️ 기사',color:'#60a5fa'},elite:{lv:5,label:'🌟 상급 평민',color:'#34d399'}};
+let eventsCache={};
+function rankOf(n){return (n===user&&myAdminRole)?myAdminRole:(staffMap[n]||'')}
+function rankLevel(n){return (RANKS[rankOf(n)]||{lv:99}).lv}
+function rankAtLeast(n,minKey){return rankLevel(n)<=(RANKS[minKey]||{lv:0}).lv}
+roleLabel=function(name){
+  name=String(name||'guest').replace(/[<>&"']/g,'');
+  const r=rankOf(name);
+  if(r==='owner')return `<span class="adminBadge">👑 Owner</span><span class="adminName">${name}</span>`;
+  if(r==='mod')return `<span class="modBadge">🛡️ 관리자</span><span class="modName">${name}</span>`;
+  if(RANKS[r])return `<span class="modBadge" style="background:${RANKS[r].color};box-shadow:0 0 10px ${RANKS[r].color}">${RANKS[r].label}</span><b style="color:${RANKS[r].color}">${name}</b>`;
+  return name;
+};
+adminLabel=roleLabel;
+setRankUser=async function(){
+  if(!isAdmin())return alert('관리자 이상만 사용 가능');
+  const n=($('rankTarget').value||'').trim(),r=$('rankSelect').value;
+  if(!n)return alert('대상 닉네임을 입력해.');
+  const uid=(await dbRef('names/'+safeKey(n)).get()).val();
+  if(!uid)return alert('없는 계정이야.');
+  const cur=staffMap[n]||'';
+  if(cur==='owner'||n===user)return alert('이 계정의 직급은 바꿀 수 없어.');
+  if(cur==='mod'&&!isOwner())return alert('관리자의 직급은 제작자만 바꿀 수 있어.');
+  if(cur==='mod')await dbRef('admins/'+uid).remove();
+  if(r==='none')await dbRef('staff/'+safeKey(n)).remove();else await dbRef('staff/'+safeKey(n)).set(r);
+  adminNoticeTextAuto(r==='none'?`${n}님의 직급이 해제되었습니다.`:`${n}님이 ${RANKS[r].label}(으)로 임명되었습니다.`);
+  alert('직급 적용 완료');
+};
+
+/* ---------- 이벤트 (직급 제한) ---------- */
+adminCreateEvent=async function(){
+  if(!isAdmin())return alert('관리자 이상만 사용 가능');
+  const title=($('evTitle').value||'').trim().slice(0,60);
+  const coins=Math.max(0,Math.floor(Number($('evCoins').value)||0)),d=Math.max(0,Math.floor(Number($('evDia').value)||0));
+  const hours=Math.max(1,Math.min(720,Math.floor(Number($('evHours').value)||24))),min=$('evMin').value;
+  if(!title)return alert('이벤트 이름을 입력해.');
+  if(!coins&&!d)return alert('보상 코인이나 다이아를 입력해.');
+  const now=Date.now();
+  await dbRef('events').push({title,coins,dia:d,min,ts:now,endsAt:now+hours*3600000,by:user});
+  adminNoticeTextAuto(`🎉 이벤트 시작: ${title} (${RANKS[min].label} 이상 참여 가능)`);
+  alert('이벤트를 열었어요.');
+};
+async function renderEvents(){
+  const box=$('eventList');if(!box)return;
+  if(user==='guest'){box.innerHTML='<div class="friendItem">로그인하면 이벤트가 보여요</div>';return}
+  const esc=x=>String(x==null?'':x).replace(/[<>&"']/g,''),now=Date.now();
+  const ids=Object.keys(eventsCache).sort((a,b)=>(eventsCache[b].ts||0)-(eventsCache[a].ts||0));
+  if(!ids.length){box.innerHTML='<div class="friendItem">진행 중인 이벤트 없음</div>';return}
+  const claimed={};
+  await Promise.all(ids.map(async id=>{try{claimed[id]=(await dbRef('eventClaims/'+id+'/'+safeKey(user)).get()).val()===true}catch(e){claimed[id]=false}}));
+  box.innerHTML=ids.map(id=>{
+    const e=eventsCache[id],over=(e.endsAt||0)<=now,ok=rankAtLeast(user,e.min),min=RANKS[e.min]||{label:e.min};
+    let btn=claimed[id]?'<span class="onlineOk">✅ 수령 완료</span>':over?'<span class="onlineBad">종료됨</span>':ok?`<button class="green" onclick="claimEvent('${esc(id)}')">보상 받기</button>`:`<span class="onlineBad">🔒 ${min.label} 이상만 참여 가능</span>`;
+    const del=isAdmin()?` <button class="red" onclick="deleteEvent('${esc(id)}')">삭제</button>`:'';
+    return `<div class="friendItem"><b>${esc(e.title)}</b><br>보상: 코인 ${e.coins||0} / 다이아 ${e.dia||0}<br>참여: ${min.label} 이상<br>종료: ${new Date(e.endsAt||0).toLocaleString()}<br>${btn}${del}</div>`;
+  }).join('');
+}
+claimEvent=async function(id){
+  const e=eventsCache[id];
+  if(user==='guest'||!e)return;
+  if(!rankAtLeast(user,e.min))return alert('참여 자격이 없는 직급이에요.');
+  if((e.endsAt||0)<=Date.now())return alert('종료된 이벤트예요.');
+  try{await dbRef('eventClaims/'+id+'/'+safeKey(user)).set(true)}catch(err){return alert('이미 받았거나 자격이 없어요.')}
+  coins+=e.coins||0;dia+=e.dia||0;store();
+  alert(`보상 수령! 코인 ${e.coins||0}, 다이아 ${e.dia||0}`);renderEvents();
+};
+deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
+norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
+</script>
+</body>
+</html>
