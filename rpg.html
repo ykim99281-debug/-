@@ -201,6 +201,24 @@ input,select{padding:10px;border-radius:9px;border:1px solid #555;background:#11
   </div>
 
   <div class="adminTile">
+    <b>🏅 직급 부여 (관리자 이상)</b><br>
+    <input id="rankTarget" class="adminInput" placeholder="대상 닉네임">
+    <select id="rankSelect"><option value="noble">🏰 하급 귀족</option><option value="knight">⚔️ 기사</option><option value="elite">🌟 상급 평민</option><option value="none">직급 해제</option></select>
+    <button class="purple" onclick="setRankUser()">적용</button>
+    <div class="small">관리자 임명은 제작자 전용(위 칸). 관리자는 귀족·기사·상급 평민만 부여할 수 있어요.</div>
+  </div>
+
+  <div class="adminTile">
+    <b>🎉 이벤트 만들기 (관리자 이상)</b><br>
+    <input id="evTitle" class="adminInput" placeholder="이벤트 이름">
+    <input id="evCoins" type="number" class="adminInput" placeholder="보상 코인">
+    <input id="evDia" type="number" class="adminInput" placeholder="보상 다이아">
+    <input id="evHours" type="number" class="adminInput" placeholder="진행 시간(시간)" value="24">
+    <select id="evMin"><option value="noble">하급 귀족 이상</option><option value="knight">기사 이상</option><option value="elite">상급 평민 이상</option></select>
+    <button class="gold" onclick="adminCreateEvent()">이벤트 열기</button>
+  </div>
+
+  <div class="adminTile">
     <b>📊 서버 정보</b><br>
     <button onclick="adminServerInfo()">서버 정보 보기</button>
     <div id="adminServerInfo" class="small">아직 조회 안 함</div>
@@ -243,6 +261,11 @@ input,select{padding:10px;border-radius:9px;border:1px solid #555;background:#11
 <p class="small">친구 요청이 오면 여기서 수락/거절할 수 있어.</p>
 <button class="blue" onclick="checkFriendMail()">우편함 확인</button>
 <div id="friendMailList" class="mailList"><div class="mailItem">받은 친구 요청 없음</div></div>
+</div>
+<div class="box" id="eventBox">
+<h3>🎉 이벤트</h3>
+<p class="small">이벤트마다 참여 가능한 최소 직급이 있어요. 직급 순서: 👑 제작자 &gt; 🛡️ 관리자 &gt; 🏰 하급 귀족 &gt; ⚔️ 기사 &gt; 🌟 상급 평민</p>
+<div id="eventList" class="friendList"><div class="friendItem">로그인하면 이벤트가 보여요</div></div>
 </div>
 <div class="shop">
 <h3>🛡️ 장비 상점 다이아 구매</h3>
@@ -1608,7 +1631,7 @@ function isMuted(n=user){return !!muteMap[n]}
 adminLabel=roleLabel;
 function updateAdminRoleList(){
   const box=$("adminRoleList");
-  if(box)box.innerHTML="현재 관리자: "+Object.keys(staffMap).map(n=>`<span class="modBadge">${staffMap[n]==='owner'?'👑':'🛡️'} ${n}</span>`).join(" ");
+  if(box)box.innerHTML="현재 관리자: "+Object.keys(staffMap).sort((a,b)=>rankLevel(a)-rankLevel(b)).map(n=>`<span class="modBadge">${(RANKS[staffMap[n]]||{label:'직급'}).label} ${n}</span>`).join(" ");
 }
 function updateAdminPanel(){
   const box=$("adminBox");
@@ -1622,9 +1645,10 @@ function updateAdminPanel(){
 function startServerListeners(){
   stopServerListeners();
   const add=(r,fn)=>{r.on('value',fn);serverSubs.push(r)};
-  add(dbRef('staff'),s=>{staffMap=s.val()||{};updateAdminPanel();ui()});
+  add(dbRef('staff'),s=>{staffMap=s.val()||{};updateAdminPanel();ui();renderEvents()});
   add(dbRef('bans'),s=>{banMap=s.val()||{};if(user!=='guest'&&banMap[user]){alert('이 계정은 밴되었습니다.');logout()}});
   add(dbRef('mutes'),s=>{muteMap=s.val()||{}});
+  add(dbRef('events').limitToLast(20),s=>{eventsCache=s.val()||{};renderEvents()});
 }
 function stopServerListeners(){
   serverSubs.forEach(r=>r.off());serverSubs=[];
@@ -1688,7 +1712,7 @@ async function finishLogin(n,uid){
   setOnlineStatus(`<span class="onlineOk">온라인 · ${n} 로그인됨</span>`);
   return true;
 }
-function resetToGuest(){stopServerListeners();user='guest';myAdminRole='';myId='P'+Math.random().toString(36).slice(2,8);save=fresh();norm();updateAdminPanel();renderAll()}
+function resetToGuest(){stopServerListeners();user='guest';myAdminRole='';myId='P'+Math.random().toString(36).slice(2,8);save=fresh();norm();updateAdminPanel();renderAll();renderEvents()}
 
 createAcc=async function(){
   if(!online||!auth)return alert('온라인 연결이 필요해요. 잠시 후 다시 시도하세요.');
@@ -1749,7 +1773,7 @@ addChatMessage=function(name,msg,system=false,admin=false){
   const div=document.createElement("div");
   div.className="chatMsg"+(system?" chatSystem":"");
   const safeName=String(name||"system").replace(/[<>&"']/g,""),safeMsg=String(msg||"").replace(/[<>]/g,"");
-  const shownName=(isStaff(name)||admin)?adminLabel(name):`<span class="chatName">${safeName}</span>`;
+  const shownName=(rankOf(name)||admin)?adminLabel(name):`<span class="chatName">${safeName}</span>`;
   div.innerHTML=system?safeMsg:`${shownName} : ${safeMsg}`;
   log.appendChild(div);
   while(log.children.length>80)log.removeChild(log.firstChild);
@@ -2002,6 +2026,75 @@ adminPickUser=function(n){
   ['adminTargetUser','adminGiveTarget','adminSearchUser'].forEach(id=>{const e=$(id);if(e)e.value=n});
   adminSearchUser();
 };
+
+/* ---------- 직급 체계: 1제작자 > 2관리자 > 3하급 귀족 > 4기사 > 5상급 평민 ---------- */
+const RANKS={owner:{lv:1,label:'👑 제작자'},mod:{lv:2,label:'🛡️ 관리자'},noble:{lv:3,label:'🏰 하급 귀족',color:'#c084fc'},knight:{lv:4,label:'⚔️ 기사',color:'#60a5fa'},elite:{lv:5,label:'🌟 상급 평민',color:'#34d399'}};
+let eventsCache={};
+function rankOf(n){return (n===user&&myAdminRole)?myAdminRole:(staffMap[n]||'')}
+function rankLevel(n){return (RANKS[rankOf(n)]||{lv:99}).lv}
+function rankAtLeast(n,minKey){return rankLevel(n)<=(RANKS[minKey]||{lv:0}).lv}
+roleLabel=function(name){
+  name=String(name||'guest').replace(/[<>&"']/g,'');
+  const r=rankOf(name);
+  if(r==='owner')return `<span class="adminBadge">👑 Owner</span><span class="adminName">${name}</span>`;
+  if(r==='mod')return `<span class="modBadge">🛡️ 관리자</span><span class="modName">${name}</span>`;
+  if(RANKS[r])return `<span class="modBadge" style="background:${RANKS[r].color};box-shadow:0 0 10px ${RANKS[r].color}">${RANKS[r].label}</span><b style="color:${RANKS[r].color}">${name}</b>`;
+  return name;
+};
+adminLabel=roleLabel;
+setRankUser=async function(){
+  if(!isAdmin())return alert('관리자 이상만 사용 가능');
+  const n=($('rankTarget').value||'').trim(),r=$('rankSelect').value;
+  if(!n)return alert('대상 닉네임을 입력해.');
+  const uid=(await dbRef('names/'+safeKey(n)).get()).val();
+  if(!uid)return alert('없는 계정이야.');
+  const cur=staffMap[n]||'';
+  if(cur==='owner'||n===user)return alert('이 계정의 직급은 바꿀 수 없어.');
+  if(cur==='mod'&&!isOwner())return alert('관리자의 직급은 제작자만 바꿀 수 있어.');
+  if(cur==='mod')await dbRef('admins/'+uid).remove();
+  if(r==='none')await dbRef('staff/'+safeKey(n)).remove();else await dbRef('staff/'+safeKey(n)).set(r);
+  adminNoticeTextAuto(r==='none'?`${n}님의 직급이 해제되었습니다.`:`${n}님이 ${RANKS[r].label}(으)로 임명되었습니다.`);
+  alert('직급 적용 완료');
+};
+
+/* ---------- 이벤트 (직급 제한) ---------- */
+adminCreateEvent=async function(){
+  if(!isAdmin())return alert('관리자 이상만 사용 가능');
+  const title=($('evTitle').value||'').trim().slice(0,60);
+  const coins=Math.max(0,Math.floor(Number($('evCoins').value)||0)),d=Math.max(0,Math.floor(Number($('evDia').value)||0));
+  const hours=Math.max(1,Math.min(720,Math.floor(Number($('evHours').value)||24))),min=$('evMin').value;
+  if(!title)return alert('이벤트 이름을 입력해.');
+  if(!coins&&!d)return alert('보상 코인이나 다이아를 입력해.');
+  const now=Date.now();
+  await dbRef('events').push({title,coins,dia:d,min,ts:now,endsAt:now+hours*3600000,by:user});
+  adminNoticeTextAuto(`🎉 이벤트 시작: ${title} (${RANKS[min].label} 이상 참여 가능)`);
+  alert('이벤트를 열었어요.');
+};
+async function renderEvents(){
+  const box=$('eventList');if(!box)return;
+  if(user==='guest'){box.innerHTML='<div class="friendItem">로그인하면 이벤트가 보여요</div>';return}
+  const esc=x=>String(x==null?'':x).replace(/[<>&"']/g,''),now=Date.now();
+  const ids=Object.keys(eventsCache).sort((a,b)=>(eventsCache[b].ts||0)-(eventsCache[a].ts||0));
+  if(!ids.length){box.innerHTML='<div class="friendItem">진행 중인 이벤트 없음</div>';return}
+  const claimed={};
+  await Promise.all(ids.map(async id=>{try{claimed[id]=(await dbRef('eventClaims/'+id+'/'+safeKey(user)).get()).val()===true}catch(e){claimed[id]=false}}));
+  box.innerHTML=ids.map(id=>{
+    const e=eventsCache[id],over=(e.endsAt||0)<=now,ok=rankAtLeast(user,e.min),min=RANKS[e.min]||{label:e.min};
+    let btn=claimed[id]?'<span class="onlineOk">✅ 수령 완료</span>':over?'<span class="onlineBad">종료됨</span>':ok?`<button class="green" onclick="claimEvent('${esc(id)}')">보상 받기</button>`:`<span class="onlineBad">🔒 ${min.label} 이상만 참여 가능</span>`;
+    const del=isAdmin()?` <button class="red" onclick="deleteEvent('${esc(id)}')">삭제</button>`:'';
+    return `<div class="friendItem"><b>${esc(e.title)}</b><br>보상: 코인 ${e.coins||0} / 다이아 ${e.dia||0}<br>참여: ${min.label} 이상<br>종료: ${new Date(e.endsAt||0).toLocaleString()}<br>${btn}${del}</div>`;
+  }).join('');
+}
+claimEvent=async function(id){
+  const e=eventsCache[id];
+  if(user==='guest'||!e)return;
+  if(!rankAtLeast(user,e.min))return alert('참여 자격이 없는 직급이에요.');
+  if((e.endsAt||0)<=Date.now())return alert('종료된 이벤트예요.');
+  try{await dbRef('eventClaims/'+id+'/'+safeKey(user)).set(true)}catch(err){return alert('이미 받았거나 자격이 없어요.')}
+  coins+=e.coins||0;dia+=e.dia||0;store();
+  alert(`보상 수령! 코인 ${e.coins||0}, 다이아 ${e.dia||0}`);renderEvents();
+};
+deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
 </body>
