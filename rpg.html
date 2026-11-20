@@ -1002,7 +1002,7 @@ setInterval(()=>{if(user!=="guest"){renderTradeView()}},3000);
 
 /* === 온라인 Firebase + 진짜 PvP 랭크전 확장 === */
 let fbApp=null,db=null,online=false,roomSub=null,pvpSub=null,pvpRoom="",pvpMode=false,pvpData={players:{},hits:{},ended:false},lastHitSeen=0,pvpMyHp=1600,pvpMaxHp=1600,pvpOpponentId="",ranked=false,pvpHostId="",pvpAutoStartedKey="";
-const DEFAULT_FIREBASE_CONFIG={apiKey:"AIzaSyDFFs0EqhlomgiHw4CZTzRHx2clSXQZXs8",authDomain:"vwiwvwkwj.firebaseapp.com",databaseURL:"https://vwiwvwkwj-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"vwiwvwkwj",storageBucket:"vwiwvwkwj.firebasestorage.app",messagingSenderId:"870276348788",appId:"1:870276348788:web:78c0de7924c8218d734a21"};
+const DEFAULT_FIREBASE_CONFIG={apiKey:"AIzaSyDgcof8nH7bB9JcELfb6KVdyO1FJoF_c4o",authDomain:"project-786867319314566748.firebaseapp.com",databaseURL:"https://project-786867319314566748-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"project-786867319314566748",storageBucket:"project-786867319314566748.firebasestorage.app",messagingSenderId:"792444845215",appId:"1:792444845215:web:ee7cdda26d468d7172f6aa"};
 function safeKey(x){return String(x||"").replace(/[.#$\[\]/]/g,"_")}
 function fbPath(...a){return a.map(safeKey).join('/')}
 function loadFirebaseConfig(){let v=localStorage.getItem('animeRpgFirebaseConfig')||JSON.stringify(DEFAULT_FIREBASE_CONFIG,null,2);if($('fbConfig'))$('fbConfig').value=v;return v}
