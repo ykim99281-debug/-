@@ -169,6 +169,13 @@ input,select{padding:10px;border-radius:9px;border:1px solid #555;background:#11
     <button class="green" onclick="adminRewardAllUsers()">모든 계정에 지급</button>
   </div>
 
+  <div class="adminTile" style="grid-column:1/-1">
+    <b>👥 전체 유저 목록</b><br>
+    <button class="blue" onclick="adminListUsers()">목록 불러오기</button>
+    <input id="adminUserFilter" class="adminInput" placeholder="닉네임 필터" oninput="renderAdminUserList()">
+    <div id="adminUserList" class="small">아직 조회 안 함</div>
+  </div>
+
   <div class="adminTile">
     <b>🔎 유저 검색</b><br>
     <input id="adminSearchUser" class="adminInput" placeholder="닉네임 검색">
@@ -1969,6 +1976,32 @@ async function removeAdmin(){
   adminNoticeTextAuto(n+'님의 관리자 권한이 해제되었습니다.');alert(n+' 관리자 해제 완료');
 }
 
+
+/* ---------- 제작자/관리자: 전체 유저 목록 ---------- */
+let adminUsersCache={};
+adminListUsers=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const box=$('adminUserList');if(box)box.textContent='불러오는 중...';
+  adminUsersCache=(await dbRef('users').get()).val()||{};
+  renderAdminUserList();
+};
+renderAdminUserList=function(){
+  const box=$('adminUserList');if(!box)return;
+  const esc=x=>String(x==null?'':x).replace(/[<>&"']/g,'');
+  const f=(($('adminUserFilter')&&$('adminUserFilter').value)||'').trim().toLowerCase();
+  const names=Object.keys(adminUsersCache).filter(n=>!f||n.toLowerCase().includes(f)).sort((a,b)=>(adminUsersCache[b].pvp||0)-(adminUsersCache[a].pvp||0));
+  if(!names.length){box.textContent=Object.keys(adminUsersCache).length?'검색 결과 없음':'유저 없음';return}
+  box.innerHTML=`총 ${Object.keys(adminUsersCache).length}명 (표시 ${names.length}명)<div class="friendList">`+names.map(n=>{
+    const u=adminUsersCache[n]||{};
+    const role=staffMap[n]==='owner'?'👑 제작자':staffMap[n]==='mod'?'🛡️ 관리자':'';
+    const st=[isBanned(n)?'🚫 밴':'',isMuted(n)?'🔇 채팅금지':''].filter(Boolean).join(' ');
+    return `<div class="friendItem"><b>${esc(n)}</b> ${role}<br>${esc(u.char||'-')} / ${esc(u.rank||'-')} (${u.pvp||0}점)<br>마지막 접속: ${u.ts?new Date(u.ts).toLocaleString():'-'}<br>${st}<br><button class="blue" onclick="adminPickUser('${esc(n)}')">선택</button></div>`;
+  }).join('')+'</div>';
+};
+adminPickUser=function(n){
+  ['adminTargetUser','adminGiveTarget','adminSearchUser'].forEach(id=>{const e=$(id);if(e)e.value=n});
+  adminSearchUser();
+};
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
 </body>
