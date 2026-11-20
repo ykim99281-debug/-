@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>TACTICAL STRIKE - 3D FPS</title>
 <style>
   :root{--red:#ff4655;--bg:#0f1923;--cream:#ece8e1}
@@ -53,6 +53,28 @@
   #btn:hover{background:#ff6a77}
   #diff{margin-bottom:20px;font-size:14px}
   #diff select{background:#16222d;color:var(--cream);border:1px solid #445;padding:6px 10px;font-size:14px}
+  html,body{touch-action:none;-webkit-touch-callout:none}
+  #touch{display:none;position:fixed;inset:0;pointer-events:none;z-index:5}
+  #touch>*{pointer-events:auto;touch-action:none}
+  #lookpad{position:absolute;inset:0;pointer-events:auto}
+  #joy{position:absolute;left:28px;bottom:28px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.35)}
+  #knob{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px;border-radius:50%;background:rgba(255,255,255,.45)}
+  .tb{position:absolute;width:58px;height:58px;border-radius:50%;background:rgba(15,25,35,.6);border:2px solid rgba(255,255,255,.45);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center;user-select:none}
+  .tb:active,.tb.on{background:rgba(255,70,85,.7)}
+  #tFire{right:26px;bottom:44px;width:92px;height:92px;font-size:16px;background:rgba(255,70,85,.45)}
+  #tJump{right:134px;bottom:30px}
+  #tRel{right:134px;bottom:98px}
+  #tScope{right:26px;bottom:150px}
+  #tDash{right:200px;bottom:98px}
+  #tSmoke{right:200px;bottom:166px}
+  #tWpn{right:70px;bottom:222px}
+  body.touchmode #hp{bottom:auto;top:12px;left:12px;font-size:24px;min-width:90px;padding:4px 10px}
+  body.touchmode #ammo{right:auto;bottom:auto;top:12px;left:120px;font-size:24px;min-width:110px;padding:4px 10px;border:0;border-left:4px solid var(--red);text-align:left}
+  body.touchmode #abil{display:none}
+  body.touchmode #feed{top:64px}
+  body.touchmode #top{top:6px}
+  #overlay{overflow-y:auto;justify-content:safe center}
+  @media (max-height:520px){#overlay h1{font-size:32px;letter-spacing:4px}#overlay h2{margin:4px 0 8px;font-size:13px}#overlay table{font-size:12px;margin-bottom:8px}#overlay td{padding:2px 10px}#diff{margin-bottom:8px}#btn{padding:10px 40px;font-size:17px}}
 </style>
 </head>
 <body>
@@ -74,11 +96,23 @@
   <div class="panel" id="feed"></div>
 </div>
 
+<div id="touch">
+  <div id="lookpad"></div>
+  <div id="joy"><div id="knob"></div></div>
+  <div class="tb" id="tFire">발사</div>
+  <div class="tb" id="tJump">점프</div>
+  <div class="tb" id="tRel">장전</div>
+  <div class="tb" id="tScope">줌</div>
+  <div class="tb" id="tDash">대시</div>
+  <div class="tb" id="tSmoke">연막</div>
+  <div class="tb" id="tWpn">무기</div>
+</div>
+
 <div id="overlay">
   <h1>TACTICAL STRIKE</h1>
   <h2>3D 택티컬 슈터 · 적을 모두 제거하세요</h2>
   <table>
-    <tr><td>W A S D</td><td>이동</td></tr>
+    <tr><td>W A S D</td><td>이동 (방향키로 시점 이동도 가능)</td></tr><tr><td>모바일</td><td>왼쪽 조이스틱 이동 · 화면 드래그 시점 · 오른쪽 버튼</td></tr>
     <tr><td>Shift</td><td>걷기 (정확도↑, 소음↓)</td></tr>
     <tr><td>Space</td><td>점프</td></tr>
     <tr><td>좌클릭 / 우클릭</td><td>발사 / 스나이퍼 줌</td></tr>
@@ -199,7 +233,7 @@ WEAPONS.forEach(w=>{w.ammo=w.mag;w.reserve=w.res});
 /* ---------- 플레이어 ---------- */
 const P={pos:new THREE.Vector3(0,0,HALF-4),vel:new THREE.Vector3(),vy:0,yaw:0,pitch:0,hp:100,onGround:true,
   eye:1.7,w:0,lastShot:0,reloading:0,recoil:0,dash:new THREE.Vector3(),dashT:0,dashCd:0,smokes:2,scoped:false,alive:true,walk:false,bob:0};
-const keys={};let mouseDown=false,playing=false;
+const keys={};let mouseDown=false,playing=false,locked=false;const joy={x:0,y:0};
 
 // 총 모델
 const gunGroup=new THREE.Group();camera.add(gunGroup);
@@ -461,6 +495,7 @@ function hurt(d,from){
 
 /* ---------- 입력 ---------- */
 addEventListener("keydown",e=>{
+  if(e.code.startsWith("Arrow")||e.code==="Space")e.preventDefault();
   if(e.repeat)return;keys[e.code]=true;
   if(!playing)return;
   if(e.code==="Digit1")switchWeapon(0);
@@ -468,16 +503,22 @@ addEventListener("keydown",e=>{
   if(e.code==="Digit3")switchWeapon(2);
   if(e.code==="KeyR")startReload();
   if(e.code==="KeyE")throwSmoke();
-  if(e.code==="KeyQ"&&P.dashCd<=0&&P.alive){
-    const d=new THREE.Vector3((keys.KeyD?1:0)-(keys.KeyA?1:0),0,(keys.KeyS?1:0)-(keys.KeyW?1:0));
-    if(d.lengthSq()===0)d.z=-1;
-    d.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),P.yaw);
-    P.dash.copy(d).multiplyScalar(22);P.dashT=.18;P.dashCd=7;noise(.25,.2,3000,"highpass");
-  }
+  if(e.code==="KeyQ")doDash();
 });
+function moveInput(){return new THREE.Vector3((keys.KeyD?1:0)-(keys.KeyA?1:0)+joy.x,0,(keys.KeyS?1:0)-(keys.KeyW?1:0)+joy.y)}
+function doDash(){
+  if(P.dashCd>0||!P.alive)return;
+  const d=moveInput();
+  if(d.lengthSq()<.01)d.set(0,0,-1);
+  d.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),P.yaw);
+  P.dash.copy(d).multiplyScalar(22);P.dashT=.18;P.dashCd=7;noise(.25,.2,3000,"highpass");
+}
+function toggleScope(){
+  if(WEAPONS[P.w].scope&&P.reloading<=0){P.scoped=!P.scoped;$("scope").style.display=P.scoped?"block":"none"}
+}
 addEventListener("keyup",e=>keys[e.code]=false);
 addEventListener("mousemove",e=>{
-  if(!playing)return;
+  if(!playing||(!locked&&!mouseDown))return;
   const s=.0022*(P.scoped?.3:1);
   P.yaw-=e.movementX*s;P.pitch-=e.movementY*s;
   P.pitch=Math.max(-1.5,Math.min(1.5,P.pitch));
@@ -485,23 +526,81 @@ addEventListener("mousemove",e=>{
 addEventListener("mousedown",e=>{
   if(!playing)return;
   if(e.button===0){mouseDown=true;shoot()}
-  if(e.button===2&&WEAPONS[P.w].scope&&P.reloading<=0){P.scoped=!P.scoped;$("scope").style.display=P.scoped?"block":"none";}
+  if(e.button===2)toggleScope();
 });
 addEventListener("mouseup",e=>{if(e.button===0)mouseDown=false});
 addEventListener("contextmenu",e=>e.preventDefault());
 addEventListener("wheel",e=>{if(playing)switchWeapon((P.w+(e.deltaY>0?1:2))%3)});
 
+const isTouch=("ontouchstart" in window)||navigator.maxTouchPoints>0;
+function setPlaying(v){
+  playing=v;
+  $("overlay").style.display=v?"none":"flex";$("hud").style.display=v?"block":"none";
+  $("touch").style.display=(v&&isTouch)?"block":"none";
+  if(v&&!started){started=true;newRound()}
+  if(!v){mouseDown=false;joy.x=joy.y=0;Object.keys(keys).forEach(k=>keys[k]=false)}
+}
+if(isTouch)document.body.classList.add("touchmode");
 $("btn").onclick=()=>{
   audio()&&audio().resume();
   diff=parseFloat($("difficulty").value);
-  renderer.domElement.requestPointerLock();
+  if(isTouch){
+    try{const el=document.documentElement;(el.requestFullscreen||el.webkitRequestFullscreen||function(){}).call(el)}catch(e){}
+    try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock("landscape").catch(()=>{})}catch(e){}
+  }else{
+    try{const r=renderer.domElement.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}
+  }
+  setPlaying(true);
 };
 document.addEventListener("pointerlockchange",()=>{
-  playing=document.pointerLockElement===renderer.domElement;
-  $("overlay").style.display=playing?"none":"flex";$("hud").style.display=playing?"block":"none";
-  if(playing&&!started){started=true;newRound()}
-  if(!playing){mouseDown=false;Object.keys(keys).forEach(k=>keys[k]=false)}
+  const was=locked;locked=document.pointerLockElement===renderer.domElement;
+  if(was&&!locked)setPlaying(false);
 });
+// 캔버스를 클릭하면 다시 마우스 잠금 시도
+renderer.domElement.addEventListener("click",()=>{if(playing&&!isTouch&&!locked){try{renderer.domElement.requestPointerLock()}catch(e){}}});
+
+/* ---------- 터치 컨트롤 ---------- */
+(()=>{
+  // 시점: 화면 드래그
+  const look=$("lookpad");let lid=null,lx=0,ly=0;
+  look.addEventListener("pointerdown",e=>{if(lid===null){lid=e.pointerId;lx=e.clientX;ly=e.clientY;look.setPointerCapture(e.pointerId)}});
+  look.addEventListener("pointermove",e=>{
+    if(e.pointerId!==lid)return;
+    const s=.0048*(P.scoped?.4:1);
+    P.yaw-=(e.clientX-lx)*s;P.pitch-=(e.clientY-ly)*s;P.pitch=Math.max(-1.5,Math.min(1.5,P.pitch));
+    lx=e.clientX;ly=e.clientY;
+  });
+  const endLook=e=>{if(e.pointerId===lid)lid=null};
+  look.addEventListener("pointerup",endLook);look.addEventListener("pointercancel",endLook);
+  // 조이스틱
+  const joyEl=$("joy"),knob=$("knob");let jid=null;
+  function jmove(e){
+    const r=joyEl.getBoundingClientRect(),R=r.width/2;
+    let dx=e.clientX-(r.left+R),dy=e.clientY-(r.top+R);const l=Math.hypot(dx,dy);
+    if(l>R*.8){dx*=R*.8/l;dy*=R*.8/l}
+    knob.style.transform="translate("+dx+"px,"+dy+"px)";
+    joy.x=dx/(R*.8);joy.y=dy/(R*.8);
+    if(Math.hypot(joy.x,joy.y)<.12)joy.x=joy.y=0;
+  }
+  joyEl.addEventListener("pointerdown",e=>{jid=e.pointerId;joyEl.setPointerCapture(e.pointerId);jmove(e)});
+  joyEl.addEventListener("pointermove",e=>{if(e.pointerId===jid)jmove(e)});
+  const jend=e=>{if(e.pointerId===jid){jid=null;joy.x=joy.y=0;knob.style.transform=""}};
+  joyEl.addEventListener("pointerup",jend);joyEl.addEventListener("pointercancel",jend);
+  // 버튼
+  function hold(id,down,up){
+    const el=$(id);
+    el.addEventListener("pointerdown",e=>{e.preventDefault();el.setPointerCapture(e.pointerId);el.classList.add("on");down()});
+    const end=()=>{el.classList.remove("on");up&&up()};
+    el.addEventListener("pointerup",end);el.addEventListener("pointercancel",end);
+  }
+  hold("tFire",()=>{mouseDown=true;shoot()},()=>{mouseDown=false});
+  hold("tJump",()=>{keys.Space=true},()=>{keys.Space=false});
+  hold("tRel",startReload);
+  hold("tScope",toggleScope);
+  hold("tDash",doDash);
+  hold("tSmoke",throwSmoke);
+  hold("tWpn",()=>switchWeapon((P.w+1)%3));
+})();
 let started=false;
 
 /* ---------- 메인 루프 ---------- */
@@ -518,9 +617,14 @@ function loop(){
       const w=WEAPONS[P.w];
       P.walk=!!keys.ShiftLeft||!!keys.ShiftRight;
       const sp=(P.walk?3:5.2)*(P.scoped?.5:1)*(P.w===2?.93:1);
-      const wish=new THREE.Vector3((keys.KeyD?1:0)-(keys.KeyA?1:0),0,(keys.KeyS?1:0)-(keys.KeyW?1:0));
+      const wish=moveInput();
       if(!P.alive)wish.set(0,0,0);
-      if(wish.lengthSq()>0)wish.normalize().applyAxisAngle(up,P.yaw);
+      if(wish.length()>1)wish.normalize();
+      wish.applyAxisAngle(up,P.yaw);
+      // 방향키로 시점 이동
+      const lk=2*dt;
+      if(keys.ArrowLeft)P.yaw+=lk;if(keys.ArrowRight)P.yaw-=lk;
+      if(keys.ArrowUp)P.pitch=Math.min(1.5,P.pitch+lk);if(keys.ArrowDown)P.pitch=Math.max(-1.5,P.pitch-lk);
       const acc=P.onGround?14:3;
       P.vel.x+=(wish.x*sp-P.vel.x)*Math.min(1,acc*dt);
       P.vel.z+=(wish.z*sp-P.vel.z)*Math.min(1,acc*dt);
