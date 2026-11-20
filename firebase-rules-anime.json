@@ -1,0 +1,122 @@
+{
+  "rules": {
+    "anime": {
+      "names": {
+        ".read": "auth!=null",
+        "$n": {
+          ".write": "auth!=null && ((!data.exists() && newData.val()===auth.uid && !root.child('anime/uids/'+auth.uid).exists() && $n.matches(/^[가-힣A-Za-z0-9_]{2,12}$/) && $n!=='제작자' && $n!=='운영자' && $n!=='관리자' && $n.toLowerCase()!=='system' && $n.toLowerCase()!=='guest') || (data.exists() && data.val()===auth.uid && !newData.exists()))"
+        }
+      },
+      "uids": {
+        "$uid": {
+          ".read": "auth!=null && (auth.uid===$uid || root.child('anime/admins/'+auth.uid).exists())",
+          ".write": "auth!=null && auth.uid===$uid && ((!data.exists() && newData.isString() && root.child('anime/names/'+newData.val()).val()===auth.uid) || !newData.exists())"
+        }
+      },
+      "admins": {
+        "$uid": {
+          ".read": "auth!=null && (auth.uid===$uid || (root.child('anime/admins/'+auth.uid).val())==='owner')",
+          ".write": "auth!=null && (root.child('anime/admins/'+auth.uid).val())==='owner' && $uid!==auth.uid && (newData.val()==='mod' || !newData.exists())"
+        }
+      },
+      "staff": {
+        ".read": "auth!=null",
+        "$n": {
+          ".write": "auth!=null && (root.child('anime/admins/'+auth.uid).val())==='owner' && (newData.val()==='mod' || !newData.exists())"
+        }
+      },
+      "bans": {
+        ".read": "auth!=null",
+        "$n": {
+          ".write": "auth!=null && (((root.child('anime/admins/'+auth.uid).val())==='owner' && root.child('anime/staff/'+$n).val()!=='owner') || ((root.child('anime/admins/'+auth.uid).val())==='mod' && !root.child('anime/staff/'+$n).exists()))"
+        }
+      },
+      "mutes": {
+        ".read": "auth!=null",
+        "$n": {
+          ".write": "auth!=null && (((root.child('anime/admins/'+auth.uid).val())==='owner' && root.child('anime/staff/'+$n).val()!=='owner') || ((root.child('anime/admins/'+auth.uid).val())==='mod' && !root.child('anime/staff/'+$n).exists()))"
+        }
+      },
+      "users": {
+        ".read": "auth!=null",
+        "$n": {
+          ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid && !root.child('anime/bans/'+$n).exists()",
+          ".validate": "newData.child('name').val()===$n"
+        }
+      },
+      "saves": {
+        "$n": {
+          ".read": "auth!=null && (root.child('anime/names/'+$n).val()===auth.uid || root.child('anime/admins/'+auth.uid).exists())",
+          ".write": "auth!=null && ((root.child('anime/names/'+$n).val()===auth.uid && !root.child('anime/bans/'+$n).exists()) || (((root.child('anime/admins/'+auth.uid).val())==='owner' && root.child('anime/staff/'+$n).val()!=='owner') || ((root.child('anime/admins/'+auth.uid).val())==='mod' && !root.child('anime/staff/'+$n).exists())))",
+          ".validate": "newData.hasChildren(['coins','dia','owned']) && newData.child('coins').isNumber() && newData.child('coins').val()>=0 && newData.child('coins').val()<=10000000000000 && newData.child('dia').isNumber() && newData.child('dia').val()>=0 && newData.child('dia').val()<=100000000 && (!newData.child('pvp').exists() || (newData.child('pvp').isNumber() && newData.child('pvp').val()>=0 && newData.child('pvp').val()<=1000000))"
+        }
+      },
+      "mails": {
+        "$n": {
+          ".read": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid",
+          ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid",
+          "friendRequests": {
+            "$id": {
+              ".write": "auth!=null && !data.exists() && newData.child('from').val()===root.child('anime/uids/'+auth.uid).val() && newData.child('from').val()!==$n"
+            }
+          },
+          "accepted": {
+            "$id": {
+              ".write": "auth!=null && !data.exists() && newData.child('from').val()===root.child('anime/uids/'+auth.uid).val() && newData.child('from').val()!==$n"
+            }
+          },
+          "notices": {
+            "$id": {
+              ".write": "auth!=null && !data.exists() && newData.child('from').val()===root.child('anime/uids/'+auth.uid).val() && newData.child('from').val()!==$n"
+            }
+          }
+        }
+      },
+      "invites": {
+        "$n": {
+          ".read": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid",
+          ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid",
+          "$id": {
+            ".write": "auth!=null && !data.exists() && newData.child('from').val()===root.child('anime/uids/'+auth.uid).val()"
+          }
+        }
+      },
+      "globalChat": {
+        ".read": "auth!=null",
+        ".write": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
+        "$id": {
+          ".write": "auth!=null && !data.exists() && newData.child('name').val()===root.child('anime/uids/'+auth.uid).val() && !root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).exists() && !root.child('anime/mutes/'+root.child('anime/uids/'+auth.uid).val()).exists() && ((newData.child('admin').val()!==true && newData.child('notice').val()!==true) || root.child('anime/admins/'+auth.uid).exists())",
+          ".validate": "newData.hasChildren(['name','msg','ts']) && newData.child('msg').isString() && newData.child('msg').val().length<=200"
+        }
+      },
+      "rooms": {
+        ".read": "auth!=null",
+        "$r": {
+          ".write": "auth!=null && root.child('anime/uids/'+auth.uid).exists() && !root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).exists()"
+        }
+      },
+      "pvpRooms": {
+        ".read": "auth!=null",
+        "$r": {
+          ".write": "auth!=null && root.child('anime/uids/'+auth.uid).exists() && !root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).exists()"
+        }
+      },
+      "tradeRooms": {
+        ".read": "auth!=null",
+        "$r": {
+          ".write": "auth!=null && root.child('anime/uids/'+auth.uid).exists() && !root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).exists()"
+        }
+      },
+      "worldRooms": {
+        ".read": "auth!=null",
+        "$r": {
+          "players": {
+            "$id": {
+              ".write": "auth!=null && $id===auth.uid && root.child('anime/uids/'+auth.uid).exists() && !root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).exists()"
+            }
+          }
+        }
+      }
+    }
+  }
+}

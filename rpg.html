@@ -123,15 +123,15 @@ input,select{padding:10px;border-radius:9px;border:1px solid #555;background:#11
 <b>계정 생성 / 로그인</b><br>
 <input id="name" placeholder="닉네임"><input id="pw" type="password" placeholder="비밀번호">
 <button class="green" onclick="createAcc()">계정 생성</button><button class="blue" onclick="login()">로그인</button><button onclick="logout()">로그아웃</button><button class="red" onclick="delAcc()">계정 삭제</button><button class="red" onclick="resetMyAccount()">내 계정 초기화</button><br>
-<b>제작자는 특별 코드. 위에 코드를 입력하시오</b><br>
-<input id="code" placeholder="특별 코드"><button onclick="codeUse()">코드 사용</button>
+<span class="small">비밀번호는 6자 이상. 닉네임은 한글/영문/숫자/_ 2~12자. 로그인은 온라인 연결이 필요해요.</span>
+<div id="onlineStatus" class="small">온라인 연결 중...</div>
 <div id="user" class="user"></div>
 </div>
 
 <div id="adminBox" class="adminBox">
 <h3>🌈 제작자 관리자 패널</h3>
 <div class="user">현재 권한: <span class="adminBadge">관리자</span><span class="adminName">제작자</span></div>
-<p class="small">이 패널은 <b>제작자</b> 계정으로 로그인했을 때만 내 계정 정보 바로 밑에 표시됩니다.</p>
+<p class="small">서버에 관리자로 등록된 계정으로 로그인했을 때만 표시됩니다. 권한은 Firebase 보안 규칙이 서버에서 검증합니다.</p>
 
 <div class="adminGrid">
   <div class="adminTile">
@@ -183,6 +183,14 @@ input,select{padding:10px;border-radius:9px;border:1px solid #555;background:#11
     <input id="adminGiveCoins" type="number" class="adminInput" placeholder="지급 코인">
     <input id="adminGiveDia" type="number" class="adminInput" placeholder="지급 다이아">
     <button class="green" onclick="adminGiveToUser()">해당 유저에게 지급</button>
+  </div>
+
+  <div class="adminTile ownerOnly">
+    <b>🛡️ 관리자 임명 (제작자 전용)</b><br>
+    <input id="adminManageUser" class="adminInput" placeholder="닉네임">
+    <button class="blue" onclick="appointAdmin()">임명</button>
+    <button class="red" onclick="removeAdmin()">해제</button>
+    <div id="adminRoleList" class="small"></div>
   </div>
 
   <div class="adminTile">
@@ -343,6 +351,7 @@ input,select{padding:10px;border-radius:9px;border:1px solid #555;background:#11
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 const chars=[
 {name:"카마도 탄지로",side:"귀살대",emoji:"🌊",breath:"물/해",power:8500,hp:1200,atk:70,spd:4.2,skill:["물의 호흡","히노카미 카구라"],color:"#38bdf8",price:0},
@@ -391,22 +400,6 @@ let user="guest",save={coins:0,dia:0,owned:["카마도 탄지로"],rare:[],best:
 const $=id=>document.getElementById(id);
 
 /* === 권한 시스템: 제작자 Owner / 관리자 임명·해제 === */
-const OWNER_NAME="제작자";
-const DEFAULT_ADMINS=["다다"];
-function adminListKey(){return "rpgAdminList"}
-function getAdminList(){
-  let arr;
-  try{arr=JSON.parse(localStorage.getItem(adminListKey())||"null")}catch(e){arr=null}
-  if(!Array.isArray(arr))arr=[...DEFAULT_ADMINS];
-  DEFAULT_ADMINS.forEach(n=>{if(!arr.includes(n))arr.push(n)});
-  localStorage.setItem(adminListKey(),JSON.stringify(arr));
-  return arr;
-}
-function setAdminList(arr){localStorage.setItem(adminListKey(),JSON.stringify([...new Set(arr)]))}
-function isOwner(n=user){return n===OWNER_NAME}
-function isModerator(n=user){return getAdminList().includes(n)}
-function isStaff(n=user){return isOwner(n)||isModerator(n)}
-function isAdmin(){return isStaff()}
 function canPunish(target){
   if(!isStaff())return false;
   if(isOwner(target))return false;
@@ -420,42 +413,6 @@ function roleLabel(name){
   return name;
 }
 function adminLabel(name){return roleLabel(name)}
-function updateAdminRoleList(){
-  const box=$("adminRoleList");
-  if(box)box.innerHTML="현재 관리자: "+getAdminList().map(n=>`<span class="modBadge">🛡️ ${n}</span>`).join(" ");
-}
-function appointAdmin(){
-  if(!isOwner())return alert("제작자만 관리자 임명 가능");
-  const n=($("adminManageUser")&&$("adminManageUser").value.trim())||"";
-  if(!n)return alert("임명할 닉네임을 입력해.");
-  if(n===OWNER_NAME)return alert("제작자는 이미 최고관리자야.");
-  if(!localStorage.getItem("rpgAcc_"+n))return alert("없는 계정이야.");
-  let arr=getAdminList();
-  if(!arr.includes(n))arr.push(n);
-  setAdminList(arr);
-  updateAdminRoleList();
-  adminNoticeTextAuto(n+"님이 관리자로 임명되었습니다.");
-  alert(n+" 관리자 임명 완료");
-}
-function removeAdmin(){
-  if(!isOwner())return alert("제작자만 관리자 해제 가능");
-  const n=($("adminManageUser")&&$("adminManageUser").value.trim())||"";
-  if(!n)return alert("해제할 닉네임을 입력해.");
-  if(n==="다다" && !confirm("기본 관리자 다다도 해제할까? 나중에 다시 임명 가능해."))return;
-  if(n===OWNER_NAME)return alert("제작자는 해제할 수 없어.");
-  let arr=getAdminList().filter(x=>x!==n);
-  localStorage.setItem(adminListKey(),JSON.stringify(arr));
-  updateAdminRoleList();
-  adminNoticeTextAuto(n+"님의 관리자 권한이 해제되었습니다.");
-  alert(n+" 관리자 해제 완료");
-}
-
-
-function isAdmin(){return isStaff()}
-function adminLabel(name){
-  if(name==="제작자")return `<span class="adminBadge">관리자</span><span class="adminName">${name}</span>`;
-  return String(name||"guest").replace(/[<>]/g,"");
-}
 function updateAdminPanel(){
   const box=$("adminBox");
   if(box)box.style.display=isStaff()?"block":"none";
@@ -478,158 +435,6 @@ function adminUnlockAll(){
   renderAll();
   alert("모든 캐릭터 해금 완료");
 }
-function adminNotice(){
-  if(!isAdmin())return alert("관리자만 사용 가능");
-  const t=($("adminNoticeText")&&$("adminNoticeText").value.trim())||"관리자 공지입니다.";
-  const payload={name:"제작자",msg:"📢 공지: "+t,ts:Date.now(),admin:true,notice:true};
-  openChatChannel();
-  if(online&&db)db.ref("globalChat").push(payload);
-  else if(chatChan){chatChan.postMessage(payload);addChatMessage(payload.name,payload.msg,false,true)}
-  else addChatMessage(payload.name,payload.msg,false,true);
-}
-
-function bannedKey(n){return "rpgBanned_"+n}
-function mutedKey(n){return "rpgMuted_"+n}
-function isBanned(n=user){return localStorage.getItem(bannedKey(n))==="1"}
-function isMuted(n=user){return localStorage.getItem(mutedKey(n))==="1"}
-
-function adminTarget(){
-  const n=$("adminTargetUser")&&$("adminTargetUser").value.trim();
-  if(!n){alert("대상 닉네임을 입력해.");return ""}
-  if(!canPunish(n)){alert("이 계정은 현재 권한으로 제재할 수 없어.");return ""}
-  return n;
-}
-
-function adminBanUser(){
-  if(!isAdmin())return alert("관리자만 사용 가능");
-  const n=adminTarget(); if(!n)return;
-  localStorage.setItem(bannedKey(n),"1");
-  adminNoticeTextAuto(n+" 계정을 밴했습니다.");
-  alert(n+" 밴 완료");
-}
-function adminUnbanUser(){
-  if(!isAdmin())return alert("관리자만 사용 가능");
-  const n=adminTarget(); if(!n)return;
-  localStorage.removeItem(bannedKey(n));
-  adminNoticeTextAuto(n+" 계정 밴을 해제했습니다.");
-  alert(n+" 밴 해제 완료");
-}
-function adminMuteUser(){
-  if(!isAdmin())return alert("관리자만 사용 가능");
-  const n=adminTarget(); if(!n)return;
-  localStorage.setItem(mutedKey(n),"1");
-  adminNoticeTextAuto(n+" 계정을 채팅 금지했습니다.");
-  alert(n+" 채팅 금지 완료");
-}
-function adminUnmuteUser(){
-  if(!isAdmin())return alert("관리자만 사용 가능");
-  const n=adminTarget(); if(!n)return;
-  localStorage.removeItem(mutedKey(n));
-  adminNoticeTextAuto(n+" 계정 채팅 금지를 해제했습니다.");
-  alert(n+" 채팅 금지 해제 완료");
-}
-function adminTakeAllItems(){
-  if(!isAdmin())return alert("관리자만 사용 가능");
-  const n=adminTarget(); if(!n)return;
-  if(!confirm(n+"의 아이템/코인/다이아/희귀 캐릭터를 전부 뺏을까?"))return;
-  const empty={coins:0,dia:0,owned:["카마도 탄지로"],rare:[],best:1,katanas:["낡은 카타나"],eq:"낡은 카타나",equips:[],eqArmor:"",pvp:0,friends:[]};
-  localStorage.setItem("rpgSave_"+n,JSON.stringify(empty));
-  adminNoticeTextAuto(n+" 계정의 아이템을 전체 몰수했습니다.");
-  alert(n+" 아이템 전체 몰수 완료");
-}
-
-
-function adminGiveToUser(){
-  if(!isAdmin())return alert("관리자만 사용 가능");
-  const n=($("adminGiveTarget")&&$("adminGiveTarget").value.trim())||"";
-  const c=Math.max(0,Math.floor(Number(($("adminGiveCoins")&&$("adminGiveCoins").value)||0)));
-  const d=Math.max(0,Math.floor(Number(($("adminGiveDia")&&$("adminGiveDia").value)||0)));
-  if(!n)return alert("대상 닉네임을 입력해.");
-  if(!localStorage.getItem("rpgAcc_"+n))return alert("없는 계정이야.");
-  if(!c&&!d)return alert("지급할 코인이나 다이아를 입력해.");
-  let s;
-  try{s=JSON.parse(localStorage.getItem("rpgSave_"+n)||"null")||fresh()}catch(e){s=fresh()}
-  s.coins=(s.coins||0)+c;
-  s.dia=(s.dia||0)+d;
-  localStorage.setItem("rpgSave_"+n,JSON.stringify(s));
-  if(n===user)load();
-  adminNoticeTextAuto(`${n}님에게 코인 ${c}, 다이아 ${d} 지급`);
-  alert(`${n}에게 지급 완료!`);
-}
-
-function adminAllAccountNames(){
-  let arr=[];
-  for(let i=0;i<localStorage.length;i++){
-    const k=localStorage.key(i);
-    if(k&&k.startsWith("rpgAcc_"))arr.push(k.replace("rpgAcc_",""));
-  }
-  return arr;
-}
-function adminRewardAllUsers(){
-  if(!isAdmin())return alert("관리자만 사용 가능");
-  const c=Math.max(0,Math.floor(Number(($("adminAllCoins")&&$("adminAllCoins").value)||0)));
-  const d=Math.max(0,Math.floor(Number(($("adminAllDia")&&$("adminAllDia").value)||0)));
-  if(!c&&!d)return alert("지급할 코인이나 다이아를 입력해.");
-  const names=adminAllAccountNames();
-  names.forEach(n=>{
-    const key="rpgSave_"+n;
-    let s;
-    try{s=JSON.parse(localStorage.getItem(key)||"null")||fresh()}catch(e){s=fresh()}
-    s.coins=(s.coins||0)+c;
-    s.dia=(s.dia||0)+d;
-    localStorage.setItem(key,JSON.stringify(s));
-  });
-  if(names.includes(user))load();
-  adminNoticeTextAuto(`모든 유저에게 코인 ${c}, 다이아 ${d} 지급`);
-  alert(`${names.length}개 계정에 보상 지급 완료`);
-}
-function adminSearchUser(){
-  if(!isAdmin())return alert("관리자만 사용 가능");
-  const n=($("adminSearchUser")&&$("adminSearchUser").value.trim())||"";
-  const box=$("adminSearchResult");
-  if(!n){if(box)box.textContent="닉네임을 입력해.";return}
-  const exists=!!localStorage.getItem("rpgAcc_"+n);
-  let s;
-  try{s=JSON.parse(localStorage.getItem("rpgSave_"+n)||"null")}catch(e){s=null}
-  if(!box)return;
-  if(!exists){box.innerHTML=`${n}: 계정 없음`;return}
-  box.innerHTML=`<b>${n}</b><br>
-  상태: ${isBanned(n)?"🚫 밴":"정상"} / ${isMuted(n)?"🔇 채팅금지":"채팅 가능"}<br>
-  코인: ${(s&&s.coins)||0}<br>
-  다이아: ${(s&&s.dia)||0}<br>
-  캐릭터: ${((s&&s.owned)||[]).length}명 / 희귀: ${((s&&s.rare)||[]).length}명<br>
-  최고 스테이지: ${(s&&s.best)||1}`;
-}
-function adminServerInfo(){
-  if(!isAdmin())return alert("관리자만 사용 가능");
-  const names=adminAllAccountNames();
-  let banned=0,muted=0;
-  names.forEach(n=>{if(isBanned(n))banned++;if(isMuted(n))muted++;});
-  const box=$("adminServerInfo");
-  if(box)box.innerHTML=`전체 계정: ${names.length}개<br>밴 계정: ${banned}개<br>채팅 금지: ${muted}개<br>저장된 방/채팅 데이터: ${localStorage.length}개`;
-}
-
-function adminNoticeTextAuto(t){
-  const payload={name:"제작자",msg:"📢 관리자: "+t,ts:Date.now(),admin:true,notice:true};
-  openChatChannel();
-  if(online&&db)db.ref("globalChat").push(payload);
-  else if(chatChan){chatChan.postMessage(payload);addChatMessage(payload.name,payload.msg,false,true)}
-  else addChatMessage(payload.name,payload.msg,false,true);
-}
-
-function adminClearGlobalChat(){
-  if(!isAdmin())return alert("관리자만 사용 가능");
-  if(!confirm("전체 채팅을 삭제할까요?"))return;
-  if(online&&db){
-    db.ref("globalChat").remove();
-    clearChatLocal();
-    addChatMessage("system","관리자가 전체 채팅을 삭제했습니다.",true);
-  }else{
-    clearChatLocal();
-    addChatMessage("system","로컬 채팅창을 삭제했습니다.",true);
-  }
-}
-
 function ak(n){return"rpgAcc_"+n}function sk(){return"rpgSave_"+user}function fresh(){return{coins:0,dia:0,owned:["카마도 탄지로"],rare:[],best:1,katanas:["낡은 호흡 장비"],eq:"낡은 호흡 장비",equips:[],eqArmor:"",pvp:0,friends:[]}}
 function norm(){save.owned??=["카마도 탄지로"];save.rare??=[];save.katanas??=["낡은 호흡 장비"];save.equips??=[];save.eq??="낡은 호흡 장비";save.dia??=0;save.pvp??=0;save.friends??=[];if(!save.owned.includes("카마도 탄지로"))save.owned.push("카마도 탄지로");coins=save.coins||0;dia=save.dia||0;best=save.best||1;ui()}
 function load(){let r=localStorage.getItem(sk());save=r?JSON.parse(r):fresh();
@@ -638,11 +443,6 @@ norm();updateAdminPanel();updateAdminRoleList();setTimeout(openChatChannel,700);
 function store(){save.coins=coins;save.dia=dia;save.best=best;localStorage.setItem(sk(),JSON.stringify(save));ui();renderAllShops()}
 function ui(){let title=isAdmin()? " 🌈 관리자":"";
 $("user").innerHTML=`${adminLabel(user)}${title} / 코인 ${coins} / 다이아 ${dia} / 캐릭터 ${save.owned.length}명 / 희귀 ${save.rare.length}명 / 최고 ${best}`;updateAdminPanel();$("rankInfo").innerHTML=`현재 PvP 점수 ${save.pvp||0}점 / 티어 <b>${rankName()}</b><br>8단계: 브론즈→실버→골드→플래티넘→다이아→마스터→그랜드마스터→챌린저`}
-function createAcc(){let n=$("name").value.trim(),p=$("pw").value;if(!n||!p)return alert("닉네임과 비밀번호를 입력하세요.");if(isBanned(n))return alert("이 닉네임은 밴되어 계정 생성이 막혀 있습니다.");if(localStorage.getItem(ak(n)))return alert("이미 있는 계정입니다.");user=n;save=fresh();localStorage.setItem(ak(n),JSON.stringify({pw:p}));store();renderAll();updateAdminPanel();updateAdminPanel();alert("계정 생성 완료")}
-function login(){let n=$("name").value.trim(),p=$("pw").value;if(!n||!p)return alert("닉네임과 비밀번호 입력");if(isBanned(n))return alert("이 계정은 밴되었습니다.");let a=localStorage.getItem(ak(n));if(!a)return alert("없는 계정");a=JSON.parse(a);if(a.pw!==p)return alert("비밀번호 틀림");user=n;load();checkInvites();updateAdminPanel();checkFriendMail();updateAdminPanel();alert("로그인 성공")}
-function logout(){user="guest";updateAdminPanel();save=fresh();norm();renderAll()}
-function delAcc(){let n=$("name").value.trim(),p=$("pw").value;if(!n||!p)return alert("삭제할 계정과 비밀번호 입력");let a=localStorage.getItem(ak(n));if(!a)return alert("없는 계정");a=JSON.parse(a);if(a.pw!==p)return alert("비밀번호 틀림");if(confirm("정말 삭제?")){localStorage.removeItem(ak(n));localStorage.removeItem("rpgSave_"+n);if(user===n)logout();alert("삭제 완료")}}
-function codeUse(){let c=$("code").value.trim();if(c==="ㅅㄱㅅ"){coins=save.coins=9999999999999;dia=save.dia=9999999;store();alert("제작자 코드 성공! 코인과 다이아 지급")}else alert("코드가 틀렸습니다.")}
 function owned(c){return save.owned.includes(c.name)||save.rare.includes(c.name)}function human(c){return c.side.includes("귀살대")||c.side==="주"}function kat(){return {name:"없음",bonus:0,emoji:"",color:"#ffffff",fx:"호흡"}}function armor(){return equips.find(e=>e.name===save.eqArmor)||{hp:0,atk:0,name:"없음"}}
 function buyChar(i){let c=chars[i];if(c.rare)return alert("희귀 캐릭터는 희귀 뽑기나 거래소에서만 얻을 수 있습니다.");if(owned(c)){sel=i;renderChars();show();return}if(coins<c.price)return alert("코인 부족");coins-=c.price;save.owned.push(c.name);sel=i;store();show()}
 function filter(f,b){curFilter=f;document.querySelectorAll(".filters button").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderChars()}
@@ -728,7 +528,7 @@ function sendFriendRequest(){
   if(!localStorage.getItem(ak(n)) && !(online&&db))return alert("없는 계정이야. 상대가 먼저 계정을 만들어야 해.");
   const req={type:"friendRequest",from:user,to:n,ts:Date.now(),status:"pending"};
   if(online&&db){
-    db.ref("mails/"+safeKey(n)+"/friendRequests").push(req);
+    dbRef("mails/"+safeKey(n)+"/friendRequests").push(req);
     alert(n+"에게 온라인 친구 요청을 보냈어.");
   }else{
     let mail=readFriendMail(n);
@@ -743,7 +543,7 @@ function checkFriendMail(){
   const box=$("friendMailList");
   if(!box)return;
   if(online&&db){
-    db.ref("mails/"+safeKey(user)+"/friendRequests").once("value").then(snap=>{
+    dbRef("mails/"+safeKey(user)+"/friendRequests").once("value").then(snap=>{
       const val=snap.val()||{};
       const arr=Object.keys(val).map(k=>Object.assign({},val[k],{key:k}));
       renderFriendMail(arr,true);
@@ -777,8 +577,8 @@ function acceptFriendRequest(from,key,onlineMail=false){
   addFriendLocal(user,from);
   addFriendLocal(from,user);
   if(onlineMail&&online&&db){
-    db.ref("mails/"+safeKey(user)+"/friendRequests/"+key).update({status:"accepted"});
-    db.ref("mails/"+safeKey(from)+"/notices").push({from:user,msg:user+"님이 친구 요청을 수락했습니다.",ts:Date.now()});
+    dbRef("mails/"+safeKey(user)+"/friendRequests/"+key).update({status:"accepted"});
+    dbRef("mails/"+safeKey(from)+"/notices").push({from:user,msg:user+"님이 친구 요청을 수락했습니다.",ts:Date.now()});
   }else{
     let mail=readFriendMail(user);
     mail=mail.map((m,i)=>String(i)===String(key)?Object.assign({},m,{status:"accepted"}):m);
@@ -790,7 +590,7 @@ function acceptFriendRequest(from,key,onlineMail=false){
 }
 function rejectFriendRequest(from,key,onlineMail=false){
   if(onlineMail&&online&&db){
-    db.ref("mails/"+safeKey(user)+"/friendRequests/"+key).update({status:"rejected"});
+    dbRef("mails/"+safeKey(user)+"/friendRequests/"+key).update({status:"rejected"});
   }else{
     let mail=readFriendMail(user);
     mail=mail.map((m,i)=>String(i)===String(key)?Object.assign({},m,{status:"rejected"}):m);
@@ -830,8 +630,8 @@ function openChatChannel(){
  globalChatOpened=true;
  if(chatChan){chatChan.close();chatChan=null}
  if(online&&db){
-   db.ref("globalChat").limitToLast(80).off();
-   db.ref("globalChat").limitToLast(80).on("child_added",snap=>{
+   dbRef("globalChat").limitToLast(80).off();
+   dbRef("globalChat").limitToLast(80).on("child_added",snap=>{
      const m=snap.val();
      if(!m)return;
      addChatMessage(m.name,m.msg,false,m.admin);
@@ -859,7 +659,7 @@ function sendChat(){
  const payload={name:user||"guest",msg:msg,ts:Date.now(),admin:isStaff()};
  openChatChannel();
  if(online&&db){
-   db.ref("globalChat").push(payload);
+   dbRef("globalChat").push(payload);
  }else if(chatChan){
    chatChan.postMessage(payload);
    addChatMessage(payload.name,payload.msg,false);
@@ -920,10 +720,10 @@ function joinWorldRoom(){
  if(worldChan){worldChan.close();worldChan=null}
  worldPeers={};
  if(online&&db){
-   const ref=db.ref("worldRooms/"+safeKey(worldRoom)+"/players/"+myId);
+   const ref=dbRef("worldRooms/"+safeKey(worldRoom)+"/players/"+myId);
    ref.set(worldState());
    ref.onDisconnect().remove();
-   db.ref("worldRooms/"+safeKey(worldRoom)+"/players").on("value",snap=>{
+   dbRef("worldRooms/"+safeKey(worldRoom)+"/players").on("value",snap=>{
      let val=snap.val()||{};
      worldPeers={};
      Object.keys(val).forEach(id=>{if(id!==myId)worldPeers[id]=val[id]});
@@ -995,7 +795,7 @@ function worldState(){
 function sendWorldState(){
  if(!worldRun||!worldRoom)return;
  let st=worldState();
- if(online&&db)db.ref("worldRooms/"+safeKey(worldRoom)+"/players/"+myId).update(st);
+ if(online&&db)dbRef("worldRooms/"+safeKey(worldRoom)+"/players/"+myId).update(st);
  else if(worldChan)worldChan.postMessage(st);
 }
 function worldLoop(t){
@@ -1126,31 +926,6 @@ function setupDungeonBattle(place){
 }
 
 
-/* === 계정 초기화 기능 === */
-function resetSaveData(){
-  return {coins:0,dia:0,owned:["카마도 탄지로"],rare:[],best:1,katanas:["낡은 카타나"],eq:"낡은 카타나",equips:[],eqArmor:"",pvp:0,friends:[]};
-}
-function resetMyAccount(){
-  if(user==="guest")return alert("로그인 후 초기화 가능해.");
-  if(!confirm("내 계정 데이터를 초기화할까? 코인, 다이아, 캐릭터, 장비, 친구, 최고기록이 초기화돼."))return;
-  save=resetSaveData();
-  coins=0;dia=0;best=1;
-  localStorage.setItem("rpgSave_"+user,JSON.stringify(save));
-  norm();
-  renderAll();
-  alert("내 계정 초기화 완료");
-}
-function adminResetUser(){
-  if(!isAdmin())return alert("관리자만 사용 가능");
-  const n=adminTarget();
-  if(!n)return;
-  if(!localStorage.getItem("rpgAcc_"+n))return alert("없는 계정이야.");
-  if(!confirm(n+" 계정 데이터를 완전 초기화할까?"))return;
-  localStorage.setItem("rpgSave_"+n,JSON.stringify(resetSaveData()));
-  if(n===user){load();}
-  adminNoticeTextAuto(n+" 계정 데이터가 관리자에 의해 초기화되었습니다.");
-  alert(n+" 계정 초기화 완료");
-}
 
 function startGame(){if(isBanned())return alert("밴된 계정은 게임을 시작할 수 없어.");let c=chars[sel];if(!owned(c))return alert("구매하지 않은 캐릭터입니다.");$("select").classList.remove("active");$("game").classList.add("active");cv=$("cv");ctx=cv.getContext("2d");resize();addEventListener("resize",resize);stage=save.best||1;coins=save.coins||0;dia=save.dia||0;setup();run=true;last=performance.now();startAt=Date.now();requestAnimationFrame(loop)}
 function back(){run=false;dungeonPlace=null;$("game").classList.remove("active");$("select").classList.add("active")}
@@ -1233,28 +1008,26 @@ function fbPath(...a){return a.map(safeKey).join('/')}
 function loadFirebaseConfig(){let v=localStorage.getItem('animeRpgFirebaseConfig')||JSON.stringify(DEFAULT_FIREBASE_CONFIG,null,2);if($('fbConfig'))$('fbConfig').value=v;return v}
 function connectFirebase(silent=false){try{let raw=($('fbConfig')&&$('fbConfig').value.trim())||loadFirebaseConfig()||JSON.stringify(DEFAULT_FIREBASE_CONFIG);let cfg=typeof raw==='string'?JSON.parse(raw):raw;if(!cfg.databaseURL)cfg.databaseURL=DEFAULT_FIREBASE_CONFIG.databaseURL;if(!firebase.apps.length)fbApp=firebase.initializeApp(cfg);else fbApp=firebase.app();db=firebase.database();online=true;localStorage.setItem('animeRpgFirebaseConfig',JSON.stringify(cfg,null,2));if($('fbConfig'))$('fbConfig').value=JSON.stringify(cfg,null,2);$('onlineStatus').innerHTML='<span class=onlineOk>온라인 자동 연결됨</span> / 다른 기기 친구·방·PvP 가능';if(user!=='guest'){onlineRegisterUser();listenOnlineInvites();syncOnlineSave();}if(!silent)alert('온라인 연결 완료');}catch(e){online=false;$('onlineStatus').innerHTML='<span class=onlineBad>연결 실패:</span> '+e.message;if(!silent)alert('Firebase 연결 실패: '+e.message)}}
 function disconnectFirebase(){online=false;db=null;if(roomSub)roomSub.off();if(pvpSub)pvpSub.off();$('onlineStatus').textContent='온라인 꺼짐: 같은 브라우저 테스트만 가능'}
-function onlineRegisterUser(){if(!online||!db||user==='guest')return;db.ref('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});}
+function onlineRegisterUser(){if(!online||!db||user==='guest')return;dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});}
 
-async function syncOnlineSave(){if(!online||!db||user==='guest')return;let ref=db.ref('saves/'+safeKey(user));let snap=await ref.get();if(snap.exists()){let remote=snap.val();if(remote&&typeof remote==='object'){save={...fresh(),...remote};norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();}}
+async function syncOnlineSave(){if(!online||!db||user==='guest')return;let ref=dbRef('saves/'+safeKey(user));let snap=await ref.get();if(snap.exists()){let remote=snap.val();if(remote&&typeof remote==='object'){save={...fresh(),...remote};norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();}}
 else{await ref.set({...save,updatedAt:Date.now()});}}
-async function pushOnlineSave(){if(!online||!db||user==='guest')return;await db.ref('saves/'+safeKey(user)).set({...save,updatedAt:Date.now()});await db.ref('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});}
+async function pushOnlineSave(){if(!online||!db||user==='guest')return;await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:Date.now()});await dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});}
 const _oldStore=store;store=function(){_oldStore();onlineRegisterUser();pushOnlineSave();}
-const _oldCreateAcc=createAcc;createAcc=async function(){let n=$('name').value.trim(),p=$('pw').value;if(!n||!p)return alert('닉네임과 비밀번호를 입력하세요.');if(online&&db){let snap=await db.ref('accounts/'+safeKey(n)).get();if(snap.exists())return alert('이미 있는 온라인 계정입니다.');user=n;save=fresh();localStorage.setItem(ak(n),JSON.stringify({pw:p}));localStorage.setItem(sk(),JSON.stringify(save));await db.ref('accounts/'+safeKey(n)).set({pw:p,createdAt:Date.now()});await pushOnlineSave();renderAll();listenOnlineInvites();return alert('온라인 계정 생성 완료');}_oldCreateAcc();onlineRegisterUser();}
-const _oldLogin=login;login=async function(){let n=$('name').value.trim(),p=$('pw').value;if(!n||!p)return alert('닉네임과 비밀번호 입력');if(online&&db){let snap=await db.ref('accounts/'+safeKey(n)).get();if(!snap.exists())return alert('없는 온라인 계정입니다. 먼저 계정 생성하세요.');let acc=snap.val();if(acc.pw!==p)return alert('비밀번호 틀림');user=n;localStorage.setItem(ak(n),JSON.stringify({pw:p}));await syncOnlineSave();onlineRegisterUser();listenOnlineInvites();return alert('온라인 로그인 성공');}_oldLogin();onlineRegisterUser();listenOnlineInvites();}
-function listenOnlineInvites(){if(!online||!db||user==='guest')return;db.ref('invites/'+safeKey(user)).limitToLast(1).on('child_added',snap=>{let inv=snap.val();if(!inv||Date.now()-inv.ts>600000)return;if(inv.type==='room')$('inviteStatus').innerHTML=`${inv.from}님의 방 [${inv.room}] 초대 <button class=green onclick="acceptInvite('${inv.room}')">참가</button>`;if(inv.type==='trade')$('tradeStatus').innerHTML=`${inv.from}님의 거래 방 [${inv.room}] 초대 <button class=green onclick="acceptTradeInvite('${inv.room}')">입장</button>`;})}
+function listenOnlineInvites(){if(!online||!db||user==='guest')return;dbRef('invites/'+safeKey(user)).limitToLast(1).on('child_added',snap=>{let inv=snap.val();if(!inv||Date.now()-inv.ts>600000)return;if(inv.type==='room')$('inviteStatus').innerHTML=`${inv.from}님의 방 [${inv.room}] 초대 <button class=green onclick="acceptInvite('${inv.room}')">참가</button>`;if(inv.type==='trade')$('tradeStatus').innerHTML=`${inv.from}님의 거래 방 [${inv.room}] 초대 <button class=green onclick="acceptTradeInvite('${inv.room}')">입장</button>`;})}
 function getLocalAcc(n){return localStorage.getItem(ak(n))}
-addFriend=async function(){if(user==='guest')return alert('로그인 후 친구 추가 가능');let n=$('friendName').value.trim();if(!n)return alert('친구 닉네임 입력');if(n===user)return alert('자기 자신은 친구 추가할 수 없습니다.');if(online&&db){let snap=await db.ref('users/'+safeKey(n)).get();if(!snap.exists())return alert('온라인에 없는 계정입니다. 상대도 이 파일에서 온라인 연결 후 계정을 만들거나 로그인해야 합니다.');}
+addFriend=async function(){if(user==='guest')return alert('로그인 후 친구 추가 가능');let n=$('friendName').value.trim();if(!n)return alert('친구 닉네임 입력');if(n===user)return alert('자기 자신은 친구 추가할 수 없습니다.');if(online&&db){let snap=await dbRef('users/'+safeKey(n)).get();if(!snap.exists())return alert('온라인에 없는 계정입니다. 상대도 이 파일에서 온라인 연결 후 계정을 만들거나 로그인해야 합니다.');}
 else if(!getLocalAcc(n))return alert('없는 계정입니다. 온라인 연결 없이는 같은 브라우저에 만든 계정만 추가됩니다.');save.friends??=[];if(save.friends.includes(n))return alert('이미 친구입니다.');save.friends.push(n);store();alert(n+' 친구 추가 완료')}
-inviteFriend=function(n){if(user==='guest')return alert('로그인 필요');if(!(save.friends||[]).includes(n))return alert('친구 목록에 있는 계정만 초대 가능');if(!room){$('roomName').value='친구방_'+user+'_'+Date.now().toString(36).slice(-4);joinRoom()}let inv={type:'room',from:user,room:room,ts:Date.now()};if(online&&db)db.ref('invites/'+safeKey(n)).push(inv);else localStorage.setItem('rpgInvite_'+n,JSON.stringify(inv));$('inviteStatus').textContent=n+'님에게 ['+room+'] 방 초대 전송';}
-inviteTradeFriend=function(){if(user==='guest')return alert('로그인 필요');let n=$('tradePartner').value.trim()||$('friendName').value.trim();if(!n)return alert('상대 닉네임 입력');if(!(save.friends||[]).includes(n))return alert('친구 목록에 있는 계정만 초대 가능');if(!tradeRoom){$('tradeRoomName').value='거래방_'+user+'_'+Date.now().toString(36).slice(-4);joinTradeRoom()}let inv={type:'trade',from:user,room:tradeRoom,ts:Date.now()};if(online&&db)db.ref('invites/'+safeKey(n)).push(inv);else localStorage.setItem('rpgTradeInvite_'+n,JSON.stringify(inv));$('tradeStatus').textContent=n+'님에게 거래 방 ['+tradeRoom+'] 초대 전송'}
-joinRoom=function(){let r=$('roomName').value.trim();if(!r)return alert('방 이름 입력');leaveRoom(false);room=r;peerPlayers={};if(online&&db){let ref=db.ref('rooms/'+safeKey(room)+'/players');roomSub=ref;ref.on('value',snap=>{let data=snap.val()||{};peerPlayers={};Object.keys(data).forEach(id=>{if(id!==myId){peerPlayers[id]=data[id];peerPlayers[id].lastSeen=Date.now()}})});db.ref('rooms/'+safeKey(room)+'/players/'+myId).onDisconnect().remove();$('roomStatus').innerHTML='온라인 방 ['+room+'] 참가 중';}
+inviteFriend=function(n){if(user==='guest')return alert('로그인 필요');if(!(save.friends||[]).includes(n))return alert('친구 목록에 있는 계정만 초대 가능');if(!room){$('roomName').value='친구방_'+user+'_'+Date.now().toString(36).slice(-4);joinRoom()}let inv={type:'room',from:user,room:room,ts:Date.now()};if(online&&db)dbRef('invites/'+safeKey(n)).push(inv);else localStorage.setItem('rpgInvite_'+n,JSON.stringify(inv));$('inviteStatus').textContent=n+'님에게 ['+room+'] 방 초대 전송';}
+inviteTradeFriend=function(){if(user==='guest')return alert('로그인 필요');let n=$('tradePartner').value.trim()||$('friendName').value.trim();if(!n)return alert('상대 닉네임 입력');if(!(save.friends||[]).includes(n))return alert('친구 목록에 있는 계정만 초대 가능');if(!tradeRoom){$('tradeRoomName').value='거래방_'+user+'_'+Date.now().toString(36).slice(-4);joinTradeRoom()}let inv={type:'trade',from:user,room:tradeRoom,ts:Date.now()};if(online&&db)dbRef('invites/'+safeKey(n)).push(inv);else localStorage.setItem('rpgTradeInvite_'+n,JSON.stringify(inv));$('tradeStatus').textContent=n+'님에게 거래 방 ['+tradeRoom+'] 초대 전송'}
+joinRoom=function(){let r=$('roomName').value.trim();if(!r)return alert('방 이름 입력');leaveRoom(false);room=r;peerPlayers={};if(online&&db){let ref=dbRef('rooms/'+safeKey(room)+'/players');roomSub=ref;ref.on('value',snap=>{let data=snap.val()||{};peerPlayers={};Object.keys(data).forEach(id=>{if(id!==myId){peerPlayers[id]=data[id];peerPlayers[id].lastSeen=Date.now()}})});dbRef('rooms/'+safeKey(room)+'/players/'+myId).onDisconnect().remove();$('roomStatus').innerHTML='온라인 방 ['+room+'] 참가 중';}
 else{chan=new BroadcastChannel('anime_rpg_room_'+room);chan.onmessage=e=>{let m=e.data;if(!m||m.id===myId)return;if(m.type==='state'){peerPlayers[m.id]=m;peerPlayers[m.id].lastSeen=Date.now()}if(m.type==='leave')delete peerPlayers[m.id]};$('roomStatus').textContent='로컬 방 ['+room+'] 참가 중'} }
-leaveRoom=function(show=true){if(chan){chan.postMessage({type:'leave',id:myId});chan.close()}if(roomSub&&online&&db){db.ref('rooms/'+safeKey(room)+'/players/'+myId).remove();roomSub.off();}chan=null;roomSub=null;room='';peerPlayers={};if(show)$('roomStatus').textContent='방 없음'}
-sendState=function(){if(!player)return;let st={type:'state',id:myId,name:user,emoji:player.emoji,color:player.color,x:player.x,y:player.y,char:player.name,hp:pvpMode?pvpMyHp:player.hp,ts:Date.now()};if(online&&db&&room)db.ref('rooms/'+safeKey(room)+'/players/'+myId).set(st);else if(chan)chan.postMessage(st);if(pvpMode&&online&&db&&pvpRoom)db.ref('pvpRooms/'+safeKey(pvpRoom)+'/players/'+myId).update(st)}
+leaveRoom=function(show=true){if(chan){chan.postMessage({type:'leave',id:myId});chan.close()}if(roomSub&&online&&db){dbRef('rooms/'+safeKey(room)+'/players/'+myId).remove();roomSub.off();}chan=null;roomSub=null;room='';peerPlayers={};if(show)$('roomStatus').textContent='방 없음'}
+sendState=function(){if(!player)return;let st={type:'state',id:myId,name:user,emoji:player.emoji,color:player.color,x:player.x,y:player.y,char:player.name,hp:pvpMode?pvpMyHp:player.hp,ts:Date.now()};if(online&&db&&room)dbRef('rooms/'+safeKey(room)+'/players/'+myId).set(st);else if(chan)chan.postMessage(st);if(pvpMode&&online&&db&&pvpRoom)dbRef('pvpRooms/'+safeKey(pvpRoom)+'/players/'+myId).update(st)}
 function pvpRankScore(){return save.pvp||0}function rankNameByScore(p){return ranks[Math.max(0,Math.min(7,Math.floor((p||0)/100)))]}
 rankName=function(){return rankNameByScore(save.pvp||0)}
 function updateRank(delta){save.pvp=Math.max(0,(save.pvp||0)+delta);store();ui();}
-function pvpRoomRef(){return db.ref('pvpRooms/'+safeKey(pvpRoom))}
+function pvpRoomRef(){return dbRef('pvpRooms/'+safeKey(pvpRoom))}
 function pvpIsHost(){return pvpHostId===myId}
 function joinPvpRoom(isRanked=false){
  if(user==='guest')return alert('로그인 필요');
@@ -1294,7 +1067,7 @@ function joinPvpRoom(isRanked=false){
  });
 }
 function joinRankedMatch(){if(user==='guest')return alert('로그인 필요');let bucket=Math.floor(Date.now()/20000);$('pvpRoomName').value='랭크전_'+bucket;joinPvpRoom(true)}
-function leavePvpRoom(show=true){if(pvpSub&&online&&db){db.ref('pvpRooms/'+safeKey(pvpRoom)+'/players/'+myId).remove();pvpSub.off()}pvpSub=null;pvpRoom='';pvpMode=false;pvpOpponentId='';pvpHostId='';pvpAutoStartedKey='';if(show&&$('pvpStatus'))$('pvpStatus').textContent='PvP 방 없음'}
+function leavePvpRoom(show=true){if(pvpSub&&online&&db){dbRef('pvpRooms/'+safeKey(pvpRoom)+'/players/'+myId).remove();pvpSub.off()}pvpSub=null;pvpRoom='';pvpMode=false;pvpOpponentId='';pvpHostId='';pvpAutoStartedKey='';if(show&&$('pvpStatus'))$('pvpStatus').textContent='PvP 방 없음'}
 function pvpTeamOf(i){return i%2===0?'A팀':'B팀'}
 function renderPvpStatus(){
  let el=$('pvpStatus'), list=$('pvpPlayers');
@@ -1320,7 +1093,7 @@ function renderPvpStatus(){
 function pvpReadyToggle(){
  if(!pvpRoom||!online||!db)return alert('PvP 방에 먼저 들어가세요.');
  let cur=(pvpData.players&&pvpData.players[myId]&&pvpData.players[myId].ready)||false;
- db.ref('pvpRooms/'+safeKey(pvpRoom)+'/players/'+myId).update({
+ dbRef('pvpRooms/'+safeKey(pvpRoom)+'/players/'+myId).update({
    ready:!cur,
    char:chars[sel].name,
    emoji:chars[sel].emoji,
@@ -1351,8 +1124,8 @@ function startPvpLocal(fromRemote){
  pvpRoomRef().child('players/'+myId).update({ready:true,hp:pvpMyHp,max:pvpMaxHp,x:player.x,y:player.y,started:true});
  msg('PvP 전투 시작! 상대를 쓰러뜨리세요');requestAnimationFrame(loop)
 }
-function applyPvpHits(){let hits=pvpData.hits||{};Object.entries(hits).forEach(([hid,h])=>{if(h.to===myId&&!h.seen){pvpMyHp=Math.max(0,pvpMyHp-(h.dmg||0));if(player){player.hp=pvpMyHp;effects.push([player.x,player.y,.45,h.color||'#ef4444','-'+Math.floor(h.dmg||0)]);impactRing(player.x,player.y,h.color||'#ef4444')}db.ref('pvpRooms/'+safeKey(pvpRoom)+'/hits/'+hid+'/seen').set(true);if(pvpMyHp<=0)finishPvp(false);}})}
-function sendPvpDamage(dmg,color){if(!pvpMode||!online||!db||!pvpOpponentId)return;db.ref('pvpRooms/'+safeKey(pvpRoom)+'/hits').push({from:myId,to:pvpOpponentId,dmg:Math.floor(dmg),color:color,ts:Date.now(),seen:false});}
+function applyPvpHits(){let hits=pvpData.hits||{};Object.entries(hits).forEach(([hid,h])=>{if(h.to===myId&&!h.seen){pvpMyHp=Math.max(0,pvpMyHp-(h.dmg||0));if(player){player.hp=pvpMyHp;effects.push([player.x,player.y,.45,h.color||'#ef4444','-'+Math.floor(h.dmg||0)]);impactRing(player.x,player.y,h.color||'#ef4444')}dbRef('pvpRooms/'+safeKey(pvpRoom)+'/hits/'+hid+'/seen').set(true);if(pvpMyHp<=0)finishPvp(false);}})}
+function sendPvpDamage(dmg,color){if(!pvpMode||!online||!db||!pvpOpponentId)return;dbRef('pvpRooms/'+safeKey(pvpRoom)+'/hits').push({from:myId,to:pvpOpponentId,dmg:Math.floor(dmg),color:color,ts:Date.now(),seen:false});}
 function finishPvp(win){if(!pvpMode)return;pvpMode=false;run=false;let delta=ranked?(win?30:-25):(win?10:-5);updateRank(delta);pvpRoomRef().child('result').push({name:user,win,delta,score:save.pvp,ts:Date.now()});alert((win?'승리! ':'패배! ')+(ranked?'랭크 ':'PvP ')+'점수 '+(delta>0?'+':'')+delta);back();}
 const _baseUpd=upd;upd=function(dt){if(!pvpMode){_baseUpd(dt);return}let vx=joy.x,vy=joy.y;if(keys.a||keys.ArrowLeft)vx=-1;if(keys.d||keys.ArrowRight)vx=1;if(keys.w||keys.ArrowUp)vy=-1;if(keys.s||keys.ArrowDown)vy=1;let l=Math.hypot(vx,vy)||1;player.x+=vx/l*player.spd*90*dt;player.y+=vy/l*player.spd*90*dt;player.x=Math.max(34,Math.min(w-34,player.x));player.y=Math.max(h*.25,Math.min(h-54,player.y));let op=(pvpData.players||{})[pvpOpponentId];if(op){enemy.x=op.x||enemy.x;enemy.y=op.y||enemy.y;enemy.hp=op.hp??enemy.hp;enemy.max=op.max??enemy.max;enemy.name=op.name||enemy.name;enemy.emoji=op.emoji||enemy.emoji;enemy.color=op.color||enemy.color;if(enemy.hp<=0)finishPvp(true)}player.hp=pvpMyHp;player.inv-=dt;c1-=dt;c2-=dt;bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(Math.hypot(b.x-enemy.x,b.y-enemy.y)<enemy.r+b.r){sendPvpDamage(b.dmg,b.color);b.life=0;effects.push([enemy.x,enemy.y,.35,b.color,Math.floor(b.dmg)])}});bullets=bullets.filter(b=>b.life>0);effects.forEach(e=>e[2]-=dt);effects=effects.filter(e=>e[2]>0);if(pvpMyHp<=0)finishPvp(false);hud();sendState();$('s1').classList.toggle('cool',c1>0);$('s2').classList.toggle('cool',c2>0);let s=Math.floor((Date.now()-startAt)/1000);$('time').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 const _baseHud=hud;hud=function(){_baseHud();if(pvpMode){$('stage').textContent=ranked?'랭크전':'PvP';$('bossType').textContent='상대 유저 전투';$('coin').textContent='내 랭크 '+(save.pvp||0);$('dia').textContent=rankName();$('rec').textContent='승리 +30 / 패배 -25';}}
@@ -1389,7 +1162,7 @@ function startOnlineRoomGame(){
   if(!room) return alert('먼저 온라인 방에 들어가세요.');
   if(online&&db){
     if(roomHostId && roomHostId!==myId) return alert('방장만 시작할 수 있습니다. 방장이 시작하면 자동으로 같이 시작됩니다.');
-    db.ref('rooms/'+safeKey(room)).update({
+    dbRef('rooms/'+safeKey(room)).update({
       host: myId,
       status: 'playing',
       gameStart: {status:'start',host:myId,startedAt:Date.now()}
@@ -1405,7 +1178,7 @@ joinRoom=function(){
   if(!r) return alert('방 이름 입력');
   leaveRoom(false); room=r; peerPlayers={}; roomData={}; roomHostId=''; roomAutoStartedKey='';
   if(online&&db){
-    let base=db.ref('rooms/'+safeKey(room)); roomSub=base;
+    let base=dbRef('rooms/'+safeKey(room)); roomSub=base;
     base.once('value').then(snap=>{
       let data=snap.val()||{}; let ps=data.players||{};
       let host=data.host||Object.keys(ps)[0]||myId; roomHostId=host;
@@ -1435,7 +1208,7 @@ joinRoom=function(){
 }
 leaveRoom=function(show=true){
   if(chan){chan.postMessage({type:'leave',id:myId});chan.close()}
-  if(roomSub&&online&&db&&room){db.ref('rooms/'+safeKey(room)+'/players/'+myId).remove();roomSub.off();}
+  if(roomSub&&online&&db&&room){dbRef('rooms/'+safeKey(room)+'/players/'+myId).remove();roomSub.off();}
   chan=null;roomSub=null;room='';peerPlayers={};roomData={};roomHostId='';roomAutoStartedKey='';
   if(show)$('roomStatus').textContent='방 없음';
 }
@@ -1443,7 +1216,7 @@ leaveRoom=function(show=true){
 
 /* === 온라인 거래방 실시간 입장 표시 + 동기화 수정 === */
 let onlineTradeRoomData=null, onlineTradeSub=null, onlineTradeLastUsers='';
-function tradeRoomBase(){return online&&db&&tradeRoom?db.ref('tradeRooms/'+safeKey(tradeRoom)):null}
+function tradeRoomBase(){return online&&db&&tradeRoom?dbRef('tradeRooms/'+safeKey(tradeRoom)):null}
 function tradeUserProfile(){let c=chars[sel]||chars[0];return {name:user,id:myId,char:c.name,emoji:c.emoji,rank:rankName(),ts:Date.now()}}
 function tradeUserNames(t){return Object.keys((t&&t.users)||{}).filter(Boolean)}
 function tradeOfferLabel(o){return offerLabel(o)}
@@ -1502,19 +1275,19 @@ const _localJoinTradeRoom=joinTradeRoom;
 joinTradeRoom=function(){if(online&&db)return joinTradeRoomOnline();return _localJoinTradeRoom();}
 const _localLeaveTradeRoom=leaveTradeRoom;
 leaveTradeRoom=function(show=true){
-  if(onlineTradeSub&&online&&db&&tradeRoom){db.ref('tradeRooms/'+safeKey(tradeRoom)+'/users/'+safeKey(user)).remove();onlineTradeSub.off();}
+  if(onlineTradeSub&&online&&db&&tradeRoom){dbRef('tradeRooms/'+safeKey(tradeRoom)+'/users/'+safeKey(user)).remove();onlineTradeSub.off();}
   onlineTradeSub=null;onlineTradeRoomData=null;onlineTradeLastUsers='';
   if(online&&db){tradeRoom=''; if(show)$('tradeStatus').textContent='거래 방 없음'; renderTradeView(); return;}
   _localLeaveTradeRoom(show);
 }
-acceptTradeInvite=function(r){$('tradeRoomName').value=r;joinTradeRoom();if(online&&db)db.ref('invites/'+safeKey(user)).remove();else localStorage.removeItem('rpgTradeInvite_'+user)}
+acceptTradeInvite=function(r){$('tradeRoomName').value=r;joinTradeRoom();if(online&&db)dbRef('invites/'+safeKey(user)).remove();else localStorage.removeItem('rpgTradeInvite_'+user)}
 inviteTradeFriend=function(){
   if(user==='guest')return alert('로그인 필요');
   let n=$('tradePartner').value.trim()||$('friendName').value.trim(); if(!n)return alert('상대 닉네임 입력');
   if(!(save.friends||[]).includes(n))return alert('친구 목록에 있는 계정만 초대 가능');
   if(!tradeRoom){$('tradeRoomName').value='거래방_'+user+'_'+Date.now().toString(36).slice(-4);joinTradeRoom()}
   let inv={type:'trade',from:user,room:tradeRoom,ts:Date.now()};
-  if(online&&db)db.ref('invites/'+safeKey(n)).push(inv);else localStorage.setItem('rpgTradeInvite_'+n,JSON.stringify(inv));
+  if(online&&db)dbRef('invites/'+safeKey(n)).push(inv);else localStorage.setItem('rpgTradeInvite_'+n,JSON.stringify(inv));
   $('tradeStatus').textContent=n+'님에게 거래 방 ['+tradeRoom+'] 초대 전송';
 }
 const _localSetTradeOffer=setTradeOffer;
@@ -1529,8 +1302,8 @@ setTradeOffer=async function(){
 }
 clearTradeOffer=async function(){if(!(online&&db)){let t=readTradeRoom();delete t.offers[user];t.ready[user]=false;saveTradeRoomData(t);return;}if(!tradeRoom)return;await tradeRoomBase().update({['offers/'+safeKey(user)]:null,['ready/'+safeKey(user)]:false});}
 cancelTradeReady=async function(){if(!(online&&db)){let t=readTradeRoom();t.ready[user]=false;saveTradeRoomData(t);return;}if(!tradeRoom)return;await tradeRoomBase().child('ready/'+safeKey(user)).set(false);}
-async function onlineReadSave(n){let snap=await db.ref('saves/'+safeKey(n)).get();return snap.exists()?{...fresh(),...snap.val()}:fresh()}
-async function onlineWriteSave(n,s){await db.ref('saves/'+safeKey(n)).set({...s,updatedAt:Date.now()});if(n===user){save=s;norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();}}
+async function onlineReadSave(n){let snap=await dbRef('saves/'+safeKey(n)).get();return snap.exists()?{...fresh(),...snap.val()}:fresh()}
+async function onlineWriteSave(n,s){await dbRef('saves/'+safeKey(n)).set({...s,updatedAt:Date.now()});if(n===user){save=s;norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();}}
 function hasOfferInSave(s,o){if(o.type==='coins')return (s.coins||0)>=o.amount;if(o.type==='char')return (s.owned||[]).includes(o.item)||(s.rare||[]).includes(o.item);if(o.type==='katana')return (s.katanas||[]).includes(o.item);if(o.type==='equip')return (s.equips||[]).includes(o.item);return false}
 function removeOfferFromSave(s,o){if(o.type==='coins')s.coins=(s.coins||0)-o.amount;if(o.type==='char'){s.owned=(s.owned||[]).filter(x=>x!==o.item);s.rare=(s.rare||[]).filter(x=>x!==o.item);if(!(s.owned||[]).length&&!(s.rare||[]).length)s.owned=['카마도 탄지로']}if(o.type==='katana'){s.katanas=(s.katanas||[]).filter(x=>x!==o.item);if(s.eq===o.item)s.eq=s.katanas[0]||'낡은 호흡 장비';if(!s.katanas.length)s.katanas=['낡은 호흡 장비']}if(o.type==='equip'){s.equips=(s.equips||[]).filter(x=>x!==o.item);if(s.eqArmor===o.item)s.eqArmor=''}return s}
 function addOfferToSave(s,o){if(o.type==='coins')s.coins=(s.coins||0)+o.amount;if(o.type==='char'){let c=chars.find(x=>x.name===o.item);let arr=c&&c.rare?'rare':'owned';s[arr]??=[];if(!s[arr].includes(o.item))s[arr].push(o.item)}if(o.type==='katana'){s.katanas??=[];if(!s.katanas.includes(o.item))s.katanas.push(o.item)}if(o.type==='equip'){s.equips??=[];if(!s.equips.includes(o.item))s.equips.push(o.item)}return s}
@@ -1560,7 +1333,7 @@ readyTrade=async function(){
 
 /* === 온라인 협동 플레이: 화면·보스체력·스테이지·공격 공유 === */
 let coopMode=false, coopSeenHits={}, coopRewarded={}, coopLastEnemyWrite=0, coopLastStage=0;
-function coopRoomRef(){return online&&db&&room?db.ref('rooms/'+safeKey(room)):null}
+function coopRoomRef(){return online&&db&&room?dbRef('rooms/'+safeKey(room)):null}
 function makeCoopEnemyData(st){
   let idx=Math.min(demons.length-1,Math.floor((st-1)/2));
   if(st%10===0)idx=Math.min(demons.length-1,10+Math.floor(st/30));
@@ -1654,7 +1427,7 @@ async function sendCoopDamage(dmg,color,fx,label){
 }
 function updateCoopPlayerState(){
   if(!coopMode||!online||!db||!room||!player)return;
-  db.ref('rooms/'+safeKey(room)+'/players/'+myId).update({x:player.x,y:player.y,hp:player.hp,max:player.max,char:player.name,emoji:player.emoji,color:player.color,name:user,ts:Date.now()});
+  dbRef('rooms/'+safeKey(room)+'/players/'+myId).update({x:player.x,y:player.y,hp:player.hp,max:player.max,char:player.name,emoji:player.emoji,color:player.color,name:user,ts:Date.now()});
 }
 function hostUpdateCoopEnemy(dt){
   if(!coopMode||roomHostId!==myId||!enemy)return;
@@ -1788,11 +1561,413 @@ drawPeers=function(){let now=Date.now();Object.keys(peerPlayers||{}).forEach(id=
 const _charOldSendState=sendState;
 sendState=function(){if(player){player.actionUntil??=0;}if(chan&&player)chan.postMessage({type:'state',id:myId,name:user,emoji:player.emoji,color:player.color,x:player.x,y:player.y,char:player.name,action:player.action||'',actionUntil:player.actionUntil||0});if(typeof _charOldSendState==='function'&&!chan)_charOldSendState();}
 const _charOldCoopUpdate=updateCoopPlayerState;
-updateCoopPlayerState=function(){if(!coopMode||!online||!db||!room||!player){if(typeof _charOldCoopUpdate==='function')_charOldCoopUpdate();return;}db.ref('rooms/'+safeKey(room)+'/players/'+myId).update({x:player.x,y:player.y,hp:player.hp,max:player.max,char:player.name,emoji:player.emoji,color:player.color,name:user,action:player.action||'',actionUntil:player.actionUntil||0,ts:Date.now()});}
+updateCoopPlayerState=function(){if(!coopMode||!online||!db||!room||!player){if(typeof _charOldCoopUpdate==='function')_charOldCoopUpdate();return;}dbRef('rooms/'+safeKey(room)+'/players/'+myId).update({x:player.x,y:player.y,hp:player.hp,max:player.max,char:player.name,emoji:player.emoji,color:player.color,name:user,action:player.action||'',actionUntil:player.actionUntil||0,ts:Date.now()});}
 function setAction(a,ms){if(player){player.action=a;player.actionUntil=Date.now()+ms;}}
 const _charOldAttack=attack;attack=function(){setAction('atk',420);return _charOldAttack();}
 const _charOldSkill=skill;skill=function(n){setAction('skill',n===2?900:520);return _charOldSkill(n);}
 const _charOldDash=dash;dash=function(){setAction('dash',380);return _charOldDash();}
+
+
+/* =====================================================================
+   보안 레이어: Firebase Auth 로그인 + 서버(보안 규칙) 기반 권한
+   - 비밀번호는 Firebase Auth가 해시로 보관 (DB/localStorage에 저장 안 함)
+   - 관리자/밴/채팅금지는 DB(anime/admins, anime/staff, anime/bans, anime/mutes)가 기준
+   - 모든 게임 데이터는 anime/ 아래에 저장 (다른 앱과 경로 충돌 없음)
+   ===================================================================== */
+const NICK_RE=/^[가-힣A-Za-z0-9_]{2,12}$/;
+const RESERVED_NICKS=["제작자","운영자","관리자","system","guest"];
+let auth=null,myAdminRole='',staffMap={},banMap={},muteMap={},authBusy=false,serverSubs=[],mySavePushes=new Set(),mySaveRef=null,acceptRef=null,lastDeniedAlert=0;
+
+function dbRef(p){return db.ref('anime/'+p)}
+function cyrb128(str){let h1=1779033703,h2=3144134277,h3=1013904242,h4=2773480762;for(let i=0,k;i<str.length;i++){k=str.charCodeAt(i);h1=h2^Math.imul(h1^k,597399067);h2=h3^Math.imul(h2^k,2869860233);h3=h4^Math.imul(h3^k,951274213);h4=h1^Math.imul(h4^k,2716044179)}h1=Math.imul(h3^(h1>>>18),597399067);h2=Math.imul(h4^(h2>>>22),2869860233);h3=Math.imul(h1^(h3>>>17),951274213);h4=Math.imul(h2^(h4>>>19),2716044179);return[(h1^h2^h3^h4)>>>0,(h2^h1)>>>0,(h3^h1)>>>0,(h4^h1)>>>0]}
+function nickEmail(n){return'u'+cyrb128('anime-rpg:'+n).map(x=>x.toString(16).padStart(8,'0')).join('')+'@anime-rpg.local'}
+function setOnlineStatus(html){const e=$('onlineStatus');if(e)e.innerHTML=html}
+function authErr(e){
+  const m={'auth/email-already-in-use':'이미 있는 닉네임이에요.','auth/invalid-credential':'닉네임 또는 비밀번호가 틀렸어요.','auth/wrong-password':'닉네임 또는 비밀번호가 틀렸어요.','auth/user-not-found':'닉네임 또는 비밀번호가 틀렸어요.','auth/weak-password':'비밀번호는 6자 이상이어야 해요.','auth/operation-not-allowed':'Firebase 콘솔 > Authentication에서 "이메일/비밀번호" 로그인을 켜야 해요.','auth/too-many-requests':'시도가 너무 많아요. 잠시 후 다시 해주세요.','auth/network-request-failed':'네트워크 오류예요.'};
+  alert(m[e&&e.code]||('오류: '+((e&&e.message)||e)));
+}
+addEventListener('unhandledrejection',e=>{
+  const msg=String((e.reason&&e.reason.message)||e.reason||'');
+  if(/permission_denied/i.test(msg)){e.preventDefault();if(Date.now()-lastDeniedAlert>5000){lastDeniedAlert=Date.now();alert('권한이 없거나 로그인이 필요한 기능이에요.')}}
+});
+
+/* ---------- 권한 (서버 값 기준) ---------- */
+function isOwner(n=user){return n===user?myAdminRole==='owner':staffMap[n]==='owner'}
+function isModerator(n=user){return n===user?myAdminRole==='mod':staffMap[n]==='mod'}
+function isStaff(n=user){return isOwner(n)||isModerator(n)}
+function isAdmin(){return isStaff()}
+function isBanned(n=user){return !!banMap[n]}
+function isMuted(n=user){return !!muteMap[n]}
+adminLabel=roleLabel;
+function updateAdminRoleList(){
+  const box=$("adminRoleList");
+  if(box)box.innerHTML="현재 관리자: "+Object.keys(staffMap).map(n=>`<span class="modBadge">${staffMap[n]==='owner'?'👑':'🛡️'} ${n}</span>`).join(" ");
+}
+function updateAdminPanel(){
+  const box=$("adminBox");
+  if(box)box.style.display=isStaff()?"block":"none";
+  const title=box&&box.querySelector("h3");
+  if(title)title.innerHTML=isOwner()?"🌈 제작자 관리자 패널":"🛡️ 관리자 패널";
+  updateAdminRoleList();
+}
+
+/* ---------- 서버 리스너 ---------- */
+function startServerListeners(){
+  stopServerListeners();
+  const add=(r,fn)=>{r.on('value',fn);serverSubs.push(r)};
+  add(dbRef('staff'),s=>{staffMap=s.val()||{};updateAdminPanel();ui()});
+  add(dbRef('bans'),s=>{banMap=s.val()||{};if(user!=='guest'&&banMap[user]){alert('이 계정은 밴되었습니다.');logout()}});
+  add(dbRef('mutes'),s=>{muteMap=s.val()||{}});
+}
+function stopServerListeners(){
+  serverSubs.forEach(r=>r.off());serverSubs=[];
+  if(mySaveRef){mySaveRef.off();mySaveRef=null}
+  if(acceptRef){acceptRef.off();acceptRef=null}
+}
+
+/* ---------- 세이브 동기화 (본인 세이브만 씀) ---------- */
+pushOnlineSave=async function(){
+  if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;
+  const t=Date.now();mySavePushes.add(t);if(mySavePushes.size>50)mySavePushes.delete(mySavePushes.values().next().value);
+  await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:t});
+  await dbRef('users/'+safeKey(user)).update({name:user,ts:t,pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});
+};
+onlineRegisterUser=function(){if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'})};
+syncOnlineSave=async function(){
+  if(!online||!db||user==='guest')return;
+  const ref=dbRef('saves/'+safeKey(user));
+  const snap=await ref.get();
+  if(snap.exists()){const r=snap.val();if(r&&typeof r==='object'){save={...fresh(),...r};norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll()}}
+  else await pushOnlineSave();
+  // 관리자가 내 세이브를 바꾸면(코인 지급/몰수/초기화) 바로 반영
+  mySaveRef=ref;
+  ref.on('value',s=>{
+    const r=s.val();
+    if(!r||mySavePushes.has(r.updatedAt))return;
+    save={...fresh(),...r};norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();
+  });
+};
+onlineReadSave=async function(n){const s=await dbRef('saves/'+safeKey(n)).get();return s.exists()?{...fresh(),...s.val()}:fresh()};
+onlineWriteSave=async function(n,s){if(n!==user)throw new Error('다른 유저의 세이브는 직접 쓸 수 없어요.');save=s;norm();localStorage.setItem(sk(),JSON.stringify(save));await pushOnlineSave();renderAll()};
+
+/* ---------- Firebase 연결 / 로그인 ---------- */
+connectFirebase=function(silent=false){
+  try{
+    if(!firebase.apps.length)fbApp=firebase.initializeApp(DEFAULT_FIREBASE_CONFIG);else fbApp=firebase.app();
+    db=firebase.database();auth=firebase.auth();online=true;
+    try{localStorage.removeItem('animeRpgFirebaseConfig')}catch(e){}
+    setOnlineStatus('<span class="onlineOk">온라인 연결됨</span> · 로그인하면 친구/방/PvP/거래 사용 가능');
+    auth.onAuthStateChanged(async u=>{
+      if(authBusy||!u||user!=='guest')return;
+      try{const nm=(await dbRef('uids/'+u.uid).get()).val();if(nm){$('name').value=nm;await finishLogin(nm,u.uid)}}catch(e){console.warn(e)}
+    });
+    if(!silent)alert('온라인 연결 완료');
+  }catch(e){online=false;setOnlineStatus('<span class="onlineBad">연결 실패:</span> '+e.message);if(!silent)alert('Firebase 연결 실패: '+e.message)}
+};
+disconnectFirebase=function(){online=false;stopServerListeners();db=null;setOnlineStatus('온라인 꺼짐')};
+
+async function finishLogin(n,uid){
+  user=n;myId=uid;
+  startServerListeners();
+  myAdminRole=((await dbRef('admins/'+uid).get()).val())||'';
+  if((await dbRef('bans/'+safeKey(n)).get()).exists()){await auth.signOut();resetToGuest();alert('이 계정은 밴되었습니다.');return false}
+  load();
+  await syncOnlineSave();
+  onlineRegisterUser();
+  listenOnlineInvites();
+  listenFriendAccepts();
+  checkFriendMail();
+  updateAdminPanel();
+  setOnlineStatus(`<span class="onlineOk">온라인 · ${n} 로그인됨</span>`);
+  return true;
+}
+function resetToGuest(){stopServerListeners();user='guest';myAdminRole='';myId='P'+Math.random().toString(36).slice(2,8);save=fresh();norm();updateAdminPanel();renderAll()}
+
+createAcc=async function(){
+  if(!online||!auth)return alert('온라인 연결이 필요해요. 잠시 후 다시 시도하세요.');
+  const n=$('name').value.trim(),p=$('pw').value;
+  if(!NICK_RE.test(n))return alert('닉네임은 한글/영문/숫자/_ 로 2~12자만 가능해요.');
+  if(RESERVED_NICKS.includes(n.toLowerCase())||RESERVED_NICKS.includes(n))return alert('사용할 수 없는 닉네임이에요.');
+  if(p.length<6)return alert('비밀번호는 6자 이상이어야 해요.');
+  authBusy=true;
+  try{
+    const cred=await auth.createUserWithEmailAndPassword(nickEmail(n),p);
+    const uid=cred.user.uid;
+    try{await dbRef('names/'+n).set(uid);await dbRef('uids/'+uid).set(n)}
+    catch(e){await dbRef('names/'+n).remove().catch(()=>{});await cred.user.delete().catch(()=>{});throw e}
+    localStorage.setItem('rpgSave_'+n,JSON.stringify(fresh()));
+    if(await finishLogin(n,uid))alert('계정 생성 완료! 로그인되었습니다.');
+  }catch(e){authErr(e)}finally{authBusy=false}
+};
+login=async function(){
+  if(!online||!auth)return alert('온라인 연결이 필요해요. 잠시 후 다시 시도하세요.');
+  const n=$('name').value.trim(),p=$('pw').value;
+  if(!n||!p)return alert('닉네임과 비밀번호를 입력하세요.');
+  authBusy=true;
+  try{
+    const cred=await auth.signInWithEmailAndPassword(nickEmail(n),p);
+    const nm=(await dbRef('uids/'+cred.user.uid).get()).val();
+    if(nm!==n){await auth.signOut();return alert('닉네임 또는 비밀번호가 틀렸어요.')}
+    if(await finishLogin(n,cred.user.uid))alert('로그인 성공');
+  }catch(e){authErr(e)}finally{authBusy=false}
+};
+logout=async function(){authBusy=true;try{if(auth)await auth.signOut()}catch(e){}authBusy=false;resetToGuest();setOnlineStatus('<span class="onlineOk">온라인 연결됨</span> · 로그아웃됨')};
+delAcc=async function(){
+  if(!online||!auth)return alert('온라인 연결이 필요해요.');
+  const n=$('name').value.trim(),p=$('pw').value;
+  if(!n||!p)return alert('삭제할 계정의 닉네임과 비밀번호를 입력하세요.');
+  if(staffMap[n])return alert('관리자/제작자 계정은 권한을 먼저 해제해야 삭제할 수 있어요.');
+  if(!confirm('정말 삭제할까요? 되돌릴 수 없어요.'))return;
+  authBusy=true;
+  try{
+    const cred=await auth.signInWithEmailAndPassword(nickEmail(n),p),uid=cred.user.uid;
+    if((await dbRef('uids/'+uid).get()).val()!==n){await auth.signOut();return alert('닉네임 또는 비밀번호가 틀렸어요.')}
+    for(const path of['saves/'+n,'users/'+n,'mails/'+n,'invites/'+n,'uids/'+uid,'names/'+n])await dbRef(path).remove().catch(()=>{});
+    await cred.user.delete();
+    localStorage.removeItem('rpgSave_'+n);
+    if(user===n)resetToGuest();
+    alert('삭제 완료');
+  }catch(e){authErr(e)}finally{authBusy=false}
+};
+resetSaveData=()=>fresh();
+resetMyAccount=function(){
+  if(user==="guest")return alert("로그인 후 초기화 가능해.");
+  if(!confirm("내 계정 데이터를 초기화할까? 코인, 다이아, 캐릭터, 장비, 친구, 최고기록이 초기화돼."))return;
+  save=fresh();coins=0;dia=0;best=1;norm();store();renderAll();alert("내 계정 초기화 완료");
+};
+
+/* ---------- 채팅 ---------- */
+addChatMessage=function(name,msg,system=false,admin=false){
+  const log=$("chatLog");if(!log)return;
+  const div=document.createElement("div");
+  div.className="chatMsg"+(system?" chatSystem":"");
+  const safeName=String(name||"system").replace(/[<>&"']/g,""),safeMsg=String(msg||"").replace(/[<>]/g,"");
+  const shownName=(isStaff(name)||admin)?adminLabel(name):`<span class="chatName">${safeName}</span>`;
+  div.innerHTML=system?safeMsg:`${shownName} : ${safeMsg}`;
+  log.appendChild(div);
+  while(log.children.length>80)log.removeChild(log.firstChild);
+  log.scrollTop=log.scrollHeight;
+};
+sendChat=function(){
+  if(user==='guest')return alert('로그인 후 채팅할 수 있어요.');
+  if(isBanned())return alert('밴된 계정은 채팅할 수 없어.');
+  if(isMuted())return alert('채팅 금지 상태야.');
+  const input=$('chatInput');if(!input)return;
+  const msg=input.value.trim().slice(0,200);if(!msg)return;
+  openChatChannel();
+  dbRef('globalChat').push({name:user,msg,ts:Date.now(),admin:isStaff()});
+  input.value='';
+};
+
+/* ---------- 친구 (각자 자기 세이브만 수정) ---------- */
+sendFriendRequest=async function(){
+  if(user==='guest')return alert('로그인 후 친구 요청 가능');
+  const n=$('friendName').value.trim();
+  if(!n)return alert('상대 닉네임을 입력해.');
+  if(n===user)return alert('자기 자신에게는 친구 요청을 보낼 수 없어.');
+  if((save.friends||[]).includes(n))return alert('이미 친구야.');
+  if(!(await dbRef('names/'+safeKey(n)).get()).exists())return alert('없는 계정이야.');
+  await dbRef('mails/'+safeKey(n)+'/friendRequests').push({type:'friendRequest',from:user,to:n,ts:Date.now(),status:'pending'});
+  alert(n+'에게 친구 요청을 보냈어.');
+};
+checkFriendMail=function(){
+  if(user==='guest'||!online||!db)return;
+  dbRef('mails/'+safeKey(user)+'/friendRequests').once('value').then(snap=>{
+    const val=snap.val()||{};
+    renderFriendMail(Object.keys(val).map(k=>Object.assign({},val[k],{key:k})),true);
+  });
+};
+acceptFriendRequest=function(from,key){
+  if(user==='guest')return;
+  save.friends??=[];if(!save.friends.includes(from))save.friends.push(from);
+  store();
+  dbRef('mails/'+safeKey(user)+'/friendRequests/'+key).update({status:'accepted'});
+  dbRef('mails/'+safeKey(from)+'/accepted').push({by:user,ts:Date.now()});
+  alert(from+'님과 친구가 됐어.');renderFriends();checkFriendMail();
+};
+rejectFriendRequest=function(from,key){
+  dbRef('mails/'+safeKey(user)+'/friendRequests/'+key).update({status:'rejected'});
+  alert('친구 요청을 거절했어.');checkFriendMail();
+};
+function listenFriendAccepts(){
+  if(acceptRef){acceptRef.off();acceptRef=null}
+  if(!online||!db||user==='guest')return;
+  acceptRef=dbRef('mails/'+safeKey(user)+'/accepted');
+  acceptRef.on('child_added',snap=>{
+    const m=snap.val();
+    if(m&&m.by&&m.by!==user){save.friends??=[];if(!save.friends.includes(m.by)){save.friends.push(m.by);store();renderFriends()}}
+    snap.ref.remove();
+  });
+}
+
+/* ---------- 거래: 각자 자기 세이브만 수정 (상대 세이브를 직접 쓰지 않음) ---------- */
+let tradeSettling=false,tradeHandled=new Set();
+const _joinTradeRoomOnline0=joinTradeRoomOnline;
+joinTradeRoomOnline=async function(){
+  await _joinTradeRoomOnline0();
+  const base=tradeRoomBase();if(!base)return;
+  base.on('value',s=>settleTrade(s.val()));
+};
+readyTrade=async function(){
+  if(!(online&&db))return _localReadyTrade();
+  if(!tradeRoom)return alert('거래 방에 먼저 입장하세요');
+  const ref=tradeRoomBase();
+  let t=(await ref.get()).val()||{};const names=tradeUserNames(t).slice(0,2);
+  if(names.length<2)return alert('상대가 거래 방에 들어와야 합니다');
+  const mine=(t.offers||{})[user];
+  if(!mine)return alert('내 거래품을 먼저 올리세요');
+  if(!hasOfferInSave(save,mine))return alert('올린 물건/골드가 부족해요. 다시 올려주세요.');
+  await ref.child('ready/'+safeKey(user)).set(true);
+  t=(await ref.get()).val()||{};
+  const other=names.find(n=>n!==user);
+  if(other&&(t.ready||{})[other]&&(t.offers||{})[other]&&!t.deal){
+    const deal={id:Date.now()+'_'+Math.random().toString(36).slice(2,7),a:user,b:other,oa:t.offers[user],ob:t.offers[other]};
+    const r=await ref.child('deal').transaction(cur=>cur||deal);
+    if(r.committed)await ref.update({ready:null,done:false,log:'거래 진행 중...'});
+  }else $('tradeStatus').textContent='내 확정 완료. 상대 확정을 기다리는 중';
+};
+async function settleTrade(t){
+  const ref=tradeRoomBase();
+  if(!t||!ref||user==='guest')return;
+  const d=t.deal;
+  if(!d){return}
+  if(d.a!==user&&d.b!==user)return;
+  const dealt=t.dealt||{};
+  // 양쪽 모두 처리되면 정리
+  if(dealt[d.a]&&dealt[d.b]&&!tradeHandled.has('fin'+d.id)){
+    tradeHandled.add('fin'+d.id);
+    const ok=dealt[d.a]==='ok'&&dealt[d.b]==='ok';
+    await ref.update({deal:null,dealt:null,offers:null,ready:null,done:ok,log:ok?`거래 완료! ${d.a} ↔ ${d.b}`:'거래 실패: 한쪽이 물건이나 골드가 부족합니다.'});
+    if(ok)alert('거래 완료!');
+    return;
+  }
+  if(dealt[user]||tradeHandled.has(d.id)||tradeSettling)return;
+  tradeHandled.add(d.id);tradeSettling=true;
+  try{
+    const mine=d.a===user?d.oa:d.ob,theirs=d.a===user?d.ob:d.oa;
+    if(!hasOfferInSave(save,mine)){await ref.child('dealt/'+safeKey(user)).set('fail');return}
+    save=addOfferToSave(removeOfferFromSave(JSON.parse(JSON.stringify(save)),mine),theirs);
+    norm();store();
+    await ref.child('dealt/'+safeKey(user)).set('ok');
+  }finally{tradeSettling=false}
+}
+
+/* ---------- 관리자 기능 (서버 DB 기준, 권한은 보안 규칙이 검증) ---------- */
+async function nickExists(n){return (await dbRef('names/'+safeKey(n)).get()).exists()}
+async function adminReadSave(n){const s=await dbRef('saves/'+safeKey(n)).get();return s.exists()?{...fresh(),...s.val()}:fresh()}
+async function adminWriteSave(n,s){
+  if(n===user){save=s;norm();store();renderAll();return}
+  await dbRef('saves/'+safeKey(n)).set({...s,updatedAt:Date.now()});
+}
+adminNoticeTextAuto=function(t){
+  openChatChannel();
+  dbRef('globalChat').push({name:user,msg:'📢 관리자: '+t,ts:Date.now(),admin:true,notice:true});
+};
+adminNotice=function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const t=($('adminNoticeText')&&$('adminNoticeText').value.trim())||'관리자 공지입니다.';
+  openChatChannel();
+  dbRef('globalChat').push({name:user,msg:'📢 공지: '+t,ts:Date.now(),admin:true,notice:true});
+};
+adminTarget=function(){
+  const n=$('adminTargetUser')&&$('adminTargetUser').value.trim();
+  if(!n){alert('대상 닉네임을 입력해.');return ''}
+  if(!canPunish(n)){alert('이 계정은 현재 권한으로 제재할 수 없어.');return ''}
+  return n;
+};
+async function adminSetFlag(node,on,label){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const n=adminTarget();if(!n)return;
+  if(!(await nickExists(n)))return alert('없는 계정이야.');
+  await dbRef(node+'/'+safeKey(n)).set(on?true:null);
+  adminNoticeTextAuto(n+' 계정 '+label);
+  alert(n+' '+label+' 완료');
+}
+adminBanUser=()=>adminSetFlag('bans',true,'밴');
+adminUnbanUser=()=>adminSetFlag('bans',false,'밴 해제');
+adminMuteUser=()=>adminSetFlag('mutes',true,'채팅 금지');
+adminUnmuteUser=()=>adminSetFlag('mutes',false,'채팅 금지 해제');
+adminTakeAllItems=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const n=adminTarget();if(!n)return;
+  if(!(await nickExists(n)))return alert('없는 계정이야.');
+  if(!confirm(n+'의 아이템/코인/다이아/희귀 캐릭터를 전부 뺏을까?'))return;
+  await adminWriteSave(n,fresh());
+  adminNoticeTextAuto(n+' 계정의 아이템을 전체 몰수했습니다.');alert(n+' 아이템 전체 몰수 완료');
+};
+adminResetUser=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const n=adminTarget();if(!n)return;
+  if(!(await nickExists(n)))return alert('없는 계정이야.');
+  if(!confirm(n+' 계정 데이터를 완전 초기화할까?'))return;
+  await adminWriteSave(n,fresh());
+  adminNoticeTextAuto(n+' 계정 데이터가 관리자에 의해 초기화되었습니다.');alert(n+' 계정 초기화 완료');
+};
+adminGiveToUser=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const n=($('adminGiveTarget')&&$('adminGiveTarget').value.trim())||'';
+  const c=Math.max(0,Math.floor(Number(($('adminGiveCoins')&&$('adminGiveCoins').value)||0)));
+  const d=Math.max(0,Math.floor(Number(($('adminGiveDia')&&$('adminGiveDia').value)||0)));
+  if(!n)return alert('대상 닉네임을 입력해.');
+  if(!c&&!d)return alert('지급할 코인이나 다이아를 입력해.');
+  if(!(await nickExists(n)))return alert('없는 계정이야.');
+  if(n!==user&&!canPunish(n))return alert('이 계정에는 현재 권한으로 지급할 수 없어.');
+  const s=await adminReadSave(n);s.coins=(s.coins||0)+c;s.dia=(s.dia||0)+d;
+  await adminWriteSave(n,s);
+  adminNoticeTextAuto(`${n}님에게 코인 ${c}, 다이아 ${d} 지급`);alert(`${n}에게 지급 완료!`);
+};
+adminRewardAllUsers=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const c=Math.max(0,Math.floor(Number(($('adminAllCoins')&&$('adminAllCoins').value)||0)));
+  const d=Math.max(0,Math.floor(Number(($('adminAllDia')&&$('adminAllDia').value)||0)));
+  if(!c&&!d)return alert('지급할 코인이나 다이아를 입력해.');
+  const names=Object.keys((await dbRef('users').get()).val()||{});
+  let ok=0;
+  for(const n of names){
+    if(n!==user&&!canPunish(n))continue;
+    try{const s=await adminReadSave(n);s.coins=(s.coins||0)+c;s.dia=(s.dia||0)+d;await adminWriteSave(n,s);ok++}catch(e){console.warn(n,e)}
+  }
+  adminNoticeTextAuto(`모든 유저에게 코인 ${c}, 다이아 ${d} 지급`);alert(`${ok}개 계정에 보상 지급 완료`);
+};
+adminSearchUser=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const n=($('adminSearchUser')&&$('adminSearchUser').value.trim())||'',box=$('adminSearchResult');
+  if(!box)return;
+  if(!n){box.textContent='닉네임을 입력해.';return}
+  if(!(await nickExists(n))){box.textContent=n+': 계정 없음';return}
+  const s=await adminReadSave(n),esc=x=>String(x).replace(/[<>&"']/g,'');
+  box.innerHTML=`<b>${esc(n)}</b><br>상태: ${isBanned(n)?'🚫 밴':'정상'} / ${isMuted(n)?'🔇 채팅금지':'채팅 가능'}<br>코인: ${s.coins||0}<br>다이아: ${s.dia||0}<br>캐릭터: ${(s.owned||[]).length}명 / 희귀: ${(s.rare||[]).length}명<br>최고 스테이지: ${s.best||1}`;
+};
+adminServerInfo=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const names=Object.keys((await dbRef('users').get()).val()||{}),box=$('adminServerInfo');
+  if(box)box.innerHTML=`전체 계정: ${names.length}개<br>밴 계정: ${Object.keys(banMap).length}개<br>채팅 금지: ${Object.keys(muteMap).length}개<br>관리자: ${Object.keys(staffMap).length}명`;
+};
+adminClearGlobalChat=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  if(!confirm('전체 채팅을 삭제할까요?'))return;
+  await dbRef('globalChat').remove();
+  clearChatLocal();addChatMessage('system','관리자가 전체 채팅을 삭제했습니다.',true);
+};
+async function appointAdmin(){
+  if(!isOwner())return alert('제작자만 관리자 임명 가능');
+  const n=($('adminManageUser')&&$('adminManageUser').value.trim())||'';
+  if(!n)return alert('임명할 닉네임을 입력해.');
+  const uid=(await dbRef('names/'+safeKey(n)).get()).val();
+  if(!uid)return alert('없는 계정이야.');
+  if(uid===auth.currentUser.uid)return alert('이미 제작자야.');
+  await dbRef('admins/'+uid).set('mod');await dbRef('staff/'+safeKey(n)).set('mod');
+  adminNoticeTextAuto(n+'님이 관리자로 임명되었습니다.');alert(n+' 관리자 임명 완료');
+}
+async function removeAdmin(){
+  if(!isOwner())return alert('제작자만 관리자 해제 가능');
+  const n=($('adminManageUser')&&$('adminManageUser').value.trim())||'';
+  if(!n)return alert('해제할 닉네임을 입력해.');
+  const uid=(await dbRef('names/'+safeKey(n)).get()).val();
+  if(!uid||staffMap[n]!=='mod')return alert('관리자로 등록된 계정이 아니야.');
+  await dbRef('admins/'+uid).remove();await dbRef('staff/'+safeKey(n)).remove();
+  adminNoticeTextAuto(n+'님의 관리자 권한이 해제되었습니다.');alert(n+' 관리자 해제 완료');
+}
 
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
