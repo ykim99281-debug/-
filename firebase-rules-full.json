@@ -1,0 +1,290 @@
+{
+  "rules": {
+    "brainRpg": {
+      ".read": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('brainRpgAdmins/' + auth.uid).exists())",
+        ".write": "auth != null && ((auth.uid === $uid && !root.child('brainRpgBans/' + $uid).exists() && !root.child('brainRpgConfig/maint/on').exists()) || root.child('brainRpgAdmins/' + auth.uid).exists())",
+        ".validate": "!root.child('brainRpgConfig/minVersion').exists() || newData.child('v').val() >= root.child('brainRpgConfig/minVersion').val()"
+      }
+    },
+    "brainRpgPub": {
+      ".read": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()",
+      "$uid": {
+        ".write": "auth != null && ((auth.uid === $uid && !root.child('brainRpgBans/' + $uid).exists() && !root.child('brainRpgConfig/maint/on').exists()) || root.child('brainRpgAdmins/' + auth.uid).exists())"
+      }
+    },
+    "brainRpgAdmins": {
+      ".read": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && ((auth.token.email === 'geab980ebaa85eca480@brainrpg.local' && auth.uid === $uid && newData.val() === 'super') || (root.child('brainRpgAdmins/' + auth.uid).val() === 'super' && $uid !== auth.uid && (newData.val() === true || !newData.exists()) && data.val() !== 'super'))"
+      }
+    },
+    "brainRpgBans": {
+      ".read": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists() && $uid !== auth.uid && root.child('brainRpgAdmins/' + $uid).val() !== 'super' && (root.child('brainRpgAdmins/' + auth.uid).val() === 'super' || !root.child('brainRpgAdmins/' + $uid).exists())"
+      }
+    },
+    "brainRpgConfig": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()"
+    },
+    "brainRpgEvent": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()"
+    },
+    "brainRpgLive": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && ((auth.uid === $uid && !root.child('brainRpgBans/' + $uid).exists() && !root.child('brainRpgConfig/maint/on').exists()) || root.child('brainRpgAdmins/' + auth.uid).exists())",
+        ".validate": "newData.hasChildren(['name','x','z','t']) && (!root.child('brainRpgConfig/minVersion').exists() || newData.child('v').val() >= root.child('brainRpgConfig/minVersion').val())"
+      }
+    },
+    "brainRpgPk": {
+      "$target": {
+        ".read": "auth != null && auth.uid === $target",
+        "$id": {
+          ".write": "auth != null && ((!data.exists() && newData.child('f').val() === auth.uid) || (data.exists() && !newData.exists() && auth.uid === $target))"
+        }
+      }
+    },
+    "heroIdle": {
+      ".read": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('brainRpgAdmins/' + auth.uid).exists())",
+        ".write": "auth != null && ((auth.uid === $uid && !root.child('heroIdleBans/' + $uid).exists() && !root.child('heroIdleConfig/maint/on').exists()) || root.child('brainRpgAdmins/' + auth.uid).exists())",
+        ".validate": "newData.hasChildren(['name','t','save']) && newData.child('save').isString() && newData.child('save').val().length < 300000 && (!root.child('heroIdleConfig/minVersion').exists() || newData.child('v').val() >= root.child('heroIdleConfig/minVersion').val())"
+      }
+    },
+    "heroIdlePub": {
+      ".read": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()",
+      "$uid": {
+        ".write": "auth != null && ((auth.uid === $uid && !root.child('heroIdleBans/' + $uid).exists() && !root.child('heroIdleConfig/maint/on').exists()) || root.child('brainRpgAdmins/' + auth.uid).exists())"
+      }
+    },
+    "heroIdleBans": {
+      ".read": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists() && $uid !== auth.uid && root.child('brainRpgAdmins/' + $uid).val() !== 'super' && (root.child('brainRpgAdmins/' + auth.uid).val() === 'super' || !root.child('brainRpgAdmins/' + $uid).exists())"
+      }
+    },
+    "heroIdleEvent": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()"
+    },
+    "heroIdleConfig": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('brainRpgAdmins/' + auth.uid).exists()"
+    },
+    "kingdomPub": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null && ((auth.uid === $uid && !root.child('heroIdleBans/' + $uid).exists()) || root.child('brainRpgAdmins/' + auth.uid).exists())"
+      }
+    },
+    "kingdom": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && ((auth.uid === $uid && !root.child('heroIdleBans/' + $uid).exists()) || root.child('brainRpgAdmins/' + auth.uid).exists())"
+      }
+    },
+    "kingdomWars": {
+      ".read": "auth != null",
+      "$wid": {
+        ".write": "auth != null && !data.exists() && newData.child('attacker').val() === auth.uid && !root.child('heroIdleBans/' + auth.uid).exists()",
+        "status": {
+          ".write": "auth != null && data.parent().child('status').val() === 'declared' && (data.parent().child('attacker').val() === auth.uid || data.parent().child('defender').val() === auth.uid)"
+        },
+        "winner": {
+          ".write": "auth != null && data.parent().child('status').val() === 'declared' && (data.parent().child('attacker').val() === auth.uid || data.parent().child('defender').val() === auth.uid)"
+        },
+        "loot": {
+          ".write": "auth != null && data.parent().child('status').val() === 'declared' && (data.parent().child('attacker').val() === auth.uid || data.parent().child('defender').val() === auth.uid)"
+        },
+        "defPow": {
+          ".write": "auth != null && data.parent().child('status').val() === 'declared' && (data.parent().child('attacker').val() === auth.uid || data.parent().child('defender').val() === auth.uid)"
+        },
+        "resolvedBy": {
+          ".write": "auth != null && data.parent().child('status').val() === 'declared' && (data.parent().child('attacker').val() === auth.uid || data.parent().child('defender').val() === auth.uid)"
+        },
+        "aDone": {
+          ".write": "auth != null && data.parent().child('attacker').val() === auth.uid"
+        },
+        "dDone": {
+          ".write": "auth != null && data.parent().child('defender').val() === auth.uid"
+        }
+      }
+    },
+    "members": {
+      ".read": "auth != null",
+      "$n": {
+        ".write": "root.child('admins/' + auth.uid).exists()"
+      }
+    },
+    "admins": {
+      ".read": "auth != null",
+      ".write": "auth != null && (!root.child('admins').exists() || root.child('admins/' + auth.uid).exists())"
+    },
+    "claims": {
+      ".read": "auth != null",
+      "$n": {
+        ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid && root.child('members/' + $n).exists()) || root.child('admins/' + auth.uid).exists())"
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid && root.child('claims/' + newData.val()).val() === auth.uid"
+      }
+    },
+    "chat": {
+      ".read": "auth != null",
+      "$room": {
+        ".indexOn": [
+          "t"
+        ],
+        "$id": {
+          ".write": "auth != null && ((!data.exists() && (newData.child('n').val() === root.child('users/' + auth.uid).val() || (newData.child('n').val() === '운영자' && root.child('admins/' + auth.uid).exists()))) || (data.exists() && (data.child('n').val() === root.child('users/' + auth.uid).val() || root.child('admins/' + auth.uid).exists())))"
+        }
+      }
+    },
+    "checks": {
+      ".read": "auth != null",
+      "$d": {
+        "$n": {
+          ".write": "auth != null && root.child('claims/' + $n).val() === auth.uid"
+        }
+      }
+    },
+    "games": {
+      ".read": "auth != null",
+      "quiz": {
+        "$n": {
+          ".write": "auth != null && root.child('claims/' + $n).val() === auth.uid"
+        }
+      }
+    },
+    "anime": {
+      "names": {
+        ".read": "auth!=null",
+        "$n": {
+          ".write": "auth!=null && ((!data.exists() && newData.val()===auth.uid && !root.child('anime/uids/'+auth.uid).exists() && $n.matches(/^[가-힣A-Za-z0-9_]{2,12}$/) && $n!=='제작자' && $n!=='운영자' && $n!=='관리자' && $n.toLowerCase()!=='system' && $n.toLowerCase()!=='guest') || (data.exists() && data.val()===auth.uid && !newData.exists()))"
+        }
+      },
+      "uids": {
+        "$uid": {
+          ".read": "auth!=null && (auth.uid===$uid || root.child('anime/admins/'+auth.uid).exists())",
+          ".write": "auth!=null && auth.uid===$uid && ((!data.exists() && newData.isString() && root.child('anime/names/'+newData.val()).val()===auth.uid) || !newData.exists())"
+        }
+      },
+      "admins": {
+        "$uid": {
+          ".read": "auth!=null && (auth.uid===$uid || (root.child('anime/admins/'+auth.uid).val())==='owner')",
+          ".write": "auth!=null && (root.child('anime/admins/'+auth.uid).val())==='owner' && $uid!==auth.uid && (newData.val()==='mod' || !newData.exists())"
+        }
+      },
+      "staff": {
+        ".read": "auth!=null",
+        "$n": {
+          ".write": "auth!=null && (root.child('anime/admins/'+auth.uid).val())==='owner' && (newData.val()==='mod' || !newData.exists())"
+        }
+      },
+      "bans": {
+        ".read": "auth!=null",
+        "$n": {
+          ".write": "auth!=null && (((root.child('anime/admins/'+auth.uid).val())==='owner' && root.child('anime/staff/'+$n).val()!=='owner') || ((root.child('anime/admins/'+auth.uid).val())==='mod' && !root.child('anime/staff/'+$n).exists()))"
+        }
+      },
+      "mutes": {
+        ".read": "auth!=null",
+        "$n": {
+          ".write": "auth!=null && (((root.child('anime/admins/'+auth.uid).val())==='owner' && root.child('anime/staff/'+$n).val()!=='owner') || ((root.child('anime/admins/'+auth.uid).val())==='mod' && !root.child('anime/staff/'+$n).exists()))"
+        }
+      },
+      "users": {
+        ".read": "auth!=null",
+        "$n": {
+          ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid && !root.child('anime/bans/'+$n).exists()",
+          ".validate": "newData.child('name').val()===$n"
+        }
+      },
+      "saves": {
+        "$n": {
+          ".read": "auth!=null && (root.child('anime/names/'+$n).val()===auth.uid || root.child('anime/admins/'+auth.uid).exists())",
+          ".write": "auth!=null && ((root.child('anime/names/'+$n).val()===auth.uid && !root.child('anime/bans/'+$n).exists()) || (((root.child('anime/admins/'+auth.uid).val())==='owner' && root.child('anime/staff/'+$n).val()!=='owner') || ((root.child('anime/admins/'+auth.uid).val())==='mod' && !root.child('anime/staff/'+$n).exists())))",
+          ".validate": "newData.hasChildren(['coins','dia','owned']) && newData.child('coins').isNumber() && newData.child('coins').val()>=0 && newData.child('coins').val()<=10000000000000 && newData.child('dia').isNumber() && newData.child('dia').val()>=0 && newData.child('dia').val()<=100000000 && (!newData.child('pvp').exists() || (newData.child('pvp').isNumber() && newData.child('pvp').val()>=0 && newData.child('pvp').val()<=1000000))"
+        }
+      },
+      "mails": {
+        "$n": {
+          ".read": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid",
+          ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid",
+          "friendRequests": {
+            "$id": {
+              ".write": "auth!=null && !data.exists() && newData.child('from').val()===root.child('anime/uids/'+auth.uid).val() && newData.child('from').val()!==$n"
+            }
+          },
+          "accepted": {
+            "$id": {
+              ".write": "auth!=null && !data.exists() && newData.child('from').val()===root.child('anime/uids/'+auth.uid).val() && newData.child('from').val()!==$n"
+            }
+          },
+          "notices": {
+            "$id": {
+              ".write": "auth!=null && !data.exists() && newData.child('from').val()===root.child('anime/uids/'+auth.uid).val() && newData.child('from').val()!==$n"
+            }
+          }
+        }
+      },
+      "invites": {
+        "$n": {
+          ".read": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid",
+          ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid",
+          "$id": {
+            ".write": "auth!=null && !data.exists() && newData.child('from').val()===root.child('anime/uids/'+auth.uid).val()"
+          }
+        }
+      },
+      "globalChat": {
+        ".read": "auth!=null",
+        ".write": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
+        "$id": {
+          ".write": "auth!=null && !data.exists() && newData.child('name').val()===root.child('anime/uids/'+auth.uid).val() && !root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).exists() && !root.child('anime/mutes/'+root.child('anime/uids/'+auth.uid).val()).exists() && ((newData.child('admin').val()!==true && newData.child('notice').val()!==true) || root.child('anime/admins/'+auth.uid).exists())",
+          ".validate": "newData.hasChildren(['name','msg','ts']) && newData.child('msg').isString() && newData.child('msg').val().length<=200"
+        }
+      },
+      "rooms": {
+        ".read": "auth!=null",
+        "$r": {
+          ".write": "auth!=null && root.child('anime/uids/'+auth.uid).exists() && !root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).exists()"
+        }
+      },
+      "pvpRooms": {
+        ".read": "auth!=null",
+        "$r": {
+          ".write": "auth!=null && root.child('anime/uids/'+auth.uid).exists() && !root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).exists()"
+        }
+      },
+      "tradeRooms": {
+        ".read": "auth!=null",
+        "$r": {
+          ".write": "auth!=null && root.child('anime/uids/'+auth.uid).exists() && !root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).exists()"
+        }
+      },
+      "worldRooms": {
+        ".read": "auth!=null",
+        "$r": {
+          "players": {
+            "$id": {
+              ".write": "auth!=null && $id===auth.uid && root.child('anime/uids/'+auth.uid).exists() && !root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).exists()"
+            }
+          }
+        }
+      }
+    }
+  }
+}
