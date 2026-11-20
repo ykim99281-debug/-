@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>귀멸 x 주술 확장 RPG</title>
+<noscript><meta http-equiv="refresh" content="0;url=https://ykim99281-debug.github.io/-/rpg.html"></noscript>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#050505,#3b0a0a,#111827);color:#f1f1f6;font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif}
+.card{width:100%;max-width:380px;background:rgba(255,255,255,.08);border:2px solid #dc2626;border-radius:20px;padding:30px 22px;text-align:center}
+.sw{font-size:64px;line-height:1}
+h1{font-size:22px;margin:14px 0 8px;color:#fca5a5;word-break:keep-all}
+#st{font-size:14.5px;color:#d1d5db;line-height:1.6;min-height:46px;word-break:keep-all}
+a{display:block;margin-top:16px;text-decoration:none;font-weight:900;border-radius:14px;padding:16px 10px;font-size:17px;background:#dc2626;color:#fff}
+small{display:block;margin-top:14px;font-size:11.5px;color:#9ca3af}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="sw">⚔️</div>
+  <h1>귀멸 x 주술 확장 RPG</h1>
+  <div id="st">최신 버전을 여는 중이에요...</div>
+  <a id="go" href="https://ykim99281-debug.github.io/-/rpg.html">▶ 게임 열기</a>
+  <small>이 파일은 열 때마다 가장 새로운 버전으로 연결돼요</small>
+</div>
+<script>
+(function(){
+  var URL_GAME="https://ykim99281-debug.github.io/-/rpg.html",st=document.getElementById("st");
+  function go(){st.textContent="최신 버전을 여는 중이에요...";setTimeout(function(){location.replace(URL_GAME)},500)}
+  if(navigator.onLine===false){st.textContent="인터넷에 연결되어 있지 않아요. 연결되면 자동으로 열려요.";window.addEventListener("online",go)}
+  else go();
+})();
+</script>
+</body>
+</html>
