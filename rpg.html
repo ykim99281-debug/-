@@ -199,6 +199,18 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 @keyframes dbn{0%{opacity:0;transform:scale(1.6)}14%{opacity:1;transform:scale(1)}80%{opacity:1;transform:scale(1.02)}100%{opacity:0;transform:scale(1.08)}}
 @media(prefers-reduced-motion:reduce){.lbBar{display:none}}
 </style>
+
+<style id="cutinUi">
+.cutin{position:fixed;left:0;right:0;top:27%;height:100px;z-index:99990;pointer-events:none;display:flex;align-items:center;justify-content:center;gap:16px;transform:skewY(-5deg);background:linear-gradient(90deg,transparent,rgba(0,0,0,.82) 16%,rgba(0,0,0,.82) 84%,transparent);border-top:2px solid var(--c);border-bottom:2px solid var(--c);box-shadow:0 0 28px var(--c),inset 0 0 22px rgba(0,0,0,.6);animation:cutinSlide 1.3s cubic-bezier(.2,.9,.2,1) forwards}
+.cutK{font-size:68px;font-weight:900;line-height:1;color:var(--c);text-shadow:0 0 18px var(--c),0 0 40px var(--c)}
+.cutT{font-size:24px;font-weight:900;color:#fff;text-shadow:0 0 12px var(--c);text-align:left}
+.cutT small{display:block;margin-top:4px;font-size:14px;color:var(--c);letter-spacing:1px}
+@keyframes cutinSlide{0%{opacity:0;transform:skewY(-5deg) translateX(-100%)}18%{opacity:1;transform:skewY(-5deg) translateX(0)}80%{opacity:1;transform:skewY(-5deg) translateX(0)}100%{opacity:0;transform:skewY(-5deg) translateX(100%)}}
+.bossBar{height:18px!important;background-image:repeating-linear-gradient(90deg,transparent 0,transparent calc(25% - 1px),rgba(255,255,255,.6) calc(25% - 1px),rgba(255,255,255,.6) 25%)!important;border-color:rgba(250,204,21,.7)!important;box-shadow:0 0 12px rgba(250,204,21,.45),inset 0 2px 4px rgba(0,0,0,.5)!important}
+.bossLow{animation:bossLowPulse .6s ease-in-out infinite alternate}
+@keyframes bossLowPulse{from{box-shadow:0 0 6px rgba(239,68,68,.4)}to{box-shadow:0 0 22px rgba(239,68,68,1)}}
+@media(prefers-reduced-motion:reduce){.cutin,.bossLow{animation:none}}
+</style>
 </head>
 <body>
 <section id="select" class="active">
@@ -2233,7 +2245,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='1.6.3',APP_BUILD=163,APP_DATE='2026-11-21';
+const APP_VERSION='1.7.0',APP_BUILD=170,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2724,6 +2736,44 @@ jujutsuFx=function(c,n){
   }
   return r;
 };
+
+/* ===================== 귀살대 호흡 컷인 / 오니 혈귀술 / 보스 등장 ===================== */
+const BREATH_KANJI={'물':'水','번개':'雷','화염':'炎','바람':'風','안개':'霞','바위':'岩','벌레':'蟲','사랑':'恋','소리':'音','짐승':'獣','해':'日','꽃':'花','뱀':'蛇'};
+function breathKanji(b){const k=Object.keys(BREATH_KANJI).find(x=>String(b||'').includes(x));return k?BREATH_KANJI[k]:'刃'}
+function kimetsuCutin(c){
+  const e=document.createElement('div');e.className='cutin';e.style.setProperty('--c',breathFx(c));
+  e.innerHTML=`<span class="cutK">${breathKanji(c.breath)}</span><span class="cutT">${escH(String(c.breath).split('/')[0])} 호흡<small>${escH(c.skill[1]||'')}</small></span>`;
+  document.body.appendChild(e);setTimeout(()=>e.remove(),1350);addShake(8);
+}
+const _skillCutinBase=skill;
+skill=function(n){
+  const ready=(n===2&&c2<=0);
+  const r=_skillCutinBase(n);
+  if(ready&&c2>0&&!pvpMode){
+    const c=chars[sel];
+    if(human(c))kimetsuCutin(c);
+    else if(c.side==='오니')domainBanner('血鬼術',c.skill[1]||'',c.color);
+  }
+  return r;
+};
+let _introEnemy=null;
+function bossNow(){
+  if(!enemy||pvpMode||(typeof coopMode!=='undefined'&&coopMode))return false;
+  return stage%5===0||(typeof dungeonPlace!=='undefined'&&dungeonPlace&&/보스/.test(enemy.name||''));
+}
+function bossFrameTick(){
+  if(!enemy)return;
+  if(enemy!==_introEnemy){
+    _introEnemy=enemy;
+    if(bossNow())domainBanner(stage%10===0?'FINAL BOSS':'⚠ BOSS',enemy.name,enemy.color||'#ef4444');
+  }
+  const bar=$('eh')&&$('eh').parentElement;
+  if(bar){const boss=bossNow();bar.classList.toggle('bossBar',boss);bar.classList.toggle('bossLow',boss&&enemy.hp/enemy.max<.25)}
+}
+const _drawBoss=draw;
+draw=function(){_drawBoss();bossFrameTick()};
+const _hudBoss=hud;
+hud=function(){_hudBoss();if(bossNow()){const e=$('en');if(e)e.textContent='👑 '+e.textContent}};
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
 </body>
