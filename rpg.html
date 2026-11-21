@@ -356,6 +356,8 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
     <button class="green" onclick="adminEndMaint()">서버 점검 종료</button>
     <button class="gold" onclick="adminCleanOldVersions()">구버전 정리 (현재 버전 미만 강제 종료)</button>
     <button onclick="adminClearMinVersion()">구버전 정리 해제</button>
+    <button class="purple" onclick="adminServerModeOn()">🔒 서버 모드 켜기</button>
+    <button onclick="adminServerModeOff()">서버 모드 끄기</button>
     <div class="small">점검 중에는 일반 유저와 상급 평민이 접속 해제되고, <b>기사 이상</b>(기사·하급 귀족·관리자·제작자)은 계속 이용할 수 있어요.</div>
   </div>
 
@@ -528,6 +530,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
 <script>
 const chars=[
 {name:"하루 세이렌",side:"기사단",emoji:"🌊",breath:"물/태양",power:8500,hp:1200,atk:70,spd:4.2,skill:["파도 가르기","여명의 검무"],color:"#38bdf8",price:0},
@@ -1121,7 +1124,7 @@ function upd(dt){let vx=joy.x,vy=joy.y;if(keys.a||keys.ArrowLeft)vx=-1;if(keys.d
 let baseLevel=dungeonPlace?dungeonPlace.level:stage;
 let rw=40+baseLevel*22+(stage%5===0?150:0)+(stage%10===0?300:0)+(dungeonPlace?baseLevel*10:0);
 let dr=(stage%10===0?10:stage%5===0?4:0)+(dungeonPlace?Math.max(1,Math.floor(baseLevel/10)):0);
-coins+=rw;dia+=dr;stage++;best=Math.max(best,stage,baseLevel+1);save.coins=coins;save.dia=dia;save.best=best;store();msg(`승리! ${rw}코인 ${dr}다이아`);
+onStageClear(rw,dr,baseLevel);
 if(dungeonPlace){let p=dungeonPlace;dungeonPlace=null;setTimeout(()=>{run=false;$("game").classList.remove("active");$("world").classList.add("active");worldRun=true;requestAnimationFrame(worldLoop);},900)}
 else setup()
 }if(player.hp<=0){msg("패배! 선택창으로");run=false;setTimeout(back,1000)}hud();sendState();$("s1").classList.toggle("cool",c1>0);$("s2").classList.toggle("cool",c2>0);let s=Math.floor((Date.now()-startAt)/1000);$("time").textContent=String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
@@ -1208,7 +1211,7 @@ leaveRoom=function(show=true){if(chan){chan.postMessage({type:'leave',id:myId});
 sendState=function(){if(!player)return;let st={type:'state',id:myId,name:user,emoji:player.emoji,color:player.color,x:player.x,y:player.y,char:player.name,hp:pvpMode?pvpMyHp:player.hp,ts:Date.now()};if(online&&db&&room)dbRef('rooms/'+safeKey(room)+'/players/'+myId).set(st);else if(chan)chan.postMessage(st);if(pvpMode&&online&&db&&pvpRoom)dbRef('pvpRooms/'+safeKey(pvpRoom)+'/players/'+myId).update(st)}
 function pvpRankScore(){return save.pvp||0}function rankNameByScore(p){return ranks[Math.max(0,Math.min(7,Math.floor((p||0)/100)))]}
 rankName=function(){return rankNameByScore(save.pvp||0)}
-function updateRank(delta){save.pvp=Math.max(0,(save.pvp||0)+delta);store();ui();}
+function updateRank(delta){if(SERVER()){ui();return}save.pvp=Math.max(0,(save.pvp||0)+delta);store();ui();}
 function pvpRoomRef(){return dbRef('pvpRooms/'+safeKey(pvpRoom))}
 function pvpIsHost(){return pvpHostId===myId}
 function joinPvpRoom(isRanked=false){
@@ -1555,6 +1558,7 @@ function processCoopReward(clearStage,rewardKey){
   if(save.coopRewards[key])return;
   save.coopRewards[key]=true;
   let r=coopRewardFor(clearStage);
+  if(SERVER()){delete save.coopRewards[key];msg('서버 모드에서는 협동 보상이 잠시 중단돼요');return}
   coins+=r.coins; dia+=r.dia; best=Math.max(best,clearStage+1);
   save.coins=coins; save.dia=dia; save.best=best;
   store(); msg(`협동 클리어! ${r.coins}코인 ${r.dia}다이아`);
@@ -1758,6 +1762,7 @@ const _charOldDash=dash;dash=function(){setAction('dash',380);return _charOldDas
    ===================================================================== */
 const NICK_RE=/^[가-힣A-Za-z0-9_]{2,12}$/;
 const RESERVED_NICKS=["제작자","운영자","관리자","system","guest"];
+let prefsRef=null,prefsCache=null,prefsApplied=false,lastServerSave=null;
 let auth=null,myAdminRole='',staffMap={},banMap={},muteMap={},authBusy=false,serverSubs=[],mySavePushes=new Set(),mySaveRef=null,acceptRef=null,lastDeniedAlert=0;
 
 function dbRef(p){return db.ref('anime/'+p)}
@@ -1800,7 +1805,7 @@ function startServerListeners(){
   const add=(r,fn)=>{r.on('value',fn);serverSubs.push(r)};
   staffReady=false;cfgReady=false;
   add(dbRef('staff'),s=>{staffMap=s.val()||{};staffReady=true;updateAdminPanel();ui();renderEvents();applyServerState()});
-  add(dbRef('config'),s=>{cfg=s.val()||{};cfgReady=true;applyServerState();renderServerCfg()});
+  add(dbRef('config'),s=>{const was=SERVER();cfg=s.val()||{};cfgReady=true;applyServerState();renderServerCfg();if(!was&&SERVER()&&user!=='guest')refreshServerSave()});
   add(dbRef('bans'),s=>{banMap=s.val()||{};if(user!=='guest'&&isBanned(user)){alert('이 계정은 밴되었습니다. ('+banText(banMap[user])+')');logout()}});
   add(dbRef('mutes'),s=>{muteMap=s.val()||{}});
   add(dbRef('events').limitToLast(20),s=>{eventsCache=s.val()||{};renderEvents()});
@@ -1809,11 +1814,13 @@ function stopServerListeners(){
   serverSubs.forEach(r=>r.off());serverSubs=[];
   if(mySaveRef){mySaveRef.off();mySaveRef=null}
   if(acceptRef){acceptRef.off();acceptRef=null}
+  if(prefsRef){prefsRef.off();prefsRef=null}
 }
 
 /* ---------- 세이브 동기화 (본인 세이브만 씀) ---------- */
 pushOnlineSave=async function(){
   if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;
+  if(SERVER()){const tt=Date.now();await dbRef('prefs/'+safeKey(user)).set({eq:save.eq||'',eqArmor:save.eqArmor||'',friends:save.friends||[],updatedAt:tt,v:APP_BUILD});await dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:tt,pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'하루 세이렌'});return}
   const t=Date.now();mySavePushes.add(t);if(mySavePushes.size>50)mySavePushes.delete(mySavePushes.values().next().value);
   await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:t,v:APP_BUILD});
   await dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:t,pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'하루 세이렌'});
@@ -1827,9 +1834,12 @@ syncOnlineSave=async function(){
   else await pushOnlineSave();
   // 관리자가 내 세이브를 바꾸면(코인 지급/몰수/초기화) 바로 반영
   mySaveRef=ref;
+  prefsRef=dbRef('prefs/'+safeKey(user));prefsRef.on('value',ps=>{prefsCache=ps.val();if(SERVER()&&prefsCache&&!prefsApplied){prefsApplied=true;['eq','eqArmor','friends'].forEach(k=>{if(prefsCache[k]!==undefined)save[k]=prefsCache[k]});norm();renderAll()}});
   ref.on('value',s=>{
     const r=s.val();
-    if(!r||mySavePushes.has(r.updatedAt))return;
+    if(!r)return;
+    if(SERVER()){applyServerSave(r);return}
+    if(mySavePushes.has(r.updatedAt))return;
     save={...fresh(),...r};norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();
   });
 };
@@ -2019,6 +2029,7 @@ readyTrade=async function(){
   }else $('tradeStatus').textContent='내 확정 완료. 상대 확정을 기다리는 중';
 };
 async function settleTrade(t){
+  if(SERVER())return;
   const ref=tradeRoomBase();
   if(!t||!ref||user==='guest')return;
   const d=t.deal;
@@ -2260,7 +2271,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='2.0.0',APP_BUILD=200,APP_DATE='2026-11-21';
+const APP_VERSION='2.1.0',APP_BUILD=210,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2391,7 +2402,7 @@ function applyServerState(){
 function renderServerCfg(){
   const e=$('serverCfgInfo');if(!e)return;
   const m=cfg.maint&&cfg.maint.on;
-  e.innerHTML=`점검: ${m?'<b style="color:#f87171">진행 중</b> ('+String(cfg.maint.msg||'').replace(/[<>&"]/g,'')+')':'<span class="onlineOk">꺼짐</span>'} / 최소 허용 버전: ${cfg.minVersion?('빌드 '+cfg.minVersion):'제한 없음'} / 내 버전: 빌드 ${APP_BUILD}`;
+  e.innerHTML=`서버 모드: ${cfg.serverMode===true?'<b style="color:#4ade80">켜짐</b>':'꺼짐'} / 점검: ${m?'<b style="color:#f87171">진행 중</b> ('+String(cfg.maint.msg||'').replace(/[<>&"]/g,'')+')':'<span class="onlineOk">꺼짐</span>'} / 최소 허용 버전: ${cfg.minVersion?('빌드 '+cfg.minVersion):'제한 없음'} / 내 버전: 빌드 ${APP_BUILD}`;
 }
 adminStartMaint=async function(){
   if(!isAdmin())return alert('관리자 이상만 사용 가능');
@@ -2818,6 +2829,122 @@ function migrateSaveNames(sv){
   ['eq','eqArmor'].forEach(k=>{if(sv[k])sv[k]=migrateName(sv[k])});
   return sv;
 }
+
+/* ===================== 서버 모드: 돈이 오가는 동작은 서버 함수가 처리 ===================== */
+const FUNCTIONS_REGION='asia-northeast3';   // functions/index.js 의 REGION 과 같아야 해요
+const ECON_KEYS=['coins','dia','owned','rare','equips','katanas','best','pvp'];
+function SERVER(){return cfg&&cfg.serverMode===true}
+let serverQueue=Promise.resolve();
+function serverEnqueue(fn){serverQueue=serverQueue.then(fn,fn);return serverQueue}   // 요청 순서를 지킴
+async function callFn(name,data){
+  const f=firebase.app().functions(FUNCTIONS_REGION).httpsCallable(name);
+  try{return (await f(Object.assign({v:APP_BUILD},data||{}))).data}
+  catch(e){throw Object.assign(new Error((e&&e.message)||'서버 오류'),{code:e&&e.code})}
+}
+function srvErr(e){alert((e&&e.message)||'처리하지 못했어요.')}
+const ECON_ARRAYS=['owned','rare','equips','katanas'];
+function econVal(r,k){const v=r[k];if(v===undefined)return ECON_ARRAYS.includes(k)?[]:undefined;return ECON_ARRAYS.includes(k)&&!Array.isArray(v)?Object.values(v||{}):v}
+function restoreEcon(){
+  if(!lastServerSave)return;
+  ECON_KEYS.forEach(k=>{const v=econVal(lastServerSave,k);if(v!==undefined)save[k]=v});
+  coins=save.coins||0;dia=save.dia||0;best=save.best||1;
+}
+function applyServerSave(r){
+  lastServerSave=r;
+  ECON_KEYS.forEach(k=>{const v=econVal(r,k);if(v!==undefined)save[k]=v});
+  if(!prefsApplied&&!prefsCache)['eq','eqArmor','friends'].forEach(k=>{if(r[k]!==undefined)save[k]=r[k]});
+  norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();
+}
+async function refreshServerSave(){try{const s=await dbRef('saves/'+safeKey(user)).get();if(s.val())applyServerSave(s.val())}catch(e){}}
+// 서버 모드에서는 화면 쪽 계산이 저장되지 않게, 저장할 때마다 서버 값으로 되돌림
+const _storeServer=store;
+store=function(){if(SERVER()&&lastServerSave)restoreEcon();_storeServer()};
+
+const _buyCharSrv=buyChar;
+buyChar=function(i){
+  if(!SERVER())return _buyCharSrv(i);
+  const c=chars[i];
+  if(c.rare)return alert('희귀 캐릭터는 희귀 뽑기나 거래소에서만 얻을 수 있습니다.');
+  if(owned(c)){sel=i;renderChars();show();return}
+  serverEnqueue(()=>callFn('buyChar',{name:c.name}).then(()=>{sel=i;show()}).catch(srvErr));
+};
+const _buyEquipSrv=buyEquip;
+buyEquip=function(i){
+  if(!SERVER())return _buyEquipSrv(i);
+  const it=equips[i];
+  if(save.equips.includes(it.name)){save.eqArmor=it.name;store();return}
+  serverEnqueue(()=>callFn('buyEquip',{name:it.name}).then(()=>{save.eqArmor=it.name;store()}).catch(srvErr));
+};
+const _c2dSrv=coinToDia,_d2cSrv=diaToCoin;
+coinToDia=function(){if(!SERVER())return _c2dSrv();serverEnqueue(()=>callFn('convert',{dir:'coinToDia',count:1}).catch(srvErr))};
+diaToCoin=function(){if(!SERVER())return _d2cSrv();serverEnqueue(()=>callFn('convert',{dir:'diaToCoin',count:1}).catch(srvErr))};
+const _rareSrv=rareEvent;
+rareEvent=function(){
+  if(!SERVER())return _rareSrv();
+  serverEnqueue(()=>callFn('gacha').then(r=>alert(r.won?(r.duplicate?'이미 가지고 있는 '+r.name+'(이)가 나왔어요. 추가 지급은 없어요.':'희귀 획득! '+r.name):'실패! 다음에 다시 도전')).catch(srvErr));
+};
+const _sellSrv=sellRare;
+sellRare=function(name){
+  if(!SERVER())return _sellSrv(name);
+  if(!save.rare.includes(name))return alert('보유한 희귀 캐릭터만 거래 가능');
+  if(confirm(name+' 판매하고 50다이아를 받을까요?'))serverEnqueue(()=>callFn('sellRare',{name}).catch(srvErr));
+};
+const _claimEvSrv=claimEvent;
+claimEvent=async function(id){
+  if(!SERVER())return _claimEvSrv(id);
+  const e=eventsCache[id];if(user==='guest'||!e)return;
+  try{const r=await callFn('claimEvent',{id});alert(`보상 수령! 코인 ${r.coins}, 다이아 ${r.dia}`);renderEvents()}
+  catch(err){srvErr(err);renderEvents()}
+};
+// 전투 보상: 시작 때 서버에 알리고, 끝나면 서버가 시간·스테이지를 확인해서 지급
+function onStageClear(rw,dr,baseLevel){
+  if(!SERVER()){coins+=rw;dia+=dr;stage++;best=Math.max(best,stage,baseLevel+1);save.coins=coins;save.dia=dia;save.best=best;store();msg(`승리! ${rw}코인 ${dr}다이아`);return}
+  stage++;
+  serverEnqueue(()=>callFn('claimStage').then(r=>msg(`승리! ${r.coins}코인 ${r.dia}다이아`)).catch(e=>msg('보상을 받지 못했어요: '+e.message)));
+}
+let _srvBattleEnemy=null;
+function serverBattleTick(){
+  if(!SERVER()||!enemy||enemy===_srvBattleEnemy)return;
+  _srvBattleEnemy=enemy;
+  if(pvpMode||(typeof coopMode!=='undefined'&&coopMode)||user==='guest')return;
+  const d=(typeof dungeonPlace!=='undefined')&&dungeonPlace;
+  serverEnqueue(()=>callFn('startBattle',{mode:d?'dungeon':'normal',stage,level:d?dungeonPlace.level:stage}).catch(e=>msg('전투를 시작하지 못했어요: '+e.message)));
+}
+const _drawSrv=draw;
+draw=function(){_drawSrv();serverBattleTick()};
+// 거래: 양쪽이 확정하면 서버가 한 번에 교환
+const _readyTradeSrv=readyTrade;
+readyTrade=async function(){
+  if(!SERVER()||!(online&&db))return _readyTradeSrv();
+  if(!tradeRoom)return alert('거래 방에 먼저 입장하세요');
+  const ref=tradeRoomBase();let t=(await ref.get()).val()||{};const names=tradeUserNames(t).slice(0,2);
+  if(names.length<2)return alert('상대가 거래 방에 들어와야 합니다');
+  const mine=(t.offers||{})[user];
+  if(!mine)return alert('내 거래품을 먼저 올리세요');
+  if(!hasOfferInSave(save,mine))return alert('올린 물건/골드가 부족해요. 다시 올려주세요.');
+  await ref.child('ready/'+safeKey(user)).set(true);
+  t=(await ref.get()).val()||{};const other=names.find(n=>n!==user);
+  if(other&&(t.ready||{})[other]&&(t.offers||{})[other]&&!t.done){
+    try{await callFn('tradeConfirm',{room:tradeRoom});alert('거래 완료!')}catch(e){alert('거래 실패: '+e.message)}
+  }else $('tradeStatus').textContent='내 확정 완료. 상대 확정을 기다리는 중';
+};
+// 서버 모드에서 막히는 관리자 도구 안내
+const _agmSrv=adminGiveMoney,_aulSrv=adminUnlockAll;
+adminGiveMoney=function(){if(SERVER())return alert('서버 모드에서는 내 계정에 직접 지급할 수 없어요. 다른 계정에 지급하세요.');return _agmSrv()};
+adminUnlockAll=function(){if(SERVER())return alert('서버 모드에서는 내 계정을 직접 바꿀 수 없어요.');return _aulSrv()};
+// 서버 모드 켜기/끄기 (관리자 이상)
+adminServerModeOn=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  try{await callFn('ping')}catch(e){return alert('서버 함수에 연결하지 못했어요. 서버 함수를 먼저 배포했는지 확인하세요. (SERVER_SETUP.md)\n\n'+e.message)}
+  if(!confirm('서버 모드를 켤까요? 켜면 돈이 오가는 모든 동작을 서버 함수가 처리하고, 브라우저에서 코인·아이템을 직접 저장할 수 없게 돼요.'))return;
+  await dbRef('config/serverMode').set(true);
+  adminNoticeTextAuto('🔒 서버 모드가 켜졌어요. 이제 코인·아이템은 서버가 관리해요.');alert('서버 모드를 켰어요.');
+};
+adminServerModeOff=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  if(!confirm('서버 모드를 끌까요? 끄면 예전 방식(브라우저 저장)으로 돌아가요.'))return;
+  await dbRef('config/serverMode').remove();alert('서버 모드를 껐어요.');
+};
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
 </body>

@@ -1,0 +1,190 @@
+{
+ "chars": [
+  {
+   "name": "하루 세이렌",
+   "rare": false,
+   "price": 0
+  },
+  {
+   "name": "라이언 볼트",
+   "rare": false,
+   "price": 350
+  },
+  {
+   "name": "가루 브루트",
+   "rare": false,
+   "price": 350
+  },
+  {
+   "name": "카이 아쿠아",
+   "rare": false,
+   "price": 900
+  },
+  {
+   "name": "솔 이그니스",
+   "rare": false,
+   "price": 1000
+  },
+  {
+   "name": "나비아 실크",
+   "rare": false,
+   "price": 700
+  },
+  {
+   "name": "에이든 바르도",
+   "rare": false,
+   "price": 850
+  },
+  {
+   "name": "미스트 루벤",
+   "rare": false,
+   "price": 950
+  },
+  {
+   "name": "로제 하트",
+   "rare": false,
+   "price": 900
+  },
+  {
+   "name": "윈드 칼리스",
+   "rare": false,
+   "price": 1100
+  },
+  {
+   "name": "그란 록하트",
+   "rare": false,
+   "price": 1500
+  },
+  {
+   "name": "루비아 엠버",
+   "rare": false,
+   "price": 250
+  },
+  {
+   "name": "그라스 타이탄",
+   "rare": false,
+   "price": 1800
+  },
+  {
+   "name": "프로스트 모르가",
+   "rare": false,
+   "price": 2300
+  },
+  {
+   "name": "루나 녹티스",
+   "rare": false,
+   "price": 3000
+  },
+  {
+   "name": "오블리비온",
+   "rare": false,
+   "price": 10000
+  },
+  {
+   "name": "토라 브레이커",
+   "rare": false,
+   "price": 15000
+  },
+  {
+   "name": "아스트라 인피니",
+   "rare": false,
+   "price": 100000
+  },
+  {
+   "name": "카오스 렉스",
+   "rare": false,
+   "price": 80000
+  },
+  {
+   "name": "리온 에리스",
+   "rare": false,
+   "price": 35000
+  },
+  {
+   "name": "미라 에코",
+   "rare": false,
+   "price": 600
+  },
+  {
+   "name": "플로라 벨",
+   "rare": false,
+   "price": 500
+  },
+  {
+   "name": "세르펜 이오",
+   "rare": false,
+   "price": 900
+  },
+  {
+   "name": "네로 쉐도우",
+   "rare": false,
+   "price": 20000
+  },
+  {
+   "name": "레오 칼라일",
+   "rare": false,
+   "price": 30000
+  },
+  {
+   "name": "모르페우스",
+   "rare": false,
+   "price": 60000
+  },
+  {
+   "name": "레이나 블래스트",
+   "rare": true,
+   "price": 999999
+  },
+  {
+   "name": "잭 리볼버",
+   "rare": true,
+   "price": 999999
+  },
+  {
+   "name": "카투스 가시",
+   "rare": true,
+   "price": 999999
+  },
+  {
+   "name": "카멜레 쉐이드",
+   "rare": true,
+   "price": 999999
+  }
+ ],
+ "equips": [
+  {
+   "name": "수련복",
+   "price": 3
+  },
+  {
+   "name": "기사단 갑옷",
+   "price": 5
+  },
+  {
+   "name": "공명 반지",
+   "price": 8
+  },
+  {
+   "name": "집중 목걸이",
+   "price": 10
+  },
+  {
+   "name": "전투 오라",
+   "price": 15
+  },
+  {
+   "name": "공허 사냥꾼 세트",
+   "price": 25
+  }
+ ],
+ "katanas": [
+  "낡은 공명 장비",
+  "푸른 물결 공명 장비",
+  "번개 공명 장비",
+  "화염 공명 장비",
+  "바람 공명 장비",
+  "안개 공명 장비",
+  "태양 공명 장비",
+  "전설의 태양 공명 장비"
+ ]
+}
