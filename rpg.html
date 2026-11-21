@@ -180,6 +180,13 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 #startBar{position:sticky;bottom:0;z-index:55;display:flex;gap:8px;justify-content:center;padding:14px 8px 12px;margin-top:8px;background:linear-gradient(180deg,transparent,rgba(5,5,10,.92) 45%)}
 #startBar .start{margin:0;flex:1;max-width:280px;padding:13px 10px;font-size:17px;border-radius:999px;white-space:nowrap}
 </style>
+
+<style id="reportUi">
+.chatUser{cursor:pointer}.chatUser:hover{text-decoration:underline dotted}
+.rpItem{background:rgba(15,23,42,.75);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:8px;margin:6px 0;word-break:break-all}
+.rpItem button{padding:4px 10px;font-size:12px;margin:2px}
+#adminBtn .cnt{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:999px;background:#ef4444;font-size:11px}
+</style>
 </head>
 <body>
 <section id="select" class="active">
@@ -235,6 +242,19 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
     <input id="adminAllCoins" type="number" class="adminInput" placeholder="지급 코인">
     <input id="adminAllDia" type="number" class="adminInput" placeholder="지급 다이아">
     <button class="green" onclick="adminRewardAllUsers()">모든 계정에 지급</button>
+  </div>
+
+  <div class="adminTile" style="grid-column:1/-1">
+    <b>🚨 신고 목록</b><br>
+    <button class="blue" onclick="adminLoadReports()">새로고침</button>
+    <div id="reportList" class="small">아직 조회 안 함</div>
+  </div>
+
+  <div class="adminTile" style="grid-column:1/-1">
+    <b>💬 채팅 기록</b><br>
+    <input id="chatHistUser" class="adminInput" placeholder="닉네임 (비우면 최근 전체 채팅)">
+    <button class="blue" onclick="adminChatHistory()">기록 보기</button>
+    <div id="chatHistList" class="small">아직 조회 안 함</div>
   </div>
 
   <div class="adminTile" style="grid-column:1/-1">
@@ -720,7 +740,7 @@ function sendState(){if(chan&&player)chan.postMessage({type:"state",id:myId,name
 
 /* === 전체 서버 채팅 시스템 === */
 let chatChan=null,chatMessages=[],globalChatOpened=false;
-function addChatMessage(name,msg,system=false,admin=false){
+function addChatMessage(name,msg,system=false,admin=false,key=''){
  const log=$("chatLog");
  if(!log)return;
  if(log.children.length===1 && log.textContent.includes("아직 채팅 없음"))log.innerHTML="";
@@ -729,7 +749,7 @@ function addChatMessage(name,msg,system=false,admin=false){
  const safeName=String(name||"system").replace(/[<>]/g,"");
  const safeMsg=String(msg||"").replace(/[<>]/g,"");
  const shownName=(isOwner(name)||isModerator(name)||admin)?adminLabel(name):`<span class="chatName">${safeName}</span>`;
- div.innerHTML=system?safeMsg:`${shownName} : ${safeMsg}`;
+ div.innerHTML=system?safeMsg:`<span class="chatUser" data-n="${safeName}" data-k="${String(key).replace(/[^\w-]/g,'')}" data-m="${encodeURIComponent(String(msg||'').slice(0,200))}" onclick="chatUserMenu(this)">${shownName}</span> : ${safeMsg}`;
  log.appendChild(div);
  while(log.children.length>80)log.removeChild(log.firstChild);
  log.scrollTop=log.scrollHeight;
@@ -743,7 +763,7 @@ function openChatChannel(){
    dbRef("globalChat").limitToLast(80).on("child_added",snap=>{
      const m=snap.val();
      if(!m)return;
-     addChatMessage(m.name,m.msg,false,m.admin);
+     addChatMessage(m.name,m.msg,false,m.admin,snap.key);
    });
    addChatMessage("system","전체 서버 채팅 온라인 연결됨",true);
  }else if(typeof BroadcastChannel!=="undefined"){
@@ -1850,13 +1870,13 @@ resetMyAccount=function(){
 };
 
 /* ---------- 채팅 ---------- */
-addChatMessage=function(name,msg,system=false,admin=false){
+addChatMessage=function(name,msg,system=false,admin=false,key=''){
   const log=$("chatLog");if(!log)return;
   const div=document.createElement("div");
   div.className="chatMsg"+(system?" chatSystem":"");
   const safeName=String(name||"system").replace(/[<>&"']/g,""),safeMsg=String(msg||"").replace(/[<>]/g,"");
   const shownName=(rankOf(name)||admin)?adminLabel(name):`<span class="chatName">${safeName}</span>`;
-  div.innerHTML=system?safeMsg:`${shownName} : ${safeMsg}`;
+  div.innerHTML=system?safeMsg:`<span class="chatUser" data-n="${safeName}" data-k="${String(key).replace(/[^\w-]/g,'')}" data-m="${encodeURIComponent(String(msg||'').slice(0,200))}" onclick="chatUserMenu(this)">${shownName}</span> : ${safeMsg}`;
   log.appendChild(div);
   while(log.children.length>80)log.removeChild(log.firstChild);
   log.scrollTop=log.scrollHeight;
@@ -2180,7 +2200,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='1.4.3',APP_BUILD=143,APP_DATE='2026-11-21';
+const APP_VERSION='1.5.0',APP_BUILD=150,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2364,6 +2384,7 @@ function showTab(id){
 }
 const ADMIN_GROUPS=[
   ['users','👤 유저',['유저 목록','유저 검색','유저 제재','직급 부여','관리자 임명']],
+  ['report','🚨 신고·채팅',['신고 목록','채팅 기록']],
   ['give','🎁 지급',['내 보상','특정 유저 지급','전체 유저 보상']],
   ['notice','📢 공지·이벤트',['전체 공지','채팅 관리','이벤트 열기']],
   ['server','🛠️ 서버',['서버 관리','서버 정보']]
@@ -2408,6 +2429,104 @@ updateAdminPanel=function(){
   if(!isStaff()&&curTab==='admin')showTab('home');
 };
 buildTabs();updateAdminPanel();
+
+/* ===================== 신고 / 채팅 기록 ===================== */
+const REPORT_REASONS=['욕설·비방','도배·광고','사기·거래 문제','부적절한 닉네임','기타'];
+let lastReportAt=0,reportsCache={},reportsRef=null;
+const escH=x=>String(x==null?'':x).replace(/[<>&"']/g,'');
+function closeChatMenu(){const e=$('chatMenu');if(e)e.remove()}
+chatUserMenu=function(el){
+  const name=el.dataset.n,key=el.dataset.k||'',msg=decodeURIComponent(el.dataset.m||'');
+  if(!name||name==='system'||name===user)return;
+  if(user==='guest')return alert('로그인 후 사용할 수 있어요.');
+  closeChatMenu();
+  const d=document.createElement('div');d.id='chatMenu';
+  d.style.cssText='position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px';
+  const staff=isAdmin();
+  d.innerHTML=`<div style="width:100%;max-width:340px;background:#0f172a;border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:16px">
+    <b style="font-size:16px">${adminLabel(name)}</b>
+    <div class="small" style="margin:6px 0 10px;max-height:60px;overflow:auto">"${escH(msg)}"</div>
+    <select id="rpReason" style="width:100%">${REPORT_REASONS.map(r=>`<option>${r}</option>`).join('')}</select>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+      <button class="red" onclick="submitReport('${escH(name)}','${key}')">🚨 신고하기</button>
+      ${staff?`<button class="blue" onclick="closeChatMenu();adminOpenChatHist('${escH(name)}')">💬 기록 보기</button>`:''}
+      <button onclick="closeChatMenu()">취소</button>
+    </div></div>`;
+  d.addEventListener('click',e=>{if(e.target===d)closeChatMenu()});
+  document.body.appendChild(d);
+};
+submitReport=async function(target,key){
+  const reason=($('rpReason')&&$('rpReason').value)||'기타';
+  if(Date.now()-lastReportAt<10000)return alert('잠시 후 다시 신고해 주세요.');
+  const m=document.querySelector(`.chatUser[data-n="${target}"][data-k="${key}"]`);
+  const msg=m?decodeURIComponent(m.dataset.m||''):'';
+  try{
+    await dbRef('reports/'+safeKey(user+'_'+(key||Date.now()))).set({by:user,target,reason,msg,key,ts:Date.now()});
+    lastReportAt=Date.now();closeChatMenu();alert('신고가 접수되었어요. 관리자가 확인할 거예요.');
+  }catch(e){closeChatMenu();alert('이미 신고했거나 신고할 수 없는 대상이에요.')}
+};
+function watchReports(){
+  const want=isAdmin()&&online&&db&&user!=='guest';
+  if(want&&!reportsRef){
+    reportsRef=dbRef('reports');
+    reportsRef.on('value',s=>{reportsCache=s.val()||{};updateReportBadge();renderReports()},()=>{});
+  }else if(!want&&reportsRef){reportsRef.off();reportsRef=null;reportsCache={};updateReportBadge()}
+}
+function updateReportBadge(){
+  const b=$('adminBtn');if(!b)return;
+  const n=Object.keys(reportsCache).length;
+  b.innerHTML='🛡️ 관리자 패널'+(n?`<span class="cnt">${n}</span>`:'');
+}
+function renderReports(){
+  const box=$('reportList');if(!box)return;
+  const ids=Object.keys(reportsCache).sort((a,b)=>(reportsCache[b].ts||0)-(reportsCache[a].ts||0));
+  if(!ids.length){box.textContent='접수된 신고 없음';return}
+  box.innerHTML=ids.map(id=>{
+    const r=reportsCache[id];
+    return `<div class="rpItem"><b>${escH(r.target)}</b> ← ${escH(r.by)} · ${escH(r.reason)}<br><span style="color:#cbd5e1">"${escH(r.msg)}"</span><br><small>${new Date(r.ts||0).toLocaleString()}</small><br>
+    <button class="blue" onclick="adminOpenChatHist('${escH(r.target)}')">💬 기록</button>
+    <button class="gold" onclick="adminReportAct('${escH(id)}','mutes')">🔇 채팅 금지</button>
+    <button class="red" onclick="adminReportAct('${escH(id)}','bans')">🚫 밴</button>
+    <button class="green" onclick="adminDismissReport('${escH(id)}')">✔ 처리 완료</button></div>`;
+  }).join('');
+}
+adminLoadReports=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  reportsCache=(await dbRef('reports').get()).val()||{};updateReportBadge();renderReports();
+};
+adminReportAct=async function(id,node){
+  if(!isAdmin())return;
+  const r=reportsCache[id];if(!r)return;
+  if(!canPunish(r.target))return alert('이 계정은 현재 권한으로 제재할 수 없어.');
+  if(!confirm(`${r.target} 계정을 ${node==='bans'?'밴':'채팅 금지'}할까요?`))return;
+  await dbRef(node+'/'+safeKey(r.target)).set(true);
+  adminNoticeTextAuto(`${r.target} 계정 ${node==='bans'?'밴':'채팅 금지'} (신고 처리)`);
+  await dbRef('reports/'+id).remove();alert('처리했어요.');
+};
+adminDismissReport=async function(id){if(!isAdmin())return;await dbRef('reports/'+id).remove()};
+adminChatHistory=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const n=(($('chatHistUser')&&$('chatHistUser').value)||'').trim(),box=$('chatHistList');
+  if(box)box.textContent='불러오는 중...';
+  const ref=n?dbRef('globalChat').orderByChild('name').equalTo(n).limitToLast(100):dbRef('globalChat').limitToLast(100);
+  const val=(await ref.get()).val()||{};
+  const ids=Object.keys(val).sort((a,b)=>(val[b].ts||0)-(val[a].ts||0));
+  if(!ids.length){box.textContent=n?`${escH(n)} 님의 채팅 기록 없음`:'채팅 기록 없음';return}
+  box.innerHTML=`${n?escH(n)+' 님의 최근 ':'최근 전체 '}채팅 ${ids.length}개`+ids.map(id=>{
+    const m=val[id];
+    return `<div class="rpItem"><b>${escH(m.name)}</b> <small>${new Date(m.ts||0).toLocaleString()}</small><br>${escH(m.msg)}<br><button class="red" onclick="adminDeleteChat('${escH(id)}')">삭제</button></div>`;
+  }).join('');
+};
+adminOpenChatHist=function(n){
+  if(typeof showTab==='function'){showTab('admin');showAdminTab('report')}
+  const i=$('chatHistUser');if(i)i.value=n;adminChatHistory();
+};
+adminDeleteChat=async function(id){
+  if(!isAdmin()||!confirm('이 채팅을 삭제할까요?'))return;
+  await dbRef('globalChat/'+id).remove();adminChatHistory();
+};
+const _uapReports=updateAdminPanel;
+updateAdminPanel=function(){_uapReports();watchReports()};
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
 </body>

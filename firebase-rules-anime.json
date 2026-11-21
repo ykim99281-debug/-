@@ -87,7 +87,10 @@
         "$id": {
           ".write": "auth!=null && !data.exists() && newData.child('name').val()===root.child('anime/uids/'+auth.uid).val() && !root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).exists() && !root.child('anime/mutes/'+root.child('anime/uids/'+auth.uid).val()).exists() && ((newData.child('admin').val()!==true && newData.child('notice').val()!==true) || root.child('anime/admins/'+auth.uid).exists()) && (!root.child('anime/config/maint/on').exists() || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='owner' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='mod' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='noble' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='knight')",
           ".validate": "newData.hasChildren(['name','msg','ts']) && newData.child('msg').isString() && newData.child('msg').val().length<=200"
-        }
+        },
+        ".indexOn": [
+          "name"
+        ]
       },
       "rooms": {
         ".read": "auth!=null",
@@ -135,6 +138,14 @@
       "config": {
         ".read": "auth!=null",
         ".write": "auth!=null && root.child('anime/admins/'+auth.uid).exists()"
+      },
+      "reports": {
+        ".read": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
+        ".write": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
+        "$id": {
+          ".write": "auth!=null && !data.exists() && newData.child('by').val()===root.child('anime/uids/'+auth.uid).val() && newData.child('target').val()!==newData.child('by').val() && root.child('anime/names/'+newData.child('target').val()).exists() && !root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).exists()",
+          ".validate": "newData.hasChildren(['by','target','reason','ts']) && newData.child('reason').isString() && newData.child('reason').val().length<=30 && (!newData.child('msg').exists() || (newData.child('msg').isString() && newData.child('msg').val().length<=200))"
+        }
       }
     }
   }
