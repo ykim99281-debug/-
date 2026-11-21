@@ -215,7 +215,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 
 <div id="adminBox" class="adminBox">
 <h3>🌈 제작자 관리자 패널</h3>
-<div class="user">현재 권한: <span class="adminBadge">관리자</span><span class="adminName">제작자</span></div>
+<div class="user">현재 권한: <span id="myRoleLabel"></span></div>
 <p class="small">서버에 관리자로 등록된 계정으로 로그인했을 때만 표시됩니다. 권한은 Firebase 보안 규칙이 서버에서 검증합니다.</p>
 
 <div class="adminGrid">
@@ -372,9 +372,8 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 <div id="friendMailList" class="mailList"><div class="mailItem">받은 친구 요청 없음</div></div>
 </div>
 <div class="box" id="perkBox">
-<h3>🏅 직급 혜택</h3>
-<div id="perkInfo" class="small">로그인하면 내 직급 혜택이 보여요</div>
-<button class="gold" id="dailyBtn" onclick="claimDaily()">🎁 일일 보상 받기</button>
+<h3>🏅 내 직급 권한</h3>
+<div id="perkInfo" class="small">로그인하면 내 직급 권한이 보여요</div>
 </div>
 <div class="box" id="eventBox">
 <h3>🎉 이벤트</h3>
@@ -565,9 +564,9 @@ function roleLabel(name){
 function adminLabel(name){return roleLabel(name)}
 function updateAdminPanel(){
   const box=$("adminBox");
-  if(box)box.style.display=isStaff()?"block":"none";
+  if(box)box.style.display=hasRank()?"block":"none";
   const title=box&&box.querySelector("h3");
-  if(title)title.innerHTML=isOwner()?"🌈 제작자 관리자 패널":"🛡️ 관리자 패널";
+  if(title)title.innerHTML=isOwner()?"🌈 제작자 관리자 패널":(isAdmin()?"🛡️ 관리자 패널":"🛠️ 운영 도구");
   updateAdminRoleList();
 }
 function adminGiveMoney(){
@@ -1756,9 +1755,9 @@ function updateAdminRoleList(){
 }
 function updateAdminPanel(){
   const box=$("adminBox");
-  if(box)box.style.display=isStaff()?"block":"none";
+  if(box)box.style.display=hasRank()?"block":"none";
   const title=box&&box.querySelector("h3");
-  if(title)title.innerHTML=isOwner()?"🌈 제작자 관리자 패널":"🛡️ 관리자 패널";
+  if(title)title.innerHTML=isOwner()?"🌈 제작자 관리자 패널":(isAdmin()?"🛡️ 관리자 패널":"🛠️ 운영 도구");
   updateAdminRoleList();
 }
 
@@ -2015,6 +2014,7 @@ async function adminWriteSave(n,s){
   await dbRef('saves/'+safeKey(n)).set({...s,updatedAt:Date.now()});
 }
 adminNoticeTextAuto=function(t){
+  if(!isAdmin())return;
   openChatChannel();
   dbRef('globalChat').push({name:user,msg:'📢 관리자: '+t,ts:Date.now(),admin:true,notice:true});
 };
@@ -2031,7 +2031,7 @@ adminTarget=function(){
   return n;
 };
 async function adminSetFlag(node,on,label){
-  if(!isAdmin())return alert('관리자만 사용 가능');
+  if(!(node==='mutes'?can('mute'):isAdmin()))return alert('권한이 없어요.');
   const n=adminTarget();if(!n)return;
   if(!(await nickExists(n)))return alert('없는 계정이야.');
   await dbRef(node+'/'+safeKey(n)).set(on?true:null);
@@ -2128,7 +2128,7 @@ async function removeAdmin(){
 /* ---------- 제작자/관리자: 전체 유저 목록 ---------- */
 let adminUsersCache={};
 adminListUsers=async function(){
-  if(!isAdmin())return alert('관리자만 사용 가능');
+  if(!can('report'))return alert('권한이 없어요.');
   const box=$('adminUserList');if(box)box.textContent='불러오는 중...';
   adminUsersCache=(await dbRef('users').get()).val()||{};
   renderAdminUserList();
@@ -2148,7 +2148,7 @@ renderAdminUserList=function(){
 };
 adminPickUser=function(n){
   ['adminTargetUser','adminGiveTarget','adminSearchUser'].forEach(id=>{const e=$(id);if(e)e.value=n});
-  adminSearchUser();
+  if(isAdmin())adminSearchUser();
 };
 
 /* ---------- 직급 체계: 1제작자 > 2관리자 > 3하급 귀족 > 4기사 > 5상급 평민 ---------- */
@@ -2222,7 +2222,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='1.6.0',APP_BUILD=160,APP_DATE='2026-11-21';
+const APP_VERSION='1.6.1',APP_BUILD=161,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2414,7 +2414,7 @@ const ADMIN_GROUPS=[
 let curAdminTab='users';
 function showAdminTab(id){
   curAdminTab=id;
-  document.querySelectorAll('#adminBox .adminTile').forEach(t=>t.classList.toggle('adminHide',t.dataset.ag!==id));
+  document.querySelectorAll('#adminBox .adminTile').forEach(t=>t.classList.toggle('adminHide',t.dataset.ag!==id||t.dataset.perm==='0'));
   document.querySelectorAll('#adminSubTabs button').forEach(b=>b.classList.toggle('on',b.dataset.ag===id));
 }
 function buildTabs(){
@@ -2425,7 +2425,7 @@ function buildTabs(){
   sc.insertBefore(bar,$('name').closest('.box'));
   // 로그인 정보 한 줄 요약
   const src=$('user'),mini=$('userMini');
-  const sync=()=>{mini.innerHTML=src.innerHTML;const lb=$('logoutBtn');if(lb)lb.style.display=(user!=='guest')?'':'none';const ab=$('adminBtn');if(ab)ab.style.display=isStaff()?'':'none'};sync();
+  const sync=()=>{mini.innerHTML=src.innerHTML;const lb=$('logoutBtn');if(lb)lb.style.display=(user!=='guest')?'':'none';const ab=$('adminBtn');if(ab)ab.style.display=hasRank()?'':'none'};sync();
   new MutationObserver(sync).observe(src,{childList:true,subtree:true,characterData:true});
   // 관리자 패널 분류
   document.querySelectorAll('#adminBox .adminTile').forEach(t=>{
@@ -2445,10 +2445,10 @@ const _uapTabs=updateAdminPanel;
 updateAdminPanel=function(){
   _uapTabs();
   const lb=$('logoutBtn');if(lb)lb.style.display=(user!=='guest')?'':'none';
-  const ab=$('adminBtn');if(ab)ab.style.display=isStaff()?'':'none';
-  const b=$('tab_admin');if(!b)return;b.style.order=isStaff()?'-1':'0';
-  b.style.display=isStaff()?'':'none';
-  if(!isStaff()&&curTab==='admin')showTab('home');
+  const ab=$('adminBtn');if(ab)ab.style.display=hasRank()?'':'none';
+  const b=$('tab_admin');if(!b)return;b.style.order=hasRank()?'-1':'0';
+  b.style.display=hasRank()?'':'none';
+  if(!hasRank()&&curTab==='admin')showTab('home');
 };
 buildTabs();updateAdminPanel();
 
@@ -2464,7 +2464,7 @@ chatUserMenu=function(el){
   closeChatMenu();
   const d=document.createElement('div');d.id='chatMenu';
   d.style.cssText='position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px';
-  const staff=isAdmin();
+  const staff=can('chat');
   d.innerHTML=`<div style="width:100%;max-width:340px;background:#0f172a;border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:16px">
     <b style="font-size:16px">${adminLabel(name)}</b>
     <div class="small" style="margin:6px 0 10px;max-height:60px;overflow:auto">"${escH(msg)}"</div>
@@ -2488,7 +2488,7 @@ submitReport=async function(target,key){
   }catch(e){closeChatMenu();alert('이미 신고했거나 신고할 수 없는 대상이에요.')}
 };
 function watchReports(){
-  const want=isAdmin()&&online&&db&&user!=='guest';
+  const want=can('report')&&online&&db&&user!=='guest';
   if(want&&!reportsRef){
     reportsRef=dbRef('reports');
     reportsRef.on('value',s=>{reportsCache=s.val()||{};updateReportBadge();renderReports()},()=>{});
@@ -2507,17 +2507,17 @@ function renderReports(){
     const r=reportsCache[id];
     return `<div class="rpItem"><b>${escH(r.target)}</b> ← ${escH(r.by)} · ${escH(r.reason)}<br><span style="color:#cbd5e1">"${escH(r.msg)}"</span><br><small>${new Date(r.ts||0).toLocaleString()}</small><br>
     <button class="blue" onclick="adminOpenChatHist('${escH(r.target)}')">💬 기록</button>
-    <button class="gold" onclick="adminReportAct('${escH(id)}','mutes')">🔇 채팅 금지</button>
-    <button class="red" onclick="adminReportAct('${escH(id)}','bans')">🚫 밴</button>
+    ${can('mute')?`<button class="gold" onclick="adminReportAct('${escH(id)}','mutes')">🔇 채팅 금지</button>`:''}
+    ${can('tempban')?`<button class="red" onclick="adminReportAct('${escH(id)}','bans')">🚫 밴</button>`:''}
     <button class="green" onclick="adminDismissReport('${escH(id)}')">✔ 처리 완료</button></div>`;
   }).join('');
 }
 adminLoadReports=async function(){
-  if(!isAdmin())return alert('관리자만 사용 가능');
+  if(!can('report'))return alert('권한이 없어요.');
   reportsCache=(await dbRef('reports').get()).val()||{};updateReportBadge();renderReports();
 };
 adminReportAct=async function(id,node){
-  if(!isAdmin())return;
+  if(node==='bans'?!can('tempban'):!can('mute'))return alert('권한이 없어요.');
   const r=reportsCache[id];if(!r)return;
   if(!canPunish(r.target))return alert('이 계정은 현재 권한으로 제재할 수 없어.');
   if(!confirm(`${r.target} 계정을 ${node==='bans'?'밴':'채팅 금지'}할까요?`))return;
@@ -2525,9 +2525,9 @@ adminReportAct=async function(id,node){
   adminNoticeTextAuto(`${r.target} 계정 ${node==='bans'?'밴':'채팅 금지'} (신고 처리)`);
   await dbRef('reports/'+id).remove();alert('처리했어요.');
 };
-adminDismissReport=async function(id){if(!isAdmin())return;await dbRef('reports/'+id).remove()};
+adminDismissReport=async function(id){if(!can('report'))return;await dbRef('reports/'+id).remove()};
 adminChatHistory=async function(){
-  if(!isAdmin())return alert('관리자만 사용 가능');
+  if(!can('chat'))return alert('권한이 없어요.');
   const n=(($('chatHistUser')&&$('chatHistUser').value)||'').trim(),box=$('chatHistList');
   if(box)box.textContent='불러오는 중...';
   const ref=n?dbRef('globalChat').orderByChild('name').equalTo(n).limitToLast(100):dbRef('globalChat').limitToLast(100);
@@ -2536,7 +2536,7 @@ adminChatHistory=async function(){
   if(!ids.length){box.textContent=n?`${escH(n)} 님의 채팅 기록 없음`:'채팅 기록 없음';return}
   box.innerHTML=`${n?escH(n)+' 님의 최근 ':'최근 전체 '}채팅 ${ids.length}개`+ids.map(id=>{
     const m=val[id];
-    return `<div class="rpItem"><b>${escH(m.name)}</b> <small>${new Date(m.ts||0).toLocaleString()}</small><br>${escH(m.msg)}<br><button class="red" onclick="adminDeleteChat('${escH(id)}')">삭제</button></div>`;
+    return `<div class="rpItem"><b>${escH(m.name)}</b> <small>${new Date(m.ts||0).toLocaleString()}</small><br>${escH(m.msg)}${can('delchat')?`<br><button class="red" onclick="adminDeleteChat('${escH(id)}')">삭제</button>`:''}</div>`;
   }).join('');
 };
 adminOpenChatHist=function(n){
@@ -2544,7 +2544,7 @@ adminOpenChatHist=function(n){
   const i=$('chatHistUser');if(i)i.value=n;adminChatHistory();
 };
 adminDeleteChat=async function(id){
-  if(!isAdmin()||!confirm('이 채팅을 삭제할까요?'))return;
+  if(!can('delchat')||!confirm('이 채팅을 삭제할까요?'))return;
   await dbRef('globalChat/'+id).remove();adminChatHistory();
 };
 const _uapReports=updateAdminPanel;
@@ -2554,20 +2554,22 @@ updateAdminPanel=function(){_uapReports();watchReports()};
 function banDurFrom(id){const e=$(id);const ms=e?Number(e.value)||0:0;return ms>0?Date.now()+ms:true}
 function banDurLabel(v){return v===true?'영구':banText(v)}
 adminBanUser=async function(){
-  if(!isAdmin())return alert('관리자만 사용 가능');
+  if(!can('tempban'))return alert('권한이 없어요.');
   const n=adminTarget();if(!n)return;
   if(!(await nickExists(n)))return alert('없는 계정이야.');
   const v=banDurFrom('banDur');
+  if(!isAdmin()&&(v===true||v-Date.now()>604800000))return alert('최대 7일까지만 밴할 수 있어요.');
   if(!confirm(`${n} 계정을 밴할까요? (${banDurLabel(v)})`))return;
   await dbRef('bans/'+safeKey(n)).set(v);
   adminNoticeTextAuto(`${n} 계정 밴 (${banDurLabel(v)})`);
   alert(`${n} 밴 완료 (${banDurLabel(v)})`);
 };
 adminReportAct=async function(id,node){
-  if(!isAdmin())return;
+  if(node==='bans'?!can('tempban'):!can('mute'))return alert('권한이 없어요.');
   const r=reportsCache[id];if(!r)return;
   if(!canPunish(r.target))return alert('이 계정은 현재 권한으로 제재할 수 없어.');
   const ban=node==='bans',v=ban?banDurFrom('rpBanDur'):true;
+  if(ban&&!isAdmin()&&(v===true||v-Date.now()>604800000))return alert('최대 7일까지만 밴할 수 있어요.');
   if(!confirm(`${r.target} 계정을 ${ban?'밴('+banDurLabel(v)+')':'채팅 금지'}할까요?`))return;
   await dbRef(node+'/'+safeKey(r.target)).set(v);
   adminNoticeTextAuto(`${r.target} 계정 ${ban?'밴 ('+banDurLabel(v)+')':'채팅 금지'} (신고 처리)`);
@@ -2634,30 +2636,63 @@ addFx2=function(cls,props={},life=1200){
   return _addFx2Base(cls,props,life);
 };
 
-/* ===================== 직급 혜택: 일일 보상 ===================== */
-const PERKS={owner:{c:20000,d:10},mod:{c:15000,d:8},noble:{c:8000,d:3},knight:{c:3000,d:1},elite:{c:1000,d:0}};
-let dailyLast=0;
-async function renderPerk(){
-  const box=$('perkInfo'),btn=$('dailyBtn');if(!box)return;
-  if(user==='guest'){box.textContent='로그인하면 내 직급 혜택이 보여요';if(btn)btn.style.display='none';return}
-  const r=rankOf(user),p=PERKS[r];
-  if(!p){box.innerHTML='직급이 없어요. 관리자에게 직급을 받으면 <b>일일 보상</b>을 받을 수 있어요.<br>🌟 상급 평민: 코인 1,000 · ⚔️ 기사: 코인 3,000 + 다이아 1 · 🏰 하급 귀족: 코인 8,000 + 다이아 3';if(btn)btn.style.display='none';return}
-  let last=0;try{last=((await dbRef('daily/'+safeKey(user)).get()).val()||{}).t||0}catch(e){}
-  dailyLast=last;
-  const next=last+82800000,ready=Date.now()>=next;
-  box.innerHTML=`내 직급: <b>${RANKS[r].label}</b><br>일일 보상: 코인 ${p.c.toLocaleString()}${p.d?' + 다이아 '+p.d:''} (23시간마다 1번)<br>${ready?'<span class="onlineOk">지금 받을 수 있어요!</span>':'다음 수령: '+new Date(next).toLocaleString()}`;
-  if(btn){btn.style.display='';btn.disabled=!ready;btn.style.opacity=ready?1:.5}
-}
-claimDaily=async function(){
-  if(user==='guest')return alert('로그인 후 사용할 수 있어요.');
-  const p=PERKS[rankOf(user)];if(!p)return alert('직급이 있는 유저만 받을 수 있어요.');
-  try{await dbRef('daily/'+safeKey(user)).set({t:firebase.database.ServerValue.TIMESTAMP})}
-  catch(e){renderPerk();return alert('아직 받을 수 없어요. (23시간마다 1번)')}
-  coins+=p.c;dia+=p.d;store();
-  alert(`일일 보상 수령! 코인 ${p.c.toLocaleString()}${p.d?', 다이아 '+p.d:''}`);renderPerk();
+/* ===================== 직급 권한 (관리자 권한의 일부) ===================== */
+const PERM_RANKS={
+  report:['owner','mod','noble','knight','elite'],
+  chat:['owner','mod','noble','knight','elite'],
+  mute:['owner','mod','noble','knight'],
+  delchat:['owner','mod','noble','knight'],
+  tempban:['owner','mod','noble']
 };
-const _uapPerk=updateAdminPanel;
-updateAdminPanel=function(){_uapPerk();renderPerk()};
+const RANK_PERM_TEXT={
+  elite:['신고 목록 보기·처리 완료','채팅 기록 보기'],
+  knight:['신고 목록 보기·처리 완료','채팅 기록 보기','채팅 금지/해제 (일반 유저·상급 평민)','채팅 메시지 삭제'],
+  noble:['신고 목록 보기·처리 완료','채팅 기록 보기','채팅 금지/해제 (기사 이하)','채팅 메시지 삭제','기간 밴 (최대 7일, 기사 이하)'],
+  mod:['모든 관리 기능 (영구 밴·지급·몰수·초기화·이벤트·공지·직급 부여·서버 점검)','관리자 임명/해제만 제작자 전용'],
+  owner:['모든 권한']
+};
+function hasRank(){return user!=='guest'&&!!RANKS[rankOf(user)]}
+function can(p){if(user==='guest')return false;if(p==='admin')return isAdmin();return (PERM_RANKS[p]||[]).includes(rankOf(user))}
+canPunish=function(target){
+  if(!hasRank()||!(can('mute')||can('tempban')||isAdmin()))return false;
+  if(rankOf(target)==='owner')return false;
+  return rankLevel(user)<rankLevel(target);
+};
+function renderPerk(){
+  const box=$('perkInfo');if(!box)return;
+  if(user==='guest'){box.textContent='로그인하면 내 직급 권한이 보여요';return}
+  const r=rankOf(user);
+  if(!RANKS[r]){box.innerHTML='직급이 없어요. 관리자에게 직급을 받으면 <b>관리자 권한 일부</b>를 쓸 수 있어요.<br>🌟 상급 평민: 신고·채팅 기록 보기<br>⚔️ 기사: + 채팅 금지·메시지 삭제<br>🏰 하급 귀족: + 기간 밴(최대 7일)';return}
+  box.innerHTML=`내 직급: <b>${RANKS[r].label}</b><br>사용할 수 있는 권한:<br>`+RANK_PERM_TEXT[r].map(t=>'· '+t).join('<br>')+(r==='mod'||r==='owner'?'':'<br><span class="small">🛡️ 관리자 패널 버튼에서 사용해요.</span>');
+}
+function applyAdminPerms(){
+  const tiles=[...document.querySelectorAll('#adminBox .adminTile')];
+  const perm={'신고 목록':()=>can('report'),'채팅 기록':()=>can('chat'),'유저 제재':()=>can('mute')||can('tempban'),'전체 유저 목록':()=>can('report')};
+  tiles.forEach(t=>{
+    const label=(t.querySelector('b')||{}).textContent||'';
+    const key=Object.keys(perm).find(k=>label.includes(k));
+    const ok=key?perm[key]():isAdmin();
+    t.dataset.perm=ok?'1':'0';
+  });
+  document.querySelectorAll('#adminBox button').forEach(b=>{
+    const oc=b.getAttribute('onclick')||'';
+    if(/adminUnbanUser|adminTakeAllItems|adminResetUser/.test(oc))b.style.display=isAdmin()?'':'none';
+    if(/adminUnmuteUser|adminMuteUser/.test(oc))b.style.display=can('mute')?'':'none';
+    if(/adminBanUser/.test(oc))b.style.display=can('tempban')?'':'none';
+  });
+  const rl=$('myRoleLabel');if(rl)rl.innerHTML=hasRank()?adminLabel(user):'';
+  const bd=$('banDur');if(bd)bd.style.display=can('tempban')?'':'none';
+  ['banDur','rpBanDur'].forEach(id=>{const sel_=$(id);if(!sel_)return;[...sel_.options].forEach(o=>{o.disabled=!isAdmin()&&(Number(o.value)===0||Number(o.value)>604800000)});if(sel_.selectedOptions[0]&&sel_.selectedOptions[0].disabled)sel_.value='3600000'});
+  document.querySelectorAll('#adminSubTabs button').forEach(b=>{
+    const has=tiles.some(t=>t.dataset.ag===b.dataset.ag&&t.dataset.perm==='1');
+    b.style.display=has?'':'none';
+  });
+  const vis=[...document.querySelectorAll('#adminSubTabs button')].filter(b=>b.style.display!=='none');
+  if(vis.length&&!vis.some(b=>b.dataset.ag===curAdminTab))showAdminTab(vis[0].dataset.ag);
+  else showAdminTab(curAdminTab);
+}
+const _uapPerk2=updateAdminPanel;
+updateAdminPanel=function(){_uapPerk2();renderPerk();applyAdminPerms()};
 const _showTabPerk=showTab;
 showTab=function(id){_showTabPerk(id);if(id==='event')renderPerk()};
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
