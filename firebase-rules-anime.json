@@ -144,7 +144,10 @@
       },
       "config": {
         ".read": "auth!=null",
-        ".write": "auth!=null && root.child('anime/admins/'+auth.uid).exists()"
+        ".write": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
+        "serverUrl": {
+          ".validate": "newData.isString() && newData.val().matches(/^https:\\/\\/[A-Za-z0-9.-]+(:[0-9]+)?$/)"
+        }
       },
       "reports": {
         ".read": "auth!=null && (root.child('anime/admins/'+auth.uid).exists() || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).exists())",
