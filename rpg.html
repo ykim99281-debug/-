@@ -188,6 +188,17 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 #adminBtn .cnt{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:999px;background:#ef4444;font-size:11px}
 </style>
 <style id="pwUi">#pwBox[data-guest="1"]{display:none!important}</style>
+
+<style id="domainUi">
+.lbBar{position:fixed;left:0;right:0;height:11vh;background:#000;z-index:99989;pointer-events:none}
+.lbTop{top:0;animation:lbTop 1.7s ease-in-out forwards}.lbBot{bottom:0;animation:lbBot 1.7s ease-in-out forwards}
+@keyframes lbTop{0%{transform:translateY(-100%)}14%,82%{transform:translateY(0)}100%{transform:translateY(-100%)}}
+@keyframes lbBot{0%{transform:translateY(100%)}14%,82%{transform:translateY(0)}100%{transform:translateY(100%)}}
+.domainBanner{position:fixed;left:0;right:0;top:36%;text-align:center;z-index:99990;pointer-events:none;font-weight:900;font-size:44px;letter-spacing:8px;color:#fff;text-shadow:0 0 16px var(--c),0 0 38px var(--c),0 3px 0 rgba(0,0,0,.6);animation:dbn 1.7s ease-out forwards}
+.domainBanner small{display:block;margin-top:6px;font-size:18px;letter-spacing:3px;color:var(--c);text-shadow:0 0 12px var(--c)}
+@keyframes dbn{0%{opacity:0;transform:scale(1.6)}14%{opacity:1;transform:scale(1)}80%{opacity:1;transform:scale(1.02)}100%{opacity:0;transform:scale(1.08)}}
+@media(prefers-reduced-motion:reduce){.lbBar{display:none}}
+</style>
 </head>
 <body>
 <section id="select" class="active">
@@ -2222,7 +2233,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='1.6.2',APP_BUILD=162,APP_DATE='2026-11-21';
+const APP_VERSION='1.6.3',APP_BUILD=163,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2695,6 +2706,24 @@ const _uapPerk2=updateAdminPanel;
 updateAdminPanel=function(){_uapPerk2();renderPerk();applyAdminPerms()};
 const _showTabPerk=showTab;
 showTab=function(id){_showTabPerk(id);if(id==='event')renderPerk()};
+
+/* ===================== 영역 전개 연출: 검은 띠 + 큰 글자 ===================== */
+function domainBanner(title,sub,color){
+  const mk=(cls,html)=>{const e=document.createElement('div');e.className=cls;if(html)e.innerHTML=html;e.style.setProperty('--c',color||'#fff');document.body.appendChild(e);setTimeout(()=>e.remove(),1800);return e};
+  mk('lbBar lbTop');mk('lbBar lbBot');
+  mk('domainBanner',`${escH(title)}<small>${escH(sub)}</small>`);
+  addShake(10);
+}
+const _jujutsuFxBase=jujutsuFx;
+jujutsuFx=function(c,n){
+  const r=_jujutsuFxBase(c,n);
+  if(n===2){
+    if(c.name.includes('고죠'))domainBanner('領域展開','무량공처','#93c5fd');
+    else if(c.name.includes('스쿠나'))domainBanner('領域展開','복마어주자','#ef4444');
+    else if(c.side==='주술회전')domainBanner('術式解放',c.skill[1]||'',c.color);
+  }
+  return r;
+};
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
 </body>
