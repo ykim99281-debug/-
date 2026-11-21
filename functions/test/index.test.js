@@ -130,3 +130,21 @@ test('거래 실패 시 아무것도 사라지지 않는다 (상대가 물건이
   assert.equal(data.anime.tradeRooms.r2.settleLock, undefined);
   await rejects(call('tradeConfirm', 'u4', { room: 'r2' }), 'failed-precondition');   // 거래 당사자가 아닌 사람
 });
+
+test('계정 삭제: 서버 데이터를 모두 지우고, 직급 있는 계정·로그인 없음은 거절', async () => {
+  seed();
+  data.anime.prefs = { 'A유저': { eq: 'x' } }; data.anime.mails = { 'A유저': { friendRequests: {} } }; data.anime.battles = { 'A유저': { stage: 1 } };
+  await rejects(call('deleteAccount', null), 'unauthenticated');
+  await rejects(call('deleteAccount', 'u4'), 'failed-precondition');          // 기사 직급이 있는 계정
+  await call('deleteAccount', 'u1');
+  for (const p of ['saves', 'prefs', 'mails', 'battles']) assert.equal(data.anime[p]['A유저'], undefined);
+  assert.equal(data.anime.uids.u1, undefined); assert.equal(data.anime.names['A유저'], undefined);
+  assert.equal(data.anime.saves['B유저'].coins, 100);                          // 다른 사람 데이터는 그대로
+});
+
+test('밴된 계정도 삭제는 할 수 있지만 밴 기록은 남는다 (재가입 우회 방지)', async () => {
+  seed();
+  await call('deleteAccount', 'u3');
+  assert.equal(data.anime.saves['밴유저'], undefined);
+  assert.equal(data.anime.bans['밴유저'], true);
+});

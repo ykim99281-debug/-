@@ -33,7 +33,7 @@ const H = makeHandlers(adapter, { rand: () => crypto.randomInt(0, 1e9) / 1e9 });
 const PASS = new Set(['unauthenticated', 'invalid-argument', 'failed-precondition', 'already-exists', 'deadline-exceeded', 'resource-exhausted', 'permission-denied', 'not-found', 'aborted', 'unavailable']);
 const toHttps = e => (e instanceof HttpsError ? e : PASS.has(e && e.code) ? new HttpsError(e.code, e.message) : new HttpsError('internal', '서버 오류가 났어요. 잠시 후 다시 시도해 주세요.'));
 
-for (const name of ['ping', 'buyChar', 'buyEquip', 'convert', 'gacha', 'sellRare', 'claimEvent', 'startBattle', 'claimStage', 'tradeConfirm']) {
+for (const name of ['ping', 'buyChar', 'buyEquip', 'convert', 'gacha', 'sellRare', 'claimEvent', 'startBattle', 'claimStage', 'tradeConfirm', 'deleteAccount']) {
   exports[name] = onCall(async request => {
     try { return await H[name]({ uid: request.auth && request.auth.uid, data: request.data || {} }); }
     catch (e) { throw toHttps(e); }

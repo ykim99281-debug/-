@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <title>성좌 크로니클</title>
+<link rel="manifest" href="rpg-manifest.webmanifest">
+<meta name="theme-color" content="#0b0f1a">
+<link rel="icon" href="rpg-icon-192.png">
+<link rel="apple-touch-icon" href="rpg-icon-192.png">
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#07070a;color:white;overflow:hidden}button{border:0;color:white;cursor:pointer}
 #select,#game,#world{display:none;width:100vw;height:100vh}#select.active,#game.active,#world.active{display:block}
@@ -187,7 +191,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 .rpItem button{padding:4px 10px;font-size:12px;margin:2px}
 #adminBtn .cnt{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:999px;background:#ef4444;font-size:11px}
 </style>
-<style id="pwUi">#pwBox[data-guest="1"]{display:none!important}</style>
+<style id="pwUi">#pwBox[data-guest="1"],#blockBox[data-guest="1"]{display:none!important}</style>
 
 <style id="domainUi">
 .lbBar{position:fixed;left:0;right:0;height:11vh;background:#000;z-index:99989;pointer-events:none}
@@ -236,6 +240,12 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 <input id="pwNew" type="password" placeholder="새 비밀번호 (6자 이상)" autocomplete="new-password">
 <input id="pwNew2" type="password" placeholder="새 비밀번호 확인" autocomplete="new-password">
 <button class="green" onclick="changePassword()">비밀번호 변경</button>
+</div>
+
+<div class="box" id="blockBox" data-guest="1">
+<h3>🚫 차단한 유저</h3>
+<p class="small">차단한 유저의 채팅은 보이지 않고, 그 유저의 친구 요청·초대는 알려주지 않아요. 채팅에서 이름을 눌러 차단할 수 있어요.</p>
+<div id="blockList" class="friendList"><div class="friendItem">차단한 유저가 없어요</div></div>
 </div>
 
 <div id="adminBox" class="adminBox">
@@ -624,7 +634,7 @@ function adminUnlockAll(){
   alert("모든 캐릭터 해금 완료");
 }
 function ak(n){return"rpgAcc_"+n}function sk(){return"rpgSave_"+user}function fresh(){return{coins:0,dia:0,owned:["하루 세이렌"],rare:[],best:1,katanas:["낡은 공명 장비"],eq:"낡은 공명 장비",equips:[],eqArmor:"",pvp:0,friends:[]}}
-function norm(){if(typeof migrateSaveNames==='function')migrateSaveNames(save);save.owned??=["하루 세이렌"];save.rare??=[];save.katanas??=["낡은 공명 장비"];save.equips??=[];save.eq??="낡은 공명 장비";save.dia??=0;save.pvp??=0;save.friends??=[];if(!save.owned.includes("하루 세이렌"))save.owned.push("하루 세이렌");coins=save.coins||0;dia=save.dia||0;best=save.best||1;ui()}
+function norm(){if(typeof migrateSaveNames==='function')migrateSaveNames(save);save.owned??=["하루 세이렌"];save.rare??=[];save.katanas??=["낡은 공명 장비"];save.equips??=[];save.eq??="낡은 공명 장비";save.dia??=0;save.pvp??=0;save.friends??=[];save.blocked??=[];if(!save.owned.includes("하루 세이렌"))save.owned.push("하루 세이렌");coins=save.coins||0;dia=save.dia||0;best=save.best||1;ui()}
 function load(){let r=localStorage.getItem(sk());save=r?JSON.parse(r):fresh();
 setTimeout(()=>{const ci=$("chatInput");if(ci){ci.dataset.chatInputEnterHook="1";ci.addEventListener("keydown",e=>{if(e.key==="Enter")sendChat()})}},0);
 norm();updateAdminPanel();updateAdminRoleList();setTimeout(openChatChannel,700);renderAll()}
@@ -743,7 +753,7 @@ function checkFriendMail(){
 function renderFriendMail(arr,onlineMail=false){
   const box=$("friendMailList");
   if(!box)return;
-  const pending=(arr||[]).filter(x=>x.status==="pending");
+  const pending=(arr||[]).filter(x=>x.status==="pending"&&!isBlocked(x.from));
   if(!pending.length){box.innerHTML='<div class="mailItem">받은 친구 요청 없음</div>';return}
   box.innerHTML=pending.map((m,i)=>`<div class="mailItem mailNew">
     <b>📩 ${m.from}</b> 님이 친구 요청을 보냈어.<br>
@@ -1202,7 +1212,7 @@ async function syncOnlineSave(){if(!online||!db||user==='guest')return;let ref=d
 else{await ref.set({...save,updatedAt:Date.now()});}}
 async function pushOnlineSave(){if(!online||!db||user==='guest')return;await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:Date.now()});await dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'하루 세이렌'});}
 const _oldStore=store;store=function(){_oldStore();onlineRegisterUser();pushOnlineSave();}
-function listenOnlineInvites(){if(!online||!db||user==='guest')return;dbRef('invites/'+safeKey(user)).limitToLast(1).on('child_added',snap=>{let inv=snap.val();if(!inv||Date.now()-inv.ts>600000)return;if(inv.type==='room')$('inviteStatus').innerHTML=`${escH(inv.from)}님의 방 [${escH(inv.room)}] 초대 <button class=green data-room="${encodeURIComponent(String(inv.room||''))}" onclick="acceptInvite(decodeURIComponent(this.dataset.room))">참가</button>`;if(inv.type==='trade')$('tradeStatus').innerHTML=`${escH(inv.from)}님의 거래 방 [${escH(inv.room)}] 초대 <button class=green data-room="${encodeURIComponent(String(inv.room||''))}" onclick="acceptTradeInvite(decodeURIComponent(this.dataset.room))">입장</button>`;})}
+function listenOnlineInvites(){if(!online||!db||user==='guest')return;dbRef('invites/'+safeKey(user)).limitToLast(1).on('child_added',snap=>{let inv=snap.val();if(!inv||Date.now()-inv.ts>600000||isBlocked(inv.from))return;if(inv.type==='room')$('inviteStatus').innerHTML=`${escH(inv.from)}님의 방 [${escH(inv.room)}] 초대 <button class=green data-room="${encodeURIComponent(String(inv.room||''))}" onclick="acceptInvite(decodeURIComponent(this.dataset.room))">참가</button>`;if(inv.type==='trade')$('tradeStatus').innerHTML=`${escH(inv.from)}님의 거래 방 [${escH(inv.room)}] 초대 <button class=green data-room="${encodeURIComponent(String(inv.room||''))}" onclick="acceptTradeInvite(decodeURIComponent(this.dataset.room))">입장</button>`;})}
 function getLocalAcc(n){return localStorage.getItem(ak(n))}
 addFriend=async function(){if(user==='guest')return alert('로그인 후 친구 추가 가능');let n=$('friendName').value.trim();if(!n)return alert('친구 닉네임 입력');if(n===user)return alert('자기 자신은 친구 추가할 수 없습니다.');if(online&&db){let snap=await dbRef('users/'+safeKey(n)).get();if(!snap.exists())return alert('온라인에 없는 계정입니다. 상대도 이 파일에서 온라인 연결 후 계정을 만들거나 로그인해야 합니다.');}
 else if(!getLocalAcc(n))return alert('없는 계정입니다. 온라인 연결 없이는 같은 브라우저에 만든 계정만 추가됩니다.');save.friends??=[];if(save.friends.includes(n))return alert('이미 친구입니다.');save.friends.push(n);store();alert(n+' 친구 추가 완료')}
@@ -1823,7 +1833,7 @@ function stopServerListeners(){
 /* ---------- 세이브 동기화 (본인 세이브만 씀) ---------- */
 pushOnlineSave=async function(){
   if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;
-  if(SERVER()){const tt=Date.now();await dbRef('prefs/'+safeKey(user)).set({eq:save.eq||'',eqArmor:save.eqArmor||'',friends:save.friends||[],updatedAt:tt,v:APP_BUILD});await dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:tt,pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'하루 세이렌'});return}
+  if(SERVER()){const tt=Date.now();await dbRef('prefs/'+safeKey(user)).set({eq:save.eq||'',eqArmor:save.eqArmor||'',friends:save.friends||[],blocked:save.blocked||[],updatedAt:tt,v:APP_BUILD});await dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:tt,pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'하루 세이렌'});return}
   const t=Date.now();mySavePushes.add(t);if(mySavePushes.size>50)mySavePushes.delete(mySavePushes.values().next().value);
   await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:t,v:APP_BUILD});
   await dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:t,pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'하루 세이렌'});
@@ -1837,7 +1847,7 @@ syncOnlineSave=async function(){
   else await pushOnlineSave();
   // 관리자가 내 세이브를 바꾸면(코인 지급/몰수/초기화) 바로 반영
   mySaveRef=ref;
-  prefsRef=dbRef('prefs/'+safeKey(user));prefsRef.on('value',ps=>{prefsCache=ps.val();if(SERVER()&&prefsCache&&!prefsApplied){prefsApplied=true;['eq','eqArmor','friends'].forEach(k=>{if(prefsCache[k]!==undefined)save[k]=prefsCache[k]});norm();renderAll()}});
+  prefsRef=dbRef('prefs/'+safeKey(user));prefsRef.on('value',ps=>{prefsCache=ps.val();if(SERVER()&&prefsCache&&!prefsApplied){prefsApplied=true;['eq','eqArmor','friends','blocked'].forEach(k=>{if(prefsCache[k]!==undefined)save[k]=prefsCache[k]});norm();renderAll()}});
   ref.on('value',s=>{
     const r=s.val();
     if(!r)return;
@@ -1923,7 +1933,8 @@ delAcc=async function(){
   try{
     const cred=await auth.signInWithEmailAndPassword(nickEmail(n),p),uid=cred.user.uid;
     if((await dbRef('uids/'+uid).get()).val()!==n){await auth.signOut();return alert('닉네임 또는 비밀번호가 틀렸어요.')}
-    for(const path of['saves/'+n,'users/'+n,'mails/'+n,'invites/'+n,'uids/'+uid,'names/'+n])await dbRef(path).remove().catch(()=>{});
+    if(typeof SERVER==='function'&&SERVER()){try{await callFn('deleteAccount')}catch(e){return alert('서버에서 계정을 삭제하지 못했어요: '+e.message)}}
+    for(const path of['saves/'+n,'prefs/'+n,'users/'+n,'mails/'+n,'invites/'+n,'uids/'+uid,'names/'+n])await dbRef(path).remove().catch(()=>{});
     await cred.user.delete();
     localStorage.removeItem('rpgSave_'+n);
     if(user===n)resetToGuest();
@@ -1940,6 +1951,7 @@ resetMyAccount=function(){
 /* ---------- 채팅 ---------- */
 addChatMessage=function(name,msg,system=false,admin=false,key=''){
   const log=$("chatLog");if(!log)return;
+  if(!system&&typeof isBlocked==='function'&&isBlocked(name))return;
   const div=document.createElement("div");
   div.className="chatMsg"+(system?" chatSystem":"");
   const safeName=String(name||"system").replace(/[<>&"']/g,""),safeMsg=String(msg||"").replace(/[<>]/g,"");
@@ -2274,7 +2286,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='2.1.1',APP_BUILD=211,APP_DATE='2026-11-21';
+const APP_VERSION='2.2.0',APP_BUILD=220,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2288,6 +2300,7 @@ async function checkNewVersion(){
   }catch(e){}
 }
 showVersion();setTimeout(checkNewVersion,1500);
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){try{navigator.serviceWorker.register('rpg-sw.js',{scope:'./rpg'}).catch(()=>{})}catch(e){}}
 
 /* ===================== 비주얼 업그레이드: 배경 · 파티클 · 화면 흔들림 ===================== */
 const PALETTES=[
@@ -2444,7 +2457,7 @@ function tabTargets(){
     shop:[...q('#select .shop'),...q('#select .trade')],
     battle:[...q('#select .tradeRoom'),...q('#select .pvp')],
     event:[$('perkBox'),$('eventBox')],
-    account:[$('name').closest('.box'),$('pwBox'),...q('#select .photoBox')],
+    account:[$('name').closest('.box'),$('pwBox'),$('blockBox'),...q('#select .photoBox')],
     admin:[$('adminBox')]
   };
 }
@@ -2523,6 +2536,7 @@ chatUserMenu=function(el){
     <select id="rpReason" style="width:100%">${REPORT_REASONS.map(r=>`<option>${r}</option>`).join('')}</select>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
       <button class="red" onclick="submitReport('${escH(name)}','${key}')">🚨 신고하기</button>
+      <button class="gold" onclick="closeChatMenu();blockUser('${escH(name)}')">🚫 차단하기</button>
       ${staff?`<button class="blue" onclick="closeChatMenu();adminOpenChatHist('${escH(name)}')">💬 기록 보기</button>`:''}
       <button onclick="closeChatMenu()">취소</button>
     </div></div>`;
@@ -2863,7 +2877,7 @@ function restoreEcon(){
 function applyServerSave(r){
   lastServerSave=r;
   ECON_KEYS.forEach(k=>{const v=econVal(r,k);if(v!==undefined)save[k]=v});
-  if(!prefsApplied&&!prefsCache)['eq','eqArmor','friends'].forEach(k=>{if(r[k]!==undefined)save[k]=r[k]});
+  if(!prefsApplied&&!prefsCache)['eq','eqArmor','friends','blocked'].forEach(k=>{if(r[k]!==undefined)save[k]=r[k]});
   norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();
 }
 async function refreshServerSave(){try{const s=await dbRef('saves/'+safeKey(user)).get();if(s.val())applyServerSave(s.val())}catch(e){}}
@@ -2969,6 +2983,28 @@ adminClearServerUrl=async function(){
   if(!isAdmin())return alert('관리자만 사용 가능');
   await dbRef('config/serverUrl').remove();alert('서버 주소를 지웠어요.');
 };
+
+/* ===================== 유저 차단 ===================== */
+function isBlocked(n){return !!n&&n!==user&&(save.blocked||[]).includes(n)}
+blockUser=function(n){
+  if(user==='guest')return alert('로그인 후 사용할 수 있어요.');
+  if(!n||n===user)return;
+  save.blocked??=[];
+  if(save.blocked.includes(n))return alert('이미 차단한 유저예요.');
+  if(save.blocked.length>=100)return alert('차단은 100명까지 할 수 있어요.');
+  if(!confirm(n+' 님을 차단할까요? 채팅이 보이지 않고 친구 요청·초대가 오지 않아요.'))return;
+  save.blocked.push(n);
+  document.querySelectorAll('.chatUser').forEach(e=>{if(e.dataset.n===n&&e.parentElement)e.parentElement.remove()});
+  store();renderBlocked();alert(n+' 님을 차단했어요.');
+};
+unblockUser=function(n){save.blocked=(save.blocked||[]).filter(x=>x!==n);store();renderBlocked()};
+function renderBlocked(){
+  const box=$('blockList');if(!box)return;
+  const list=save.blocked||[];
+  box.innerHTML=list.length?list.map(n=>`<div class="friendItem"><b>${escH(n)}</b><br><button class="blue" onclick="unblockUser('${escH(n)}')">차단 해제</button></div>`).join(''):'<div class="friendItem">차단한 유저가 없어요</div>';
+}
+const _uapBlock=updateAdminPanel;
+updateAdminPanel=function(){_uapBlock();const bb=$('blockBox');if(bb)bb.dataset.guest=(user==='guest')?'1':'';renderBlocked()};
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
 </body>

@@ -93,7 +93,7 @@ export function makeRestAdapter(env) {
 
 /* ---------- 요청 처리 ---------- */
 const HTTP = { 'invalid-argument': 400, unauthenticated: 401, 'permission-denied': 403, 'not-found': 404, 'deadline-exceeded': 408, 'already-exists': 409, aborted: 409, 'failed-precondition': 412, 'resource-exhausted': 429, unavailable: 503 };
-const NAMES = new Set(['ping', 'buyChar', 'buyEquip', 'convert', 'gacha', 'sellRare', 'claimEvent', 'startBattle', 'claimStage', 'tradeConfirm']);
+const NAMES = new Set(['ping', 'buyChar', 'buyEquip', 'convert', 'gacha', 'sellRare', 'claimEvent', 'startBattle', 'claimStage', 'tradeConfirm', 'deleteAccount']);
 const rand = () => { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] / 4294967296; };
 
 function corsHeaders(req, env) {

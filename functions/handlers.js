@@ -172,6 +172,18 @@ function makeHandlers(db, opts = {}) {
     return { ok: true };
   };
 
+  /** 내 계정의 서버 데이터를 모두 지웁니다. (밴/채팅금지 기록은 우회 방지를 위해 남겨요) */
+  H.deleteAccount = async ctx => {
+    if (!ctx.uid) throw L.err('unauthenticated', '로그인이 필요해요.');
+    const nick = await db.get('uids/' + ctx.uid);
+    if (!nick) throw L.err('failed-precondition', '삭제할 계정이 없어요.');
+    if (await db.get('staff/' + nick)) throw L.err('failed-precondition', '직급이 있는 계정은 먼저 직급을 해제해야 삭제할 수 있어요.');
+    for (const p of ['saves/' + nick, 'prefs/' + nick, 'users/' + nick, 'mails/' + nick, 'invites/' + nick, 'battles/' + nick, 'ledger/' + nick]) await db.remove(p);
+    await db.remove('uids/' + ctx.uid);
+    await db.remove('names/' + nick);
+    return { ok: true };
+  };
+
   return H;
 }
 
