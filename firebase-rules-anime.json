@@ -49,7 +49,7 @@
       "saves": {
         "$n": {
           ".read": "auth!=null && (root.child('anime/names/'+$n).val()===auth.uid || root.child('anime/admins/'+auth.uid).exists())",
-          ".write": "auth!=null && ((root.child('anime/names/'+$n).val()===auth.uid && !(root.child('anime/bans/'+$n).val()===true || (root.child('anime/bans/'+$n).isNumber() && root.child('anime/bans/'+$n).val()>now))) || (((root.child('anime/admins/'+auth.uid).val())==='owner' && root.child('anime/staff/'+$n).val()!=='owner') || ((root.child('anime/admins/'+auth.uid).val())==='mod' && root.child('anime/staff/'+$n).val()!=='mod' && root.child('anime/staff/'+$n).val()!=='owner'))) && (!root.child('anime/config/maint/on').exists() || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='owner' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='mod' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='noble' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='knight')",
+          ".write": "auth!=null && ((root.child('anime/names/'+$n).val()===auth.uid && root.child('anime/config/serverMode').val()!==true && !(root.child('anime/bans/'+$n).val()===true || (root.child('anime/bans/'+$n).isNumber() && root.child('anime/bans/'+$n).val()>now))) || (((root.child('anime/admins/'+auth.uid).val())==='owner' && root.child('anime/staff/'+$n).val()!=='owner') || ((root.child('anime/admins/'+auth.uid).val())==='mod' && root.child('anime/staff/'+$n).val()!=='mod' && root.child('anime/staff/'+$n).val()!=='owner'))) && (!root.child('anime/config/maint/on').exists() || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='owner' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='mod' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='noble' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='knight')",
           ".validate": "newData.hasChildren(['coins','dia','owned']) && newData.child('coins').isNumber() && newData.child('coins').val()>=0 && newData.child('coins').val()<=10000000000000 && newData.child('dia').isNumber() && newData.child('dia').val()>=0 && newData.child('dia').val()<=100000000 && (!newData.child('pvp').exists() || (newData.child('pvp').isNumber() && newData.child('pvp').val()>=0 && newData.child('pvp').val()<=1000000)) && (!root.child('anime/config/minVersion').exists() || newData.child('v').val()>=root.child('anime/config/minVersion').val()) && (root.child('anime/admins/'+auth.uid).exists() || (!data.exists() && newData.child('coins').val()<=1000000 && newData.child('dia').val()<=1000) || (data.exists() && newData.child('coins').val()<=data.child('coins').val()+1000000 && newData.child('dia').val()<=data.child('dia').val()+200 && (!newData.child('pvp').exists() || !data.child('pvp').exists() || newData.child('pvp').val()<=data.child('pvp').val()+100)))"
         },
         ".read": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
@@ -138,7 +138,7 @@
         ".read": "auth!=null",
         "$e": {
           "$n": {
-            ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid && !data.exists() && newData.val()===true && root.child('anime/events/'+$e).exists() && root.child('anime/events/'+$e+'/endsAt').val()>now && ((root.child('anime/events/'+$e+'/min').val()==='all') || (((root.child('anime/events/'+$e+'/min').val())==='noble' && (root.child('anime/staff/'+$n).val()==='owner'||root.child('anime/staff/'+$n).val()==='mod'||root.child('anime/staff/'+$n).val()==='noble')) || ((root.child('anime/events/'+$e+'/min').val())==='knight' && (root.child('anime/staff/'+$n).val()==='owner'||root.child('anime/staff/'+$n).val()==='mod'||root.child('anime/staff/'+$n).val()==='noble'||root.child('anime/staff/'+$n).val()==='knight')) || ((root.child('anime/events/'+$e+'/min').val())==='elite' && root.child('anime/staff/'+$n).exists()))) && (!root.child('anime/config/maint/on').exists() || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='owner' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='mod' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='noble' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='knight')"
+            ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid && !data.exists() && newData.val()===true && root.child('anime/events/'+$e).exists() && root.child('anime/events/'+$e+'/endsAt').val()>now && ((root.child('anime/events/'+$e+'/min').val()==='all') || (((root.child('anime/events/'+$e+'/min').val())==='noble' && (root.child('anime/staff/'+$n).val()==='owner'||root.child('anime/staff/'+$n).val()==='mod'||root.child('anime/staff/'+$n).val()==='noble')) || ((root.child('anime/events/'+$e+'/min').val())==='knight' && (root.child('anime/staff/'+$n).val()==='owner'||root.child('anime/staff/'+$n).val()==='mod'||root.child('anime/staff/'+$n).val()==='noble'||root.child('anime/staff/'+$n).val()==='knight')) || ((root.child('anime/events/'+$e+'/min').val())==='elite' && root.child('anime/staff/'+$n).exists()))) && (!root.child('anime/config/maint/on').exists() || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='owner' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='mod' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='noble' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='knight') && root.child('anime/config/serverMode').val()!==true"
           }
         }
       },
@@ -153,6 +153,37 @@
           ".write": "auth!=null && !data.exists() && newData.child('by').val()===root.child('anime/uids/'+auth.uid).val() && newData.child('target').val()!==newData.child('by').val() && root.child('anime/names/'+newData.child('target').val()).exists() && !(root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).val()===true || (root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).isNumber() && root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).val()>now))",
           ".validate": "newData.hasChildren(['by','target','reason','ts']) && newData.child('reason').isString() && newData.child('reason').val().length<=30 && (!newData.child('msg').exists() || (newData.child('msg').isString() && newData.child('msg').val().length<=200))"
         }
+      },
+      "prefs": {
+        "$n": {
+          ".read": "auth!=null && (root.child('anime/names/'+$n).val()===auth.uid || root.child('anime/admins/'+auth.uid).exists())",
+          ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid && !(root.child('anime/bans/'+$n).val()===true || (root.child('anime/bans/'+$n).isNumber() && root.child('anime/bans/'+$n).val()>now)) && (!root.child('anime/config/maint/on').exists() || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='owner' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='mod' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='noble' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='knight')",
+          ".validate": "newData.hasChildren(['updatedAt'])",
+          "eq": {
+            ".validate": "newData.isString() && newData.val().length<=40"
+          },
+          "eqArmor": {
+            ".validate": "newData.isString() && newData.val().length<=40"
+          },
+          "friends": {
+            ".validate": "newData.hasChildren() || newData.val()===null"
+          },
+          "updatedAt": {
+            ".validate": "newData.isNumber()"
+          },
+          "v": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      },
+      "battles": {
+        ".read": "auth!=null && root.child('anime/admins/'+auth.uid).exists()"
+      },
+      "ledger": {
+        ".read": "auth!=null && root.child('anime/admins/'+auth.uid).exists()"
       }
     }
   }
