@@ -1163,7 +1163,7 @@ async function syncOnlineSave(){if(!online||!db||user==='guest')return;let ref=d
 else{await ref.set({...save,updatedAt:Date.now()});}}
 async function pushOnlineSave(){if(!online||!db||user==='guest')return;await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:Date.now()});await dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});}
 const _oldStore=store;store=function(){_oldStore();onlineRegisterUser();pushOnlineSave();}
-function listenOnlineInvites(){if(!online||!db||user==='guest')return;dbRef('invites/'+safeKey(user)).limitToLast(1).on('child_added',snap=>{let inv=snap.val();if(!inv||Date.now()-inv.ts>600000)return;if(inv.type==='room')$('inviteStatus').innerHTML=`${inv.from}님의 방 [${inv.room}] 초대 <button class=green onclick="acceptInvite('${inv.room}')">참가</button>`;if(inv.type==='trade')$('tradeStatus').innerHTML=`${inv.from}님의 거래 방 [${inv.room}] 초대 <button class=green onclick="acceptTradeInvite('${inv.room}')">입장</button>`;})}
+function listenOnlineInvites(){if(!online||!db||user==='guest')return;dbRef('invites/'+safeKey(user)).limitToLast(1).on('child_added',snap=>{let inv=snap.val();if(!inv||Date.now()-inv.ts>600000)return;if(inv.type==='room')$('inviteStatus').innerHTML=`${escH(inv.from)}님의 방 [${escH(inv.room)}] 초대 <button class=green data-room="${encodeURIComponent(String(inv.room||''))}" onclick="acceptInvite(decodeURIComponent(this.dataset.room))">참가</button>`;if(inv.type==='trade')$('tradeStatus').innerHTML=`${escH(inv.from)}님의 거래 방 [${escH(inv.room)}] 초대 <button class=green data-room="${encodeURIComponent(String(inv.room||''))}" onclick="acceptTradeInvite(decodeURIComponent(this.dataset.room))">입장</button>`;})}
 function getLocalAcc(n){return localStorage.getItem(ak(n))}
 addFriend=async function(){if(user==='guest')return alert('로그인 후 친구 추가 가능');let n=$('friendName').value.trim();if(!n)return alert('친구 닉네임 입력');if(n===user)return alert('자기 자신은 친구 추가할 수 없습니다.');if(online&&db){let snap=await dbRef('users/'+safeKey(n)).get();if(!snap.exists())return alert('온라인에 없는 계정입니다. 상대도 이 파일에서 온라인 연결 후 계정을 만들거나 로그인해야 합니다.');}
 else if(!getLocalAcc(n))return alert('없는 계정입니다. 온라인 연결 없이는 같은 브라우저에 만든 계정만 추가됩니다.');save.friends??=[];if(save.friends.includes(n))return alert('이미 친구입니다.');save.friends.push(n);store();alert(n+' 친구 추가 완료')}
@@ -1229,15 +1229,15 @@ function renderPvpStatus(){
    let team=mode==='team'?pvpTeamOf(i):'개인전';
    return `<div class="pvpPlayer ${p.ready?'pvpReady':''}">
      <span class="teamBadge">${team}</span><br>
-     <b>${id===pvpHostId?'👑 ':''}${p.emoji||'🙂'} ${p.name}</b><br>
-     캐릭터: ${p.char||''}<br>
+     <b>${id===pvpHostId?'👑 ':''}${escH(p.emoji||'🙂')} ${escH(p.name)}</b><br>
+     캐릭터: ${escH(p.char||'')}<br>
      랭크: ${rankNameByScore(p.rank||0)}<br>
      ${p.ready?'✅ 준비 완료':'⏳ 준비 전'}
    </div>`;
  }).join('');
  if(list)list.innerHTML=cards||'<div class="pvpPlayer">참가자 없음</div>';
  let state=pvpData.gameStart&&pvpData.gameStart.status==='start'?'전투 시작됨':(ids.length<2?'친구 대기 중':'시작 가능');
- el.innerHTML=`${ranked?'랭크전':'PvP'} 방 [${pvpRoom}] / 인원 ${ids.length}/4 / ${state}<br>${pvpIsHost()?'👑 방장: 시작 버튼을 누르면 모두 같이 시작합니다.':'방장이 시작하면 자동으로 전투 화면으로 들어갑니다.'}`;
+ el.innerHTML=`${ranked?'랭크전':'PvP'} 방 [${escH(pvpRoom)}] / 인원 ${ids.length}/4 / ${state}<br>${pvpIsHost()?'👑 방장: 시작 버튼을 누르면 모두 같이 시작합니다.':'방장이 시작하면 자동으로 전투 화면으로 들어갑니다.'}`;
 }
 function pvpReadyToggle(){
  if(!pvpRoom||!online||!db)return alert('PvP 방에 먼저 들어가세요.');
@@ -1375,8 +1375,8 @@ function renderTradeStatusOnline(t){
   let count=names.length;
   let others=names.filter(n=>n!==user);
   let roomOwner=t.host||names[0]||user;
-  let msg=`거래 방 [${tradeRoom}] / 인원 ${count}/2<br>참가자: ${names.map(n=>(n===roomOwner?'👑 ':'')+(n===user?'나':n)).join(', ')||'대기 중'}`;
-  if(others.length)msg+=`<br><span class=onlineOk>${others[0]}님이 거래방에 입장했습니다. 거래 가능!</span>`;
+  let msg=`거래 방 [${escH(tradeRoom)}] / 인원 ${count}/2<br>참가자: ${names.map(n=>(n===roomOwner?'👑 ':'')+(n===user?'나':escH(n))).join(', ')||'대기 중'}`;
+  if(others.length)msg+=`<br><span class=onlineOk>${escH(others[0])}님이 거래방에 입장했습니다. 거래 가능!</span>`;
   else msg+=`<br><span class=tradeWarn>상대가 아직 입장하지 않았습니다.</span>`;
   $('tradeStatus').innerHTML=msg;
 }
@@ -1389,10 +1389,10 @@ renderTradeView=function(){
     let html=`<div class="tradeSlot ${names.length>=2?'tradeReady':'tradeWarn'}"><b>입장 상태</b><br>${names.length}/2명<br>${names.length>=2?'✅ 상대 입장 완료':'⏳ 상대 대기 중'}</div>`;
     html+=names.map(n=>{
       let u=(t.users||{})[n]||{};
-      return `<div class="tradeSlot ${(t.ready||{})[n]?'tradeReady':''}"><b>${n===user?'나':n}</b> ${u.emoji||''}<br>캐릭터: ${u.char||'-'}<br>티어: ${u.rank||'-'}<br>거래품: ${tradeOfferLabel((t.offers||{})[n])}<br>${(t.ready||{})[n]?'✅ 확정':'⏳ 미확정'}</div>`;
+      return `<div class="tradeSlot ${(t.ready||{})[n]?'tradeReady':''}"><b>${n===user?'나':escH(n)}</b> ${escH(u.emoji||'')}<br>캐릭터: ${escH(u.char||'-')}<br>티어: ${escH(u.rank||'-')}<br>거래품: ${escH(tradeOfferLabel((t.offers||{})[n]))}<br>${(t.ready||{})[n]?'✅ 확정':'⏳ 미확정'}</div>`;
     }).join('');
     if(names.length<2)html+='<div class="tradeSlot tradeWarn">친구가 들어오면 자동으로 2/2 표시됩니다.</div>';
-    if((t.log||'').length)html+=`<div class="tradeSlot">${t.log}</div>`;
+    if((t.log||'').length)html+=`<div class="tradeSlot">${escH(t.log)}</div>`;
     v.innerHTML=html;renderOfferSelect();return;
   }
   _localRenderTradeView();
@@ -1413,7 +1413,7 @@ async function joinTradeRoomOnline(){
     let names=tradeUserNames(onlineTradeRoomData).join('|');
     if(onlineTradeLastUsers && names!==onlineTradeLastUsers){
       let prev=onlineTradeLastUsers.split('|').filter(Boolean); let now=names.split('|').filter(Boolean);
-      let joined=now.find(x=>!prev.includes(x)&&x!==user); if(joined) $('tradeStatus').innerHTML=`<span class=onlineOk>${joined}님이 거래방에 입장했습니다!</span>`;
+      let joined=now.find(x=>!prev.includes(x)&&x!==user); if(joined) $('tradeStatus').innerHTML=`<span class=onlineOk>${escH(joined)}님이 거래방에 입장했습니다!</span>`;
     }
     onlineTradeLastUsers=names;
     renderTradeStatusOnline(onlineTradeRoomData); renderTradeView();
@@ -2222,7 +2222,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='1.6.1',APP_BUILD=161,APP_DATE='2026-11-21';
+const APP_VERSION='1.6.2',APP_BUILD=162,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
