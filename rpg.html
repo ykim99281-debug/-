@@ -371,6 +371,11 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 <button class="blue" onclick="checkFriendMail()">우편함 확인</button>
 <div id="friendMailList" class="mailList"><div class="mailItem">받은 친구 요청 없음</div></div>
 </div>
+<div class="box" id="perkBox">
+<h3>🏅 직급 혜택</h3>
+<div id="perkInfo" class="small">로그인하면 내 직급 혜택이 보여요</div>
+<button class="gold" id="dailyBtn" onclick="claimDaily()">🎁 일일 보상 받기</button>
+</div>
 <div class="box" id="eventBox">
 <h3>🎉 이벤트</h3>
 <p class="small">이벤트는 <b>관리자 이상</b>이 열 수 있어요. 기본은 모두 참여하고, 이벤트마다 최소 직급을 따로 정할 수도 있어요.<br>직급 순서: 👑 제작자 &gt; 🛡️ 관리자 &gt; 🏰 하급 귀족 &gt; ⚔️ 기사 &gt; 🌟 상급 평민</p>
@@ -513,6 +518,12 @@ const chars=[
 {name:"고죠 사토루",side:"주술회전",emoji:"♾️",breath:"무하한",power:12000,hp:2300,atk:125,spd:5.7,skill:["무하한","허식 자"],color:"#38bdf8",price:100000},
 {name:"스쿠나",side:"주술회전",emoji:"👹",breath:"저주",power:11800,hp:2400,atk:128,spd:5.4,skill:["해","복마어주자"],color:"#dc2626",price:80000},
 {name:"옷코츠 유타",side:"주술회전",emoji:"💍",breath:"리카",power:10500,hp:2000,atk:112,spd:4.9,skill:["리카","반전술식"],color:"#a78bfa",price:35000},
+{name:"사비토",side:"귀살대",emoji:"🎭",breath:"물",power:8300,hp:1150,atk:78,spd:4.6,skill:["수의 호흡 일격","여우 가면 베기"],color:"#60a5fa",price:600},
+{name:"카나오 츠유리",side:"귀살대",emoji:"🌸",breath:"꽃",power:8000,hp:1050,atk:76,spd:5.0,skill:["꽃의 호흡","종의 연속 베기"],color:"#f9a8d4",price:500},
+{name:"이구로 오바나이",side:"주",emoji:"🐍",breath:"뱀",power:8200,hp:1200,atk:80,spd:5.1,skill:["뱀의 호흡","굽이치는 칼날"],color:"#a3e635",price:900},
+{name:"후시구로 메구미",side:"주술회전",emoji:"🐺",breath:"십종영법정",power:9200,hp:1700,atk:96,spd:4.8,skill:["옥견","탈토"],color:"#475569",price:20000},
+{name:"나나미 켄토",side:"주술회전",emoji:"👔",breath:"십할",power:9800,hp:1800,atk:102,spd:4.6,skill:["십할 일격","초과근무"],color:"#fbbf24",price:30000},
+{name:"게토 스구루",side:"주술회전",emoji:"🌀",breath:"저주 조종",power:11000,hp:2100,atk:116,spd:4.9,skill:["저주 방출","최대 출력"],color:"#7c3aed",price:60000},
 {name:"쉘리",side:"브롤스타즈",emoji:"💥",breath:"희귀",power:7000,hp:1150,atk:82,spd:4.4,skill:["산탄총","슈퍼 쉘"],color:"#c084fc",price:999999,rare:true},
 {name:"콜트",side:"브롤스타즈",emoji:"🔫",breath:"희귀",power:7200,hp:1000,atk:86,spd:4.6,skill:["쌍권총","불렛 스톰"],color:"#ef4444",price:999999,rare:true},
 {name:"스파이크",side:"브롤스타즈",emoji:"🌵",breath:"희귀",power:9000,hp:1300,atk:105,spd:4.2,skill:["가시 수류탄","선인장 폭발"],color:"#22c55e",price:999999,rare:true},
@@ -533,7 +544,7 @@ const equips=[
 {name:"호흡 반지",price:8,hp:80,atk:25,emoji:"💍"},{name:"집중 목걸이",price:10,hp:120,atk:35,emoji:"📿"},
 {name:"전투 오라",price:15,hp:250,atk:55,emoji:"✨"},{name:"상현 사냥꾼 세트",price:25,hp:500,atk:90,emoji:"👑"}
 ];
-const demons=[["늪의 혈귀","🕳️","#14532d"],["북의 혈귀 쿄우가이","🥁","#7c2d12"],["거미 혈귀 루이","🕷️","#64748b"],["꿈의 혈귀 엔무","💤","#7e22ce"],["상현의 육 규타로","☠️","#166534"],["상현의 오 굣코","🏺","#0891b2"],["상현의 사 한텐구","👺","#a16207"],["상현의 삼 아카자","👊","#dc2626"],["상현의 이 도우마","❄️","#38bdf8"],["상현의 일 코쿠시보","🌙","#9333ea"],["오니의 시조 무잔","🩸","#7f1d1d"],["스쿠나 레이드","⛩️","#dc2626"],["고죠 히든 보스","♾️","#38bdf8"]];
+const demons=[["늪의 혈귀","🕳️","#14532d"],["북의 혈귀 쿄우가이","🥁","#7c2d12"],["거미 혈귀 루이","🕷️","#64748b"],["꿈의 혈귀 엔무","💤","#7e22ce"],["상현의 육 규타로","☠️","#166534"],["상현의 오 굣코","🏺","#0891b2"],["상현의 사 한텐구","👺","#a16207"],["상현의 삼 아카자","👊","#dc2626"],["상현의 이 도우마","❄️","#38bdf8"],["상현의 일 코쿠시보","🌙","#9333ea"],["오니의 시조 무잔","🩸","#7f1d1d"],["스쿠나 레이드","⛩️","#dc2626"],["고죠 히든 보스","♾️","#38bdf8"],["달그림자 카게츠","🌑","#6d28d9"],["혈귀 군단장 오니가미","⚔️","#b91c1c"],["특급 주령 재앙","🌋","#ea580c"]];
 const ranks=["브론즈","실버","골드","플래티넘","다이아","마스터","그랜드마스터","챌린저"];
 let user="guest",save={coins:0,dia:0,owned:["카마도 탄지로"],rare:[],best:1,katanas:["낡은 호흡 장비"],eq:"낡은 호흡 장비",equips:[],eqArmor:"",pvp:0,friends:[]},sel=0,curFilter="전체",coins=0,dia=0,best=1,stage=1,run=false,cv,ctx,w,h,player,enemy,last=0,startAt=0,joy={x:0,y:0,a:false},keys={},bullets=[],effects=[],c1=0,c2=0,room="",peerPlayers={},myId="P"+Math.random().toString(36).slice(2,8),chan=null,tradeRoom="";
 const $=id=>document.getElementById(id);
@@ -2211,7 +2222,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='1.5.2',APP_BUILD=152,APP_DATE='2026-11-21';
+const APP_VERSION='1.6.0',APP_BUILD=160,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2283,7 +2294,7 @@ draw=function(){
   _drawBase();
   ctx.globalCompositeOperation='lighter';
   particles=particles.filter(p=>(p.life-=dt)>0);
-  particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=380*dt;const a=Math.max(0,p.life/p.max);ctx.globalAlpha=a;ctx.fillStyle=p.c;ctx.shadowColor=p.c;ctx.shadowBlur=10;ctx.beginPath();ctx.arc(p.x,p.y,p.r*(.4+a),0,7);ctx.fill()});
+  particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=380*dt*(p.g==null?1:p.g);const a=Math.max(0,p.life/p.max)*(p.a==null?1:p.a);ctx.globalAlpha=a;ctx.fillStyle=p.c;ctx.shadowColor=p.c;ctx.shadowBlur=10;ctx.beginPath();ctx.arc(p.x,p.y,p.r*(.4+a),0,7);ctx.fill()});
   ctx.shadowBlur=0;ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
   ctx.restore();
   let vg=ctx.createRadialGradient(w/2,h/2,Math.min(w,h)*.35,w/2,h/2,Math.max(w,h)*.75);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.55)');
@@ -2380,7 +2391,7 @@ function tabTargets(){
     online:[...q('#select .room'),...q('#select .friend'),...q('#select .mailBox')],
     shop:[...q('#select .shop'),...q('#select .trade')],
     battle:[...q('#select .tradeRoom'),...q('#select .pvp')],
-    event:[$('eventBox')],
+    event:[$('perkBox'),$('eventBox')],
     account:[$('name').closest('.box'),$('pwBox'),...q('#select .photoBox')],
     admin:[$('adminBox')]
   };
@@ -2585,6 +2596,70 @@ changePassword=async function(){
 };
 const _uapPw=updateAdminPanel;
 updateAdminPanel=function(){_uapPw();const pb=$('pwBox');if(pb)pb.dataset.guest=(user==='guest')?'1':''};
+
+/* ===================== 이펙트 개선: 번개 · 바람 · 안개 ===================== */
+function boltPoints(x1,y1,x2,y2,segs,jit){
+  const pts=[[x1,y1]];
+  for(let i=1;i<segs;i++){const t=i/segs;pts.push([x1+(x2-x1)*t+(Math.random()-.5)*jit*2,y1+(y2-y1)*t+(Math.random()-.5)*jit*2])}
+  pts.push([x2,y2]);return pts;
+}
+function lightningBolt(x1,y1,x2,y2,jit=26,width=3){
+  const pts=boltPoints(x1,y1,x2,y2,9,jit),cols=['#ffffff','#fde047'];
+  for(let i=0;i<pts.length-1;i++){
+    const a=pts[i],b=pts[i+1];
+    for(let k=0;k<8;k++){const t=k/8;particles.push({x:a[0]+(b[0]-a[0])*t,y:a[1]+(b[1]-a[1])*t,vx:0,vy:0,g:0,life:.32+Math.random()*.14,max:.46,r:width*(1+Math.random()*.9),c:cols[k%2]})}
+    if(Math.random()<.35){const m=pts[i],ex=m[0]+(Math.random()-.5)*90,ey=m[1]+(Math.random()-.5)*90;
+      for(let k=0;k<5;k++){const t=k/5;particles.push({x:m[0]+(ex-m[0])*t,y:m[1]+(ey-m[1])*t,vx:0,vy:0,g:0,life:.22,max:.22,r:width*.8,c:'#fef08a'})}}
+  }
+}
+thunder2=function(x1,y1,x2,y2){
+  [0,70,140].forEach((d,i)=>setTimeout(()=>lightningBolt(x1,y1-18,x2,y2-18,30-i*6,3.2-i*.5),d));
+  setTimeout(()=>{spawnSparks(x2,y2,'#fde047',30,420);impactRing(x2,y2,'#facc15')},150);
+  flash2('rgba(250,204,21,.4)');addShake(7);
+};
+function windSpiral(x,y,color){
+  for(let i=0;i<54;i++)setTimeout(()=>{
+    const ang=i*.55,rad=10+i*1.7;
+    particles.push({x:x+Math.cos(ang)*rad,y:y+Math.sin(ang)*rad*.55-10,vx:-Math.sin(ang)*120,vy:Math.cos(ang)*60-30,g:-.1,life:.5,max:.5,r:3+Math.random()*3,c:i%3?color:'#ecfccb'});
+  },i*9);
+  setTimeout(()=>spawnSparks(x,y,color,22,320),450);
+}
+function mistCloud(x,y,color){
+  for(let i=0;i<26;i++)particles.push({x:x+(Math.random()-.5)*150,y:y+(Math.random()-.5)*60,vx:(Math.random()-.5)*40,vy:-Math.random()*26,g:0,a:.2,life:.9+Math.random()*.5,max:1.3,r:20+Math.random()*26,c:i%2?color:'#ffffff'});
+}
+const _addFx2Base=addFx2;
+addFx2=function(cls,props={},life=1200){
+  if(cls==='windStorm2'){windSpiral(parseFloat(props['--x'])||innerWidth/2,parseFloat(props['--y'])||innerHeight/2,props.color||'#86efac');return null}
+  if(cls==='mistField2'){mistCloud(parseFloat(props['--x'])||innerWidth/2,parseFloat(props['--y'])||innerHeight/2,props.color||'#99f6e4');return null}
+  return _addFx2Base(cls,props,life);
+};
+
+/* ===================== 직급 혜택: 일일 보상 ===================== */
+const PERKS={owner:{c:20000,d:10},mod:{c:15000,d:8},noble:{c:8000,d:3},knight:{c:3000,d:1},elite:{c:1000,d:0}};
+let dailyLast=0;
+async function renderPerk(){
+  const box=$('perkInfo'),btn=$('dailyBtn');if(!box)return;
+  if(user==='guest'){box.textContent='로그인하면 내 직급 혜택이 보여요';if(btn)btn.style.display='none';return}
+  const r=rankOf(user),p=PERKS[r];
+  if(!p){box.innerHTML='직급이 없어요. 관리자에게 직급을 받으면 <b>일일 보상</b>을 받을 수 있어요.<br>🌟 상급 평민: 코인 1,000 · ⚔️ 기사: 코인 3,000 + 다이아 1 · 🏰 하급 귀족: 코인 8,000 + 다이아 3';if(btn)btn.style.display='none';return}
+  let last=0;try{last=((await dbRef('daily/'+safeKey(user)).get()).val()||{}).t||0}catch(e){}
+  dailyLast=last;
+  const next=last+82800000,ready=Date.now()>=next;
+  box.innerHTML=`내 직급: <b>${RANKS[r].label}</b><br>일일 보상: 코인 ${p.c.toLocaleString()}${p.d?' + 다이아 '+p.d:''} (23시간마다 1번)<br>${ready?'<span class="onlineOk">지금 받을 수 있어요!</span>':'다음 수령: '+new Date(next).toLocaleString()}`;
+  if(btn){btn.style.display='';btn.disabled=!ready;btn.style.opacity=ready?1:.5}
+}
+claimDaily=async function(){
+  if(user==='guest')return alert('로그인 후 사용할 수 있어요.');
+  const p=PERKS[rankOf(user)];if(!p)return alert('직급이 있는 유저만 받을 수 있어요.');
+  try{await dbRef('daily/'+safeKey(user)).set({t:firebase.database.ServerValue.TIMESTAMP})}
+  catch(e){renderPerk();return alert('아직 받을 수 없어요. (23시간마다 1번)')}
+  coins+=p.c;dia+=p.d;store();
+  alert(`일일 보상 수령! 코인 ${p.c.toLocaleString()}${p.d?', 다이아 '+p.d:''}`);renderPerk();
+};
+const _uapPerk=updateAdminPanel;
+updateAdminPanel=function(){_uapPerk();renderPerk()};
+const _showTabPerk=showTab;
+showTab=function(id){_showTabPerk(id);if(id==='event')renderPerk()};
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
 </body>
