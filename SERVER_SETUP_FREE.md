@@ -40,7 +40,7 @@ npx wrangler login          # 브라우저가 열리면 Cloudflare 계정으로 
 ```bash
 npx wrangler deploy
 ```
-끝나면 `https://seongjwa-server.내계정.workers.dev` 같은 **주소**가 나와요. 그 주소 뒤에 `/health` 를 붙여서 브라우저로 열었을 때 `{"ok":true}` 가 보이면 성공이에요.
+끝나면 `https://byeolbit-server.내계정.workers.dev` 같은 **주소**가 나와요. 그 주소 뒤에 `/health` 를 붙여서 브라우저로 열었을 때 `{"ok":true}` 가 보이면 성공이에요.
 
 ## 4. 규칙 게시
 `firebase-rules-anime.json` 내용을 Realtime Database → 규칙 탭에 붙여 넣고 게시하세요.

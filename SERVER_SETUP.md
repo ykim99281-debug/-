@@ -1,4 +1,4 @@
-# 서버 모드 켜는 방법 (성좌 크로니클)
+# 서버 모드 켜는 방법 (별빛 공명 연대기)
 
 > **카드가 없거나 비용을 쓸 수 없다면** `SERVER_SETUP_FREE.md`(Cloudflare Workers, 무료)를 보세요. 이 문서는 Firebase Blaze 요금제(카드 필요) 방식이에요.
 

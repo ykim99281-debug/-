@@ -1,5 +1,5 @@
 /**
- * 성좌 크로니클 — Cloudflare Workers 판 서버 (카드 없이 무료)
+ * 별빛 공명 연대기 — Cloudflare Workers 판 서버 (카드 없이 무료)
  * 하는 일: 1) 로그인 토큰(Firebase ID 토큰) 확인  2) 서비스 계정으로 Realtime Database 읽기/쓰기
  * 실제 게임 규칙은 ../functions/handlers.js, logic.js 를 그대로 씁니다.
  */

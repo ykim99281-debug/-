@@ -1,4 +1,4 @@
-// 성좌 크로니클 — 서비스워커: 항상 최신 화면을 받고, 인터넷이 끊기면 안내 화면을 보여 줘요.
+// 별빛 공명 연대기 — 서비스워커: 항상 최신 화면을 받고, 인터넷이 끊기면 안내 화면을 보여 줘요.
 const CACHE = "seongjwa-v1";
 const OFFLINE = "rpg-offline.html";
 self.addEventListener("install", e => e.waitUntil(caches.open(CACHE).then(c => c.add(OFFLINE)).then(() => self.skipWaiting())));
