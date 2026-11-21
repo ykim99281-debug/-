@@ -179,6 +179,9 @@
           },
           "$other": {
             ".validate": false
+          },
+          "blocked": {
+            ".validate": "newData.hasChildren() || newData.val()===null"
           }
         }
       },

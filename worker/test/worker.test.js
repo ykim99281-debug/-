@@ -131,3 +131,12 @@ test('전투 보상과 거래가 Worker 를 통해서도 똑같이 동작한다'
   assert.ok(db('saves/A유저').rare.includes('레이나 블래스트'));
   assert.equal(db('tradeRooms/r').done, true);
 });
+
+test('계정 삭제도 Worker 를 통해 동작한다', async () => {
+  seed();
+  data.anime.prefs = { 'A유저': { eq: 'x' } };
+  const r = await api('deleteAccount', 'u1');
+  assert.equal(r.status, 200);
+  assert.equal(db('saves/A유저'), null); assert.equal(db('prefs/A유저'), null); assert.equal(db('uids/u1'), null);
+  assert.ok(db('saves/B유저'));
+});
