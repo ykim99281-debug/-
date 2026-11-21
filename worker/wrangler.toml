@@ -1,0 +1,13 @@
+name = "seongjwa-server"
+main = "index.js"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+FIREBASE_PROJECT_ID = "project-786867319314566748"
+DATABASE_URL = "https://project-786867319314566748-default-rtdb.asia-southeast1.firebasedatabase.app"
+# 게임이 열리는 주소들 (쉼표로 구분). 다른 사이트에서의 호출은 막아요.
+ALLOWED_ORIGINS = "https://ykim99281-debug.github.io"
+
+# 비밀 키는 여기 적지 않아요! 아래 명령으로 따로 넣습니다:
+#   npx wrangler secret put SA_JSON
