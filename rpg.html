@@ -229,7 +229,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
   <div class="adminTile">
     <b>👤 유저 제재</b><br>
     <input id="adminTargetUser" class="adminInput" placeholder="대상 닉네임">
-    <button class="red" onclick="adminBanUser()">밴</button>
+    <select id="banDur" title="밴 기간"><option value="0">영구</option><option value="3600000">1시간</option><option value="21600000">6시간</option><option value="86400000">1일</option><option value="259200000">3일</option><option value="604800000">7일</option><option value="2592000000">30일</option></select><button class="red" onclick="adminBanUser()">밴</button>
     <button class="gold" onclick="adminMuteUser()">채팅 금지</button>
     <button class="blue" onclick="adminUnbanUser()">밴 해제</button>
     <button class="green" onclick="adminUnmuteUser()">채팅 금지 해제</button>
@@ -246,7 +246,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 
   <div class="adminTile" style="grid-column:1/-1">
     <b>🚨 신고 목록</b><br>
-    <button class="blue" onclick="adminLoadReports()">새로고침</button>
+    <button class="blue" onclick="adminLoadReports()">새로고침</button> <span class="small">신고 밴 기간:</span> <select id="rpBanDur"><option value="0">영구</option><option value="3600000">1시간</option><option value="21600000">6시간</option><option value="86400000">1일</option><option value="259200000">3일</option><option value="604800000">7일</option><option value="2592000000">30일</option></select>
     <div id="reportList" class="small">아직 조회 안 함</div>
   </div>
 
@@ -338,7 +338,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 <div id="chatLog" class="chatLog"><div class="chatMsg chatSystem">아직 채팅 없음. 전체 서버 채팅에 메시지를 보내세요.</div></div>
 <input id="chatInput" placeholder="메시지 입력" style="width:min(520px,90%)">
 <button class="blue" onclick="sendChat()">보내기</button>
-<button onclick="clearChatLocal()">채팅창 지우기</button>
+<button onclick="clearChatLocal()">내 화면만 지우기</button><span class="small"> (다른 사람 화면과 서버 기록에는 영향 없어요)</span>
 </div>
 </div>
 
@@ -799,7 +799,7 @@ function sendChat(){
 }
 function clearChatLocal(){
  const log=$("chatLog");
- if(log)log.innerHTML='<div class="chatMsg chatSystem">채팅창을 비웠습니다.</div>';
+ if(log)log.innerHTML='<div class="chatMsg chatSystem">내 화면의 채팅만 지웠어요. (다른 사람에게는 그대로 보여요)</div>';
 }
 
 
@@ -1725,7 +1725,8 @@ function isOwner(n=user){return n===user?myAdminRole==='owner':staffMap[n]==='ow
 function isModerator(n=user){return n===user?myAdminRole==='mod':staffMap[n]==='mod'}
 function isStaff(n=user){return isOwner(n)||isModerator(n)}
 function isAdmin(){return isStaff()}
-function isBanned(n=user){return !!banMap[n]}
+function isBanned(n=user){const v=banMap[n];return v===true||(typeof v==='number'&&v>Date.now())}
+function banText(v){return v===true?'영구':(typeof v==='number'?new Date(v).toLocaleString()+' 까지':'')}
 function isMuted(n=user){return !!muteMap[n]}
 adminLabel=roleLabel;
 function updateAdminRoleList(){
@@ -1747,7 +1748,7 @@ function startServerListeners(){
   staffReady=false;cfgReady=false;
   add(dbRef('staff'),s=>{staffMap=s.val()||{};staffReady=true;updateAdminPanel();ui();renderEvents();applyServerState()});
   add(dbRef('config'),s=>{cfg=s.val()||{};cfgReady=true;applyServerState();renderServerCfg()});
-  add(dbRef('bans'),s=>{banMap=s.val()||{};if(user!=='guest'&&banMap[user]){alert('이 계정은 밴되었습니다.');logout()}});
+  add(dbRef('bans'),s=>{banMap=s.val()||{};if(user!=='guest'&&isBanned(user)){alert('이 계정은 밴되었습니다. ('+banText(banMap[user])+')');logout()}});
   add(dbRef('mutes'),s=>{muteMap=s.val()||{}});
   add(dbRef('events').limitToLast(20),s=>{eventsCache=s.val()||{};renderEvents()});
 }
@@ -1802,7 +1803,7 @@ async function finishLogin(n,uid){
   user=n;myId=uid;roleReady=false;
   startServerListeners();
   myAdminRole=((await dbRef('admins/'+uid).get()).val())||'';roleReady=true;applyServerState();
-  if((await dbRef('bans/'+safeKey(n)).get()).exists()){await auth.signOut();resetToGuest();alert('이 계정은 밴되었습니다.');return false}
+  {const bv=(await dbRef('bans/'+safeKey(n)).get()).val();if(bv===true||(typeof bv==='number'&&bv>Date.now())){await auth.signOut();resetToGuest();alert('이 계정은 밴되었습니다. ('+banText(bv)+')');return false}}
   load();
   await syncOnlineSave();
   onlineRegisterUser();
@@ -2074,7 +2075,7 @@ adminSearchUser=async function(){
 adminServerInfo=async function(){
   if(!isAdmin())return alert('관리자만 사용 가능');
   const names=Object.keys((await dbRef('users').get()).val()||{}),box=$('adminServerInfo');
-  if(box)box.innerHTML=`전체 계정: ${names.length}개<br>밴 계정: ${Object.keys(banMap).length}개<br>채팅 금지: ${Object.keys(muteMap).length}개<br>관리자: ${Object.keys(staffMap).length}명`;
+  if(box)box.innerHTML=`전체 계정: ${names.length}개<br>밴 계정: ${Object.keys(banMap).filter(n=>isBanned(n)).length}개<br>채팅 금지: ${Object.keys(muteMap).length}개<br>관리자: ${Object.keys(staffMap).length}명`;
 };
 adminClearGlobalChat=async function(){
   if(!isAdmin())return alert('관리자만 사용 가능');
@@ -2120,7 +2121,7 @@ renderAdminUserList=function(){
   box.innerHTML=`총 ${Object.keys(adminUsersCache).length}명 (표시 ${names.length}명)<div class="friendList">`+names.map(n=>{
     const u=adminUsersCache[n]||{};
     const role=staffMap[n]==='owner'?'👑 제작자':staffMap[n]==='mod'?'🛡️ 관리자':'';
-    const st=[isBanned(n)?'🚫 밴':'',isMuted(n)?'🔇 채팅금지':''].filter(Boolean).join(' ');
+    const st=[isBanned(n)?'🚫 밴('+banText(banMap[n])+')':'',isMuted(n)?'🔇 채팅금지':''].filter(Boolean).join(' ');
     return `<div class="friendItem"><b>${esc(n)}</b> ${role}<br>${esc(u.char||'-')} / ${esc(u.rank||'-')} (${u.pvp||0}점)<br>마지막 접속: ${u.ts?new Date(u.ts).toLocaleString():'-'}<br>${st}<br><button class="blue" onclick="adminPickUser('${esc(n)}')">선택</button></div>`;
   }).join('')+'</div>';
 };
@@ -2200,7 +2201,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='1.5.0',APP_BUILD=150,APP_DATE='2026-11-21';
+const APP_VERSION='1.5.1',APP_BUILD=151,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2527,6 +2528,30 @@ adminDeleteChat=async function(id){
 };
 const _uapReports=updateAdminPanel;
 updateAdminPanel=function(){_uapReports();watchReports()};
+
+/* ===================== 기간 밴 ===================== */
+function banDurFrom(id){const e=$(id);const ms=e?Number(e.value)||0:0;return ms>0?Date.now()+ms:true}
+function banDurLabel(v){return v===true?'영구':banText(v)}
+adminBanUser=async function(){
+  if(!isAdmin())return alert('관리자만 사용 가능');
+  const n=adminTarget();if(!n)return;
+  if(!(await nickExists(n)))return alert('없는 계정이야.');
+  const v=banDurFrom('banDur');
+  if(!confirm(`${n} 계정을 밴할까요? (${banDurLabel(v)})`))return;
+  await dbRef('bans/'+safeKey(n)).set(v);
+  adminNoticeTextAuto(`${n} 계정 밴 (${banDurLabel(v)})`);
+  alert(`${n} 밴 완료 (${banDurLabel(v)})`);
+};
+adminReportAct=async function(id,node){
+  if(!isAdmin())return;
+  const r=reportsCache[id];if(!r)return;
+  if(!canPunish(r.target))return alert('이 계정은 현재 권한으로 제재할 수 없어.');
+  const ban=node==='bans',v=ban?banDurFrom('rpBanDur'):true;
+  if(!confirm(`${r.target} 계정을 ${ban?'밴('+banDurLabel(v)+')':'채팅 금지'}할까요?`))return;
+  await dbRef(node+'/'+safeKey(r.target)).set(v);
+  adminNoticeTextAuto(`${r.target} 계정 ${ban?'밴 ('+banDurLabel(v)+')':'채팅 금지'} (신고 처리)`);
+  await dbRef('reports/'+id).remove();alert('처리했어요.');
+};
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
 </body>
