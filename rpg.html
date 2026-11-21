@@ -260,13 +260,24 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
   </div>
 
   <div class="adminTile">
-    <b>🎉 이벤트 만들기 (관리자 이상)</b><br>
+    <b>🎉 이벤트 열기 (관리자 이상)</b><br>
     <input id="evTitle" class="adminInput" placeholder="이벤트 이름">
     <input id="evCoins" type="number" class="adminInput" placeholder="보상 코인">
     <input id="evDia" type="number" class="adminInput" placeholder="보상 다이아">
     <input id="evHours" type="number" class="adminInput" placeholder="진행 시간(시간)" value="24">
-    <select id="evMin"><option value="noble">하급 귀족 이상</option><option value="knight">기사 이상</option><option value="elite">상급 평민 이상</option></select>
+    <select id="evMin"><option value="all" selected>모두 참여</option><option value="noble">하급 귀족 이상만</option><option value="knight">기사 이상만</option><option value="elite">상급 평민 이상만</option></select>
     <button class="gold" onclick="adminCreateEvent()">이벤트 열기</button>
+  </div>
+
+  <div class="adminTile" style="grid-column:1/-1">
+    <b>🛠️ 서버 관리 (관리자 이상)</b>
+    <div id="serverCfgInfo" class="small">불러오는 중...</div>
+    <input id="maintMsg" class="adminInput" placeholder="점검 안내 문구 (선택)">
+    <button class="red" onclick="adminStartMaint()">서버 점검 시작</button>
+    <button class="green" onclick="adminEndMaint()">서버 점검 종료</button>
+    <button class="gold" onclick="adminCleanOldVersions()">구버전 정리 (현재 버전 미만 강제 종료)</button>
+    <button onclick="adminClearMinVersion()">구버전 정리 해제</button>
+    <div class="small">점검 중에는 일반 유저와 상급 평민이 접속 해제되고, <b>기사 이상</b>(기사·하급 귀족·관리자·제작자)은 계속 이용할 수 있어요.</div>
   </div>
 
   <div class="adminTile">
@@ -315,7 +326,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 </div>
 <div class="box" id="eventBox">
 <h3>🎉 이벤트</h3>
-<p class="small">이벤트마다 참여 가능한 최소 직급이 있어요. 직급 순서: 👑 제작자 &gt; 🛡️ 관리자 &gt; 🏰 하급 귀족 &gt; ⚔️ 기사 &gt; 🌟 상급 평민</p>
+<p class="small">이벤트는 <b>관리자 이상</b>이 열 수 있어요. 기본은 모두 참여하고, 이벤트마다 최소 직급을 따로 정할 수도 있어요.<br>직급 순서: 👑 제작자 &gt; 🛡️ 관리자 &gt; 🏰 하급 귀족 &gt; ⚔️ 기사 &gt; 🌟 상급 평민</p>
 <div id="eventList" class="friendList"><div class="friendItem">로그인하면 이벤트가 보여요</div></div>
 </div>
 <div class="shop">
@@ -1384,7 +1395,7 @@ setTradeOffer=async function(){
 clearTradeOffer=async function(){if(!(online&&db)){let t=readTradeRoom();delete t.offers[user];t.ready[user]=false;saveTradeRoomData(t);return;}if(!tradeRoom)return;await tradeRoomBase().update({['offers/'+safeKey(user)]:null,['ready/'+safeKey(user)]:false});}
 cancelTradeReady=async function(){if(!(online&&db)){let t=readTradeRoom();t.ready[user]=false;saveTradeRoomData(t);return;}if(!tradeRoom)return;await tradeRoomBase().child('ready/'+safeKey(user)).set(false);}
 async function onlineReadSave(n){let snap=await dbRef('saves/'+safeKey(n)).get();return snap.exists()?{...fresh(),...snap.val()}:fresh()}
-async function onlineWriteSave(n,s){await dbRef('saves/'+safeKey(n)).set({...s,updatedAt:Date.now()});if(n===user){save=s;norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();}}
+async function onlineWriteSave(n,s){await dbRef('saves/'+safeKey(n)).set({...s,updatedAt:Date.now(),v:APP_BUILD});if(n===user){save=s;norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();}}
 function hasOfferInSave(s,o){if(o.type==='coins')return (s.coins||0)>=o.amount;if(o.type==='char')return (s.owned||[]).includes(o.item)||(s.rare||[]).includes(o.item);if(o.type==='katana')return (s.katanas||[]).includes(o.item);if(o.type==='equip')return (s.equips||[]).includes(o.item);return false}
 function removeOfferFromSave(s,o){if(o.type==='coins')s.coins=(s.coins||0)-o.amount;if(o.type==='char'){s.owned=(s.owned||[]).filter(x=>x!==o.item);s.rare=(s.rare||[]).filter(x=>x!==o.item);if(!(s.owned||[]).length&&!(s.rare||[]).length)s.owned=['카마도 탄지로']}if(o.type==='katana'){s.katanas=(s.katanas||[]).filter(x=>x!==o.item);if(s.eq===o.item)s.eq=s.katanas[0]||'낡은 호흡 장비';if(!s.katanas.length)s.katanas=['낡은 호흡 장비']}if(o.type==='equip'){s.equips=(s.equips||[]).filter(x=>x!==o.item);if(s.eqArmor===o.item)s.eqArmor=''}return s}
 function addOfferToSave(s,o){if(o.type==='coins')s.coins=(s.coins||0)+o.amount;if(o.type==='char'){let c=chars.find(x=>x.name===o.item);let arr=c&&c.rare?'rare':'owned';s[arr]??=[];if(!s[arr].includes(o.item))s[arr].push(o.item)}if(o.type==='katana'){s.katanas??=[];if(!s.katanas.includes(o.item))s.katanas.push(o.item)}if(o.type==='equip'){s.equips??=[];if(!s.equips.includes(o.item))s.equips.push(o.item)}return s}
@@ -1696,7 +1707,8 @@ function updateAdminPanel(){
 function startServerListeners(){
   stopServerListeners();
   const add=(r,fn)=>{r.on('value',fn);serverSubs.push(r)};
-  add(dbRef('staff'),s=>{staffMap=s.val()||{};updateAdminPanel();ui();renderEvents()});
+  add(dbRef('staff'),s=>{staffMap=s.val()||{};updateAdminPanel();ui();renderEvents();applyServerState()});
+  add(dbRef('config'),s=>{cfg=s.val()||{};applyServerState();renderServerCfg()});
   add(dbRef('bans'),s=>{banMap=s.val()||{};if(user!=='guest'&&banMap[user]){alert('이 계정은 밴되었습니다.');logout()}});
   add(dbRef('mutes'),s=>{muteMap=s.val()||{}});
   add(dbRef('events').limitToLast(20),s=>{eventsCache=s.val()||{};renderEvents()});
@@ -1711,10 +1723,10 @@ function stopServerListeners(){
 pushOnlineSave=async function(){
   if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;
   const t=Date.now();mySavePushes.add(t);if(mySavePushes.size>50)mySavePushes.delete(mySavePushes.values().next().value);
-  await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:t});
-  await dbRef('users/'+safeKey(user)).update({name:user,ts:t,pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});
+  await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:t,v:APP_BUILD});
+  await dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:t,pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});
 };
-onlineRegisterUser=function(){if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'})};
+onlineRegisterUser=function(){if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'})};
 syncOnlineSave=async function(){
   if(!online||!db||user==='guest')return;
   const ref=dbRef('saves/'+safeKey(user));
@@ -1763,7 +1775,7 @@ async function finishLogin(n,uid){
   setOnlineStatus(`<span class="onlineOk">온라인 · ${n} 로그인됨</span>`);
   return true;
 }
-function resetToGuest(){stopServerListeners();user='guest';myAdminRole='';myId='P'+Math.random().toString(36).slice(2,8);save=fresh();norm();updateAdminPanel();renderAll();renderEvents()}
+function resetToGuest(){stopServerListeners();cfg={};try{applyServerState()}catch(e){}user='guest';myAdminRole='';myId='P'+Math.random().toString(36).slice(2,8);save=fresh();norm();updateAdminPanel();renderAll();renderEvents()}
 
 createAcc=async function(){
   if(!online||!auth)return alert('온라인 연결이 필요해요. 잠시 후 다시 시도하세요.');
@@ -2083,7 +2095,8 @@ const RANKS={owner:{lv:1,label:'👑 제작자'},mod:{lv:2,label:'🛡️ 관리
 let eventsCache={};
 function rankOf(n){return (n===user&&myAdminRole)?myAdminRole:(staffMap[n]||'')}
 function rankLevel(n){return (RANKS[rankOf(n)]||{lv:99}).lv}
-function rankAtLeast(n,minKey){return rankLevel(n)<=(RANKS[minKey]||{lv:0}).lv}
+function rankAtLeast(n,minKey){if(minKey==='all')return true;return rankLevel(n)<=(RANKS[minKey]||{lv:0}).lv}
+function minLabel(k){return k==='all'?'모두 참여':((RANKS[k]||{label:k}).label+' 이상만')}
 roleLabel=function(name){
   name=String(name||'guest').replace(/[<>&"']/g,'');
   const r=rankOf(name);
@@ -2118,7 +2131,7 @@ adminCreateEvent=async function(){
   if(!coins&&!d)return alert('보상 코인이나 다이아를 입력해.');
   const now=Date.now();
   await dbRef('events').push({title,coins,dia:d,min,ts:now,endsAt:now+hours*3600000,by:user});
-  adminNoticeTextAuto(`🎉 이벤트 시작: ${title} (${RANKS[min].label} 이상 참여 가능)`);
+  adminNoticeTextAuto(`🎉 이벤트 시작: ${title} (${minLabel(min)})`);
   alert('이벤트를 열었어요.');
 };
 async function renderEvents(){
@@ -2130,10 +2143,10 @@ async function renderEvents(){
   const claimed={};
   await Promise.all(ids.map(async id=>{try{claimed[id]=(await dbRef('eventClaims/'+id+'/'+safeKey(user)).get()).val()===true}catch(e){claimed[id]=false}}));
   box.innerHTML=ids.map(id=>{
-    const e=eventsCache[id],over=(e.endsAt||0)<=now,ok=rankAtLeast(user,e.min),min=RANKS[e.min]||{label:e.min};
-    let btn=claimed[id]?'<span class="onlineOk">✅ 수령 완료</span>':over?'<span class="onlineBad">종료됨</span>':ok?`<button class="green" onclick="claimEvent('${esc(id)}')">보상 받기</button>`:`<span class="onlineBad">🔒 ${min.label} 이상만 참여 가능</span>`;
+    const e=eventsCache[id],over=(e.endsAt||0)<=now,ok=rankAtLeast(user,e.min);
+    let btn=claimed[id]?'<span class="onlineOk">✅ 수령 완료</span>':over?'<span class="onlineBad">종료됨</span>':ok?`<button class="green" onclick="claimEvent('${esc(id)}')">보상 받기</button>`:`<span class="onlineBad">🔒 ${minLabel(e.min)}</span>`;
     const del=isAdmin()?` <button class="red" onclick="deleteEvent('${esc(id)}')">삭제</button>`:'';
-    return `<div class="friendItem"><b>${esc(e.title)}</b><br>보상: 코인 ${e.coins||0} / 다이아 ${e.dia||0}<br>참여: ${min.label} 이상<br>종료: ${new Date(e.endsAt||0).toLocaleString()}<br>${btn}${del}</div>`;
+    return `<div class="friendItem"><b>${esc(e.title)}</b><br>보상: 코인 ${e.coins||0} / 다이아 ${e.dia||0}<br>참여: ${minLabel(e.min)}<br>종료: ${new Date(e.endsAt||0).toLocaleString()}<br>${btn}${del}</div>`;
   }).join('');
 }
 claimEvent=async function(id){
@@ -2148,7 +2161,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='1.2.0',APP_DATE='2026-11-21';
+const APP_VERSION='1.3.0',APP_BUILD=130,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2237,6 +2250,74 @@ dragon2=function(kind,x1,y1,x2,y2,color){
     for(let k=0;k<4;k++)particles.push({x:bx+(Math.random()-.5)*12,y:by+(Math.random()-.5)*12,vx:(Math.random()-.5)*60,vy:(Math.random()-.5)*60-20,life:.45+Math.random()*.25,max:.7,r:4+Math.random()*5,c:cols[(Math.random()*3)|0]});
   },i*12);
   setTimeout(()=>{impactRing(x2,y2,cols[1]);spawnSparks(x2,y2,cols[0],30,420)},N*12);
+};
+
+/* ---------- 서버 점검 / 구버전 정리 (관리자 이상) ---------- */
+let cfg={};
+function canBypassMaint(){return rankLevel(user)<=4}   // 제작자·관리자·하급 귀족·기사
+function ensureLockUi(){
+  if($('lockOverlay'))return;
+  const d=document.createElement('div');d.id='lockOverlay';
+  d.style.cssText='display:none;position:fixed;inset:0;z-index:100000;background:rgba(3,7,18,.94);color:#fff;align-items:center;justify-content:center;text-align:center;padding:24px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)';
+  d.innerHTML='<div style="max-width:360px"><div id="lockIcon" style="font-size:64px"></div><h2 id="lockTitle" style="margin:12px 0 8px"></h2><div id="lockMsg" style="color:#cbd5e1;line-height:1.6;word-break:keep-all"></div><button id="lockBtn" class="blue" style="margin-top:18px;padding:12px 22px" onclick="location.reload()">새로고침</button></div>';
+  document.body.appendChild(d);
+  const b=document.createElement('div');b.id='maintBanner';
+  b.style.cssText='display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,#b45309,#dc2626);color:#fff;text-align:center;font-size:12px;font-weight:700;padding:4px 8px;pointer-events:none';
+  document.body.appendChild(b);
+}
+function kickToLobby(){
+  try{run=false}catch(e){}
+  try{leaveRoom(false)}catch(e){}try{leavePvpRoom(false)}catch(e){}try{leaveTradeRoom(false)}catch(e){}
+  ['game','world'].forEach(id=>{const e=$(id);if(e)e.classList.remove('active')});
+  const sel_=$('select');if(sel_)sel_.classList.add('active');
+}
+function applyServerState(){
+  ensureLockUi();
+  const o=$('lockOverlay'),bn=$('maintBanner');
+  let reason='';
+  if(user!=='guest'){
+    if((cfg.minVersion||0)>APP_BUILD)reason='ver';
+    else if(cfg.maint&&cfg.maint.on&&!canBypassMaint())reason='maint';
+  }
+  if(reason){
+    $('lockIcon').textContent=reason==='ver'?'⬆️':'🛠️';
+    $('lockTitle').textContent=reason==='ver'?'새 버전이 필요해요':'서버 점검 중이에요';
+    $('lockMsg').textContent=reason==='ver'?'이전 버전은 더 이상 사용할 수 없어요. 새로고침해서 최신 버전을 받아 주세요.':((cfg.maint&&cfg.maint.msg)||'잠시 후 다시 접속해 주세요.')+' (기사 이상 직급은 점검 중에도 이용할 수 있어요)';
+    $('lockBtn').textContent=reason==='ver'?'새로고침':'다시 확인';
+    if(o.style.display!=='flex'){kickToLobby()}
+    o.style.display='flex';
+  }else o.style.display='none';
+  if(user!=='guest'&&cfg.maint&&cfg.maint.on&&canBypassMaint()){bn.textContent='🛠️ 서버 점검 중 · 기사 이상 직급만 이용 중이에요';bn.style.display='block'}else bn.style.display='none';
+}
+function renderServerCfg(){
+  const e=$('serverCfgInfo');if(!e)return;
+  const m=cfg.maint&&cfg.maint.on;
+  e.innerHTML=`점검: ${m?'<b style="color:#f87171">진행 중</b> ('+String(cfg.maint.msg||'').replace(/[<>&"]/g,'')+')':'<span class="onlineOk">꺼짐</span>'} / 최소 허용 버전: ${cfg.minVersion?('빌드 '+cfg.minVersion):'제한 없음'} / 내 버전: 빌드 ${APP_BUILD}`;
+}
+adminStartMaint=async function(){
+  if(!isAdmin())return alert('관리자 이상만 사용 가능');
+  if(!confirm('서버 점검을 시작할까요? 기사 미만 직급과 일반 유저는 모두 접속이 해제돼요.'))return;
+  const msg=(($('maintMsg')&&$('maintMsg').value)||'').trim().slice(0,100)||'서버 점검 중입니다.';
+  await dbRef('config/maint').set({on:true,msg,by:user,ts:Date.now()});
+  adminNoticeTextAuto('🛠️ 서버 점검을 시작합니다. 기사 이상 직급만 이용할 수 있어요.');
+  alert('점검을 시작했어요.');
+};
+adminEndMaint=async function(){
+  if(!isAdmin())return alert('관리자 이상만 사용 가능');
+  await dbRef('config/maint').remove();
+  adminNoticeTextAuto('✅ 서버 점검이 끝났습니다. 모두 다시 접속해 주세요.');
+  alert('점검을 종료했어요.');
+};
+adminCleanOldVersions=async function(){
+  if(!isAdmin())return alert('관리자 이상만 사용 가능');
+  if(!confirm(`현재 버전(빌드 ${APP_BUILD}) 미만으로 접속 중인 모든 유저를 강제 종료할까요? 새로고침하면 다시 접속할 수 있어요.`))return;
+  await dbRef('config/minVersion').set(APP_BUILD);
+  adminNoticeTextAuto(`⬆️ 구버전 정리: 버전 ${APP_VERSION} 미만은 새로고침이 필요해요.`);
+  alert('구버전 정리를 적용했어요.');
+};
+adminClearMinVersion=async function(){
+  if(!isAdmin())return alert('관리자 이상만 사용 가능');
+  await dbRef('config/minVersion').remove();alert('구버전 제한을 해제했어요.');
 };
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
