@@ -3,8 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>성좌 크로니클</title>
+<title>별빛 공명 연대기</title>
 <link rel="manifest" href="rpg-manifest.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:title" content="별빛 공명 연대기">
+<meta property="og:description" content="꺼진 별을 다시 켜는 공명의 여정. 친구와 함께 싸우는 온라인 액션 RPG">
+<meta property="og:image" content="https://ykim99281-debug.github.io/-/rpg-art-og.jpg">
 <meta name="theme-color" content="#0b0f1a">
 <link rel="icon" href="rpg-icon-192.png">
 <link rel="apple-touch-icon" href="rpg-icon-192.png">
@@ -215,10 +219,22 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 @keyframes bossLowPulse{from{box-shadow:0 0 6px rgba(239,68,68,.4)}to{box-shadow:0 0 22px rgba(239,68,68,1)}}
 @media(prefers-reduced-motion:reduce){.cutin,.bossLow{animation:none}}
 </style>
+
+<style id="storyUi">
+.heroArt{display:block;width:100%;max-width:1180px;height:min(30vw,220px);margin:0 auto 10px;object-fit:cover;object-position:center 32%;border-radius:18px;box-shadow:0 10px 40px rgba(124,58,237,.38);border:1px solid rgba(196,181,253,.25)}
+.storyArt{display:block;width:100%;max-height:260px;object-fit:cover;object-position:center 30%;border-radius:14px;margin:8px 0}
+.storyText{color:#e5e7eb;line-height:1.8;font-size:14px;margin:6px 0}
+#storyBox h4{margin:16px 0 6px;color:#c4b5fd}
+details.chapter{background:rgba(15,23,42,.7);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px;margin:8px 0}
+details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{opacity:.55}
+.domainBanner small.bannerLine{font-size:15px;letter-spacing:1px;color:#e5e7eb;margin:10px auto 0;max-width:88vw;white-space:normal;word-break:keep-all;line-height:1.55;text-shadow:0 2px 8px #000}
+</style>
 </head>
 <body>
 <section id="select" class="active">
-<h1 class="title">⚔️ 성좌 크로니클</h1>
+<img class="heroArt" src="rpg-art-hero.jpg" alt="별빛 공명 연대기 대표 그림">
+<h1 class="title">⚔️ 별빛 공명 연대기</h1>
+<p class="sub" style="margin-top:-4px;color:#c4b5fd">꺼진 별을 다시 켜는 공명의 여정</p>
 <p class="sub">공명 이펙트·친구 초대·장비·코인 거래소·다이아·보스 보상·랜덤 매칭·희귀 캐릭터 거래</p>
 <p class="sub" id="verLabel" style="font-size:12px;color:#9ca3af"></p>
 
@@ -418,6 +434,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 <button class="blue" onclick="checkFriendMail()">우편함 확인</button>
 <div id="friendMailList" class="mailList"><div class="mailItem">받은 친구 요청 없음</div></div>
 </div>
+<div class="box" id="storyBox"></div>
 <div class="box" id="perkBox">
 <h3>🏅 내 직급 권한</h3>
 <div id="perkInfo" class="small">로그인하면 내 직급 권한이 보여요</div>
@@ -544,6 +561,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+<script src="rpg-story.js?v=2.3.0"></script>
 <script>
 const chars=[
 {name:"하루 세이렌",side:"기사단",emoji:"🌊",breath:"물/태양",power:8500,hp:1200,atk:70,spd:4.2,skill:["파도 가르기","여명의 검무"],color:"#38bdf8",price:0},
@@ -674,7 +692,7 @@ function setCharPhotoUrl(){let n=$("photoChar").value,u=$("photoUrl").value.trim
 function uploadCharPhoto(e){let n=$("photoChar").value,f=e.target.files&&e.target.files[0];if(!n||!f)return;let r=new FileReader();r.onload=()=>{localStorage.setItem(imgKey(n),r.result);renderChars();renderCharPhotoTools();alert(n+" 사진 저장 완료")};r.readAsDataURL(f)}
 function resetCharPhoto(){let n=$("photoChar").value;if(!n)return;localStorage.removeItem(imgKey(n));renderChars();renderCharPhotoTools();}
 function renderChars(){let g=$("grid");g.innerHTML="";chars.forEach((c,i)=>{if(curFilter!=="전체"&&!c.side.includes(curFilter))return;let o=owned(c),img=getCharImg(c.name);let face=img?`<img src="${img}" onerror="this.parentElement.textContent='${c.emoji}'">`:c.emoji;let d=document.createElement("div");d.className="card "+(i===sel?"selected ":"")+(o?"":"locked");d.onclick=()=>{if(o){sel=i;renderChars();show();renderCharPhotoTools()}};d.innerHTML=`<div class=face style="box-shadow:0 0 14px ${c.color}">${face}</div><b>${c.name}</b><br>${c.side}<br><small>${c.breath}</small><br><span class=price>${o?"보유중":c.rare?"희귀 전용":"가격 "+c.price+"코인"}</span><br>${o?"":`<button class=green onclick="event.stopPropagation();buyChar(${i})">${c.rare?"희귀":"구매"}</button>`}`;g.appendChild(d)})}
-function show(){let c=chars[sel];$("info").innerHTML=`<h3>${c.emoji} ${c.name}</h3><p>진영: ${c.side} / 전투력 ${c.power} / 속성: ${c.breath}</p><p>기술: ${c.skill.join(", ")}</p><p>상태: ${owned(c)?"보유중":"잠김"}</p><p>공격 방식: ${human(c)?"공명 이펙트 공격":"고유 애니 공격"}</p><p>장비: ${save.eqArmor||"없음"}</p>`}
+function show(){let c=chars[sel];$("info").innerHTML=`<h3>${c.emoji} ${c.name}</h3><p>진영: ${(typeof STORY!=='undefined'&&STORY.factions[c.side])?STORY.factions[c.side].name:c.side} / 전투력 ${c.power} / 속성: ${c.breath}</p><p>기술: ${c.skill.join(", ")}</p><p>상태: ${owned(c)?"보유중":"잠김"}</p><p>공격 방식: ${human(c)?"공명 이펙트 공격":"고유 애니 공격"}</p><p>장비: ${save.eqArmor||"없음"}</p><p class="storyText">${(typeof escH==='function'?escH:(x=>x))((typeof STORY!=='undefined'&&STORY.chars[c.name])||'')}</p>`}
 function renderKat(){return}
 function buyKat(i){alert("공명 장비 아이템은 삭제되었습니다.")}
 function renderEquip(){let e=$("equipshop");e.innerHTML=equips.map((it,i)=>{let o=save.equips.includes(it.name),eq=save.eqArmor===it.name;return`<div class="equip ${eq?"equipped":""}"><div style=font-size:34px>${it.emoji}</div><b>${it.name}</b><br>HP +${it.hp} / ATK +${it.atk}<br><span class=dia>${o?(eq?"장착중":"보유중"):"가격 "+it.price+"다이아"}</span><br><button class=purple onclick=buyEquip(${i})>${o?(eq?"장착중":"장착"):"구매"}</button></div>`}).join("")}
@@ -2286,7 +2304,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='2.2.0',APP_BUILD=220,APP_DATE='2026-11-21';
+const APP_VERSION='2.3.0',APP_BUILD=230,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2447,7 +2465,7 @@ adminClearMinVersion=async function(){
 };
 
 /* ===================== 화면 정리: 탭 메뉴 + 관리자 패널 분류 ===================== */
-const TABS=[['home','🏠 홈'],['online','🌐 온라인'],['shop','🛒 상점'],['battle','⚔️ 거래·PvP'],['event','🎉 이벤트'],['account','👤 계정'],['admin','🛡️ 관리']];
+const TABS=[['home','🏠 홈'],['online','🌐 온라인'],['shop','🛒 상점'],['battle','⚔️ 거래·PvP'],['event','🎉 이벤트'],['story','📖 이야기'],['account','👤 계정'],['admin','🛡️ 관리']];
 let curTab='account';
 function tabTargets(){
   const q=x=>[...document.querySelectorAll(x)];
@@ -2457,6 +2475,7 @@ function tabTargets(){
     shop:[...q('#select .shop'),...q('#select .trade')],
     battle:[...q('#select .tradeRoom'),...q('#select .pvp')],
     event:[$('perkBox'),$('eventBox')],
+    story:[$('storyBox')],
     account:[$('name').closest('.box'),$('pwBox'),$('blockBox'),...q('#select .photoBox')],
     admin:[$('adminBox')]
   };
@@ -2763,10 +2782,10 @@ const _showTabPerk=showTab;
 showTab=function(id){_showTabPerk(id);if(id==='event')renderPerk()};
 
 /* ===================== 영역 전개 연출: 검은 띠 + 큰 글자 ===================== */
-function domainBanner(title,sub,color){
+function domainBanner(title,sub,color,line){
   const mk=(cls,html)=>{const e=document.createElement('div');e.className=cls;if(html)e.innerHTML=html;e.style.setProperty('--c',color||'#fff');document.body.appendChild(e);setTimeout(()=>e.remove(),1800);return e};
   mk('lbBar lbTop');mk('lbBar lbBot');
-  mk('domainBanner',`${escH(title)}<small>${escH(sub)}</small>`);
+  mk('domainBanner',`${escH(title)}<small>${escH(sub)}</small>${line?`<small class="bannerLine">“${escH(line)}”</small>`:''}`);
   addShake(10);
 }
 const _jujutsuFxBase=jujutsuFx;
@@ -2808,7 +2827,7 @@ function bossFrameTick(){
   if(!enemy)return;
   if(enemy!==_introEnemy){
     _introEnemy=enemy;
-    if(bossNow())domainBanner(stage%10===0?'FINAL BOSS':'⚠ BOSS',enemy.name,enemy.color||'#ef4444');
+    if(bossNow())domainBanner(stage%10===0?'FINAL BOSS':'⚠ BOSS',enemy.name,enemy.color||'#ef4444',bossLine(enemy.name));
   }
   const bar=$('eh')&&$('eh').parentElement;
   if(bar){const boss=bossNow();bar.classList.toggle('bossBar',boss);bar.classList.toggle('bossLow',boss&&enemy.hp/enemy.max<.25)}
@@ -3005,6 +3024,62 @@ function renderBlocked(){
 }
 const _uapBlock=updateAdminPanel;
 updateAdminPanel=function(){_uapBlock();const bb=$('blockBox');if(bb)bb.dataset.guest=(user==='guest')?'1':'';renderBlocked()};
+
+/* ===================== 이야기: 프롤로그 · 이야기 탭 · 챕터 · 보스 대사 ===================== */
+function bossLine(name){
+  if(typeof STORY==='undefined')return '';
+  if(STORY.bosses[name])return STORY.bosses[name];
+  const d=(typeof dungeonPlace!=='undefined')&&dungeonPlace;
+  return (d&&STORY.chapters[d.name]&&STORY.chapters[d.name].boss)||'';
+}
+function storyOverlay(inner,z){
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:'+(z||100002)+';display:flex;align-items:flex-end;justify-content:center;padding:20px;background:#05030f url(rpg-art.jpg) center/cover';
+  ov.innerHTML='<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,3,15,.2),rgba(5,3,15,.82) 52%,rgba(5,3,15,.97))"></div><div style="position:relative;max-width:540px;width:100%;text-align:center">'+inner+'</div>';
+  document.body.appendChild(ov);return ov;
+}
+function showPrologue(force){
+  if(typeof STORY==='undefined'||!STORY.prologue)return;
+  try{if(!force&&localStorage.getItem('bgPrologueSeen'))return}catch(e){}
+  if($('prologueOv'))return;
+  const pages=STORY.prologue;let i=0;
+  const ov=storyOverlay('<div style="font-size:13px;letter-spacing:3px;color:#c4b5fd;margin-bottom:10px">별빛 공명 연대기</div><div id="prText" style="font-size:18px;line-height:1.95;min-height:150px;white-space:pre-line;color:#f5f3ff;text-shadow:0 2px 12px #000"></div><div id="prDots" style="margin:10px 0;letter-spacing:6px;color:#a78bfa"></div><div style="display:flex;gap:8px;justify-content:center;margin-bottom:10px"><button id="prNext" class="purple" style="padding:12px 28px">다음</button><button id="prSkip" style="padding:12px 18px">건너뛰기</button></div>');
+  ov.id='prologueOv';
+  const done=()=>{try{localStorage.setItem('bgPrologueSeen','1')}catch(e){}ov.remove()};
+  const draw=()=>{ov.querySelector('#prText').textContent=pages[i];ov.querySelector('#prDots').textContent=pages.map((_,k)=>k===i?'●':'○').join(' ');ov.querySelector('#prNext').textContent=i===pages.length-1?'여정을 시작하기':'다음'};
+  ov.querySelector('#prNext').onclick=()=>{if(i<pages.length-1){i++;draw()}else done()};
+  ov.querySelector('#prSkip').onclick=done;
+  draw();
+}
+function renderStory(){
+  const box=$('storyBox');if(!box||typeof STORY==='undefined')return;
+  const lv=(typeof worldLevel==='function')?worldLevel():1;
+  const fac=Object.values(STORY.factions).map(f=>`<div class="friendItem"><b>${escH(f.name)}</b><br><span class="small">${escH(f.desc)}</span></div>`).join('');
+  const chap=worldPlaces.map(p=>{
+    const c=STORY.chapters[p.name];if(!c)return '';
+    const open=lv>=p.level;
+    return `<details class="chapter ${open?'':'locked'}"><summary>${open?'':'🔒 '}${escH(c.title)} <span class="small">(${escH(p.name)} · Lv.${p.level})</span></summary>${open?`<p class="storyText">${escH(c.text)}</p>`:`<p class="small">Lv.${p.level} 이상이 되면 이야기가 열려요.</p>`}</details>`;
+  }).join('');
+  box.innerHTML=`<h3>📖 ${escH(STORY.title)}</h3><img class="storyArt" src="rpg-art.jpg" alt="대표 그림">${STORY.world.map(p=>`<p class="storyText">${escH(p)}</p>`).join('')}<h4>진영</h4><div class="friendList">${fac}</div><h4>챕터</h4>${chap}<button class="purple" onclick="showPrologue(true)">프롤로그 다시 보기</button>`;
+}
+const _showTabStory=showTab;
+showTab=function(id){_showTabStory(id);if(id==='story')renderStory()};
+function showChapterModal(name,onStart){
+  const c=STORY.chapters[name];
+  const ov=storyOverlay(`<div style="font-size:13px;letter-spacing:3px;color:#c4b5fd">${escH(name)}</div><h2 style="margin:8px 0 12px;color:#fff;text-shadow:0 2px 12px #000">${escH(c.title)}</h2><div style="font-size:16px;line-height:1.85;color:#f5f3ff;text-shadow:0 2px 10px #000;word-break:keep-all">${escH(c.text)}</div><button class="purple" style="margin:18px 0 8px;padding:13px 32px" id="chGo">전투 시작</button>`,100001);
+  ov.querySelector('#chGo').onclick=()=>{ov.remove();onStart()};
+}
+const _enterPlaceStory=enterWorldPlace;
+enterWorldPlace=function(){
+  const p=currentWorldPlace;
+  try{
+    if(p&&typeof STORY!=='undefined'&&STORY.chapters[p.name]&&canEnterPlace(p)&&!localStorage.getItem('bgChap_'+p.name)){
+      showChapterModal(p.name,()=>{try{localStorage.setItem('bgChap_'+p.name,'1')}catch(e){}_enterPlaceStory()});return;
+    }
+  }catch(e){}
+  _enterPlaceStory();
+};
+setTimeout(()=>showPrologue(false),900);
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
 </body>

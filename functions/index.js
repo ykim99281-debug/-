@@ -1,6 +1,6 @@
 'use strict';
 /**
- * 성좌 크로니클 — Firebase Functions 판 (Blaze 요금제 필요)
+ * 별빛 공명 연대기 — Firebase Functions 판 (Blaze 요금제 필요)
  * 실제 동작은 handlers.js 에 있어요. 이 파일은 Firebase 와 연결하는 얇은 껍데기입니다.
  * 카드 없이 쓰려면 worker/ (Cloudflare Workers) 를 쓰세요.
  */
