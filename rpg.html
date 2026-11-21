@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>귀멸x주술 확장 RPG</title>
+<title>성좌 크로니클</title>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#07070a;color:white;overflow:hidden}button{border:0;color:white;cursor:pointer}
 #select,#game,#world{display:none;width:100vw;height:100vh}#select.active,#game.active,#world.active{display:block}
@@ -214,8 +214,8 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 </head>
 <body>
 <section id="select" class="active">
-<h1 class="title">⚔️ 귀멸 x 주술 확장 RPG</h1>
-<p class="sub">강화 호흡 이펙트·친구 초대·장비·코인 거래소·다이아·보스 보상·랜덤 매칭·희귀 캐릭터 거래</p>
+<h1 class="title">⚔️ 성좌 크로니클</h1>
+<p class="sub">공명 이펙트·친구 초대·장비·코인 거래소·다이아·보스 보상·랜덤 매칭·희귀 캐릭터 거래</p>
 <p class="sub" id="verLabel" style="font-size:12px;color:#9ca3af"></p>
 
 <div class="box">
@@ -431,7 +431,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 
 <div class="tradeRoom">
 <h3>🤝 유저 거래 방</h3>
-<p class="small">친구나 다른 계정과 거래 방을 만들고 캐릭터·호흡 장비·장비·골드를 서로 올린 뒤 양쪽이 확정하면 교환됩니다. 골드는 현재 코인으로 처리됩니다.</p>
+<p class="small">친구나 다른 계정과 거래 방을 만들고 캐릭터·공명 장비·장비·골드를 서로 올린 뒤 양쪽이 확정하면 교환됩니다. 골드는 현재 코인으로 처리됩니다.</p>
 <input id="tradeRoomName" placeholder="거래 방 이름">
 <input id="tradePartner" placeholder="상대 닉네임">
 <button class="blue" onclick="joinTradeRoom()">거래 방 만들기/입장</button>
@@ -443,7 +443,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 <select id="offerType" onchange="renderOfferSelect()">
 <option value="coins">골드/코인</option>
 <option value="char">캐릭터</option>
-<option value="katana">호흡 장비</option>
+<option value="katana">공명 장비</option>
 <option value="equip">장비</option>
 </select>
 <input id="offerAmount" type="number" min="1" placeholder="골드 수량">
@@ -473,7 +473,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 <div class="small">최대 4명까지 같은 PvP 방에 들어갈 수 있습니다. 1명만 공격 대상으로 잡히고, 나머지 참가자는 전투 화면에 함께 표시됩니다.</div>
 </div>
 
-<div class="filters"><button class="active" onclick="filter('전체',this)">전체</button><button onclick="filter('귀살대',this)">귀살대</button><button onclick="filter('주',this)">주</button><button onclick="filter('오니',this)">오니</button><button onclick="filter('주술회전',this)">주술회전</button><button onclick="filter('브롤스타즈',this)">희귀</button></div>
+<div class="filters"><button class="active" onclick="filter('전체',this)">전체</button><button onclick="filter('기사단',this)">기사단</button><button onclick="filter('수호좌',this)">수호좌</button><button onclick="filter('공허군',this)">공허군</button><button onclick="filter('각성자',this)">각성자</button><button onclick="filter('용병단',this)">희귀</button></div>
 
 <div class="photoBox">
 <h3>🖼️ 캐릭터 선택창 실제 사진 등록</h3>
@@ -512,7 +512,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
     <div id="worldStatus" class="user">월드방 없음</div><div id="worldPowerStatus" class="user">월드 능력: 기본</div>
   </div>
 </div>
-<div id="worldPlace" class="worldPlace">후지카사네산 입구</div>
+<div id="worldPlace" class="worldPlace">새벽별 언덕 입구</div>
 <div id="worldJoy" class="joy"><div id="worldStick" class="stick"></div></div>
 </section>
 
@@ -530,55 +530,55 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script>
 const chars=[
-{name:"카마도 탄지로",side:"귀살대",emoji:"🌊",breath:"물/해",power:8500,hp:1200,atk:70,spd:4.2,skill:["물의 호흡","히노카미 카구라"],color:"#38bdf8",price:0},
-{name:"아가츠마 젠이츠",side:"귀살대",emoji:"⚡",breath:"번개",power:7900,hp:1000,atk:88,spd:5.2,skill:["벽력일섬","초고속 베기"],color:"#facc15",price:350},
-{name:"하시비라 이노스케",side:"귀살대",emoji:"🐗",breath:"짐승",power:8000,hp:1250,atk:75,spd:4.5,skill:["짐승의 호흡","난타 베기"],color:"#93c5fd",price:350},
-{name:"토미오카 기유",side:"주",emoji:"💧",breath:"물",power:9000,hp:1350,atk:82,spd:4.4,skill:["수면베기","잔잔한 물결"],color:"#2563eb",price:900},
-{name:"렌고쿠 쿄쥬로",side:"주",emoji:"🔥",breath:"화염",power:9100,hp:1400,atk:90,spd:4.1,skill:["염호","연옥"],color:"#f97316",price:1000},
-{name:"코쵸 시노부",side:"주",emoji:"🦋",breath:"벌레",power:7600,hp:950,atk:62,spd:5.4,skill:["독 찌르기","나비 춤"],color:"#a78bfa",price:700},
-{name:"우즈이 텐겐",side:"주",emoji:"💎",breath:"소리",power:8300,hp:1350,atk:78,spd:4.7,skill:["폭음참","소리의 호흡"],color:"#e5e7eb",price:850},
-{name:"토키토 무이치로",side:"주",emoji:"🌫️",breath:"안개",power:8400,hp:1150,atk:86,spd:5.0,skill:["안개의 호흡","은신 베기"],color:"#99f6e4",price:950},
-{name:"칸로지 미츠리",side:"주",emoji:"💗",breath:"사랑",power:8650,hp:1250,atk:84,spd:4.8,skill:["사랑의 호흡","연속 채찍검"],color:"#f9a8d4",price:900},
-{name:"시나즈가와 사네미",side:"주",emoji:"🌪️",breath:"바람",power:8850,hp:1350,atk:89,spd:4.9,skill:["바람 칼날","폭풍 참격"],color:"#86efac",price:1100},
-{name:"히메지마 교메이",side:"주",emoji:"🪨",breath:"바위",power:9500,hp:1700,atk:95,spd:3.5,skill:["바위 철퇴","쇄도 강타"],color:"#a3a3a3",price:1500},
-{name:"카마도 네즈코",side:"오니",emoji:"🔥",breath:"혈귀술",power:7800,hp:1300,atk:65,spd:4.0,skill:["폭혈","혈귀 각성"],color:"#fb7185",price:250},
-{name:"아카자",side:"오니",emoji:"👊",breath:"파괴살",power:9300,hp:1600,atk:93,spd:4.8,skill:["파괴살","나침"],color:"#ef4444",price:1800},
-{name:"도우마",side:"오니",emoji:"❄️",breath:"빙결 혈귀술",power:9600,hp:1700,atk:90,spd:4.1,skill:["얼음 연꽃","냉기 폭발"],color:"#bae6fd",price:2300},
-{name:"코쿠시보",side:"오니",emoji:"🌙",breath:"달/혈귀술",power:9800,hp:1850,atk:98,spd:4.7,skill:["달의 호흡","월광 난무"],color:"#c084fc",price:3000},
-{name:"키부츠지 무잔",side:"오니",emoji:"🩸",breath:"혈귀술",power:10000,hp:2200,atk:105,spd:4.5,skill:["피의 채찍","재생 폭주"],color:"#991b1b",price:10000},
-{name:"이타도리 유지",side:"주술회전",emoji:"👊",breath:"주력",power:8800,hp:1400,atk:86,spd:4.7,skill:["흑섬","연속 타격"],color:"#fb7185",price:15000},
-{name:"고죠 사토루",side:"주술회전",emoji:"♾️",breath:"무하한",power:12000,hp:2300,atk:125,spd:5.7,skill:["무하한","허식 자"],color:"#38bdf8",price:100000},
-{name:"스쿠나",side:"주술회전",emoji:"👹",breath:"저주",power:11800,hp:2400,atk:128,spd:5.4,skill:["해","복마어주자"],color:"#dc2626",price:80000},
-{name:"옷코츠 유타",side:"주술회전",emoji:"💍",breath:"리카",power:10500,hp:2000,atk:112,spd:4.9,skill:["리카","반전술식"],color:"#a78bfa",price:35000},
-{name:"사비토",side:"귀살대",emoji:"🎭",breath:"물",power:8300,hp:1150,atk:78,spd:4.6,skill:["수의 호흡 일격","여우 가면 베기"],color:"#60a5fa",price:600},
-{name:"카나오 츠유리",side:"귀살대",emoji:"🌸",breath:"꽃",power:8000,hp:1050,atk:76,spd:5.0,skill:["꽃의 호흡","종의 연속 베기"],color:"#f9a8d4",price:500},
-{name:"이구로 오바나이",side:"주",emoji:"🐍",breath:"뱀",power:8200,hp:1200,atk:80,spd:5.1,skill:["뱀의 호흡","굽이치는 칼날"],color:"#a3e635",price:900},
-{name:"후시구로 메구미",side:"주술회전",emoji:"🐺",breath:"십종영법정",power:9200,hp:1700,atk:96,spd:4.8,skill:["옥견","탈토"],color:"#475569",price:20000},
-{name:"나나미 켄토",side:"주술회전",emoji:"👔",breath:"십할",power:9800,hp:1800,atk:102,spd:4.6,skill:["십할 일격","초과근무"],color:"#fbbf24",price:30000},
-{name:"게토 스구루",side:"주술회전",emoji:"🌀",breath:"저주 조종",power:11000,hp:2100,atk:116,spd:4.9,skill:["저주 방출","최대 출력"],color:"#7c3aed",price:60000},
-{name:"쉘리",side:"브롤스타즈",emoji:"💥",breath:"희귀",power:7000,hp:1150,atk:82,spd:4.4,skill:["산탄총","슈퍼 쉘"],color:"#c084fc",price:999999,rare:true},
-{name:"콜트",side:"브롤스타즈",emoji:"🔫",breath:"희귀",power:7200,hp:1000,atk:86,spd:4.6,skill:["쌍권총","불렛 스톰"],color:"#ef4444",price:999999,rare:true},
-{name:"스파이크",side:"브롤스타즈",emoji:"🌵",breath:"희귀",power:9000,hp:1300,atk:105,spd:4.2,skill:["가시 수류탄","선인장 폭발"],color:"#22c55e",price:999999,rare:true},
-{name:"레온",side:"브롤스타즈",emoji:"🦎",breath:"희귀",power:9300,hp:1250,atk:110,spd:5.4,skill:["표창","은신"],color:"#84cc16",price:999999,rare:true}
+{name:"하루 세이렌",side:"기사단",emoji:"🌊",breath:"물/태양",power:8500,hp:1200,atk:70,spd:4.2,skill:["파도 가르기","여명의 검무"],color:"#38bdf8",price:0},
+{name:"라이언 볼트",side:"기사단",emoji:"⚡",breath:"번개",power:7900,hp:1000,atk:88,spd:5.2,skill:["섬광 일격","뇌명 연참"],color:"#facc15",price:350},
+{name:"가루 브루트",side:"기사단",emoji:"🐗",breath:"짐승",power:8000,hp:1250,atk:75,spd:4.5,skill:["야수의 포효","광란 난타"],color:"#93c5fd",price:350},
+{name:"카이 아쿠아",side:"수호좌",emoji:"💧",breath:"물",power:9000,hp:1350,atk:82,spd:4.4,skill:["수면 베기","고요한 파문"],color:"#2563eb",price:900},
+{name:"솔 이그니스",side:"수호좌",emoji:"🔥",breath:"화염",power:9100,hp:1400,atk:90,spd:4.1,skill:["화룡 일섬","작열 폭염"],color:"#f97316",price:1000},
+{name:"나비아 실크",side:"수호좌",emoji:"🦋",breath:"벌레",power:7600,hp:950,atk:62,spd:5.4,skill:["독침 찌르기","나비 춤"],color:"#a78bfa",price:700},
+{name:"에이든 바르도",side:"수호좌",emoji:"💎",breath:"소리",power:8300,hp:1350,atk:78,spd:4.7,skill:["폭음 참격","공명의 선율"],color:"#e5e7eb",price:850},
+{name:"미스트 루벤",side:"수호좌",emoji:"🌫️",breath:"안개",power:8400,hp:1150,atk:86,spd:5.0,skill:["안개 장막","은신 베기"],color:"#99f6e4",price:950},
+{name:"로제 하트",side:"수호좌",emoji:"💗",breath:"사랑",power:8650,hp:1250,atk:84,spd:4.8,skill:["연심 채찍검","하트 난무"],color:"#f9a8d4",price:900},
+{name:"윈드 칼리스",side:"수호좌",emoji:"🌪️",breath:"바람",power:8850,hp:1350,atk:89,spd:4.9,skill:["바람 칼날","폭풍 참격"],color:"#86efac",price:1100},
+{name:"그란 록하트",side:"수호좌",emoji:"🪨",breath:"바위",power:9500,hp:1700,atk:95,spd:3.5,skill:["암석 철퇴","쇄도 강타"],color:"#a3a3a3",price:1500},
+{name:"루비아 엠버",side:"공허군",emoji:"🔥",breath:"공허술",power:7800,hp:1300,atk:65,spd:4.0,skill:["폭염 파동","공허 각성"],color:"#fb7185",price:250},
+{name:"그라스 타이탄",side:"공허군",emoji:"👊",breath:"파쇄술",power:9300,hp:1600,atk:93,spd:4.8,skill:["파쇄 주먹","연환 타격"],color:"#ef4444",price:1800},
+{name:"프로스트 모르가",side:"공허군",emoji:"❄️",breath:"빙결 공허술",power:9600,hp:1700,atk:90,spd:4.1,skill:["서리 연꽃","냉기 폭발"],color:"#bae6fd",price:2300},
+{name:"루나 녹티스",side:"공허군",emoji:"🌙",breath:"달/공허술",power:9800,hp:1850,atk:98,spd:4.7,skill:["달빛 베기","월광 난무"],color:"#c084fc",price:3000},
+{name:"오블리비온",side:"공허군",emoji:"🩸",breath:"공허술",power:10000,hp:2200,atk:105,spd:4.5,skill:["공허의 채찍","재생 폭주"],color:"#991b1b",price:10000},
+{name:"토라 브레이커",side:"각성자",emoji:"👊",breath:"마력",power:8800,hp:1400,atk:86,spd:4.7,skill:["섬광 타격","연속 타격"],color:"#fb7185",price:15000},
+{name:"아스트라 인피니",side:"각성자",emoji:"♾️",breath:"무한",power:12000,hp:2300,atk:125,spd:5.7,skill:["무한 장막","공허 구체"],color:"#38bdf8",price:100000},
+{name:"카오스 렉스",side:"각성자",emoji:"👹",breath:"혼돈",power:11800,hp:2400,atk:128,spd:5.4,skill:["혼돈 참격","폭군의 성"],color:"#dc2626",price:80000},
+{name:"리온 에리스",side:"각성자",emoji:"💍",breath:"수호령",power:10500,hp:2000,atk:112,spd:4.9,skill:["수호령 소환","역전 술식"],color:"#a78bfa",price:35000},
+{name:"미라 에코",side:"기사단",emoji:"🎭",breath:"물",power:8300,hp:1150,atk:78,spd:4.6,skill:["잔월 일격","그림자 가면 베기"],color:"#60a5fa",price:600},
+{name:"플로라 벨",side:"기사단",emoji:"🌸",breath:"꽃",power:8000,hp:1050,atk:76,spd:5.0,skill:["만개 연참","꽃잎 폭풍"],color:"#f9a8d4",price:500},
+{name:"세르펜 이오",side:"수호좌",emoji:"🐍",breath:"뱀",power:8200,hp:1200,atk:80,spd:5.1,skill:["뱀의 이빨","굽이치는 칼날"],color:"#a3e635",price:900},
+{name:"네로 쉐도우",side:"각성자",emoji:"🐺",breath:"그림자 소환",power:9200,hp:1700,atk:96,spd:4.8,skill:["그림자 사냥개","환영 토끼"],color:"#475569",price:20000},
+{name:"레오 칼라일",side:"각성자",emoji:"👔",breath:"황금비",power:9800,hp:1800,atk:102,spd:4.6,skill:["황금비 일격","야근 폭발"],color:"#fbbf24",price:30000},
+{name:"모르페우스",side:"각성자",emoji:"🌀",breath:"영혼 지배",power:11000,hp:2100,atk:116,spd:4.9,skill:["영혼 방출","최대 출력"],color:"#7c3aed",price:60000},
+{name:"레이나 블래스트",side:"용병단",emoji:"💥",breath:"희귀",power:7000,hp:1150,atk:82,spd:4.4,skill:["산탄 폭발","슈퍼 폭파"],color:"#c084fc",price:999999,rare:true},
+{name:"잭 리볼버",side:"용병단",emoji:"🔫",breath:"희귀",power:7200,hp:1000,atk:86,spd:4.6,skill:["쌍권총 난사","탄막 폭풍"],color:"#ef4444",price:999999,rare:true},
+{name:"카투스 가시",side:"용병단",emoji:"🌵",breath:"희귀",power:9000,hp:1300,atk:105,spd:4.2,skill:["가시 수류탄","선인장 폭발"],color:"#22c55e",price:999999,rare:true},
+{name:"카멜레 쉐이드",side:"용병단",emoji:"🦎",breath:"희귀",power:9300,hp:1250,atk:110,spd:5.4,skill:["표창","은신"],color:"#84cc16",price:999999,rare:true}
 ];
 const katanas=[
-{name:"낡은 호흡 장비",price:0,bonus:0,emoji:"🗡️",color:"#d1d5db",fx:"기본 참격"},
-{name:"푸른 물결 호흡 장비",price:1500,bonus:28,emoji:"🌊",color:"#38bdf8",fx:"물의 호흡"},
-{name:"번개 호흡 장비",price:3500,bonus:50,emoji:"⚡",color:"#facc15",fx:"번개의 호흡"},
-{name:"화염 호흡 장비",price:8000,bonus:85,emoji:"🔥",color:"#fb923c",fx:"화염의 호흡"},
-{name:"바람 호흡 장비",price:15000,bonus:130,emoji:"🌪️",color:"#86efac",fx:"바람의 호흡"},
-{name:"안개 호흡 장비",price:30000,bonus:190,emoji:"🌫️",color:"#99f6e4",fx:"안개의 호흡"},
-{name:"태양 호흡 장비",price:70000,bonus:300,emoji:"☀️",color:"#fbbf24",fx:"히노카미 카구라"},
-{name:"전설의 해의 호흡 장비",price:200000,bonus:600,emoji:"🌅",color:"#f97316",fx:"해의 호흡"}
+{name:"낡은 공명 장비",price:0,bonus:0,emoji:"🗡️",color:"#d1d5db",fx:"기본 참격"},
+{name:"푸른 물결 공명 장비",price:1500,bonus:28,emoji:"🌊",color:"#38bdf8",fx:"물결 공명"},
+{name:"번개 공명 장비",price:3500,bonus:50,emoji:"⚡",color:"#facc15",fx:"번개 공명"},
+{name:"화염 공명 장비",price:8000,bonus:85,emoji:"🔥",color:"#fb923c",fx:"화염 공명"},
+{name:"바람 공명 장비",price:15000,bonus:130,emoji:"🌪️",color:"#86efac",fx:"바람 공명"},
+{name:"안개 공명 장비",price:30000,bonus:190,emoji:"🌫️",color:"#99f6e4",fx:"안개 공명"},
+{name:"태양 공명 장비",price:70000,bonus:300,emoji:"☀️",color:"#fbbf24",fx:"여명의 검무"},
+{name:"전설의 태양 공명 장비",price:200000,bonus:600,emoji:"🌅",color:"#f97316",fx:"태양 공명"}
 ];
 const equips=[
-{name:"수련복",price:3,hp:80,atk:5,emoji:"🥋"},{name:"귀살대 갑옷",price:5,hp:150,atk:10,emoji:"🛡️"},
-{name:"호흡 반지",price:8,hp:80,atk:25,emoji:"💍"},{name:"집중 목걸이",price:10,hp:120,atk:35,emoji:"📿"},
-{name:"전투 오라",price:15,hp:250,atk:55,emoji:"✨"},{name:"상현 사냥꾼 세트",price:25,hp:500,atk:90,emoji:"👑"}
+{name:"수련복",price:3,hp:80,atk:5,emoji:"🥋"},{name:"기사단 갑옷",price:5,hp:150,atk:10,emoji:"🛡️"},
+{name:"공명 반지",price:8,hp:80,atk:25,emoji:"💍"},{name:"집중 목걸이",price:10,hp:120,atk:35,emoji:"📿"},
+{name:"전투 오라",price:15,hp:250,atk:55,emoji:"✨"},{name:"공허 사냥꾼 세트",price:25,hp:500,atk:90,emoji:"👑"}
 ];
-const demons=[["늪의 혈귀","🕳️","#14532d"],["북의 혈귀 쿄우가이","🥁","#7c2d12"],["거미 혈귀 루이","🕷️","#64748b"],["꿈의 혈귀 엔무","💤","#7e22ce"],["상현의 육 규타로","☠️","#166534"],["상현의 오 굣코","🏺","#0891b2"],["상현의 사 한텐구","👺","#a16207"],["상현의 삼 아카자","👊","#dc2626"],["상현의 이 도우마","❄️","#38bdf8"],["상현의 일 코쿠시보","🌙","#9333ea"],["오니의 시조 무잔","🩸","#7f1d1d"],["스쿠나 레이드","⛩️","#dc2626"],["고죠 히든 보스","♾️","#38bdf8"],["달그림자 카게츠","🌑","#6d28d9"],["혈귀 군단장 오니가미","⚔️","#b91c1c"],["특급 주령 재앙","🌋","#ea580c"]];
+const demons=[["늪의 공허체","🕳️","#14532d"],["북의 공허 고수 두루","🥁","#7c2d12"],["거미 공허체 아라크","🕷️","#64748b"],["꿈의 공허체 슬리퍼","💤","#7e22ce"],["공허 6좌 모루그","☠️","#166534"],["공허 5좌 헤카","🏺","#0891b2"],["공허 4좌 구렘","👺","#a16207"],["공허 3좌 그라스 타이탄","👊","#dc2626"],["공허 2좌 프로스트 모르가","❄️","#38bdf8"],["공허 1좌 루나 녹티스","🌙","#9333ea"],["공허의 시조 오블리비온","🩸","#7f1d1d"],["혼돈 레이드 카오스","⛩️","#dc2626"],["무한 히든 보스 아스트라","♾️","#38bdf8"],["달그림자 녹스","🌑","#6d28d9"],["공허 군단장 발로르","⚔️","#b91c1c"],["재앙의 화신 카타스트로프","🌋","#ea580c"]];
 const ranks=["브론즈","실버","골드","플래티넘","다이아","마스터","그랜드마스터","챌린저"];
-let user="guest",save={coins:0,dia:0,owned:["카마도 탄지로"],rare:[],best:1,katanas:["낡은 호흡 장비"],eq:"낡은 호흡 장비",equips:[],eqArmor:"",pvp:0,friends:[]},sel=0,curFilter="전체",coins=0,dia=0,best=1,stage=1,run=false,cv,ctx,w,h,player,enemy,last=0,startAt=0,joy={x:0,y:0,a:false},keys={},bullets=[],effects=[],c1=0,c2=0,room="",peerPlayers={},myId="P"+Math.random().toString(36).slice(2,8),chan=null,tradeRoom="";
+let user="guest",save={coins:0,dia:0,owned:["하루 세이렌"],rare:[],best:1,katanas:["낡은 공명 장비"],eq:"낡은 공명 장비",equips:[],eqArmor:"",pvp:0,friends:[]},sel=0,curFilter="전체",coins=0,dia=0,best=1,stage=1,run=false,cv,ctx,w,h,player,enemy,last=0,startAt=0,joy={x:0,y:0,a:false},keys={},bullets=[],effects=[],c1=0,c2=0,room="",peerPlayers={},myId="P"+Math.random().toString(36).slice(2,8),chan=null,tradeRoom="";
 const $=id=>document.getElementById(id);
 
 /* === 권한 시스템: 제작자 Owner / 관리자 임명·해제 === */
@@ -617,25 +617,25 @@ function adminUnlockAll(){
   renderAll();
   alert("모든 캐릭터 해금 완료");
 }
-function ak(n){return"rpgAcc_"+n}function sk(){return"rpgSave_"+user}function fresh(){return{coins:0,dia:0,owned:["카마도 탄지로"],rare:[],best:1,katanas:["낡은 호흡 장비"],eq:"낡은 호흡 장비",equips:[],eqArmor:"",pvp:0,friends:[]}}
-function norm(){save.owned??=["카마도 탄지로"];save.rare??=[];save.katanas??=["낡은 호흡 장비"];save.equips??=[];save.eq??="낡은 호흡 장비";save.dia??=0;save.pvp??=0;save.friends??=[];if(!save.owned.includes("카마도 탄지로"))save.owned.push("카마도 탄지로");coins=save.coins||0;dia=save.dia||0;best=save.best||1;ui()}
+function ak(n){return"rpgAcc_"+n}function sk(){return"rpgSave_"+user}function fresh(){return{coins:0,dia:0,owned:["하루 세이렌"],rare:[],best:1,katanas:["낡은 공명 장비"],eq:"낡은 공명 장비",equips:[],eqArmor:"",pvp:0,friends:[]}}
+function norm(){if(typeof migrateSaveNames==='function')migrateSaveNames(save);save.owned??=["하루 세이렌"];save.rare??=[];save.katanas??=["낡은 공명 장비"];save.equips??=[];save.eq??="낡은 공명 장비";save.dia??=0;save.pvp??=0;save.friends??=[];if(!save.owned.includes("하루 세이렌"))save.owned.push("하루 세이렌");coins=save.coins||0;dia=save.dia||0;best=save.best||1;ui()}
 function load(){let r=localStorage.getItem(sk());save=r?JSON.parse(r):fresh();
 setTimeout(()=>{const ci=$("chatInput");if(ci){ci.dataset.chatInputEnterHook="1";ci.addEventListener("keydown",e=>{if(e.key==="Enter")sendChat()})}},0);
 norm();updateAdminPanel();updateAdminRoleList();setTimeout(openChatChannel,700);renderAll()}
 function store(){save.coins=coins;save.dia=dia;save.best=best;localStorage.setItem(sk(),JSON.stringify(save));ui();renderAllShops()}
 function ui(){let title=isAdmin()? " 🌈 관리자":"";
 $("user").innerHTML=`${adminLabel(user)}${title} / 코인 ${coins} / 다이아 ${dia} / 캐릭터 ${save.owned.length}명 / 희귀 ${save.rare.length}명 / 최고 ${best}`;updateAdminPanel();$("rankInfo").innerHTML=`현재 PvP 점수 ${save.pvp||0}점 / 티어 <b>${rankName()}</b><br>8단계: 브론즈→실버→골드→플래티넘→다이아→마스터→그랜드마스터→챌린저`}
-function owned(c){return save.owned.includes(c.name)||save.rare.includes(c.name)}function human(c){return c.side.includes("귀살대")||c.side==="주"}function kat(){return {name:"없음",bonus:0,emoji:"",color:"#ffffff",fx:"호흡"}}function armor(){return equips.find(e=>e.name===save.eqArmor)||{hp:0,atk:0,name:"없음"}}
+function owned(c){return save.owned.includes(c.name)||save.rare.includes(c.name)}function human(c){return c.side.includes("기사단")||c.side==="수호좌"}function kat(){return {name:"없음",bonus:0,emoji:"",color:"#ffffff",fx:"공명"}}function armor(){return equips.find(e=>e.name===save.eqArmor)||{hp:0,atk:0,name:"없음"}}
 function buyChar(i){let c=chars[i];if(c.rare)return alert("희귀 캐릭터는 희귀 뽑기나 거래소에서만 얻을 수 있습니다.");if(owned(c)){sel=i;renderChars();show();return}if(coins<c.price)return alert("코인 부족");coins-=c.price;save.owned.push(c.name);sel=i;store();show()}
 function filter(f,b){curFilter=f;document.querySelectorAll(".filters button").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderChars()}
 function imgKey(n){return "rpgCharImg_"+n}
 function autoPortrait(c){
   const themes={
-    "물/해":["#0ea5e9","#f97316","水"],"물":["#2563eb","#38bdf8","水"],"번개":["#facc15","#78350f","雷"],"짐승":["#64748b","#93c5fd","獸"],"화염":["#dc2626","#fb923c","炎"],"벌레":["#7c3aed","#f0abfc","蝶"],"소리":["#e5e7eb","#a855f7","音"],"안개":["#99f6e4","#334155","霞"],"사랑":["#f472b6","#fb7185","戀"],"바람":["#22c55e","#86efac","風"],"바위":["#78716c","#d6d3d1","岩"],"혈귀술":["#991b1b","#fb7185","鬼"],"파괴살":["#ef4444","#111827","破"],"빙결 혈귀술":["#bae6fd","#0284c7","冰"],"달/혈귀술":["#7e22ce","#c084fc","月"],"주력":["#ef4444","#111827","呪"],"무하한":["#38bdf8","#7e22ce","∞"],"저주":["#dc2626","#020617","斬"],"리카":["#a78bfa","#111827","愛"],"희귀":["#22c55e","#c084fc","★"]
+    "물/태양":["#0ea5e9","#f97316","水"],"물":["#2563eb","#38bdf8","水"],"번개":["#facc15","#78350f","雷"],"짐승":["#64748b","#93c5fd","獸"],"화염":["#dc2626","#fb923c","炎"],"벌레":["#7c3aed","#f0abfc","蝶"],"소리":["#e5e7eb","#a855f7","音"],"안개":["#99f6e4","#334155","霞"],"사랑":["#f472b6","#fb7185","戀"],"바람":["#22c55e","#86efac","風"],"바위":["#78716c","#d6d3d1","岩"],"공허술":["#991b1b","#fb7185","虛"],"파쇄술":["#ef4444","#111827","破"],"빙결 공허술":["#bae6fd","#0284c7","冰"],"달/공허술":["#7e22ce","#c084fc","月"],"마력":["#ef4444","#111827","魔"],"무한":["#38bdf8","#7e22ce","∞"],"혼돈":["#dc2626","#020617","斬"],"수호령":["#a78bfa","#111827","靈"],"그림자 소환":["#475569","#0f172a","影"],"황금비":["#fbbf24","#78350f","金"],"영혼 지배":["#7c3aed","#111827","魂"],"뱀":["#84cc16","#14532d","蛇"],"꽃":["#f9a8d4","#be185d","花"],"희귀":["#22c55e","#c084fc","★"]
   };
   const t=themes[c.breath]||[c.color||"#64748b","#111827",c.emoji||"★"];
-  const hair=c.name.includes("고죠")?"#f8fafc":c.name.includes("스쿠나")?"#fca5a5":c.name.includes("렌고쿠")?"#fbbf24":c.name.includes("탄지로")?"#3f1d12":c.name.includes("네즈코")?"#111827":c.name.includes("젠이츠")?"#fde047":c.name.includes("이노스케")?"#334155":c.name.includes("시노부")?"#111827":"#1f2937";
-  const mark=c.name.includes("탄지로")?"✦":c.name.includes("고죠")?"◎":c.name.includes("스쿠나")?"☰":c.name.includes("네즈코")?"✿":c.name.includes("렌고쿠")?"🔥":c.emoji;
+  const hair=c.name.includes("아스트라")?"#f8fafc":c.name.includes("카오스")?"#fca5a5":c.name.includes("이그니스")?"#fbbf24":c.name.includes("세이렌")?"#3f1d12":c.name.includes("엠버")?"#111827":c.name.includes("볼트")?"#fde047":c.name.includes("브루트")?"#334155":c.name.includes("실크")?"#111827":"#1f2937";
+  const mark=c.name.includes("세이렌")?"✦":c.name.includes("아스트라")?"◎":c.name.includes("카오스")?"☰":c.name.includes("엠버")?"✿":c.name.includes("이그니스")?"🔥":c.emoji;
   const svg=`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 300'>
   <defs><linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'><stop stop-color='${t[0]}'/><stop offset='.58' stop-color='${t[1]}'/><stop offset='1' stop-color='#020617'/></linearGradient><radialGradient id='glow' cx='.5' cy='.28' r='.6'><stop stop-color='white' stop-opacity='.55'/><stop offset='.35' stop-color='${t[0]}' stop-opacity='.5'/><stop offset='1' stop-color='transparent'/></radialGradient></defs>
   <rect width='240' height='300' rx='24' fill='url(#bg)'/><rect width='240' height='300' fill='url(#glow)'/>
@@ -658,9 +658,9 @@ function setCharPhotoUrl(){let n=$("photoChar").value,u=$("photoUrl").value.trim
 function uploadCharPhoto(e){let n=$("photoChar").value,f=e.target.files&&e.target.files[0];if(!n||!f)return;let r=new FileReader();r.onload=()=>{localStorage.setItem(imgKey(n),r.result);renderChars();renderCharPhotoTools();alert(n+" 사진 저장 완료")};r.readAsDataURL(f)}
 function resetCharPhoto(){let n=$("photoChar").value;if(!n)return;localStorage.removeItem(imgKey(n));renderChars();renderCharPhotoTools();}
 function renderChars(){let g=$("grid");g.innerHTML="";chars.forEach((c,i)=>{if(curFilter!=="전체"&&!c.side.includes(curFilter))return;let o=owned(c),img=getCharImg(c.name);let face=img?`<img src="${img}" onerror="this.parentElement.textContent='${c.emoji}'">`:c.emoji;let d=document.createElement("div");d.className="card "+(i===sel?"selected ":"")+(o?"":"locked");d.onclick=()=>{if(o){sel=i;renderChars();show();renderCharPhotoTools()}};d.innerHTML=`<div class=face style="box-shadow:0 0 14px ${c.color}">${face}</div><b>${c.name}</b><br>${c.side}<br><small>${c.breath}</small><br><span class=price>${o?"보유중":c.rare?"희귀 전용":"가격 "+c.price+"코인"}</span><br>${o?"":`<button class=green onclick="event.stopPropagation();buyChar(${i})">${c.rare?"희귀":"구매"}</button>`}`;g.appendChild(d)})}
-function show(){let c=chars[sel];$("info").innerHTML=`<h3>${c.emoji} ${c.name}</h3><p>진영: ${c.side} / 전투력 ${c.power} / 속성: ${c.breath}</p><p>기술: ${c.skill.join(", ")}</p><p>상태: ${owned(c)?"보유중":"잠김"}</p><p>공격 방식: ${human(c)?"호흡 이펙트 공격":"고유 애니 공격"}</p><p>장비: ${save.eqArmor||"없음"}</p>`}
+function show(){let c=chars[sel];$("info").innerHTML=`<h3>${c.emoji} ${c.name}</h3><p>진영: ${c.side} / 전투력 ${c.power} / 속성: ${c.breath}</p><p>기술: ${c.skill.join(", ")}</p><p>상태: ${owned(c)?"보유중":"잠김"}</p><p>공격 방식: ${human(c)?"공명 이펙트 공격":"고유 애니 공격"}</p><p>장비: ${save.eqArmor||"없음"}</p>`}
 function renderKat(){return}
-function buyKat(i){alert("호흡 장비 아이템은 삭제되었습니다.")}
+function buyKat(i){alert("공명 장비 아이템은 삭제되었습니다.")}
 function renderEquip(){let e=$("equipshop");e.innerHTML=equips.map((it,i)=>{let o=save.equips.includes(it.name),eq=save.eqArmor===it.name;return`<div class="equip ${eq?"equipped":""}"><div style=font-size:34px>${it.emoji}</div><b>${it.name}</b><br>HP +${it.hp} / ATK +${it.atk}<br><span class=dia>${o?(eq?"장착중":"보유중"):"가격 "+it.price+"다이아"}</span><br><button class=purple onclick=buyEquip(${i})>${o?(eq?"장착중":"장착"):"구매"}</button></div>`}).join("")}
 function buyEquip(i){let it=equips[i],o=save.equips.includes(it.name);if(!o){if(dia<it.price)return alert("다이아 부족");dia-=it.price;save.equips.push(it.name)}save.eqArmor=it.name;store()}
 function renderMarket(){let m=$("market");m.innerHTML=chars.filter(c=>c.rare).map((c,i)=>`<div class=marketCard><div style=font-size:34px>${c.emoji}</div><b>${c.name}</b><br>희귀 캐릭터<br><span class=dia>${owned(c)?"보유/거래 가능":"미보유"}</span><br><button class=gold onclick="sellRare('${c.name}')">판매 50다이아</button></div>`).join("")}
@@ -674,7 +674,7 @@ function writeSaveOf(n,obj){localStorage.setItem("rpgSave_"+n,JSON.stringify(obj
 function trKey(){return "rpgTradeRoom_"+tradeRoom}
 function readTradeRoom(){if(!tradeRoom)return null;let r=localStorage.getItem(trKey());return r?JSON.parse(r):{room:tradeRoom,users:[],offers:{},ready:{},done:false,log:""}}
 function saveTradeRoomData(t){if(tradeRoom)localStorage.setItem(trKey(),JSON.stringify(t));renderTradeView()}
-function offerLabel(o){if(!o)return "아직 안 올림";if(o.type==="coins")return "골드/코인 "+o.amount;let names={char:"캐릭터",katana:"호흡 장비",equip:"장비"};return names[o.type]+" : "+o.item}
+function offerLabel(o){if(!o)return "아직 안 올림";if(o.type==="coins")return "골드/코인 "+o.amount;let names={char:"캐릭터",katana:"공명 장비",equip:"장비"};return names[o.type]+" : "+o.item}
 function myTradeItems(type){if(type==="char")return [...new Set([...(save.owned||[]),...(save.rare||[])])];if(type==="katana")return save.katanas||[];if(type==="equip")return save.equips||[];return []}
 function renderOfferSelect(){let t=$("offerType"),item=$("offerItem"),amt=$("offerAmount");if(!t||!item||!amt)return;let type=t.value;amt.style.display=type==="coins"?"inline-block":"none";item.style.display=type==="coins"?"none":"inline-block";item.innerHTML=myTradeItems(type).map(x=>`<option value="${x}">${x}</option>`).join("")||'<option value="">거래 가능 물건 없음</option>'}
 function joinTradeRoom(){if(user==="guest")return alert("로그인 후 거래 가능");let r=$("tradeRoomName").value.trim();if(!r)return alert("거래 방 이름 입력");tradeRoom=r;let t=readTradeRoom();if(!t.users.includes(user))t.users.push(user);t.users=t.users.slice(-2);t.done=false;saveTradeRoomData(t);$("tradeStatus").textContent="거래 방 ["+tradeRoom+"] 입장 중"}
@@ -686,7 +686,7 @@ function setTradeOffer(){if(!tradeRoom)return alert("거래 방에 먼저 입장
 function clearTradeOffer(){if(!tradeRoom)return;let t=readTradeRoom();delete t.offers[user];t.ready[user]=false;saveTradeRoomData(t)}
 function cancelTradeReady(){if(!tradeRoom)return;let t=readTradeRoom();t.ready[user]=false;saveTradeRoomData(t)}
 function hasOffer(n,o){let s=readSaveOf(n);if(o.type==="coins")return (s.coins||0)>=o.amount;if(o.type==="char")return (s.owned||[]).includes(o.item)||(s.rare||[]).includes(o.item);if(o.type==="katana")return (s.katanas||[]).includes(o.item);if(o.type==="equip")return (s.equips||[]).includes(o.item);return false}
-function removeOffer(n,o){let s=readSaveOf(n);if(o.type==="coins")s.coins=(s.coins||0)-o.amount;if(o.type==="char"){s.owned=(s.owned||[]).filter(x=>x!==o.item);s.rare=(s.rare||[]).filter(x=>x!==o.item);if(!(s.owned||[]).length&&!(s.rare||[]).length)s.owned=["카마도 탄지로"]}if(o.type==="katana"){s.katanas=(s.katanas||[]).filter(x=>x!==o.item);if(s.eq===o.item)s.eq=s.katanas[0]||"낡은 호흡 장비";if(!s.katanas.length)s.katanas=["낡은 호흡 장비"]}if(o.type==="equip"){s.equips=(s.equips||[]).filter(x=>x!==o.item);if(s.eqArmor===o.item)s.eqArmor=""}writeSaveOf(n,s)}
+function removeOffer(n,o){let s=readSaveOf(n);if(o.type==="coins")s.coins=(s.coins||0)-o.amount;if(o.type==="char"){s.owned=(s.owned||[]).filter(x=>x!==o.item);s.rare=(s.rare||[]).filter(x=>x!==o.item);if(!(s.owned||[]).length&&!(s.rare||[]).length)s.owned=["하루 세이렌"]}if(o.type==="katana"){s.katanas=(s.katanas||[]).filter(x=>x!==o.item);if(s.eq===o.item)s.eq=s.katanas[0]||"낡은 공명 장비";if(!s.katanas.length)s.katanas=["낡은 공명 장비"]}if(o.type==="equip"){s.equips=(s.equips||[]).filter(x=>x!==o.item);if(s.eqArmor===o.item)s.eqArmor=""}writeSaveOf(n,s)}
 function addOffer(n,o){let s=readSaveOf(n);if(o.type==="coins")s.coins=(s.coins||0)+o.amount;if(o.type==="char"){let c=chars.find(x=>x.name===o.item);let arr=c&&c.rare?"rare":"owned";s[arr]??=[];if(!s[arr].includes(o.item))s[arr].push(o.item)}if(o.type==="katana"){s.katanas??=[];if(!s.katanas.includes(o.item))s.katanas.push(o.item)}if(o.type==="equip"){s.equips??=[];if(!s.equips.includes(o.item))s.equips.push(o.item)}writeSaveOf(n,s)}
 function readyTrade(){if(!tradeRoom)return alert("거래 방에 먼저 입장하세요");let t=readTradeRoom();let users=t.users.filter(Boolean).slice(0,2);if(users.length<2)return alert("상대가 거래 방에 들어와야 합니다");if(!t.offers[user])return alert("내 거래품을 먼저 올리세요");t.ready[user]=true;let other=users.find(x=>x!==user);if(other&&t.ready[other]&&t.offers[other]){let a=user,b=other,oa=t.offers[a],ob=t.offers[b];if(!hasOffer(a,oa)||!hasOffer(b,ob)){t.ready={};t.log="거래 실패: 한쪽이 물건이나 골드가 부족합니다.";saveTradeRoomData(t);return alert(t.log)}removeOffer(a,oa);removeOffer(b,ob);addOffer(a,ob);addOffer(b,oa);t.log=`거래 완료! ${a} ↔ ${b}`;t.offers={};t.ready={};t.done=true;saveTradeRoomData(t);alert(t.log);load()}else{saveTradeRoomData(t);$("tradeStatus").textContent="내 확정 완료. 상대 확정을 기다리는 중"}}
 function renderTradeView(){let v=$("tradeView");if(!v)return;if(!tradeRoom){v.innerHTML='<div class="tradeSlot">거래 방에 입장하면 상태가 표시됩니다.</div>';renderOfferSelect();return}let t=readTradeRoom();let users=t.users.filter(Boolean);let html=users.map(n=>`<div class="tradeSlot ${t.ready[n]?"tradeReady":""}"><b>${n===user?"나":n}</b><br>${offerLabel(t.offers[n])}<br>${t.ready[n]?"✅ 확정":"⏳ 미확정"}</div>`).join("");if(users.length<2)html+='<div class="tradeSlot tradeWarn">상대가 아직 입장하지 않았습니다.</div>';if(t.log)html+=`<div class="tradeSlot">${t.log}</div>`;v.innerHTML=html}
@@ -861,20 +861,20 @@ let worldRun=false,worldCanvas=null,wctx=null,ww=0,wh=0,worldLast=0;
 let worldPlayer={x:520,y:420,spd:260,level:1};let currentWorldPlace=null,dungeonPlace=null;let flyMode=false,invisibleMode=false;
 let worldRoom="",worldChan=null,worldPeers={},worldJoy={x:0,y:0,a:false};
 const worldPlaces=[
- {name:"후지카사네산 입구",x:520,y:420,r:130,level:1,color:"#14532d",emoji:"🏔️",desc:"초보자 수련 지역"},
- {name:"나타구모산",x:1180,y:520,r:150,level:5,color:"#166534",emoji:"🕷️",desc:"거미 혈귀 지역"},
- {name:"아사쿠사",x:1850,y:380,r:145,level:8,color:"#334155",emoji:"🏙️",desc:"도시 조사 지역"},
- {name:"츠즈미 저택",x:2450,y:760,r:140,level:10,color:"#7c2d12",emoji:"🥁",desc:"북의 혈귀 지역"},
- {name:"무한열차",x:820,y:1180,r:155,level:15,color:"#78350f",emoji:"🚂",desc:"꿈 혈귀 보스 지역"},
- {name:"요시와라 유곽",x:1650,y:1280,r:165,level:20,color:"#7f1d1d",emoji:"🏮",desc:"상현의 육 지역"},
- {name:"도공 마을",x:2700,y:1420,r:160,level:25,color:"#475569",emoji:"⚒️",desc:"장비 강화 지역"},
- {name:"무한성",x:3450,y:980,r:190,level:35,color:"#312e81",emoji:"🏯",desc:"상현 집결 지역"},
- {name:"주술고전",x:3920,y:420,r:170,level:40,color:"#1e3a8a",emoji:"⛩️",desc:"주술회전 시작 지역"},
- {name:"시부야",x:4380,y:1180,r:185,level:50,color:"#334155",emoji:"🌆",desc:"주술회전 대형 전투 지역"},
- {name:"사멸회유 결계",x:5050,y:720,r:190,level:60,color:"#581c87",emoji:"🌀",desc:"고난도 주술 지역"},
- {name:"상현 레이드",x:5520,y:1420,r:200,level:70,color:"#581c87",emoji:"👹",desc:"상현 보스 레이드"},
- {name:"스쿠나 영역",x:6320,y:620,r:215,level:85,color:"#7f1d1d",emoji:"⛩️",desc:"최상위 주술 보스"},
- {name:"최종 무잔전",x:6900,y:1480,r:230,level:100,color:"#020617",emoji:"🩸",desc:"최종 보스 지역"}
+ {name:"새벽별 언덕 입구",x:520,y:420,r:130,level:1,color:"#14532d",emoji:"🏔️",desc:"초보자 수련 지역"},
+ {name:"거미줄 협곡",x:1180,y:520,r:150,level:5,color:"#166534",emoji:"🕷️",desc:"거미 공허체 지역"},
+ {name:"등불 항구도시",x:1850,y:380,r:145,level:8,color:"#334155",emoji:"🏙️",desc:"도시 조사 지역"},
+ {name:"북소리 저택",x:2450,y:760,r:140,level:10,color:"#7c2d12",emoji:"🥁",desc:"북의 공허 고수 지역"},
+ {name:"별빛 급행열차",x:820,y:1180,r:155,level:15,color:"#78350f",emoji:"🚂",desc:"꿈 공허체 보스 지역"},
+ {name:"홍등 불야성",x:1650,y:1280,r:165,level:20,color:"#7f1d1d",emoji:"🏮",desc:"공허 6좌 지역"},
+ {name:"대장장이 마을",x:2700,y:1420,r:160,level:25,color:"#475569",emoji:"⚒️",desc:"장비 강화 지역"},
+ {name:"공허 성채",x:3450,y:980,r:190,level:35,color:"#312e81",emoji:"🏯",desc:"공허 군주 집결 지역"},
+ {name:"각성자 학원",x:3920,y:420,r:170,level:40,color:"#1e3a8a",emoji:"⛩️",desc:"각성자 시작 지역"},
+ {name:"네온 구역",x:4380,y:1180,r:185,level:50,color:"#334155",emoji:"🌆",desc:"각성자 대형 전투 지역"},
+ {name:"순환 결계",x:5050,y:720,r:190,level:60,color:"#581c87",emoji:"🌀",desc:"고난도 술식 지역"},
+ {name:"공허 군주 레이드",x:5520,y:1420,r:200,level:70,color:"#581c87",emoji:"👹",desc:"공허 군주 보스 레이드"},
+ {name:"카오스의 성역",x:6320,y:620,r:215,level:85,color:"#7f1d1d",emoji:"⛩️",desc:"최상위 각성자 보스"},
+ {name:"오블리비온 최종전",x:6900,y:1480,r:230,level:100,color:"#020617",emoji:"🩸",desc:"최종 보스 지역"}
 ];
 const WORLD_W=7400,WORLD_H=2200;
 function startWorldMap(){
@@ -1098,8 +1098,8 @@ function setupDungeonBattle(place){
   let c=chars[sel],ar=armor();
   player={x:w*.25,y:h*.62,r:34,hp:c.hp+ar.hp,max:c.hp+ar.hp,atk:c.atk+ar.atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:false,inv:0};
   let diff=Math.max(1,place.level);
-  let boss=place.level>=70 || place.name.includes("무잔") || place.name.includes("스쿠나") || place.name.includes("상현");
-  let demonName=boss?place.name+" 보스":place.name+" 혈귀";
+  let boss=place.level>=70 || place.name.includes("오블리비온") || place.name.includes("카오스") || place.name.includes("레이드");
+  let demonName=boss?place.name+" 보스":place.name+" 공허체";
   let eh=(900+diff*420)*(boss?2.2:1.35);
   enemy={x:w*.72,y:h*.62,r:boss?52:40,hp:eh,max:eh,atk:(35+diff*13)*(boss?1.65:1.2),spd:1.55+diff*.025,name:demonName,emoji:place.emoji,color:place.color};
   bullets=[];effects=[];c1=c2=0;
@@ -1112,7 +1112,7 @@ function setupDungeonBattle(place){
 function startGame(){if(isBanned())return alert("밴된 계정은 게임을 시작할 수 없어.");let c=chars[sel];if(!owned(c))return alert("구매하지 않은 캐릭터입니다.");$("select").classList.remove("active");$("game").classList.add("active");cv=$("cv");ctx=cv.getContext("2d");resize();addEventListener("resize",resize);stage=save.best||1;coins=save.coins||0;dia=save.dia||0;setup();run=true;last=performance.now();startAt=Date.now();requestAnimationFrame(loop)}
 function back(){run=false;dungeonPlace=null;$("game").classList.remove("active");$("select").classList.add("active")}
 function resize(){w=cv.width=innerWidth;h=cv.height=innerHeight}
-function bossKind(){if(stage%10===0)return"최종보스";if(stage%5===0)return"중간보스";return"일반 혈귀"}
+function bossKind(){if(stage%10===0)return"최종보스";if(stage%5===0)return"중간보스";return"일반 공허체"}
 function setup(){let c=chars[sel],kb=0,ar=armor();player={x:w*.25,y:h*.62,r:34,hp:c.hp+ar.hp,max:c.hp+ar.hp,atk:c.atk+ar.atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:false,inv:0};let idx=Math.min(demons.length-1,Math.floor((stage-1)/2));if(stage%10===0)idx=Math.min(demons.length-1,10+Math.floor(stage/30));else if(stage%5===0)idx=Math.min(demons.length-1,4+Math.floor(stage/10));let d=demons[idx];let mult=stage%10===0?2.1:stage%5===0?1.55:1;let eh=(650+stage*260+Math.floor(stage/3)*180)*mult;enemy={x:w*.72,y:h*.62,r:stage%10===0?48:stage%5===0?42:36,hp:eh,max:eh,atk:(26+stage*9)*mult,spd:1.45+stage*.16,name:d[0],emoji:d[1],color:d[2]};bullets=[];effects=[];c1=c2=0;msg(`스테이지 ${stage} ${bossKind()} : ${enemy.name}`);hud()}
 function hud(){$("pn").textContent=player.name;$("en").textContent=enemy.name;$("stage").textContent="스테이지 "+stage;$("bossType").textContent=bossKind();$("coin").textContent="코인 "+coins;$("dia").textContent="다이아 "+dia;$("rec").textContent="최고 "+best;$("eq").textContent=player.isSword?save.eq:player.breath;$("ph").style.width=Math.max(0,player.hp/player.max*100)+"%";$("eh").style.width=Math.max(0,enemy.hp/enemy.max*100)+"%";$("pt").textContent=Math.floor(Math.max(0,player.hp))+" / "+player.max;$("et").textContent=Math.floor(Math.max(0,enemy.hp))+" / "+Math.floor(enemy.max)}
 function msg(t){$("msg").textContent=t;clearTimeout($("msg")._t);$("msg").style.display="block";$("msg")._t=setTimeout(()=>$("msg").style.display="none",1600)}
@@ -1171,10 +1171,10 @@ function rot2(x1,y1,x2,y2){return Math.atan2(y2-y1,x2-x1)+"rad"}
 function flash2(c="rgba(255,255,255,.72)"){let e=document.createElement("div");e.className="screenFlash";e.style.background=c;document.body.appendChild(e);setTimeout(()=>e.remove(),430)}
 function dragon2(kind,x1,y1,x2,y2,color){addFx2(kind==="fire"?"fireDragon2":"waterDragon2",{"--sx":x1+"px","--sy":(y1-65)+"px","--rot":rot2(x1,y1,x2,y2),color},980);impactRing(x2,y2,color)}
 function thunder2(x1,y1,x2,y2){addFx2("thunderStep2",{"--sx":x1+"px","--sy":(y1-10)+"px","--rot":rot2(x1,y1,x2,y2),color:"#facc15"},600);flash2("rgba(250,204,21,.55)")}
-function kimetsuFx(c,strong=false){let color=breathFx(c),b=c.breath||"";if(b.includes("물")||b.includes("해")){dragon2((strong||c.skill.join(" ").includes("히노")||b.includes("해"))?"fire":"water",player.x,player.y,enemy.x,enemy.y,(strong||b.includes("해"))?"#f97316":color)}else if(b.includes("화염")){dragon2("fire",player.x,player.y,enemy.x,enemy.y,"#fb923c")}else if(b.includes("번개")){thunder2(player.x,player.y,enemy.x,enemy.y)}else if(b.includes("안개")){addFx2("mistField2",{"--x":enemy.x+"px","--y":enemy.y+"px",color},1200);slashAnime(player.x,player.y,enemy.x,enemy.y,color)}else if(b.includes("바람")){addFx2("windStorm2",{"--x":enemy.x+"px","--y":enemy.y+"px",color},1000);for(let i=0;i<5;i++)setTimeout(()=>slashAnime(player.x-40+i*18,player.y-35,enemy.x+30,enemy.y+30,color),i*55)}else if(b.includes("벌레")){addFx2("mistField2",{"--x":enemy.x+"px","--y":enemy.y+"px",color:"#c084fc"},850);anime("🦋毒",enemy.x,enemy.y,"#c084fc")}else if(b.includes("사랑")){slashAnime(player.x,player.y,enemy.x,enemy.y,"#f9a8d4");anime("戀",enemy.x,enemy.y,"#f9a8d4")}else if(b.includes("바위")){burstAnime(enemy.x,enemy.y,"#a3a3a3");impactRing(enemy.x,enemy.y,"#a3a3a3")}else{slashAnime(player.x,player.y,enemy.x,enemy.y,color);burstAnime(enemy.x,enemy.y,color)}if(strong){impactRing(enemy.x,enemy.y,color);burstAnime(enemy.x,enemy.y,color);anime(c.breath+" 필살",enemy.x,enemy.y,color)}}
-function jujutsuFx(c,n){let label=c.skill[n-1],color=c.color;if(c.name.includes("고죠")&&n===2){flash2("rgba(147,197,253,.75)");addFx2("limitlessVoid2",{},1450);setTimeout(()=>addFx2("hollowPurple2",{"--sx":(player.x-48)+"px","--sy":(player.y-48)+"px","--ex":(enemy.x-48)+"px","--ey":(enemy.y-48)+"px"},1150),260);anime("無量空処",innerWidth/2,innerHeight*.34,"#93c5fd");return true}if(c.name.includes("고죠")){addFx2("hollowPurple2",{"--sx":(player.x-48)+"px","--sy":(player.y-48)+"px","--ex":(enemy.x-48)+"px","--ey":(enemy.y-48)+"px"},1050);return true}if(c.name.includes("스쿠나")&&n===2){flash2("rgba(239,68,68,.65)");addFx2("shrine2",{},1300);addFx2("sukunaCuts2",{},900);anime("伏魔御厨子",innerWidth/2,innerHeight*.34,"#ef4444");return true}if(c.name.includes("스쿠나")){addFx2("sukunaCuts2",{},800);flash2("rgba(239,68,68,.45)");return true}if(c.name.includes("이타도리")){addFx2("blackFlash2",{"--x":enemy.x+"px","--y":enemy.y+"px"},700);flash2("rgba(239,68,68,.8)");anime("黒閃",enemy.x,enemy.y,"#ef4444");return true}domainAnime(label,color);return true}
-function attack(){let c=chars[sel],h=human(c),k=kat(),color=h?breathFx(c):player.color,d=player.atk*(.8+Math.random()*.4),dist=Math.hypot(player.x-enemy.x,player.y-enemy.y);if(dist<105){enemy.hp-=d;effects.push([enemy.x,enemy.y,.35,color,Math.floor(d)]);impactRing(enemy.x,enemy.y,color);if(h){kimetsuFx(c,false);anime(k.emoji,enemy.x,enemy.y,color)}else if(c.side==="주술회전"){jujutsuFx(c,1)}else{anime(c.side==="브롤스타즈"?"💥":"🩸",enemy.x,enemy.y,color)}}else msg("가까이 가세요")}
-function skill(n){let c=chars[sel];if(n===1&&c1>0)return;if(n===2&&c2>0)return;let dx=enemy.x-player.x,dy=enemy.y-player.y,l=Math.hypot(dx,dy)||1,h=human(c),color=h?breathFx(c):c.color,label=c.skill[n-1];if(n===1){c1=3;bullets.push({x:player.x,y:player.y,r:h?12:22,vx:dx/l*610,vy:dy/l*610,dmg:player.atk*2.2,life:1.15,color});if(h){kimetsuFx(c,false);impactRing(player.x,player.y,color);anime(c.breath+" "+kat().emoji,player.x,player.y,color)}else if(c.side==="주술회전")jujutsuFx(c,1);else anime(label,player.x,player.y,color);msg(label)}else{c2=6;let mult=c.name.includes("고죠")?5.6:(h?3.6:c.side==="주술회전"?4.2:c.side==="브롤스타즈"?3.9:3.8);enemy.hp-=player.atk*mult;effects.push([enemy.x,enemy.y,.75,color,h?"호흡 필살":c.side==="주술회전"?"영역":c.side==="브롤스타즈"?"슈퍼":"혈귀술"]);impactRing(enemy.x,enemy.y,color);burstAnime(enemy.x,enemy.y,color);if(h){slashAnime(player.x-40,player.y-20,enemy.x+40,enemy.y+20,color);slashAnime(player.x+40,player.y+25,enemy.x-40,enemy.y-25,color);kimetsuFx(c,true)}else if(c.side==="주술회전")jujutsuFx(c,2);else domainAnime(label,color);msg(label)}}
+function kimetsuFx(c,strong=false){let color=breathFx(c),b=c.breath||"";if(b.includes("물")||b.includes("태양")){dragon2((strong||c.skill.join(" ").includes("여명")||b.includes("태양"))?"fire":"water",player.x,player.y,enemy.x,enemy.y,(strong||b.includes("태양"))?"#f97316":color)}else if(b.includes("화염")){dragon2("fire",player.x,player.y,enemy.x,enemy.y,"#fb923c")}else if(b.includes("번개")){thunder2(player.x,player.y,enemy.x,enemy.y)}else if(b.includes("안개")){addFx2("mistField2",{"--x":enemy.x+"px","--y":enemy.y+"px",color},1200);slashAnime(player.x,player.y,enemy.x,enemy.y,color)}else if(b.includes("바람")){addFx2("windStorm2",{"--x":enemy.x+"px","--y":enemy.y+"px",color},1000);for(let i=0;i<5;i++)setTimeout(()=>slashAnime(player.x-40+i*18,player.y-35,enemy.x+30,enemy.y+30,color),i*55)}else if(b.includes("벌레")){addFx2("mistField2",{"--x":enemy.x+"px","--y":enemy.y+"px",color:"#c084fc"},850);anime("🦋毒",enemy.x,enemy.y,"#c084fc")}else if(b.includes("사랑")){slashAnime(player.x,player.y,enemy.x,enemy.y,"#f9a8d4");anime("戀",enemy.x,enemy.y,"#f9a8d4")}else if(b.includes("바위")){burstAnime(enemy.x,enemy.y,"#a3a3a3");impactRing(enemy.x,enemy.y,"#a3a3a3")}else{slashAnime(player.x,player.y,enemy.x,enemy.y,color);burstAnime(enemy.x,enemy.y,color)}if(strong){impactRing(enemy.x,enemy.y,color);burstAnime(enemy.x,enemy.y,color);anime(c.breath+" 필살",enemy.x,enemy.y,color)}}
+function jujutsuFx(c,n){let label=c.skill[n-1],color=c.color;if(c.name.includes("아스트라")&&n===2){flash2("rgba(147,197,253,.75)");addFx2("limitlessVoid2",{},1450);setTimeout(()=>addFx2("hollowPurple2",{"--sx":(player.x-48)+"px","--sy":(player.y-48)+"px","--ex":(enemy.x-48)+"px","--ey":(enemy.y-48)+"px"},1150),260);anime("無限星界",innerWidth/2,innerHeight*.34,"#93c5fd");return true}if(c.name.includes("아스트라")){addFx2("hollowPurple2",{"--sx":(player.x-48)+"px","--sy":(player.y-48)+"px","--ex":(enemy.x-48)+"px","--ey":(enemy.y-48)+"px"},1050);return true}if(c.name.includes("카오스")&&n===2){flash2("rgba(239,68,68,.65)");addFx2("shrine2",{},1300);addFx2("sukunaCuts2",{},900);anime("混沌聖域",innerWidth/2,innerHeight*.34,"#ef4444");return true}if(c.name.includes("카오스")){addFx2("sukunaCuts2",{},800);flash2("rgba(239,68,68,.45)");return true}if(c.name.includes("토라")){addFx2("blackFlash2",{"--x":enemy.x+"px","--y":enemy.y+"px"},700);flash2("rgba(239,68,68,.8)");anime("閃光",enemy.x,enemy.y,"#ef4444");return true}domainAnime(label,color);return true}
+function attack(){let c=chars[sel],h=human(c),k=kat(),color=h?breathFx(c):player.color,d=player.atk*(.8+Math.random()*.4),dist=Math.hypot(player.x-enemy.x,player.y-enemy.y);if(dist<105){enemy.hp-=d;effects.push([enemy.x,enemy.y,.35,color,Math.floor(d)]);impactRing(enemy.x,enemy.y,color);if(h){kimetsuFx(c,false);anime(k.emoji,enemy.x,enemy.y,color)}else if(c.side==="각성자"){jujutsuFx(c,1)}else{anime(c.side==="용병단"?"💥":"🩸",enemy.x,enemy.y,color)}}else msg("가까이 가세요")}
+function skill(n){let c=chars[sel];if(n===1&&c1>0)return;if(n===2&&c2>0)return;let dx=enemy.x-player.x,dy=enemy.y-player.y,l=Math.hypot(dx,dy)||1,h=human(c),color=h?breathFx(c):c.color,label=c.skill[n-1];if(n===1){c1=3;bullets.push({x:player.x,y:player.y,r:h?12:22,vx:dx/l*610,vy:dy/l*610,dmg:player.atk*2.2,life:1.15,color});if(h){kimetsuFx(c,false);impactRing(player.x,player.y,color);anime(c.breath+" "+kat().emoji,player.x,player.y,color)}else if(c.side==="각성자")jujutsuFx(c,1);else anime(label,player.x,player.y,color);msg(label)}else{c2=6;let mult=c.name.includes("아스트라")?5.6:(h?3.6:c.side==="각성자"?4.2:c.side==="용병단"?3.9:3.8);enemy.hp-=player.atk*mult;effects.push([enemy.x,enemy.y,.75,color,h?"공명 필살":c.side==="각성자"?"영역":c.side==="용병단"?"슈퍼":"공허술"]);impactRing(enemy.x,enemy.y,color);burstAnime(enemy.x,enemy.y,color);if(h){slashAnime(player.x-40,player.y-20,enemy.x+40,enemy.y+20,color);slashAnime(player.x+40,player.y+25,enemy.x-40,enemy.y-25,color);kimetsuFx(c,true)}else if(c.side==="각성자")jujutsuFx(c,2);else domainAnime(label,color);msg(label)}}
 function dash(){let dx=joy.x||((enemy.x<player.x)?1:-1),dy=joy.y||0,l=Math.hypot(dx,dy)||1;player.x+=dx/l*120;player.y+=dy/l*120;player.inv=.6;msg("회피")}
 addEventListener("keydown",e=>{keys[e.key]=true;if(e.key===" ")attack();if(e.key==="1")skill(1);if(e.key==="2")skill(2)});addEventListener("keyup",e=>keys[e.key]=false);
 const je=$("joy"),st=$("stick");function jm(x,y){let r=je.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,xx=x-cx,yy=y-cy,lim=r.width/2-31,len=Math.hypot(xx,yy);if(len>lim){xx=xx/len*lim;yy=yy/len*lim}st.style.transform=`translate(${xx}px,${yy}px)`;joy.x=xx/lim;joy.y=yy/lim}
@@ -1190,11 +1190,11 @@ function fbPath(...a){return a.map(safeKey).join('/')}
 function loadFirebaseConfig(){let v=localStorage.getItem('animeRpgFirebaseConfig')||JSON.stringify(DEFAULT_FIREBASE_CONFIG,null,2);if($('fbConfig'))$('fbConfig').value=v;return v}
 function connectFirebase(silent=false){try{let raw=($('fbConfig')&&$('fbConfig').value.trim())||loadFirebaseConfig()||JSON.stringify(DEFAULT_FIREBASE_CONFIG);let cfg=typeof raw==='string'?JSON.parse(raw):raw;if(!cfg.databaseURL)cfg.databaseURL=DEFAULT_FIREBASE_CONFIG.databaseURL;if(!firebase.apps.length)fbApp=firebase.initializeApp(cfg);else fbApp=firebase.app();db=firebase.database();online=true;localStorage.setItem('animeRpgFirebaseConfig',JSON.stringify(cfg,null,2));if($('fbConfig'))$('fbConfig').value=JSON.stringify(cfg,null,2);$('onlineStatus').innerHTML='<span class=onlineOk>온라인 자동 연결됨</span> / 다른 기기 친구·방·PvP 가능';if(user!=='guest'){onlineRegisterUser();listenOnlineInvites();syncOnlineSave();}if(!silent)alert('온라인 연결 완료');}catch(e){online=false;$('onlineStatus').innerHTML='<span class=onlineBad>연결 실패:</span> '+e.message;if(!silent)alert('Firebase 연결 실패: '+e.message)}}
 function disconnectFirebase(){online=false;db=null;if(roomSub)roomSub.off();if(pvpSub)pvpSub.off();$('onlineStatus').textContent='온라인 꺼짐: 같은 브라우저 테스트만 가능'}
-function onlineRegisterUser(){if(!online||!db||user==='guest')return;dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});}
+function onlineRegisterUser(){if(!online||!db||user==='guest')return;dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'하루 세이렌'});}
 
 async function syncOnlineSave(){if(!online||!db||user==='guest')return;let ref=dbRef('saves/'+safeKey(user));let snap=await ref.get();if(snap.exists()){let remote=snap.val();if(remote&&typeof remote==='object'){save={...fresh(),...remote};norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();}}
 else{await ref.set({...save,updatedAt:Date.now()});}}
-async function pushOnlineSave(){if(!online||!db||user==='guest')return;await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:Date.now()});await dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});}
+async function pushOnlineSave(){if(!online||!db||user==='guest')return;await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:Date.now()});await dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'하루 세이렌'});}
 const _oldStore=store;store=function(){_oldStore();onlineRegisterUser();pushOnlineSave();}
 function listenOnlineInvites(){if(!online||!db||user==='guest')return;dbRef('invites/'+safeKey(user)).limitToLast(1).on('child_added',snap=>{let inv=snap.val();if(!inv||Date.now()-inv.ts>600000)return;if(inv.type==='room')$('inviteStatus').innerHTML=`${escH(inv.from)}님의 방 [${escH(inv.room)}] 초대 <button class=green data-room="${encodeURIComponent(String(inv.room||''))}" onclick="acceptInvite(decodeURIComponent(this.dataset.room))">참가</button>`;if(inv.type==='trade')$('tradeStatus').innerHTML=`${escH(inv.from)}님의 거래 방 [${escH(inv.room)}] 초대 <button class=green data-room="${encodeURIComponent(String(inv.room||''))}" onclick="acceptTradeInvite(decodeURIComponent(this.dataset.room))">입장</button>`;})}
 function getLocalAcc(n){return localStorage.getItem(ak(n))}
@@ -1311,8 +1311,8 @@ function sendPvpDamage(dmg,color){if(!pvpMode||!online||!db||!pvpOpponentId)retu
 function finishPvp(win){if(!pvpMode)return;pvpMode=false;run=false;let delta=ranked?(win?30:-25):(win?10:-5);updateRank(delta);pvpRoomRef().child('result').push({name:user,win,delta,score:save.pvp,ts:Date.now()});alert((win?'승리! ':'패배! ')+(ranked?'랭크 ':'PvP ')+'점수 '+(delta>0?'+':'')+delta);back();}
 const _baseUpd=upd;upd=function(dt){if(!pvpMode){_baseUpd(dt);return}let vx=joy.x,vy=joy.y;if(keys.a||keys.ArrowLeft)vx=-1;if(keys.d||keys.ArrowRight)vx=1;if(keys.w||keys.ArrowUp)vy=-1;if(keys.s||keys.ArrowDown)vy=1;let l=Math.hypot(vx,vy)||1;player.x+=vx/l*player.spd*90*dt;player.y+=vy/l*player.spd*90*dt;player.x=Math.max(34,Math.min(w-34,player.x));player.y=Math.max(h*.25,Math.min(h-54,player.y));let op=(pvpData.players||{})[pvpOpponentId];if(op){enemy.x=op.x||enemy.x;enemy.y=op.y||enemy.y;enemy.hp=op.hp??enemy.hp;enemy.max=op.max??enemy.max;enemy.name=op.name||enemy.name;enemy.emoji=op.emoji||enemy.emoji;enemy.color=op.color||enemy.color;if(enemy.hp<=0)finishPvp(true)}player.hp=pvpMyHp;player.inv-=dt;c1-=dt;c2-=dt;bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(Math.hypot(b.x-enemy.x,b.y-enemy.y)<enemy.r+b.r){sendPvpDamage(b.dmg,b.color);b.life=0;effects.push([enemy.x,enemy.y,.35,b.color,Math.floor(b.dmg)])}});bullets=bullets.filter(b=>b.life>0);effects.forEach(e=>e[2]-=dt);effects=effects.filter(e=>e[2]>0);if(pvpMyHp<=0)finishPvp(false);hud();sendState();$('s1').classList.toggle('cool',c1>0);$('s2').classList.toggle('cool',c2>0);let s=Math.floor((Date.now()-startAt)/1000);$('time').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 const _baseHud=hud;hud=function(){_baseHud();if(pvpMode){$('stage').textContent=ranked?'랭크전':'PvP';$('bossType').textContent='상대 유저 전투';$('coin').textContent='내 랭크 '+(save.pvp||0);$('dia').textContent=rankName();$('rec').textContent='승리 +30 / 패배 -25';}}
-const _baseAttack=attack;attack=function(){if(!pvpMode){_baseAttack();return}let c=chars[sel],h=human(c),k=kat(),color=h?breathFx(c):player.color,d=player.atk*(.8+Math.random()*.4),dist=Math.hypot(player.x-enemy.x,player.y-enemy.y);if(dist<115){sendPvpDamage(d,color);effects.push([enemy.x,enemy.y,.35,color,Math.floor(d)]);impactRing(enemy.x,enemy.y,color);if(h){kimetsuFx(c,false);anime(k.emoji,enemy.x,enemy.y,color)}else if(c.side==='주술회전')jujutsuFx(c,1);else anime('💥',enemy.x,enemy.y,color)}else msg('상대에게 가까이 가세요')}
-const _baseSkill=skill;skill=function(n){if(!pvpMode){_baseSkill(n);return}let c=chars[sel];if(n===1&&c1>0)return;if(n===2&&c2>0)return;let dx=enemy.x-player.x,dy=enemy.y-player.y,l=Math.hypot(dx,dy)||1,h=human(c),color=h?breathFx(c):c.color,label=c.skill[n-1];if(n===1){c1=3;bullets.push({x:player.x,y:player.y,r:h?12:22,vx:dx/l*610,vy:dy/l*610,dmg:player.atk*2.0,life:1.15,color});if(h)kimetsuFx(c,false);else if(c.side==='주술회전')jujutsuFx(c,1);msg(label)}else{c2=6;let dmg=player.atk*(c.name.includes('고죠')?4.5:(h?3.2:3.8));sendPvpDamage(dmg,color);effects.push([enemy.x,enemy.y,.75,color,'필살']);if(h)kimetsuFx(c,true);else if(c.side==='주술회전')jujutsuFx(c,2);else domainAnime(label,color);msg(label)}}
+const _baseAttack=attack;attack=function(){if(!pvpMode){_baseAttack();return}let c=chars[sel],h=human(c),k=kat(),color=h?breathFx(c):player.color,d=player.atk*(.8+Math.random()*.4),dist=Math.hypot(player.x-enemy.x,player.y-enemy.y);if(dist<115){sendPvpDamage(d,color);effects.push([enemy.x,enemy.y,.35,color,Math.floor(d)]);impactRing(enemy.x,enemy.y,color);if(h){kimetsuFx(c,false);anime(k.emoji,enemy.x,enemy.y,color)}else if(c.side==='각성자')jujutsuFx(c,1);else anime('💥',enemy.x,enemy.y,color)}else msg('상대에게 가까이 가세요')}
+const _baseSkill=skill;skill=function(n){if(!pvpMode){_baseSkill(n);return}let c=chars[sel];if(n===1&&c1>0)return;if(n===2&&c2>0)return;let dx=enemy.x-player.x,dy=enemy.y-player.y,l=Math.hypot(dx,dy)||1,h=human(c),color=h?breathFx(c):c.color,label=c.skill[n-1];if(n===1){c1=3;bullets.push({x:player.x,y:player.y,r:h?12:22,vx:dx/l*610,vy:dy/l*610,dmg:player.atk*2.0,life:1.15,color});if(h)kimetsuFx(c,false);else if(c.side==='각성자')jujutsuFx(c,1);msg(label)}else{c2=6;let dmg=player.atk*(c.name.includes('아스트라')?4.5:(h?3.2:3.8));sendPvpDamage(dmg,color);effects.push([enemy.x,enemy.y,.75,color,'필살']);if(h)kimetsuFx(c,true);else if(c.side==='각성자')jujutsuFx(c,2);else domainAnime(label,color);msg(label)}}
 
 
 // === 온라인 일반 방: 방장 시작 기능 ===
@@ -1487,7 +1487,7 @@ cancelTradeReady=async function(){if(!(online&&db)){let t=readTradeRoom();t.read
 async function onlineReadSave(n){let snap=await dbRef('saves/'+safeKey(n)).get();return snap.exists()?{...fresh(),...snap.val()}:fresh()}
 async function onlineWriteSave(n,s){await dbRef('saves/'+safeKey(n)).set({...s,updatedAt:Date.now(),v:APP_BUILD});if(n===user){save=s;norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();}}
 function hasOfferInSave(s,o){if(o.type==='coins')return (s.coins||0)>=o.amount;if(o.type==='char')return (s.owned||[]).includes(o.item)||(s.rare||[]).includes(o.item);if(o.type==='katana')return (s.katanas||[]).includes(o.item);if(o.type==='equip')return (s.equips||[]).includes(o.item);return false}
-function removeOfferFromSave(s,o){if(o.type==='coins')s.coins=(s.coins||0)-o.amount;if(o.type==='char'){s.owned=(s.owned||[]).filter(x=>x!==o.item);s.rare=(s.rare||[]).filter(x=>x!==o.item);if(!(s.owned||[]).length&&!(s.rare||[]).length)s.owned=['카마도 탄지로']}if(o.type==='katana'){s.katanas=(s.katanas||[]).filter(x=>x!==o.item);if(s.eq===o.item)s.eq=s.katanas[0]||'낡은 호흡 장비';if(!s.katanas.length)s.katanas=['낡은 호흡 장비']}if(o.type==='equip'){s.equips=(s.equips||[]).filter(x=>x!==o.item);if(s.eqArmor===o.item)s.eqArmor=''}return s}
+function removeOfferFromSave(s,o){if(o.type==='coins')s.coins=(s.coins||0)-o.amount;if(o.type==='char'){s.owned=(s.owned||[]).filter(x=>x!==o.item);s.rare=(s.rare||[]).filter(x=>x!==o.item);if(!(s.owned||[]).length&&!(s.rare||[]).length)s.owned=['하루 세이렌']}if(o.type==='katana'){s.katanas=(s.katanas||[]).filter(x=>x!==o.item);if(s.eq===o.item)s.eq=s.katanas[0]||'낡은 공명 장비';if(!s.katanas.length)s.katanas=['낡은 공명 장비']}if(o.type==='equip'){s.equips=(s.equips||[]).filter(x=>x!==o.item);if(s.eqArmor===o.item)s.eqArmor=''}return s}
 function addOfferToSave(s,o){if(o.type==='coins')s.coins=(s.coins||0)+o.amount;if(o.type==='char'){let c=chars.find(x=>x.name===o.item);let arr=c&&c.rare?'rare':'owned';s[arr]??=[];if(!s[arr].includes(o.item))s[arr].push(o.item)}if(o.type==='katana'){s.katanas??=[];if(!s.katanas.includes(o.item))s.katanas.push(o.item)}if(o.type==='equip'){s.equips??=[];if(!s.equips.includes(o.item))s.equips.push(o.item)}return s}
 const _localReadyTrade=readyTrade;
 readyTrade=async function(){
@@ -1524,7 +1524,7 @@ function makeCoopEnemyData(st){
   let max=Math.floor((780+st*320+Math.floor(st/3)*220)*mult);
   return {name:d[0],emoji:d[1],color:d[2],hp:max,max:max,x:Math.floor(innerWidth*.72),y:Math.floor(innerHeight*.62),r:st%10===0?52:st%5===0?45:38,stage:st,updatedAt:Date.now()};
 }
-function coopBossKind(st){if(st%10===0)return '협동 최종보스'; if(st%5===0)return '협동 중간보스'; return '협동 일반 혈귀'}
+function coopBossKind(st){if(st%10===0)return '협동 최종보스'; if(st%5===0)return '협동 중간보스'; return '협동 일반 공허체'}
 function coopRewardFor(st){return {coins:70+st*22+(st%5===0?220:0)+(st%10===0?500:0),dia:st%10===0?12:(st%5===0?5:0)}}
 function ensureCoopSaveFields(){save.coopRewards??={};}
 function applyCoopRoomData(){
@@ -1639,14 +1639,14 @@ const _prevAttackForCoop=attack;
 attack=function(){
   if(!coopMode){_prevAttackForCoop();return;}
   let c=chars[sel],h=human(c),k=kat(),color=h?breathFx(c):player.color,d=player.atk*(.85+Math.random()*.45),dist=Math.hypot(player.x-enemy.x,player.y-enemy.y);
-  if(dist<120){sendCoopDamage(d,color,h?'kimetsu':(c.name.includes('스쿠나')?'sukuna':''),'공격');effects.push([enemy.x,enemy.y,.35,color,Math.floor(d)]);impactRing(enemy.x,enemy.y,color);if(h){kimetsuFx(c,false);anime(k.emoji,enemy.x,enemy.y,color)}else if(c.side==='주술회전')jujutsuFx(c,1);else anime('💥',enemy.x,enemy.y,color)}else msg('보스에게 가까이 가세요');
+  if(dist<120){sendCoopDamage(d,color,h?'kimetsu':(c.name.includes('카오스')?'sukuna':''),'공격');effects.push([enemy.x,enemy.y,.35,color,Math.floor(d)]);impactRing(enemy.x,enemy.y,color);if(h){kimetsuFx(c,false);anime(k.emoji,enemy.x,enemy.y,color)}else if(c.side==='각성자')jujutsuFx(c,1);else anime('💥',enemy.x,enemy.y,color)}else msg('보스에게 가까이 가세요');
 }
 const _prevSkillForCoop=skill;
 skill=function(n){
   if(!coopMode){_prevSkillForCoop(n);return;}
   let c=chars[sel];if(n===1&&c1>0)return;if(n===2&&c2>0)return;let dx=enemy.x-player.x,dy=enemy.y-player.y,l=Math.hypot(dx,dy)||1,h=human(c),color=h?breathFx(c):c.color,label=c.skill[n-1];
-  if(n===1){c1=3;bullets.push({x:player.x,y:player.y,r:h?12:22,vx:dx/l*610,vy:dy/l*610,dmg:player.atk*2.25,life:1.15,color,fx:h?'kimetsu':(c.name.includes('스쿠나')?'sukuna':'')});if(h)kimetsuFx(c,false);else if(c.side==='주술회전')jujutsuFx(c,1);msg(label)}
-  else{c2=6;let fx=c.name.includes('고죠')?'gojo':(c.name.includes('스쿠나')?'sukuna':(h?'kimetsu':''));let dmg=player.atk*(c.name.includes('고죠')?5.2:(h?3.8:4.2));sendCoopDamage(dmg,color,fx,label);effects.push([enemy.x,enemy.y,.75,color,'협동 필살']);if(h)kimetsuFx(c,true);else if(c.side==='주술회전')jujutsuFx(c,2);else domainAnime(label,color);msg(label)}
+  if(n===1){c1=3;bullets.push({x:player.x,y:player.y,r:h?12:22,vx:dx/l*610,vy:dy/l*610,dmg:player.atk*2.25,life:1.15,color,fx:h?'kimetsu':(c.name.includes('카오스')?'sukuna':'')});if(h)kimetsuFx(c,false);else if(c.side==='각성자')jujutsuFx(c,1);msg(label)}
+  else{c2=6;let fx=c.name.includes('아스트라')?'gojo':(c.name.includes('카오스')?'sukuna':(h?'kimetsu':''));let dmg=player.atk*(c.name.includes('아스트라')?5.2:(h?3.8:4.2));sendCoopDamage(dmg,color,fx,label);effects.push([enemy.x,enemy.y,.75,color,'협동 필살']);if(h)kimetsuFx(c,true);else if(c.side==='각성자')jujutsuFx(c,2);else domainAnime(label,color);msg(label)}
 }
 const _prevBackForCoop=back;
 back=function(){coopMode=false;_prevBackForCoop();}
@@ -1660,30 +1660,30 @@ setTimeout(()=>connectFirebase(true),500);
 /* ===== 자연스러운 캐릭터 모델 / 걷기·공격 모션 업그레이드 ===== */
 function charProfile(name){
   let base={hair:'#111827',coat:'#1f2937',pants:'#111827',skin:'#f3c6a8',accent:'#e5e7eb',eye:'#111827',weapon:'sword'};
-  if(name.includes('탄지로'))return {...base,hair:'#3f1d1d',coat:'#14532d',accent:'#22c55e',mark:'#7f1d1d'};
-  if(name.includes('젠이츠'))return {...base,hair:'#facc15',coat:'#f59e0b',accent:'#fff7ad'};
-  if(name.includes('이노스케'))return {...base,hair:'#6b7280',coat:'#6b4423',accent:'#93c5fd',boar:true};
+  if(name.includes('세이렌'))return {...base,hair:'#3f1d1d',coat:'#14532d',accent:'#22c55e',mark:'#7f1d1d'};
+  if(name.includes('볼트'))return {...base,hair:'#facc15',coat:'#f59e0b',accent:'#fff7ad'};
+  if(name.includes('브루트'))return {...base,hair:'#6b7280',coat:'#6b4423',accent:'#93c5fd',boar:true};
   if(name.includes('기유'))return {...base,hair:'#111827',coat:'#1e3a8a',accent:'#60a5fa'};
-  if(name.includes('렌고쿠'))return {...base,hair:'#facc15',coat:'#b91c1c',accent:'#fb923c'};
-  if(name.includes('시노부'))return {...base,hair:'#111827',coat:'#581c87',accent:'#c4b5fd'};
+  if(name.includes('이그니스'))return {...base,hair:'#facc15',coat:'#b91c1c',accent:'#fb923c'};
+  if(name.includes('실크'))return {...base,hair:'#111827',coat:'#581c87',accent:'#c4b5fd'};
   if(name.includes('우즈이'))return {...base,hair:'#e5e7eb',coat:'#334155',accent:'#f8fafc'};
   if(name.includes('무이치로'))return {...base,hair:'#99f6e4',coat:'#164e63',accent:'#ccfbf1'};
   if(name.includes('미츠리'))return {...base,hair:'#f9a8d4',coat:'#166534',accent:'#fef3c7'};
   if(name.includes('사네미'))return {...base,hair:'#e5e7eb',coat:'#14532d',accent:'#86efac'};
   if(name.includes('교메이'))return {...base,hair:'#1f2937',coat:'#44403c',accent:'#a3a3a3'};
-  if(name.includes('네즈코'))return {...base,hair:'#3f1d1d',coat:'#be123c',accent:'#fb7185',demon:true};
+  if(name.includes('엠버'))return {...base,hair:'#3f1d1d',coat:'#be123c',accent:'#fb7185',demon:true};
   if(name.includes('아카자'))return {...base,hair:'#fb7185',coat:'#0369a1',accent:'#ef4444',demon:true,weapon:'fist'};
   if(name.includes('도우마'))return {...base,hair:'#f8fafc',coat:'#7c2d12',accent:'#bae6fd',demon:true,weapon:'fan'};
   if(name.includes('코쿠시보'))return {...base,hair:'#312e81',coat:'#581c87',accent:'#c084fc',demon:true,weapon:'moon'};
-  if(name.includes('무잔'))return {...base,hair:'#111827',coat:'#27272a',accent:'#991b1b',demon:true,weapon:'whip'};
-  if(name.includes('고죠'))return {...base,hair:'#f8fafc',coat:'#0f172a',accent:'#38bdf8',eye:'#38bdf8',jjk:'gojo',weapon:'curse'};
-  if(name.includes('스쿠나'))return {...base,hair:'#fda4af',coat:'#3f1d1d',accent:'#dc2626',jjk:'sukuna',weapon:'curse'};
-  if(name.includes('이타도리'))return {...base,hair:'#fb7185',coat:'#111827',accent:'#ef4444',jjk:'itadori',weapon:'fist'};
+  if(name.includes('오블리비온'))return {...base,hair:'#111827',coat:'#27272a',accent:'#991b1b',demon:true,weapon:'whip'};
+  if(name.includes('아스트라'))return {...base,hair:'#f8fafc',coat:'#0f172a',accent:'#38bdf8',eye:'#38bdf8',jjk:'gojo',weapon:'curse'};
+  if(name.includes('카오스'))return {...base,hair:'#fda4af',coat:'#3f1d1d',accent:'#dc2626',jjk:'sukuna',weapon:'curse'};
+  if(name.includes('토라'))return {...base,hair:'#fb7185',coat:'#111827',accent:'#ef4444',jjk:'itadori',weapon:'fist'};
   if(name.includes('옷코츠'))return {...base,hair:'#111827',coat:'#0f172a',accent:'#a78bfa',jjk:'yuta',weapon:'sword'};
-  if(name.includes('쉘리'))return {...base,hair:'#7c3aed',coat:'#7e22ce',accent:'#c084fc',weapon:'gun'};
-  if(name.includes('콜트'))return {...base,hair:'#ef4444',coat:'#1d4ed8',accent:'#fca5a5',weapon:'gun'};
-  if(name.includes('스파이크'))return {...base,hair:'#22c55e',coat:'#15803d',accent:'#bbf7d0',cactus:true,weapon:'bomb'};
-  if(name.includes('레온'))return {...base,hair:'#84cc16',coat:'#365314',accent:'#bef264',lizard:true,weapon:'star'};
+  if(name.includes('블래스트'))return {...base,hair:'#7c3aed',coat:'#7e22ce',accent:'#c084fc',weapon:'gun'};
+  if(name.includes('리볼버'))return {...base,hair:'#ef4444',coat:'#1d4ed8',accent:'#fca5a5',weapon:'gun'};
+  if(name.includes('가시'))return {...base,hair:'#22c55e',coat:'#15803d',accent:'#bbf7d0',cactus:true,weapon:'bomb'};
+  if(name.includes('쉐이드'))return {...base,hair:'#84cc16',coat:'#365314',accent:'#bef264',lizard:true,weapon:'star'};
   return base;
 }
 function roundRectPath(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
@@ -1706,8 +1706,8 @@ function drawAnimeCharacter(o,opt={}){
   /* coat/body */
   ctx.shadowBlur=0;ctx.fillStyle=p.coat;roundRectPath(-17,-5,34,30,9);ctx.fill();
   ctx.fillStyle=p.accent;roundRectPath(-20,-2,9,27,5);ctx.fill();roundRectPath(11,-2,9,27,5);ctx.fill();
-  if((o.name||'').includes('탄지로')){ctx.strokeStyle='#111827';ctx.lineWidth=2;for(let yy=0;yy<22;yy+=9){ctx.beginPath();ctx.moveTo(-16,yy);ctx.lineTo(16,yy);ctx.stroke()}for(let xx=-12;xx<16;xx+=10){ctx.beginPath();ctx.moveTo(xx,-3);ctx.lineTo(xx,24);ctx.stroke()}}
-  if((o.name||'').includes('젠이츠')){ctx.fillStyle='rgba(255,255,255,.65)';for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(-15+i*7,2);ctx.lineTo(-10+i*7,12);ctx.lineTo(-18+i*7,12);ctx.fill();}}
+  if((o.name||'').includes('세이렌')){ctx.strokeStyle='#111827';ctx.lineWidth=2;for(let yy=0;yy<22;yy+=9){ctx.beginPath();ctx.moveTo(-16,yy);ctx.lineTo(16,yy);ctx.stroke()}for(let xx=-12;xx<16;xx+=10){ctx.beginPath();ctx.moveTo(xx,-3);ctx.lineTo(xx,24);ctx.stroke()}}
+  if((o.name||'').includes('볼트')){ctx.fillStyle='rgba(255,255,255,.65)';for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(-15+i*7,2);ctx.lineTo(-10+i*7,12);ctx.lineTo(-18+i*7,12);ctx.fill();}}
   /* arms */
   let atk=action==='atk'||action==='skill', dash=action==='dash';
   let armSwing=moving?Math.sin(now*12)*6:0;
@@ -1816,9 +1816,9 @@ pushOnlineSave=async function(){
   if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;
   const t=Date.now();mySavePushes.add(t);if(mySavePushes.size>50)mySavePushes.delete(mySavePushes.values().next().value);
   await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:t,v:APP_BUILD});
-  await dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:t,pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'});
+  await dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:t,pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'하루 세이렌'});
 };
-onlineRegisterUser=function(){if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'카마도 탄지로'})};
+onlineRegisterUser=function(){if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'하루 세이렌'})};
 syncOnlineSave=async function(){
   if(!online||!db||user==='guest')return;
   const ref=dbRef('saves/'+safeKey(user));
@@ -2224,7 +2224,7 @@ setRankUser=async function(){
 adminCreateEvent=async function(){
   if(!isAdmin())return alert('관리자 이상만 사용 가능');
   const title=($('evTitle').value||'').trim().slice(0,60);
-  const coins=Math.min(500000,Math.max(0,Math.floor(Number($('evCoins').value)||0))),d=Math.min(200,Math.max(0,Math.floor(Number($('evDia').value)||0)));
+  const coins=Math.min(1000000,Math.max(0,Math.floor(Number($('evCoins').value)||0))),d=Math.min(200,Math.max(0,Math.floor(Number($('evDia').value)||0)));
   const hours=Math.max(1,Math.min(720,Math.floor(Number($('evHours').value)||24))),min=$('evMin').value;
   if(!title)return alert('이벤트 이름을 입력해.');
   if(!coins&&!d)return alert('보상 코인이나 다이아를 입력해.');
@@ -2260,7 +2260,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='1.8.0',APP_BUILD=180,APP_DATE='2026-11-21';
+const APP_VERSION='2.0.0',APP_BUILD=200,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2745,19 +2745,19 @@ const _jujutsuFxBase=jujutsuFx;
 jujutsuFx=function(c,n){
   const r=_jujutsuFxBase(c,n);
   if(n===2){
-    if(c.name.includes('고죠'))domainBanner('領域展開','무량공처','#93c5fd');
-    else if(c.name.includes('스쿠나'))domainBanner('領域展開','복마어주자','#ef4444');
-    else if(c.side==='주술회전')domainBanner('術式解放',c.skill[1]||'',c.color);
+    if(c.name.includes('아스트라'))domainBanner('星界解放','무한 성계','#93c5fd');
+    else if(c.name.includes('카오스'))domainBanner('星界解放','혼돈 성역','#ef4444');
+    else if(c.side==='각성자')domainBanner('魔力解放',c.skill[1]||'',c.color);
   }
   return r;
 };
 
-/* ===================== 귀살대 호흡 컷인 / 오니 혈귀술 / 보스 등장 ===================== */
+/* ===================== 기사단 공명 컷인 / 공허군 공허술 / 보스 등장 ===================== */
 const BREATH_KANJI={'물':'水','번개':'雷','화염':'炎','바람':'風','안개':'霞','바위':'岩','벌레':'蟲','사랑':'恋','소리':'音','짐승':'獣','해':'日','꽃':'花','뱀':'蛇'};
 function breathKanji(b){const k=Object.keys(BREATH_KANJI).find(x=>String(b||'').includes(x));return k?BREATH_KANJI[k]:'刃'}
 function kimetsuCutin(c){
   const e=document.createElement('div');e.className='cutin';e.style.setProperty('--c',breathFx(c));
-  e.innerHTML=`<span class="cutK">${breathKanji(c.breath)}</span><span class="cutT">${escH(String(c.breath).split('/')[0])} 호흡<small>${escH(c.skill[1]||'')}</small></span>`;
+  e.innerHTML=`<span class="cutK">${breathKanji(c.breath)}</span><span class="cutT">${escH(String(c.breath).split('/')[0])} 공명<small>${escH(c.skill[1]||'')}</small></span>`;
   document.body.appendChild(e);setTimeout(()=>e.remove(),1350);addShake(8);
 }
 const _skillCutinBase=skill;
@@ -2767,7 +2767,7 @@ skill=function(n){
   if(ready&&c2>0&&!pvpMode){
     const c=chars[sel];
     if(human(c))kimetsuCutin(c);
-    else if(c.side==='오니')domainBanner('血鬼術',c.skill[1]||'',c.color);
+    else if(c.side==='공허군')domainBanner('虛空術',c.skill[1]||'',c.color);
   }
   return r;
 };
@@ -2804,6 +2804,20 @@ adminSuspicious=async function(){
     return `<div class="rpItem">${flag?'⚠ ':''}<b>${escH(n)}</b> · 코인 ${(v.coins||0).toLocaleString()} · 다이아 ${(v.dia||0).toLocaleString()} · 캐릭터 ${((v.owned||[]).length)+((v.rare||[]).length)}명 · PvP ${v.pvp||0}<br><small>마지막 저장: ${v.updatedAt?new Date(v.updatedAt).toLocaleString():'-'}</small><br><button class="blue" onclick="adminPickUser('${escH(n)}')">선택</button></div>`;
   }).join('');
 };
+
+/* ===================== 세이브 이전: 이전 이름 → 새 이름 ===================== */
+const OLD_TO_NEW={"카마도 탄지로":"하루 세이렌","아가츠마 젠이츠":"라이언 볼트","하시비라 이노스케":"가루 브루트","토미오카 기유":"카이 아쿠아","렌고쿠 쿄쥬로":"솔 이그니스","코쵸 시노부":"나비아 실크","우즈이 텐겐":"에이든 바르도","토키토 무이치로":"미스트 루벤","칸로지 미츠리":"로제 하트","시나즈가와 사네미":"윈드 칼리스","히메지마 교메이":"그란 록하트","카마도 네즈코":"루비아 엠버","아카자":"그라스 타이탄","도우마":"프로스트 모르가","코쿠시보":"루나 녹티스","키부츠지 무잔":"오블리비온","이타도리 유지":"토라 브레이커","고죠 사토루":"아스트라 인피니","스쿠나":"카오스 렉스","옷코츠 유타":"리온 에리스","사비토":"미라 에코","카나오 츠유리":"플로라 벨","이구로 오바나이":"세르펜 이오","후시구로 메구미":"네로 쉐도우","나나미 켄토":"레오 칼라일","게토 스구루":"모르페우스","쉘리":"레이나 블래스트","콜트":"잭 리볼버","스파이크":"카투스 가시","레온":"카멜레 쉐이드","귀살대 갑옷":"기사단 갑옷","상현 사냥꾼 세트":"공허 사냥꾼 세트"};
+function migrateName(n){
+  if(typeof n!=='string')return n;
+  if(OLD_TO_NEW[n])return OLD_TO_NEW[n];
+  return n.replace('전설의 해의 호흡 장비','전설의 태양 공명 장비').replace('태양 호흡 장비','태양 공명 장비').replace('호흡','공명');
+}
+function migrateSaveNames(sv){
+  if(!sv||typeof sv!=='object')return sv;
+  ['owned','rare','katanas','equips'].forEach(k=>{if(Array.isArray(sv[k]))sv[k]=[...new Set(sv[k].map(migrateName))]});
+  ['eq','eqArmor'].forEach(k=>{if(sv[k])sv[k]=migrateName(sv[k])});
+  return sv;
+}
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
 </body>
