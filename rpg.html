@@ -171,7 +171,9 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 #tabRow::-webkit-scrollbar{display:none}
 #tabRow button,.subTabRow button{flex:0 0 auto;margin:0;padding:9px 14px;border-radius:999px;background:rgba(255,255,255,.07);box-shadow:none;white-space:nowrap}
 #tabRow button.on,.subTabRow button.on{background:linear-gradient(180deg,#ef4444,#991b1b);box-shadow:0 0 14px rgba(239,68,68,.55)}
-#userMini{margin-top:6px;font-size:12px;color:#facc15;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#userRow{display:flex;align-items:center;gap:8px;margin-top:6px}
+#logoutBtn{flex:0 0 auto;margin:0;padding:5px 12px;font-size:12px;border-radius:999px}
+#userMini{flex:1;min-width:0;font-size:12px;color:#facc15;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .subTabRow{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px}
 .adminTile.adminHide{display:none!important}
 #startBar{position:sticky;bottom:0;z-index:55;display:flex;gap:8px;justify-content:center;padding:14px 8px 12px;margin-top:8px;background:linear-gradient(180deg,transparent,rgba(5,5,10,.92) 45%)}
@@ -2176,7 +2178,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='1.4.0',APP_BUILD=140,APP_DATE='2026-11-21';
+const APP_VERSION='1.4.1',APP_BUILD=141,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2372,12 +2374,12 @@ function showAdminTab(id){
 function buildTabs(){
   if($('tabBar'))return;
   const bar=document.createElement('div');bar.id='tabBar';
-  bar.innerHTML='<div id="tabRow">'+TABS.map(([id,l])=>`<button data-tab="${id}" id="tab_${id}" onclick="showTab('${id}')">${l}</button>`).join('')+'</div><div id="userMini"></div>';
+  bar.innerHTML='<div id="tabRow">'+TABS.map(([id,l])=>`<button data-tab="${id}" id="tab_${id}" onclick="showTab('${id}')">${l}</button>`).join('')+'</div><div id="userRow"><div id="userMini"></div><button id="logoutBtn" class="red" onclick="if(confirm(\'로그아웃할까요?\'))logout()" style="display:none">로그아웃</button></div>';
   const sc=$('select'),first=sc.querySelector('.box');
   sc.insertBefore(bar,$('name').closest('.box'));
   // 로그인 정보 한 줄 요약
   const src=$('user'),mini=$('userMini');
-  const sync=()=>{mini.innerHTML=src.innerHTML};sync();
+  const sync=()=>{mini.innerHTML=src.innerHTML;const lb=$('logoutBtn');if(lb)lb.style.display=(user!=='guest')?'':'none'};sync();
   new MutationObserver(sync).observe(src,{childList:true,subtree:true,characterData:true});
   // 관리자 패널 분류
   document.querySelectorAll('#adminBox .adminTile').forEach(t=>{
@@ -2396,6 +2398,7 @@ function buildTabs(){
 const _uapTabs=updateAdminPanel;
 updateAdminPanel=function(){
   _uapTabs();
+  const lb=$('logoutBtn');if(lb)lb.style.display=(user!=='guest')?'':'none';
   const b=$('tab_admin');if(!b)return;
   b.style.display=isStaff()?'':'none';
   if(!isStaff()&&curTab==='admin')showTab('home');
