@@ -1724,8 +1724,9 @@ function updateAdminPanel(){
 function startServerListeners(){
   stopServerListeners();
   const add=(r,fn)=>{r.on('value',fn);serverSubs.push(r)};
-  add(dbRef('staff'),s=>{staffMap=s.val()||{};updateAdminPanel();ui();renderEvents();applyServerState()});
-  add(dbRef('config'),s=>{cfg=s.val()||{};applyServerState();renderServerCfg()});
+  staffReady=false;cfgReady=false;
+  add(dbRef('staff'),s=>{staffMap=s.val()||{};staffReady=true;updateAdminPanel();ui();renderEvents();applyServerState()});
+  add(dbRef('config'),s=>{cfg=s.val()||{};cfgReady=true;applyServerState();renderServerCfg()});
   add(dbRef('bans'),s=>{banMap=s.val()||{};if(user!=='guest'&&banMap[user]){alert('이 계정은 밴되었습니다.');logout()}});
   add(dbRef('mutes'),s=>{muteMap=s.val()||{}});
   add(dbRef('events').limitToLast(20),s=>{eventsCache=s.val()||{};renderEvents()});
@@ -1778,9 +1779,9 @@ connectFirebase=function(silent=false){
 disconnectFirebase=function(){online=false;stopServerListeners();db=null;setOnlineStatus('온라인 꺼짐')};
 
 async function finishLogin(n,uid){
-  user=n;myId=uid;
+  user=n;myId=uid;roleReady=false;
   startServerListeners();
-  myAdminRole=((await dbRef('admins/'+uid).get()).val())||'';
+  myAdminRole=((await dbRef('admins/'+uid).get()).val())||'';roleReady=true;applyServerState();
   if((await dbRef('bans/'+safeKey(n)).get()).exists()){await auth.signOut();resetToGuest();alert('이 계정은 밴되었습니다.');return false}
   load();
   await syncOnlineSave();
@@ -1793,7 +1794,7 @@ async function finishLogin(n,uid){
   if(typeof showTab==='function'&&curTab==='account')showTab('home');
   return true;
 }
-function resetToGuest(){stopServerListeners();cfg={};try{applyServerState()}catch(e){}if(typeof showTab==='function')showTab('account');user='guest';myAdminRole='';myId='P'+Math.random().toString(36).slice(2,8);save=fresh();norm();updateAdminPanel();renderAll();renderEvents()}
+function resetToGuest(){stopServerListeners();cfg={};roleReady=false;staffReady=false;cfgReady=false;try{applyServerState()}catch(e){}if(typeof showTab==='function')showTab('account');user='guest';myAdminRole='';myId='P'+Math.random().toString(36).slice(2,8);save=fresh();norm();updateAdminPanel();renderAll();renderEvents()}
 
 createAcc=async function(){
   if(!online||!auth)return alert('온라인 연결이 필요해요. 잠시 후 다시 시도하세요.');
@@ -2179,7 +2180,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='1.4.2',APP_BUILD=142,APP_DATE='2026-11-21';
+const APP_VERSION='1.4.3',APP_BUILD=143,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2271,13 +2272,13 @@ dragon2=function(kind,x1,y1,x2,y2,color){
 };
 
 /* ---------- 서버 점검 / 구버전 정리 (관리자 이상) ---------- */
-let cfg={};
+let cfg={},staffReady=false,cfgReady=false,roleReady=false;
 function canBypassMaint(){return rankLevel(user)<=4}   // 제작자·관리자·하급 귀족·기사
 function ensureLockUi(){
   if($('lockOverlay'))return;
   const d=document.createElement('div');d.id='lockOverlay';
   d.style.cssText='display:none;position:fixed;inset:0;z-index:100000;background:rgba(3,7,18,.94);color:#fff;align-items:center;justify-content:center;text-align:center;padding:24px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)';
-  d.innerHTML='<div style="max-width:360px"><div id="lockIcon" style="font-size:64px"></div><h2 id="lockTitle" style="margin:12px 0 8px"></h2><div id="lockMsg" style="color:#cbd5e1;line-height:1.6;word-break:keep-all"></div><button id="lockBtn" class="blue" style="margin-top:18px;padding:12px 22px" onclick="location.reload()">새로고침</button></div>';
+  d.innerHTML='<div style="max-width:360px"><div id="lockIcon" style="font-size:64px"></div><h2 id="lockTitle" style="margin:12px 0 8px"></h2><div id="lockMsg" style="color:#cbd5e1;line-height:1.6;word-break:keep-all"></div><div style="margin-top:18px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button id="lockBtn" class="blue" style="padding:12px 22px" onclick="location.reload()">새로고침</button><button class="red" style="padding:12px 22px" onclick="logout()">로그아웃</button></div></div>';
   document.body.appendChild(d);
   const b=document.createElement('div');b.id='maintBanner';
   b.style.cssText='display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(90deg,#b45309,#dc2626);color:#fff;text-align:center;font-size:12px;font-weight:700;padding:4px 8px;pointer-events:none';
@@ -2293,7 +2294,7 @@ function applyServerState(){
   ensureLockUi();
   const o=$('lockOverlay'),bn=$('maintBanner');
   let reason='';
-  if(user!=='guest'){
+  if(user!=='guest'&&roleReady&&staffReady&&cfgReady){
     if((cfg.minVersion||0)>APP_BUILD)reason='ver';
     else if(cfg.maint&&cfg.maint.on&&!canBypassMaint())reason='maint';
   }
