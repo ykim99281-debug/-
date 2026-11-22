@@ -3252,12 +3252,14 @@ async function loadScoreRanking(){
   if(user==='guest'||!online||!db){box.textContent='로그인하면 순위표를 볼 수 있어요';return}
   box.textContent='불러오는 중...';
   try{
-    const v=(await dbRef('users').orderByChild('score').limitToLast(30).get()).val()||{};
+    let v;
+    try{v=(await dbRef('users').orderByChild('score').limitToLast(30).get()).val()||{}}
+    catch(e1){v=(await dbRef('users').get()).val()||{}} // 정렬 인덱스가 없으면 전체를 읽어서 직접 정렬해요
     const list=Object.keys(v).map(n=>({n,score:Number(v[n].score)||0,char:v[n].char||''})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
     if(!list.length){box.textContent='아직 점수 순위가 없어요';return}
     const myIdx=list.findIndex(x=>x.n===user);
     box.innerHTML=`<div style="margin:6px 0">⭐ 점수 순위(누적) · 내 순위: <b>${myIdx>=0?(myIdx+1)+'위':'30위 밖'}</b> · 내 누적 점수 ${(save.total||0).toLocaleString()}</div>`+list.map((x,i)=>`<div class="rkRow ${x.n===user?'me':''}"><span class="rkNo">${i<3?['🥇','🥈','🥉'][i]:(i+1)}</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${adminLabel(x.n)}<br><small style="color:#9ca3af">${escH(x.char)}</small></span><span style="text-align:right"><b>${x.score.toLocaleString()}</b>점</span></div>`).join('');
-  }catch(e){box.textContent='순위표를 불러오지 못했어요.'}
+  }catch(e){box.textContent='순위표를 불러오지 못했어요. ('+(e&&(e.code||e.message)||'알 수 없음')+')'}
 }
 SERVER=function(){return false};
 adminServerModeOn=function(){alert("하길 판에서는 서버 모드를 지원하지 않아요.")};
