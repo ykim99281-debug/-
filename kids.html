@@ -262,7 +262,7 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 <button class="green" onclick="createAcc()">계정 생성</button><button class="blue" onclick="login()">로그인</button><button onclick="logout()">로그아웃</button><button class="red" onclick="delAcc()">계정 삭제</button><button class="red" onclick="resetMyAccount()">내 계정 초기화</button><br>
 <span class="small">비밀번호는 6자 이상. 닉네임은 한글/영문/숫자/_ 2~12자. 로그인은 온라인 연결이 필요해요.</span>
 <div id="onlineStatus" class="small">온라인 연결 중...</div>
-<label class="small" style="display:block;margin:6px 0"><input type="checkbox" id="agreeBox" style="width:auto;margin-right:6px">이용약관과 개인정보처리방침에 동의합니다. (만 14세 미만은 보호자 동의가 필요해요)</label>
+<label class="small" style="display:block;margin:6px 0"><input type="checkbox" id="agreeBox" style="width:auto;margin-right:6px">보호자(법정대리인)와 함께 이용약관과 개인정보처리방침을 읽고 동의합니다. (만 14세 미만은 보호자 동의가 꼭 필요해요)</label>
 <div class="small"><a href="rpg-terms.html" target="_blank" style="color:#93c5fd">이용약관</a> · <a href="rpg-privacy.html" target="_blank" style="color:#93c5fd">개인정보처리방침</a></div>
 <div id="user" class="user"></div>
 </div>
@@ -1981,7 +1981,7 @@ function resetToGuest(){stopServerListeners();cfg={};roleReady=false;staffReady=
 createAcc=async function(){
   if(!online||!auth)return alert('온라인 연결이 필요해요. 잠시 후 다시 시도하세요.');
   const n=$('name').value.trim(),p=$('pw').value;
-  if(!$('agreeBox')||!$('agreeBox').checked)return alert('이용약관과 개인정보처리방침에 동의해야 가입할 수 있어요.');
+  if(!$('agreeBox')||!$('agreeBox').checked)return alert('보호자와 함께 이용약관과 개인정보처리방침을 읽고 동의해야 가입할 수 있어요.');
   if(!NICK_RE.test(n))return alert('닉네임은 한글/영문/숫자/_ 로 2~12자만 가능해요.');
   if(RESERVED_NICKS.includes(n.toLowerCase())||RESERVED_NICKS.includes(n))return alert('사용할 수 없는 닉네임이에요.');
   if(p.length<6)return alert('비밀번호는 6자 이상이어야 해요.');
