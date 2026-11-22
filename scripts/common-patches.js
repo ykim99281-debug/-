@@ -43,6 +43,8 @@ exports.apply = function (s, o) {
   }
   // 2-2) 의견 보내기 · 의견함
   s = require('./feedback-patch').apply(s);
+  // 2-3) 재미(타격감·오늘의 목표)·첫 5분(튜토리얼)·이용 기록(통계)
+  s = require('./engage-patch').apply(s, o.coin);
   // 3) PC·모바일 같이 하기 (화면 크기와 상관없는 전투장)
   s = require('./multiscreen-patch').apply(s);
   return s;

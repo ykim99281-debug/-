@@ -165,7 +165,7 @@ for (const [a, b] of [['星界解放', '하늘의 군대'], ['魔力解放', '�
 }
 
 // 9) 공통 패치: 내 계정 점검 칸 + 프리미엄 1단계 (칭호 이름만 하길 분위기로)
-s = require('./common-patches').apply(s, { version: '2.10.0', build: 300, root: 'hagil',
+s = require('./common-patches').apply(s, { version: '2.11.0', build: 310, root: 'hagil', coin: '점수',
   og: { title: '하길 공명 연대기', desc: '성경 속 인물과 함께 걷는 믿음의 모험. 성경 퀴즈, 친구와 함께하기, 주간 순위. 무료로 바로 플레이!', image: 'https://ykim99281-debug.github.io/-/promo/og-hagil.jpg', url: 'https://ykim99281-debug.github.io/-/hagil.html' },
   titles: [['🌱 개척자', '🌱 믿음의 개척자'], ['💎 후원자', '🕊️ 평화의 사람'], ['✨ 별빛 수호자', '✝️ 길의 수호자'], ['🏅 베테랑', '📖 말씀의 사람']] });
 
