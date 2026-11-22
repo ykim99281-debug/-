@@ -148,8 +148,14 @@ for (const [a, b] of [['星界解放', '하늘의 군대'], ['魔力解放', '�
   rep('<button class="blue" onclick="loadRanking()">랭킹 새로고침</button>', '<button class="blue" onclick="loadRanking()">🏅 승점 순위</button> <button class="gold" onclick="loadScoreRanking()">⭐ 점수 순위</button>');
   // 누적 점수를 users 기록에 함께 저장
   rep('pvp:save.pvp||0,', 'pvp:save.pvp||0,score:save.total||0,', true);
+  // 승점 주간 초기화: users 기록에 이번 주 번호(pw)를 같이 저장하고, 순위표는 이번 주 사람만 보여요
+  rep('pvp:save.pvp||0,score:save.total||0,', 'pvp:save.pvp||0,pw:save.pw||0,score:save.total||0,', true);
+  rep("(await dbRef('users').orderByChild('pvp').limitToLast(30).get()).val()||{}", "(await dbRef('users').orderByChild('pw').equalTo(pvpWeekNow()).get()).val()||{}");
+  rep('.sort((a,b)=>b.pvp-a.pvp);', '.filter(x=>x.pvp>0).sort((a,b)=>b.pvp-a.pvp).slice(0,30);');
+  rep('<br><span id="rankTierInfo"></span>', '<br>· 승점은 <b>매주 월요일 0시(한국시간)</b>에 모두 0으로 초기화돼요 <span id="weekLeft"></span><br><span id="rankTierInfo"></span>');
+  rep("  box.textContent='불러오는 중...';\n  try{\n    const v=(await dbRef('users').orderByChild('pw')", "  box.textContent='불러오는 중...';updateWeekLeft();\n  try{\n    const v=(await dbRef('users').orderByChild('pw')");
   // 누적 점수 + 점수 순위표 코드
-  rep('SERVER=function(){return false};', fs.readFileSync(path.join(__dirname, 'hagil-score.js'), 'utf8') + 'SERVER=function(){return false};');
+  rep('SERVER=function(){return false};', fs.readFileSync(path.join(__dirname, 'hagil-score.js'), 'utf8') + fs.readFileSync(path.join(__dirname, 'hagil-weekly.js'), 'utf8') + 'SERVER=function(){return false};');
 }
 
 // 9) 내 계정 점검 칸 (별빛 2.3.1과 같은 도구)
