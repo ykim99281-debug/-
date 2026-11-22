@@ -50,6 +50,19 @@ async function savePremDeco(){
   try{await dbRef('premium/'+safeKey(user)+'/deco').set(deco);premDirty=false;alert('저장했어요!')}
   catch(e){alert('저장하지 못했어요: '+(e.code||e.message))}
 }
+// ----- 능력치 혜택: 프리미엄은 몬스터·던전·협동 전투에서 체력·공격 +5% (PvP·랭크전 제외) -----
+const PREM_BUFF=0.05;
+function applyPremBuff(){
+  try{
+    if(typeof player==='undefined'||!player||player._pb||pvpMode||!premActive(user))return;
+    player._pb=1;const k=1+PREM_BUFF;
+    player.hp=Math.round(player.hp*k);player.max=Math.round(player.max*k);player.atk=Math.round(player.atk*k);
+  }catch(e){}
+}
+['setup','setupDungeonBattle','startOnlineRoomLocal'].forEach(f=>{
+  const o=window[f];if(typeof o!=='function')return;
+  window[f]=function(){const r=o.apply(this,arguments);applyPremBuff();return r};
+});
 // ----- 관리자: 지급 / 해제 / 조회 (닉네임 앞뒤 공백은 자동으로 지워요) -----
 async function adminPremGrant(){
   if(!isAdmin())return alert('권한이 없어요.');
