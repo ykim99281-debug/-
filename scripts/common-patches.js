@@ -6,6 +6,9 @@ const read = f => fs.readFileSync(path.join(__dirname, f), 'utf8');
 
 exports.apply = function (s, o) {
   const rep = (a, b) => { if (s.split(a).length !== 2) throw new Error('공통 패치 위치를 못 찾았어요: ' + a.slice(0, 50)); s = s.replace(a, () => b); };
+  // 0) PvP 열린 방 목록 + 참가 버튼
+  rep('<div id="pvpStatus" class="user">PvP 방 없음</div>', read('pvp-rooms.html') + '<div id="pvpStatus" class="user">PvP 방 없음</div>');
+  rep('/* ===================== 비밀번호 변경 ===================== */', read('pvp-rooms.js') + '/* ===================== 비밀번호 변경 ===================== */');
   // 1) 내 계정 점검 칸
   rep('<div class="box" id="pwBox" data-guest="1">', read('diag-box.html') + '<div class="box" id="pwBox" data-guest="1">');
   rep('/* ===================== 비밀번호 변경 ===================== */', read('diag.js') + '/* ===================== 비밀번호 변경 ===================== */');

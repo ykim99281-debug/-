@@ -556,6 +556,8 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 <button class="green" onclick="pvpReadyToggle()">준비</button>
 <button class="gold" onclick="startPvpGame()">방장 시작</button>
 <button class="red" onclick="leavePvpRoom()">PvP 나가기</button>
+<button class="blue" onclick="loadPvpRooms()">🔍 열린 방 찾기</button>
+<div id="pvpRoomList" class="small" style="margin:6px 0">열린 방 찾기를 눌러 보세요. 목록에서 <b>참가</b>를 누르면 바로 들어가요.</div>
 <div id="pvpStatus" class="user">PvP 방 없음</div>
 <div id="pvpPlayers" class="pvpPlayers"><div class="pvpPlayer">참가자 없음</div></div>
 <div class="small">최대 4명까지 같은 PvP 방에 들어갈 수 있습니다. 1명만 공격 대상으로 잡히고, 나머지 참가자는 전투 화면에 함께 표시됩니다.</div>
@@ -2368,7 +2370,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='2.6.0',APP_BUILD=260,APP_DATE='2026-11-21';
+const APP_VERSION='2.6.1',APP_BUILD=261,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2724,6 +2726,35 @@ adminReportAct=async function(id,node){
   await dbRef('reports/'+id).remove();alert('처리했어요.');
 };
 
+/* ===================== PvP 열린 방 목록 + 참가 버튼 ===================== */
+let lastPvpList=0;
+async function loadPvpRooms(){
+  const box=$('pvpRoomList');if(!box)return;
+  if(user==='guest'||!online||!db){box.textContent='로그인하면 열린 방을 볼 수 있어요';return}
+  lastPvpList=Date.now();box.textContent='불러오는 중...';
+  try{
+    const v=(await dbRef('pvpRooms').limitToLast(50).get()).val()||{},now=Date.now();
+    const rows=Object.keys(v).map(k=>{
+      const d=v[k]||{},ps=d.players||{},ids=Object.keys(ps);
+      const fresh=ids.some(id=>now-(Number(ps[id]&&ps[id].ts)||0)<30*60*1000);
+      return {k,d,ps,ids,fresh};
+    }).filter(r=>r.ids.length>0&&r.ids.length<4&&r.fresh&&!(r.d.gameStart&&r.d.gameStart.status==='start'));
+    if(!rows.length){box.textContent='지금 열린 방이 없어요. 아래에서 방을 만들면 친구 화면에 바로 보여요.';return}
+    box.innerHTML=rows.map(r=>{
+      const host=(r.ps[r.d.host]&&r.ps[r.d.host].name)||(r.ps[r.ids[0]]&&r.ps[r.ids[0]].name)||'?';
+      const rk=String(r.k).startsWith('랭크전_'),mode=r.d.mode==='team'?'2대2 팀전':'개인전',mine=(typeof pvpRoom!=='undefined'&&pvpRoom===r.k);
+      const enc=encodeURIComponent(r.k).replace(/'/g,'%27');
+      return `<div style="display:flex;gap:8px;align-items:center;padding:6px 8px;margin:4px 0;border-radius:10px;background:rgba(255,255,255,.07)"><span style="flex:1;min-width:0">${rk?'🏅 ':''}<b>${escH(r.k)}</b><br><small style="color:#9ca3af">방장 ${escH(host)} · ${mode} · ${r.ids.length}/4명</small></span>${mine?'<small>참가 중</small>':`<button class="green" onclick="joinListedPvp('${enc}')">참가</button>`}</div>`;
+    }).join('');
+  }catch(e){box.textContent='방 목록을 불러오지 못했어요. ('+(e&&(e.code||e.message)||'알 수 없음')+')'}
+}
+function joinListedPvp(enc){
+  const name=decodeURIComponent(enc);
+  const input=$('pvpRoomName');if(input)input.value=name;
+  joinPvpRoom(name.startsWith('랭크전_'));
+}
+{const _stRooms=showTab;showTab=function(id){_stRooms(id);if(id==='battle'&&Date.now()-lastPvpList>8000)loadPvpRooms()}}
+setInterval(()=>{try{if(typeof curTab!=='undefined'&&curTab==='battle'&&!pvpRoom&&document.visibilityState==='visible'&&Date.now()-lastPvpList>12000)loadPvpRooms()}catch(e){}},5000);
 /* ===================== 프리미엄 (1단계: 결제 없이 관리자 지급) ===================== */
 // 데이터: hagil/premium/<닉네임> = {until(0=영구 또는 만료 시각), titles:{id:true}, deco:{title,nameColor,frame,bio}}
 // until·titles는 관리자만, deco는 프리미엄 본인만 규칙으로 쓸 수 있어요. 능력치·보상에는 영향이 없어요.
