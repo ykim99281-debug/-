@@ -43,10 +43,14 @@
         ".read": "auth!=null",
         "$n": {
           ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid && !(root.child('anime/bans/'+$n).val()===true || (root.child('anime/bans/'+$n).isNumber() && root.child('anime/bans/'+$n).val()>now)) && (!root.child('anime/config/maint/on').exists() || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='owner' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='mod' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='noble' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='knight')",
-          ".validate": "newData.child('name').val()===$n && (!root.child('anime/config/minVersion').exists() || newData.child('v').val()>=root.child('anime/config/minVersion').val())"
+          ".validate": "newData.child('name').val()===$n && (!root.child('anime/config/minVersion').exists() || newData.child('v').val()>=root.child('anime/config/minVersion').val())",
+          "best": {
+            ".validate": "newData.isNumber() && newData.val()>=1 && newData.val()<=100000"
+          }
         },
         ".indexOn": [
-          "pvp"
+          "pvp",
+          "best"
         ]
       },
       "saves": {
@@ -279,6 +283,45 @@
             }
           }
         }
+      },
+      "dm": {
+        "$to": {
+          ".read": "auth!=null && root.child('anime/names/'+$to).val()===auth.uid",
+          "$id": {
+            ".write": "auth!=null && ((!data.exists() && newData.child('from').val()===root.child('anime/uids/'+auth.uid).val() && newData.child('from').val()!==$to && root.child('anime/names/'+$to).exists() && !(root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).val()===true || (root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).isNumber() && root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).val()>now)) && !root.child('anime/mutes/'+root.child('anime/uids/'+auth.uid).val()).exists()) || (data.exists() && !newData.exists() && root.child('anime/names/'+$to).val()===auth.uid))",
+            ".validate": "newData.hasChildren(['from','msg','ts']) && newData.child('from').isString() && newData.child('msg').isString() && newData.child('msg').val().length>=1 && newData.child('msg').val().length<=200 && newData.child('ts').isNumber() && newData.child('ts').val()<=now+60000",
+            "from": {
+              ".validate": "true"
+            },
+            "msg": {
+              ".validate": "true"
+            },
+            "ts": {
+              ".validate": "true"
+            },
+            "$other": {
+              ".validate": "false"
+            }
+          }
+        }
+      },
+      "coupons": {
+        ".read": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
+        ".write": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
+        "$c": {
+          ".read": "auth!=null",
+          ".validate": "$c.matches(/^[A-Z0-9]{4,16}$/) && newData.hasChildren(['endsAt','ts']) && newData.child('endsAt').isNumber() && newData.child('ts').isNumber() && (!newData.child('coins').exists() || (newData.child('coins').isNumber() && newData.child('coins').val()>=0 && newData.child('coins').val()<=1000000)) && (!newData.child('dia').exists() || (newData.child('dia').isNumber() && newData.child('dia').val()>=0 && newData.child('dia').val()<=200))"
+        }
+      },
+      "couponClaims": {
+        ".read": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
+        ".write": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
+        "$c": {
+          "$n": {
+            ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid && !data.exists() && newData.val()===true && root.child('anime/coupons/'+$c).exists() && root.child('anime/coupons/'+$c+'/endsAt').val()>now && !(root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).val()===true || (root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).isNumber() && root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).val()>now))",
+            ".validate": "newData.val()===true"
+          }
+        }
       }
     },
     "hagil": {
@@ -330,12 +373,16 @@
           },
           "pw": {
             ".validate": "newData.isNumber() && newData.val()>=0 && newData.val()<=100000"
+          },
+          "best": {
+            ".validate": "newData.isNumber() && newData.val()>=1 && newData.val()<=100000"
           }
         },
         ".indexOn": [
           "pvp",
           "score",
-          "pw"
+          "pw",
+          "best"
         ]
       },
       "saves": {
@@ -568,6 +615,45 @@
             }
           }
         }
+      },
+      "dm": {
+        "$to": {
+          ".read": "auth!=null && root.child('hagil/names/'+$to).val()===auth.uid",
+          "$id": {
+            ".write": "auth!=null && ((!data.exists() && newData.child('from').val()===root.child('hagil/uids/'+auth.uid).val() && newData.child('from').val()!==$to && root.child('hagil/names/'+$to).exists() && !(root.child('hagil/bans/'+root.child('hagil/uids/'+auth.uid).val()).val()===true || (root.child('hagil/bans/'+root.child('hagil/uids/'+auth.uid).val()).isNumber() && root.child('hagil/bans/'+root.child('hagil/uids/'+auth.uid).val()).val()>now)) && !root.child('hagil/mutes/'+root.child('hagil/uids/'+auth.uid).val()).exists()) || (data.exists() && !newData.exists() && root.child('hagil/names/'+$to).val()===auth.uid))",
+            ".validate": "newData.hasChildren(['from','msg','ts']) && newData.child('from').isString() && newData.child('msg').isString() && newData.child('msg').val().length>=1 && newData.child('msg').val().length<=200 && newData.child('ts').isNumber() && newData.child('ts').val()<=now+60000",
+            "from": {
+              ".validate": "true"
+            },
+            "msg": {
+              ".validate": "true"
+            },
+            "ts": {
+              ".validate": "true"
+            },
+            "$other": {
+              ".validate": "false"
+            }
+          }
+        }
+      },
+      "coupons": {
+        ".read": "auth!=null && root.child('hagil/admins/'+auth.uid).exists()",
+        ".write": "auth!=null && root.child('hagil/admins/'+auth.uid).exists()",
+        "$c": {
+          ".read": "auth!=null",
+          ".validate": "$c.matches(/^[A-Z0-9]{4,16}$/) && newData.hasChildren(['endsAt','ts']) && newData.child('endsAt').isNumber() && newData.child('ts').isNumber() && (!newData.child('coins').exists() || (newData.child('coins').isNumber() && newData.child('coins').val()>=0 && newData.child('coins').val()<=1000000)) && (!newData.child('dia').exists() || (newData.child('dia').isNumber() && newData.child('dia').val()>=0 && newData.child('dia').val()<=200))"
+        }
+      },
+      "couponClaims": {
+        ".read": "auth!=null && root.child('hagil/admins/'+auth.uid).exists()",
+        ".write": "auth!=null && root.child('hagil/admins/'+auth.uid).exists()",
+        "$c": {
+          "$n": {
+            ".write": "auth!=null && root.child('hagil/names/'+$n).val()===auth.uid && !data.exists() && newData.val()===true && root.child('hagil/coupons/'+$c).exists() && root.child('hagil/coupons/'+$c+'/endsAt').val()>now && !(root.child('hagil/bans/'+root.child('hagil/uids/'+auth.uid).val()).val()===true || (root.child('hagil/bans/'+root.child('hagil/uids/'+auth.uid).val()).isNumber() && root.child('hagil/bans/'+root.child('hagil/uids/'+auth.uid).val()).val()>now))",
+            ".validate": "newData.val()===true"
+          }
+        }
       }
     },
     "gunchuk": {
@@ -613,10 +699,14 @@
         ".read": "auth!=null",
         "$n": {
           ".write": "auth!=null && root.child('gunchuk/names/'+$n).val()===auth.uid && !(root.child('gunchuk/bans/'+$n).val()===true || (root.child('gunchuk/bans/'+$n).isNumber() && root.child('gunchuk/bans/'+$n).val()>now)) && (!root.child('gunchuk/config/maint/on').exists() || root.child('gunchuk/staff/'+root.child('gunchuk/uids/'+auth.uid).val()).val()==='owner' || root.child('gunchuk/staff/'+root.child('gunchuk/uids/'+auth.uid).val()).val()==='mod' || root.child('gunchuk/staff/'+root.child('gunchuk/uids/'+auth.uid).val()).val()==='noble' || root.child('gunchuk/staff/'+root.child('gunchuk/uids/'+auth.uid).val()).val()==='knight')",
-          ".validate": "newData.child('name').val()===$n && (!root.child('gunchuk/config/minVersion').exists() || newData.child('v').val()>=root.child('gunchuk/config/minVersion').val())"
+          ".validate": "newData.child('name').val()===$n && (!root.child('gunchuk/config/minVersion').exists() || newData.child('v').val()>=root.child('gunchuk/config/minVersion').val())",
+          "best": {
+            ".validate": "newData.isNumber() && newData.val()>=1 && newData.val()<=100000"
+          }
         },
         ".indexOn": [
-          "pvp"
+          "pvp",
+          "best"
         ]
       },
       "saves": {
@@ -849,6 +939,45 @@
             }
           }
         }
+      },
+      "dm": {
+        "$to": {
+          ".read": "auth!=null && root.child('gunchuk/names/'+$to).val()===auth.uid",
+          "$id": {
+            ".write": "auth!=null && ((!data.exists() && newData.child('from').val()===root.child('gunchuk/uids/'+auth.uid).val() && newData.child('from').val()!==$to && root.child('gunchuk/names/'+$to).exists() && !(root.child('gunchuk/bans/'+root.child('gunchuk/uids/'+auth.uid).val()).val()===true || (root.child('gunchuk/bans/'+root.child('gunchuk/uids/'+auth.uid).val()).isNumber() && root.child('gunchuk/bans/'+root.child('gunchuk/uids/'+auth.uid).val()).val()>now)) && !root.child('gunchuk/mutes/'+root.child('gunchuk/uids/'+auth.uid).val()).exists()) || (data.exists() && !newData.exists() && root.child('gunchuk/names/'+$to).val()===auth.uid))",
+            ".validate": "newData.hasChildren(['from','msg','ts']) && newData.child('from').isString() && newData.child('msg').isString() && newData.child('msg').val().length>=1 && newData.child('msg').val().length<=200 && newData.child('ts').isNumber() && newData.child('ts').val()<=now+60000",
+            "from": {
+              ".validate": "true"
+            },
+            "msg": {
+              ".validate": "true"
+            },
+            "ts": {
+              ".validate": "true"
+            },
+            "$other": {
+              ".validate": "false"
+            }
+          }
+        }
+      },
+      "coupons": {
+        ".read": "auth!=null && root.child('gunchuk/admins/'+auth.uid).exists()",
+        ".write": "auth!=null && root.child('gunchuk/admins/'+auth.uid).exists()",
+        "$c": {
+          ".read": "auth!=null",
+          ".validate": "$c.matches(/^[A-Z0-9]{4,16}$/) && newData.hasChildren(['endsAt','ts']) && newData.child('endsAt').isNumber() && newData.child('ts').isNumber() && (!newData.child('coins').exists() || (newData.child('coins').isNumber() && newData.child('coins').val()>=0 && newData.child('coins').val()<=1000000)) && (!newData.child('dia').exists() || (newData.child('dia').isNumber() && newData.child('dia').val()>=0 && newData.child('dia').val()<=200))"
+        }
+      },
+      "couponClaims": {
+        ".read": "auth!=null && root.child('gunchuk/admins/'+auth.uid).exists()",
+        ".write": "auth!=null && root.child('gunchuk/admins/'+auth.uid).exists()",
+        "$c": {
+          "$n": {
+            ".write": "auth!=null && root.child('gunchuk/names/'+$n).val()===auth.uid && !data.exists() && newData.val()===true && root.child('gunchuk/coupons/'+$c).exists() && root.child('gunchuk/coupons/'+$c+'/endsAt').val()>now && !(root.child('gunchuk/bans/'+root.child('gunchuk/uids/'+auth.uid).val()).val()===true || (root.child('gunchuk/bans/'+root.child('gunchuk/uids/'+auth.uid).val()).isNumber() && root.child('gunchuk/bans/'+root.child('gunchuk/uids/'+auth.uid).val()).val()>now))",
+            ".validate": "newData.val()===true"
+          }
+        }
       }
     },
     "kids": {
@@ -894,10 +1023,14 @@
         ".read": "auth!=null",
         "$n": {
           ".write": "auth!=null && root.child('kids/names/'+$n).val()===auth.uid && !(root.child('kids/bans/'+$n).val()===true || (root.child('kids/bans/'+$n).isNumber() && root.child('kids/bans/'+$n).val()>now)) && (!root.child('kids/config/maint/on').exists() || root.child('kids/staff/'+root.child('kids/uids/'+auth.uid).val()).val()==='owner' || root.child('kids/staff/'+root.child('kids/uids/'+auth.uid).val()).val()==='mod' || root.child('kids/staff/'+root.child('kids/uids/'+auth.uid).val()).val()==='noble' || root.child('kids/staff/'+root.child('kids/uids/'+auth.uid).val()).val()==='knight')",
-          ".validate": "newData.child('name').val()===$n && (!root.child('kids/config/minVersion').exists() || newData.child('v').val()>=root.child('kids/config/minVersion').val())"
+          ".validate": "newData.child('name').val()===$n && (!root.child('kids/config/minVersion').exists() || newData.child('v').val()>=root.child('kids/config/minVersion').val())",
+          "best": {
+            ".validate": "newData.isNumber() && newData.val()>=1 && newData.val()<=100000"
+          }
         },
         ".indexOn": [
-          "pvp"
+          "pvp",
+          "best"
         ]
       },
       "saves": {
@@ -1128,6 +1261,24 @@
               ".write": "auth!=null && root.child('kids/names/'+$n).val()===auth.uid && !data.exists() && ($k==='tutDone' || $k==='firstBattle' || $k==='firstWin' || $k==='stage5' || $k==='stage10' || $k==='quiz' || $k==='feedback') && newData.isNumber()",
               ".validate": "newData.isNumber() && newData.val()<=now+60000"
             }
+          }
+        }
+      },
+      "coupons": {
+        ".read": "auth!=null && root.child('kids/admins/'+auth.uid).exists()",
+        ".write": "auth!=null && root.child('kids/admins/'+auth.uid).exists()",
+        "$c": {
+          ".read": "auth!=null",
+          ".validate": "$c.matches(/^[A-Z0-9]{4,16}$/) && newData.hasChildren(['endsAt','ts']) && newData.child('endsAt').isNumber() && newData.child('ts').isNumber() && (!newData.child('coins').exists() || (newData.child('coins').isNumber() && newData.child('coins').val()>=0 && newData.child('coins').val()<=1000000)) && (!newData.child('dia').exists() || (newData.child('dia').isNumber() && newData.child('dia').val()>=0 && newData.child('dia').val()<=200))"
+        }
+      },
+      "couponClaims": {
+        ".read": "auth!=null && root.child('kids/admins/'+auth.uid).exists()",
+        ".write": "auth!=null && root.child('kids/admins/'+auth.uid).exists()",
+        "$c": {
+          "$n": {
+            ".write": "auth!=null && root.child('kids/names/'+$n).val()===auth.uid && !data.exists() && newData.val()===true && root.child('kids/coupons/'+$c).exists() && root.child('kids/coupons/'+$c+'/endsAt').val()>now && !(root.child('kids/bans/'+root.child('kids/uids/'+auth.uid).val()).val()===true || (root.child('kids/bans/'+root.child('kids/uids/'+auth.uid).val()).isNumber() && root.child('kids/bans/'+root.child('kids/uids/'+auth.uid).val()).val()>now))",
+            ".validate": "newData.val()===true"
           }
         }
       }
