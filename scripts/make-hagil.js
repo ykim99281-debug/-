@@ -128,6 +128,30 @@ for (const [a, b] of [['"공허술":[', '"회개의 힘":['], ['"파쇄술":[', 
 for (const [a, b] of [['星界解放', '하늘의 군대'], ['魔力解放', '천사의 능력'], ['虛術', '悔改'], ['無限星界', '天軍'], ['混沌聖域', '聖火'], ['무한 성계', '미가엘의 검'], ['혼돈 성역', '거룩한 불'],
   ['👹 처치 보너스 퀴즈', '📖 처치 보너스 성경 퀴즈']]) { if (s.includes(a)) s = s.split(a).join(b); }
 
+// 10) 하길: 코인 대신 "점수", 점수 순위표 (PvP 점수는 "승점"으로 이름을 나눠요)
+{
+  const rep = (a, b, all) => { const n = s.split(a).length - 1; if (n < 1 || (!all && n !== 1)) throw new Error('점수 패치 위치 확인 필요(' + n + '곳): ' + a.slice(0, 40)); s = s.split(a).join(b); };
+  // PvP 점수 → 승점
+  rep('현재 PvP 점수 ${save.pvp||0}점', '현재 PvP 승점 ${save.pvp||0}점');
+  rep('<b>점수 규칙</b>', '<b>승점 규칙</b>');
+  rep('진 사람의 점수를 <b>', '진 사람의 승점을 <b>');
+  rep('퀴즈 상자에서도 랭크 점수를 얻을 수 있어요', '퀴즈 상자에서도 승점을 얻을 수 있어요');
+  rep('`랭크 점수 +${r.score}`', '`승점 +${r.score}`');
+  rep('내 점수 ${save.pvp||0}', '내 승점 ${save.pvp||0}');
+  rep("'점수 '+(delta", "'승점 '+(delta", true);
+  rep('점수가 바뀌지', '승점이 바뀌지');
+  // 코인 → 점수
+  s = s.replace(/([0-9}])코인/g, '$1 점수'); // 숫자 뒤는 띄어 써요 (1000 점수)
+  rep('코인', '점수', true);
+  // 순위표 버튼
+  rep('<h3>🏆 랭킹</h3>', '<h3>🏆 순위표</h3>');
+  rep('<button class="blue" onclick="loadRanking()">랭킹 새로고침</button>', '<button class="blue" onclick="loadRanking()">🏅 승점 순위</button> <button class="gold" onclick="loadScoreRanking()">⭐ 점수 순위</button>');
+  // 누적 점수를 users 기록에 함께 저장
+  rep('pvp:save.pvp||0,', 'pvp:save.pvp||0,score:save.total||0,', true);
+  // 누적 점수 + 점수 순위표 코드
+  rep('SERVER=function(){return false};', fs.readFileSync(path.join(__dirname, 'hagil-score.js'), 'utf8') + 'SERVER=function(){return false};');
+}
+
 // 9) 내 계정 점검 칸 (별빛 2.3.1과 같은 도구)
 {
   const box = fs.readFileSync(path.join(__dirname, 'diag-box.html'), 'utf8');
