@@ -128,5 +128,18 @@ for (const [a, b] of [['"공허술":[', '"회개의 힘":['], ['"파쇄술":[', 
 for (const [a, b] of [['星界解放', '하늘의 군대'], ['魔力解放', '천사의 능력'], ['虛術', '悔改'], ['無限星界', '天軍'], ['混沌聖域', '聖火'], ['무한 성계', '미가엘의 검'], ['혼돈 성역', '거룩한 불'],
   ['👹 처치 보너스 퀴즈', '📖 처치 보너스 성경 퀴즈']]) { if (s.includes(a)) s = s.split(a).join(b); }
 
+// 9) 내 계정 점검 칸 (별빛 2.3.1과 같은 도구)
+{
+  const box = fs.readFileSync(path.join(__dirname, 'diag-box.html'), 'utf8');
+  const js = fs.readFileSync(path.join(__dirname, 'diag.js'), 'utf8');
+  const rep = (a, b) => { if (s.split(a).length !== 2) throw new Error('진단 패치 위치를 못 찾았어요: ' + a.slice(0, 40)); s = s.replace(a, () => b); };
+  rep('<div class="box" id="pwBox" data-guest="1">', box + '<div class="box" id="pwBox" data-guest="1">');
+  rep('/* ===================== 비밀번호 변경 ===================== */', js + '/* ===================== 비밀번호 변경 ===================== */');
+  rep('#pwBox[data-guest="1"],#blockBox', '#pwBox[data-guest="1"],#diagBox[data-guest="1"],#blockBox');
+  rep("$('pwBox'),$('blockBox')", "$('pwBox'),$('diagBox'),$('blockBox')");
+  rep("const pb=$('pwBox');if(pb)pb.dataset.guest=(user==='guest')?'1':''}", "for(const id of['pwBox','diagBox']){const pb=$(id);if(pb)pb.dataset.guest=(user==='guest')?'1':''}}");
+  rep("const APP_VERSION='2.4.0',APP_BUILD=240", "const APP_VERSION='2.4.1',APP_BUILD=241");
+}
+
 fs.writeFileSync(out, s);
 console.log('만들었어요:', out, Math.round(s.length / 1024) + 'KB');
