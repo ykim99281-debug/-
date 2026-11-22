@@ -32,5 +32,7 @@ exports.apply = function (s, o) {
   { const n = s.split('`<span class="chatName">${safeName}</span>`').length - 1; if (n < 1) throw new Error('채팅 이름 위치 없음'); s = s.split('`<span class="chatName">${safeName}</span>`').join('premLabel(safeName)'); }
   rep("  add(dbRef('mutes'),s=>{muteMap=s.val()||{}});", "  add(dbRef('mutes'),s=>{muteMap=s.val()||{}});\n  add(dbRef('premium'),s=>{premiumMap=s.val()||{};renderPremium()});");
   rep('/* ===================== 내 계정 점검 ===================== */', theme(read('prem.js')) + '/* ===================== 내 계정 점검 ===================== */');
+  // 3) PC·모바일 같이 하기 (화면 크기와 상관없는 전투장)
+  s = require('./multiscreen-patch').apply(s);
   return s;
 };
