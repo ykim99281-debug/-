@@ -41,6 +41,8 @@ exports.apply = function (s, o) {
     const tags = '\n<meta property="og:type" content="website">\n<meta property="og:title" content="' + esc(o.og.title) + '">\n<meta property="og:description" content="' + esc(o.og.desc) + '">\n<meta property="og:image" content="' + esc(o.og.image) + '">\n<meta property="og:url" content="' + esc(o.og.url) + '">\n<meta name="twitter:card" content="summary_large_image">\n<meta name="description" content="' + esc(o.og.desc) + '">';
     rep('</title>', '</title>' + tags);
   }
+  // 2-2) 의견 보내기 · 의견함
+  s = require('./feedback-patch').apply(s);
   // 3) PC·모바일 같이 하기 (화면 크기와 상관없는 전투장)
   s = require('./multiscreen-patch').apply(s);
   return s;

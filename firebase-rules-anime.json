@@ -232,6 +232,32 @@
             ".validate": "false"
           }
         }
+      },
+      "feedback": {
+        ".read": "auth!=null && (root.child('anime/admins/'+auth.uid).exists() || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).exists())",
+        ".write": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
+        "$id": {
+          ".write": "auth!=null && !data.exists() && newData.child('by').val()===root.child('anime/uids/'+auth.uid).val() && !(root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).val()===true || (root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).isNumber() && root.child('anime/bans/'+root.child('anime/uids/'+auth.uid).val()).val()>now))",
+          ".validate": "newData.hasChildren(['by','msg','cat','ts','v']) && newData.child('msg').isString() && newData.child('msg').val().length>=2 && newData.child('msg').val().length<=400 && (newData.child('cat').val()==='bug' || newData.child('cat').val()==='idea' || newData.child('cat').val()==='etc') && newData.child('ts').isNumber() && newData.child('ts').val()<=now+60000 && newData.child('v').isString() && newData.child('v').val().length<=12",
+          "by": {
+            ".validate": "newData.isString()"
+          },
+          "msg": {
+            ".validate": "true"
+          },
+          "cat": {
+            ".validate": "true"
+          },
+          "ts": {
+            ".validate": "true"
+          },
+          "v": {
+            ".validate": "true"
+          },
+          "$other": {
+            ".validate": "false"
+          }
+        }
       }
     },
     "hagil": {
@@ -474,6 +500,32 @@
             ".validate": "false"
           }
         }
+      },
+      "feedback": {
+        ".read": "auth!=null && (root.child('hagil/admins/'+auth.uid).exists() || root.child('hagil/staff/'+root.child('hagil/uids/'+auth.uid).val()).exists())",
+        ".write": "auth!=null && root.child('hagil/admins/'+auth.uid).exists()",
+        "$id": {
+          ".write": "auth!=null && !data.exists() && newData.child('by').val()===root.child('hagil/uids/'+auth.uid).val() && !(root.child('hagil/bans/'+root.child('hagil/uids/'+auth.uid).val()).val()===true || (root.child('hagil/bans/'+root.child('hagil/uids/'+auth.uid).val()).isNumber() && root.child('hagil/bans/'+root.child('hagil/uids/'+auth.uid).val()).val()>now))",
+          ".validate": "newData.hasChildren(['by','msg','cat','ts','v']) && newData.child('msg').isString() && newData.child('msg').val().length>=2 && newData.child('msg').val().length<=400 && (newData.child('cat').val()==='bug' || newData.child('cat').val()==='idea' || newData.child('cat').val()==='etc') && newData.child('ts').isNumber() && newData.child('ts').val()<=now+60000 && newData.child('v').isString() && newData.child('v').val().length<=12",
+          "by": {
+            ".validate": "newData.isString()"
+          },
+          "msg": {
+            ".validate": "true"
+          },
+          "cat": {
+            ".validate": "true"
+          },
+          "ts": {
+            ".validate": "true"
+          },
+          "v": {
+            ".validate": "true"
+          },
+          "$other": {
+            ".validate": "false"
+          }
+        }
       }
     },
     "gunchuk": {
@@ -708,6 +760,32 @@
             ".validate": "false"
           }
         }
+      },
+      "feedback": {
+        ".read": "auth!=null && (root.child('gunchuk/admins/'+auth.uid).exists() || root.child('gunchuk/staff/'+root.child('gunchuk/uids/'+auth.uid).val()).exists())",
+        ".write": "auth!=null && root.child('gunchuk/admins/'+auth.uid).exists()",
+        "$id": {
+          ".write": "auth!=null && !data.exists() && newData.child('by').val()===root.child('gunchuk/uids/'+auth.uid).val() && !(root.child('gunchuk/bans/'+root.child('gunchuk/uids/'+auth.uid).val()).val()===true || (root.child('gunchuk/bans/'+root.child('gunchuk/uids/'+auth.uid).val()).isNumber() && root.child('gunchuk/bans/'+root.child('gunchuk/uids/'+auth.uid).val()).val()>now))",
+          ".validate": "newData.hasChildren(['by','msg','cat','ts','v']) && newData.child('msg').isString() && newData.child('msg').val().length>=2 && newData.child('msg').val().length<=400 && (newData.child('cat').val()==='bug' || newData.child('cat').val()==='idea' || newData.child('cat').val()==='etc') && newData.child('ts').isNumber() && newData.child('ts').val()<=now+60000 && newData.child('v').isString() && newData.child('v').val().length<=12",
+          "by": {
+            ".validate": "newData.isString()"
+          },
+          "msg": {
+            ".validate": "true"
+          },
+          "cat": {
+            ".validate": "true"
+          },
+          "ts": {
+            ".validate": "true"
+          },
+          "v": {
+            ".validate": "true"
+          },
+          "$other": {
+            ".validate": "false"
+          }
+        }
       }
     },
     "kids": {
@@ -937,6 +1015,32 @@
             "aura": {
               ".validate": "newData.isString() && newData.val().matches(/^[a-z]{1,10}$/)"
             }
+          },
+          "$other": {
+            ".validate": "false"
+          }
+        }
+      },
+      "feedback": {
+        ".read": "auth!=null && (root.child('kids/admins/'+auth.uid).exists() || root.child('kids/staff/'+root.child('kids/uids/'+auth.uid).val()).exists())",
+        ".write": "auth!=null && root.child('kids/admins/'+auth.uid).exists()",
+        "$id": {
+          ".write": "auth!=null && !data.exists() && newData.child('by').val()===root.child('kids/uids/'+auth.uid).val() && !(root.child('kids/bans/'+root.child('kids/uids/'+auth.uid).val()).val()===true || (root.child('kids/bans/'+root.child('kids/uids/'+auth.uid).val()).isNumber() && root.child('kids/bans/'+root.child('kids/uids/'+auth.uid).val()).val()>now))",
+          ".validate": "newData.hasChildren(['by','msg','cat','ts','v']) && newData.child('msg').isString() && newData.child('msg').val().length>=2 && newData.child('msg').val().length<=400 && (newData.child('cat').val()==='bug' || newData.child('cat').val()==='idea' || newData.child('cat').val()==='etc') && newData.child('ts').isNumber() && newData.child('ts').val()<=now+60000 && newData.child('v').isString() && newData.child('v').val().length<=12",
+          "by": {
+            ".validate": "newData.isString()"
+          },
+          "msg": {
+            ".validate": "true"
+          },
+          "cat": {
+            ".validate": "true"
+          },
+          "ts": {
+            ".validate": "true"
+          },
+          "v": {
+            ".validate": "true"
           },
           "$other": {
             ".validate": "false"
