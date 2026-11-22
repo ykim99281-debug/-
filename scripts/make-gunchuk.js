@@ -157,6 +157,7 @@ for (const [a, b] of [['星界解放', '설계 해방'], ['魔力解放', '공�
 
 // 9) 공통 패치: 내 계정 점검 칸 + 프리미엄 1단계 (칭호 이름만 건축 분위기로)
 s = require('./common-patches').apply(s, { version: '1.2.1', build: 121, root: 'gunchuk',
+  og: { title: '건축 공명 연대기', desc: '무너지는 세계를 다시 짓는 건축가들의 모험. 건축 퀴즈, 친구와 함께하기. 무료로 바로 플레이!', image: 'https://ykim99281-debug.github.io/-/promo/og-gunchuk.jpg', url: 'https://ykim99281-debug.github.io/-/gunchuk.html' },
   titles: [['🌱 개척자', '🌱 첫 기초를 놓은 사람'], ['💎 후원자', '🏗️ 건축 후원자'], ['✨ 별빛 수호자', '🏛️ 건축의 수호자'], ['🏅 베테랑', '📐 베테랑 설계사']] });
 
 fs.writeFileSync(out, s);
