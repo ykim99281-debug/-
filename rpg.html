@@ -195,7 +195,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 .rpItem button{padding:4px 10px;font-size:12px;margin:2px}
 #adminBtn .cnt{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:999px;background:#ef4444;font-size:11px}
 </style>
-<style id="pwUi">#pwBox[data-guest="1"],#blockBox[data-guest="1"]{display:none!important}</style>
+<style id="pwUi">#pwBox[data-guest="1"],#diagBox[data-guest="1"],#blockBox[data-guest="1"]{display:none!important}</style>
 
 <style id="domainUi">
 .lbBar{position:fixed;left:0;right:0;height:11vh;background:#000;z-index:99989;pointer-events:none}
@@ -247,6 +247,13 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 <label class="small" style="display:block;margin:6px 0"><input type="checkbox" id="agreeBox" style="width:auto;margin-right:6px">이용약관과 개인정보처리방침에 동의합니다. (만 14세 미만은 보호자 동의가 필요해요)</label>
 <div class="small"><a href="rpg-terms.html" target="_blank" style="color:#93c5fd">이용약관</a> · <a href="rpg-privacy.html" target="_blank" style="color:#93c5fd">개인정보처리방침</a></div>
 <div id="user" class="user"></div>
+</div>
+
+<div class="box" id="diagBox" data-guest="1">
+<h3>🔍 내 계정 점검</h3>
+<p class="small">권한이 이상할 때 눌러 보세요. 결과를 그대로 알려주면 원인을 찾을 수 있어요.</p>
+<button class="blue" onclick="runDiag()">점검하기</button> <button class="green" onclick="copyMyUid()">내 UID 복사</button>
+<pre id="diagOut" class="small" style="white-space:pre-wrap;word-break:break-all"></pre>
 </div>
 
 <div class="box" id="pwBox" data-guest="1">
@@ -2304,7 +2311,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='2.3.0',APP_BUILD=230,APP_DATE='2026-11-21';
+const APP_VERSION='2.3.1',APP_BUILD=231,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2476,7 +2483,7 @@ function tabTargets(){
     battle:[...q('#select .tradeRoom'),...q('#select .pvp')],
     event:[$('perkBox'),$('eventBox')],
     story:[$('storyBox')],
-    account:[$('name').closest('.box'),$('pwBox'),$('blockBox'),...q('#select .photoBox')],
+    account:[$('name').closest('.box'),$('pwBox'),$('diagBox'),$('blockBox'),...q('#select .photoBox')],
     admin:[$('adminBox')]
   };
 }
@@ -2661,6 +2668,29 @@ adminReportAct=async function(id,node){
   await dbRef('reports/'+id).remove();alert('처리했어요.');
 };
 
+/* ===================== 내 계정 점검 ===================== */
+async function runDiag(){
+  const o=$('diagOut'),L=[];
+  const out=()=>{o.textContent=L.join('\n')};
+  L.push('버전: '+APP_VERSION+' (빌드 '+APP_BUILD+')');
+  L.push('게임 닉네임: '+user);
+  const cu=auth&&auth.currentUser;
+  L.push('로그인 UID: '+(cu?cu.uid:'(로그인 안 됨)'));
+  L.push('내 권한(myAdminRole): '+(myAdminRole||'(없음)'));
+  L.push('직급(rankOf): '+(rankOf(user)||'(없음)'));
+  L.push('관리자 패널 버튼: '+(hasRank()?'보여야 함':'숨김'));
+  out();
+  if(!cu||!db)return;
+  try{L.push('names/'+user+' 값: '+JSON.stringify((await dbRef('names/'+safeKey(user)).get()).val()))}catch(e){L.push('names 읽기 오류: '+(e.code||e.message))}
+  try{L.push('uids/내UID 값: '+JSON.stringify((await dbRef('uids/'+cu.uid).get()).val()))}catch(e){L.push('uids 읽기 오류: '+(e.code||e.message))}
+  try{L.push('admins/내UID 값: '+JSON.stringify((await dbRef('admins/'+cu.uid).get()).val()))}catch(e){L.push('admins 읽기 오류: '+(e.code||e.message))}
+  out();
+}
+async function copyMyUid(){
+  const cu=auth&&auth.currentUser;if(!cu)return alert('로그인 후 사용할 수 있어요.');
+  try{await navigator.clipboard.writeText(cu.uid);alert('UID를 복사했어요.')}catch(e){prompt('이 UID를 복사하세요',cu.uid)}
+}
+
 /* ===================== 비밀번호 변경 ===================== */
 changePassword=async function(){
   if(user==='guest'||!auth||!auth.currentUser)return alert('로그인 후 사용할 수 있어요.');
@@ -2682,7 +2712,7 @@ changePassword=async function(){
   }finally{authBusy=false}
 };
 const _uapPw=updateAdminPanel;
-updateAdminPanel=function(){_uapPw();const pb=$('pwBox');if(pb)pb.dataset.guest=(user==='guest')?'1':''};
+updateAdminPanel=function(){_uapPw();for(const id of['pwBox','diagBox']){const pb=$(id);if(pb)pb.dataset.guest=(user==='guest')?'1':''}};
 
 /* ===================== 이펙트 개선: 번개 · 바람 · 안개 ===================== */
 function boltPoints(x1,y1,x2,y2,segs,jit){
