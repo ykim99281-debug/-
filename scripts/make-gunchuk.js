@@ -157,7 +157,7 @@ for (const [a, b] of [['星界解放', '설계 해방'], ['魔力解放', '공�
 }
 
 // 9) 공통 패치: 내 계정 점검 칸 + 프리미엄 1단계 (칭호 이름만 건축 분위기로)
-s = require('./common-patches').apply(s, { version: '1.0.1', build: 101, root: 'gunchuk',
+s = require('./common-patches').apply(s, { version: '1.1.0', build: 110, root: 'gunchuk',
   titles: [['🌱 개척자', '🌱 첫 기초를 놓은 사람'], ['💎 후원자', '🏗️ 건축 후원자'], ['✨ 별빛 수호자', '🏛️ 건축의 수호자'], ['🏅 베테랑', '📐 베테랑 설계사']] });
 
 fs.writeFileSync(out, s);
