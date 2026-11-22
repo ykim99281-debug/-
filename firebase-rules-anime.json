@@ -193,6 +193,42 @@
       },
       "ledger": {
         ".read": "auth!=null && root.child('anime/admins/'+auth.uid).exists()"
+      },
+      "premium": {
+        ".read": "auth!=null",
+        "$n": {
+          ".write": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
+          ".validate": "newData.hasChild('until')",
+          "until": {
+            ".validate": "newData.isNumber() && newData.val()>=0 && newData.val()<=4102444800000"
+          },
+          "titles": {
+            "$t": {
+              ".validate": "newData.val()===true && ($t==='pioneer' || $t==='patron' || $t==='guardian' || $t==='veteran')"
+            }
+          },
+          "deco": {
+            ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid && (root.child('anime/premium/'+$n+'/until').val()===0 || root.child('anime/premium/'+$n+'/until').val()>now) && !(root.child('anime/bans/'+$n).val()===true || (root.child('anime/bans/'+$n).isNumber() && root.child('anime/bans/'+$n).val()>now))",
+            "title": {
+              ".validate": "newData.isString() && root.child('anime/premium/'+$n+'/titles/'+newData.val()).val()===true"
+            },
+            "nameColor": {
+              ".validate": "newData.isString() && newData.val().matches(/^#[0-9a-f]{6}$/)"
+            },
+            "frame": {
+              ".validate": "newData.isString() && newData.val().matches(/^[a-z]{1,10}$/)"
+            },
+            "bio": {
+              ".validate": "newData.isString() && newData.val().length<=30"
+            },
+            "$other": {
+              ".validate": "false"
+            }
+          },
+          "$other": {
+            ".validate": "false"
+          }
+        }
       }
     },
     "hagil": {
@@ -241,11 +277,15 @@
           ".validate": "newData.child('name').val()===$n && (!root.child('hagil/config/minVersion').exists() || newData.child('v').val()>=root.child('hagil/config/minVersion').val())",
           "score": {
             ".validate": "newData.isNumber() && newData.val()>=0 && newData.val()<=100000000000"
+          },
+          "pw": {
+            ".validate": "newData.isNumber() && newData.val()>=0 && newData.val()<=100000"
           }
         },
         ".indexOn": [
           "pvp",
-          "score"
+          "score",
+          "pw"
         ]
       },
       "saves": {
