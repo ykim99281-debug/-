@@ -62,8 +62,8 @@
   #tDash{right:200px;bottom:98px}
   #tSmoke{right:200px;bottom:166px}
   #tWpn{right:70px;bottom:222px}
-  body.touchmode #hp{bottom:auto;top:12px;left:12px;font-size:24px;min-width:90px;padding:4px 10px}
-  body.touchmode #ammo{right:auto;bottom:auto;top:12px;left:120px;font-size:24px;min-width:110px;padding:4px 10px;border:0;border-left:4px solid var(--red);text-align:left}
+  body.touchmode #hp{bottom:auto;top:12px;left:12px;font-size:24px;min-width:130px;padding:4px 10px}
+  body.touchmode #ammo{right:auto;bottom:auto;top:12px;left:160px;font-size:24px;min-width:110px;padding:4px 10px;border:0;border-left:4px solid var(--red);text-align:left}
   body.touchmode #abil{display:none}
   body.touchmode #feed{top:64px}
   body.touchmode #top{top:6px}
@@ -100,14 +100,14 @@
   #tPause{right:12px;top:12px;width:40px;height:40px;font-size:15px}
   @media (max-width:760px){#home .side{display:none}}
   @media (max-height:520px){#home .menu{gap:7px;padding:8px 0}.logo{font-size:30px;letter-spacing:3px}.sub{display:none}.mbtn{padding:8px 10px;font-size:14px}.mbtn.primary{font-size:17px;padding:11px}.seg div{padding:6px 0}.lbl{display:none}#mbox{padding:14px 18px}}
-  #buy{display:none;position:absolute;left:50%;top:128px;transform:translateX(-50%);background:rgba(15,25,35,.88);border-top:4px solid #ffcc33;padding:12px 16px;pointer-events:auto;min-width:min(420px,94vw);z-index:6}
+  #buy{display:none;position:fixed;left:50%;top:128px;transform:translateX(-50%);background:rgba(15,25,35,.88);border-top:4px solid #ffcc33;padding:12px 16px;pointer-events:auto;min-width:min(420px,94vw);z-index:20;touch-action:manipulation}
   #buy .bh{letter-spacing:3px;margin-bottom:8px;font-size:15px}
   #buyItems{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
   .bi{background:rgba(236,232,225,.12);border:1px solid rgba(236,232,225,.3);padding:8px 10px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;font-size:14px}
   .bi b{color:#ffcc33}.bi.dis{opacity:.4}
   #buy .mbtn{width:100%;padding:9px;font-size:15px}
   #crn{display:block;color:#ffcc33;font-size:14px}
-  @media (max-height:520px){#buy{top:84px;padding:8px 12px}#buyItems{margin-bottom:6px}.bi{padding:5px 8px;font-size:12px}#buy .mbtn{padding:6px}}
+  @media (max-height:520px){#buy{top:112px;padding:8px 12px}#buyItems{margin-bottom:6px}.bi{padding:5px 8px;font-size:12px}#buy .mbtn{padding:6px}}
   #home,#pause,#modal,#mbox{touch-action:pan-y}
   .mbtn,.bi,.seg div{touch-action:manipulation}
 </style>
@@ -122,7 +122,7 @@
   <div id="msg"></div>
   <div id="reload">재장전 중...</div>
   <div class="panel" id="top"><span id="rtxt">ROUND 1</span><big id="alive">0 / 0</big><span id="score">0 : 0</span><span id="crn"></span></div>
-  <div id="buy"><div class="bh">구매 단계 <b id="buyT">15</b>초 · <span id="buyCr" style="color:#ffcc33"></span></div><div id="buyItems"></div><button class="mbtn primary" id="buyGo">준비 완료 [Enter]</button></div>
+  
   <div class="panel" id="hp"><small>HEALTH<span id="arm" style="color:#6cf"></span></small><span id="hpn">100</span><div id="hpbar"><b></b></div></div>
   <div class="panel" id="ammo"><small id="wname">CLASSIC</small><span id="am">12</span><span style="font-size:22px;opacity:.6"> / <span id="rs">36</span></span></div>
   <div class="panel" id="abil">
@@ -164,6 +164,7 @@
   <button class="mbtn" id="pCtl">조작법</button>
   <button class="mbtn" id="pHome">홈으로</button>
 </div>
+<div id="buy"><div class="bh">구매 단계 <b id="buyT">15</b>초 · <span id="buyCr" style="color:#ffcc33"></span></div><div id="buyItems"></div><button class="mbtn primary" id="buyGo">준비 완료 [Enter]</button></div>
 <div id="modal"><div id="mbox"></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -445,6 +446,11 @@ const SHOP={
   armor:{name:"아머 +50",price:600,msg:"보유",can:()=>P.armor<50,give:()=>{P.armor=50}},
   skill:{name:"스킬 +1",price:300,msg:"해당없음",can:()=>P.slots.some(x=>x.ch>=0),give:()=>{P.slots.forEach(x=>{if(x.ch>=0)x.ch++})}}
 };
+function onTap(el,fn){
+  let last=0;
+  const h=e=>{e.preventDefault();e.stopPropagation();const n=Date.now();if(n-last<350)return;last=n;fn()};
+  ["pointerdown","touchstart","click"].forEach(t=>el.addEventListener(t,h,{passive:false}));
+}
 function renderBuy(){
   $("buyCr").textContent="$"+P.credits;
   const el=$("buyItems");el.innerHTML="";
@@ -452,7 +458,7 @@ function renderBuy(){
     const it=SHOP[k],ok=it.can();
     const d=document.createElement("div");d.className="bi"+(ok&&P.credits>=it.price?"":" dis");
     d.innerHTML="<span>"+key+" · "+it.name+"</span><b>"+(ok?"$"+it.price:it.msg)+"</b>";
-    d.onpointerdown=e=>{e.preventDefault();buy(k)};
+    onTap(d,()=>buy(k));
     el.appendChild(d);
   });
 }
@@ -466,7 +472,7 @@ function endBuy(){
   if(state!=="buy")return;
   state="play";$("buy").style.display="none";msg("ROUND "+round,"#fff");beep(700,.15,.15,"triangle",300);
 }
-$("buyGo").onpointerdown=e=>{e.preventDefault();endBuy()};
+onTap($("buyGo"),endBuy);
 
 /* ---------- 라운드 / 게임 상태 ---------- */
 let round=1,winP=0,winB=0,state="play",diff=settings.diff,stateT=0,buyT=0;
@@ -711,6 +717,7 @@ function setPlaying(v){
   $("hud").style.display=v?"block":"none";
   $("touch").style.display=(v&&isTouch)?"block":"none";
   show("home",!v&&!started);show("pause",!v&&started);
+  $("buy").style.display=(v&&started&&state==="buy")?"block":"none";
   if(!v){mouseDown=false;joy.x=joy.y=0;Object.keys(keys).forEach(k=>keys[k]=false)}
 }
 if(isTouch)document.body.classList.add("touchmode");
