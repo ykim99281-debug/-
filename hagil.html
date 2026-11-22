@@ -271,18 +271,20 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 <div id="premStatus" class="small">불러오는 중...</div>
 <div id="premEdit" style="display:none">
   <div class="small" style="margin-top:8px">칭호</div>
-  <select id="premTitle" onchange="premPreview()"></select>
+  <select id="premTitle" onchange="premDirty=true;premPreview()"></select>
   <div class="small" style="margin-top:8px">이름 색</div>
   <div id="premSwatches"></div>
   <div class="small" style="margin-top:8px">이름 테두리</div>
-  <select id="premFrame" onchange="premPreview()"><option value="none">없음</option><option value="laurel">🌿 월계수</option><option value="star">⭐ 별</option><option value="flame">🔥 불꽃</option><option value="crown">👑 왕관</option></select>
+  <select id="premFrame" onchange="premDirty=true;premPreview()"><option value="none">없음</option><option value="laurel">🌿 월계수</option><option value="star">⭐ 별</option><option value="flame">🔥 불꽃</option><option value="crown">👑 왕관</option></select>
+  <div class="small" style="margin-top:8px">캐릭터 오라 (전투 중 내 캐릭터 주변 효과)</div>
+  <select id="premAura" onchange="premDirty=true"><option value="none">없음</option><option value="gold">✨ 황금</option><option value="blue">🌊 푸른 물결</option><option value="pink">🌸 분홍</option><option value="rainbow">🌈 무지개</option></select>
   <div class="small" style="margin-top:8px">한 줄 소개 (30자)</div>
-  <input id="premBio" maxlength="30" placeholder="나를 소개해 보세요" oninput="premPreview()">
+  <input id="premBio" maxlength="30" placeholder="나를 소개해 보세요" oninput="premDirty=true;premPreview()">
   <div class="small" style="margin-top:8px">미리보기</div>
   <div id="premPreviewBox" class="chatMsg"></div>
   <button class="green" onclick="savePremDeco()">저장</button>
 </div>
-<p class="small" style="margin-top:8px">💎 <b>혜택</b>: 몬스터·던전·협동 전투에서 <b>체력·공격 +5%</b> (대인전 PvP·랭크전에는 적용되지 않아 공정해요) + 칭호·이름 꾸미기. 지금은 <b>결제 없이 관리자가 지급</b>해요(테스트 기간).</p>
+<p class="small" style="margin-top:8px">💎 <b>혜택</b>: 몬스터·던전·협동 전투에서 <b>체력·공격 +5%</b> (대인전 PvP·랭크전에는 적용되지 않아 공정해요) + 칭호·이름·오라 꾸미기. 지금은 <b>결제 없이 관리자가 지급</b>해요(테스트 기간).</p>
 </div>
 
 <div class="box" id="diagBox" data-guest="1">
@@ -2366,7 +2368,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='2.5.0',APP_BUILD=250,APP_DATE='2026-11-21';
+const APP_VERSION='2.6.0',APP_BUILD=260,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2728,6 +2730,7 @@ adminReportAct=async function(id,node){
 let premiumMap={};
 const PREM_TITLES={pioneer:'🌱 믿음의 개척자',patron:'🕊️ 평화의 사람',guardian:'✝️ 길의 수호자',veteran:'📖 말씀의 사람'};
 const PREM_COLORS=['#ffffff','#ff9ecb','#ffd86b','#8be9fd','#b8ff9f','#c4a1ff','#ff8a8a'];
+const PREM_AURAS={none:'없음',gold:'✨ 황금',blue:'🌊 푸른 물결',pink:'🌸 분홍',rainbow:'🌈 무지개'};
 const PREM_FRAMES={none:['',''],laurel:['🌿','🌿'],star:['⭐','⭐'],flame:['🔥','🔥'],crown:['👑','']};
 function premActive(n){const m=premiumMap[n];return !!(m&&typeof m.until==='number'&&(m.until===0||m.until>Date.now()))}
 function premDaysLeft(m){return m.until===0?'영구':Math.max(0,Math.ceil((m.until-Date.now())/864e5))+'일 남음'}
@@ -2764,12 +2767,13 @@ function renderPremium(){
   $('premSwatches').innerHTML=PREM_COLORS.map(c=>`<button class="swatch" data-c="${c}" style="background:${c}" onclick="premDirty=true;premPickColor('${c}')"></button>`).join('');
   premPickColor(PREM_COLORS.includes(d.nameColor)?d.nameColor:PREM_COLORS[0]);
   $('premFrame').value=PREM_FRAMES[d.frame]?d.frame:'none';
+  $('premAura').value=PREM_AURAS[d.aura]?d.aura:'none';
   $('premBio').value=d.bio||'';
   premPreview();
 }
 async function savePremDeco(){
   if(!premActive(user))return alert('프리미엄 회원만 쓸 수 있어요.');
-  const sw=document.querySelector('#premSwatches .swatch.on'),deco={nameColor:sw?sw.dataset.c:PREM_COLORS[0],frame:$('premFrame').value||'none',bio:String($('premBio').value||'').replace(/[<>&"']/g,'').trim().slice(0,30)};
+  const sw=document.querySelector('#premSwatches .swatch.on'),deco={nameColor:sw?sw.dataset.c:PREM_COLORS[0],frame:$('premFrame').value||'none',aura:$('premAura').value||'none',bio:String($('premBio').value||'').replace(/[<>&"']/g,'').trim().slice(0,30)};
   if($('premTitle').value)deco.title=$('premTitle').value;
   try{await dbRef('premium/'+safeKey(user)+'/deco').set(deco);premDirty=false;alert('저장했어요!')}
   catch(e){alert('저장하지 못했어요: '+(e.code||e.message))}
@@ -2787,6 +2791,18 @@ function applyPremBuff(){
   const o=window[f];if(typeof o!=='function')return;
   window[f]=function(){const r=o.apply(this,arguments);applyPremBuff();return r};
 });
+// ----- 캐릭터 오라: 전투 중 내 캐릭터 주변 효과 (꾸미기만, 능력치 없음) -----
+function drawPremAura(o){
+  const m=premiumMap[user],a=m&&m.deco&&m.deco.aura;
+  if(!a||a==='none'||!PREM_AURAS[a]||!premActive(user))return;
+  const t=Date.now()/400,col=a==='gold'?'#ffd86b':a==='blue'?'#60a5fa':a==='pink'?'#ff9ecb':`hsl(${(Date.now()/8)%360},90%,65%)`;
+  ctx.save();ctx.strokeStyle=col;ctx.fillStyle=col;ctx.shadowColor=col;ctx.shadowBlur=22;ctx.lineWidth=3;
+  for(let i=0;i<2;i++){ctx.globalAlpha=.55-i*.2;ctx.beginPath();ctx.arc(o.x,o.y,o.r+10+i*9+Math.sin(t+i)*3,0,7);ctx.stroke()}
+  ctx.globalAlpha=.9;
+  for(let i=0;i<5;i++){const g=t*.8+i*1.2566;ctx.beginPath();ctx.arc(o.x+Math.cos(g)*(o.r+22),o.y+Math.sin(g)*(o.r+22),2.5,0,7);ctx.fill()}
+  ctx.restore();
+}
+{const _dc=drawC;drawC=function(o){try{if(typeof player!=='undefined'&&o===player)drawPremAura(o)}catch(e){}return _dc.apply(this,arguments)}}
 // ----- 관리자: 지급 / 해제 / 조회 (닉네임 앞뒤 공백은 자동으로 지워요) -----
 async function adminPremGrant(){
   if(!isAdmin())return alert('권한이 없어요.');

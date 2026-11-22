@@ -3,17 +3,19 @@
 <div id="premStatus" class="small">불러오는 중...</div>
 <div id="premEdit" style="display:none">
   <div class="small" style="margin-top:8px">칭호</div>
-  <select id="premTitle" onchange="premPreview()"></select>
+  <select id="premTitle" onchange="premDirty=true;premPreview()"></select>
   <div class="small" style="margin-top:8px">이름 색</div>
   <div id="premSwatches"></div>
   <div class="small" style="margin-top:8px">이름 테두리</div>
-  <select id="premFrame" onchange="premPreview()"><option value="none">없음</option><option value="laurel">🌿 월계수</option><option value="star">⭐ 별</option><option value="flame">🔥 불꽃</option><option value="crown">👑 왕관</option></select>
+  <select id="premFrame" onchange="premDirty=true;premPreview()"><option value="none">없음</option><option value="laurel">🌿 월계수</option><option value="star">⭐ 별</option><option value="flame">🔥 불꽃</option><option value="crown">👑 왕관</option></select>
+  <div class="small" style="margin-top:8px">캐릭터 오라 (전투 중 내 캐릭터 주변 효과)</div>
+  <select id="premAura" onchange="premDirty=true"><option value="none">없음</option><option value="gold">✨ 황금</option><option value="blue">🌊 푸른 물결</option><option value="pink">🌸 분홍</option><option value="rainbow">🌈 무지개</option></select>
   <div class="small" style="margin-top:8px">한 줄 소개 (30자)</div>
-  <input id="premBio" maxlength="30" placeholder="나를 소개해 보세요" oninput="premPreview()">
+  <input id="premBio" maxlength="30" placeholder="나를 소개해 보세요" oninput="premDirty=true;premPreview()">
   <div class="small" style="margin-top:8px">미리보기</div>
   <div id="premPreviewBox" class="chatMsg"></div>
   <button class="green" onclick="savePremDeco()">저장</button>
 </div>
-<p class="small" style="margin-top:8px">💎 <b>혜택</b>: 몬스터·던전·협동 전투에서 <b>체력·공격 +5%</b> (대인전 PvP·랭크전에는 적용되지 않아 공정해요) + 칭호·이름 꾸미기. 지금은 <b>결제 없이 관리자가 지급</b>해요(테스트 기간).</p>
+<p class="small" style="margin-top:8px">💎 <b>혜택</b>: 몬스터·던전·협동 전투에서 <b>체력·공격 +5%</b> (대인전 PvP·랭크전에는 적용되지 않아 공정해요) + 칭호·이름·오라 꾸미기. 지금은 <b>결제 없이 관리자가 지급</b>해요(테스트 기간).</p>
 </div>
 
