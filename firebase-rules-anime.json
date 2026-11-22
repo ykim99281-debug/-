@@ -44,7 +44,10 @@
         "$n": {
           ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid && !(root.child('anime/bans/'+$n).val()===true || (root.child('anime/bans/'+$n).isNumber() && root.child('anime/bans/'+$n).val()>now)) && (!root.child('anime/config/maint/on').exists() || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='owner' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='mod' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='noble' || root.child('anime/staff/'+root.child('anime/uids/'+auth.uid).val()).val()==='knight')",
           ".validate": "newData.child('name').val()===$n && (!root.child('anime/config/minVersion').exists() || newData.child('v').val()>=root.child('anime/config/minVersion').val())"
-        }
+        },
+        ".indexOn": [
+          "pvp"
+        ]
       },
       "saves": {
         "$n": {

@@ -229,6 +229,25 @@ details.chapter{background:rgba(15,23,42,.7);border:1px solid rgba(255,255,255,.
 details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{opacity:.55}
 .domainBanner small.bannerLine{font-size:15px;letter-spacing:1px;color:#e5e7eb;margin:10px auto 0;max-width:88vw;white-space:normal;word-break:keep-all;line-height:1.55;text-shadow:0 2px 8px #000}
 </style>
+
+<style id="quizUi">
+#quizOv{position:fixed;inset:0;z-index:100003;background:rgba(3,2,12,.88);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px}
+.quizCard{width:100%;max-width:460px;background:linear-gradient(180deg,#1b1240,#0b0820);border:1px solid rgba(196,181,253,.4);border-radius:20px;padding:20px 18px;box-shadow:0 0 40px rgba(124,58,237,.5);text-align:center}
+.quizHead{font-weight:900;color:#fde047;letter-spacing:1px}
+.quizTimer{height:8px;border-radius:999px;background:rgba(255,255,255,.12);margin:12px 0;overflow:hidden}.quizTimer>div{height:100%;width:100%;background:linear-gradient(90deg,#22c55e,#facc15,#ef4444);transition:width .25s linear}
+.quizQ{font-size:18px;line-height:1.6;font-weight:700;margin:10px 0 16px;word-break:keep-all}
+.quizChoice{display:block;width:100%;margin:8px 0;padding:14px;font-size:16px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2)}
+.quizChoice.ok{background:#15803d!important;border-color:#4ade80}.quizChoice.no{background:#991b1b!important;border-color:#f87171}
+.boxRow{display:flex;gap:10px;justify-content:center;margin:16px 0}
+.quizBox{flex:1;max-width:120px;min-height:130px;padding:10px 6px;border-radius:16px;font-size:44px;background:linear-gradient(180deg,#7c3aed,#4c1d95);border:2px solid #c4b5fd;box-shadow:0 0 18px rgba(167,139,250,.6);animation:boxBob 1.2s ease-in-out infinite}
+.quizBox:nth-child(2){animation-delay:.2s}.quizBox:nth-child(3){animation-delay:.4s}
+.quizBox.open{animation:none;font-size:15px;line-height:1.5;background:rgba(15,23,42,.8);border-color:rgba(255,255,255,.2);opacity:.55}
+.quizBox.picked{opacity:1;border-color:#fde047;box-shadow:0 0 24px rgba(253,224,71,.8);color:#fde047;font-weight:900}
+@keyframes boxBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@media(prefers-reduced-motion:reduce){.quizBox{animation:none}}
+.rkRow{display:flex;gap:8px;align-items:center;padding:7px 10px;margin:4px 0;border-radius:10px;background:rgba(15,23,42,.7);border:1px solid rgba(255,255,255,.1)}
+.rkRow.me{border-color:#facc15;box-shadow:0 0 10px rgba(250,204,21,.4)}.rkNo{width:34px;text-align:center;font-weight:900;color:#fde047}
+</style>
 </head>
 <body>
 <section id="select" class="active">
@@ -505,6 +524,12 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 <div class="small">최대 4명까지 같은 PvP 방에 들어갈 수 있습니다. 1명만 공격 대상으로 잡히고, 나머지 참가자는 전투 화면에 함께 표시됩니다.</div>
 </div>
 
+<div class="box" id="rankingBox">
+<h3>🏆 랭킹</h3>
+<p class="small"><b>점수 규칙</b><br>· 일반 PvP: 이기면 진 사람의 점수를 <b>최대 10점 가져와요</b> (진 사람은 그만큼 잃어요)<br>· 랭크전: 이기면 판돈 10점의 <b>2배(+20)</b>, 지면 판돈의 <b>절반(-5)</b><br>· 퀴즈 상자에서도 랭크 점수를 얻을 수 있어요<br><span id="rankTierInfo"></span></p>
+<button class="blue" onclick="loadRanking()">랭킹 새로고침</button>
+<div id="rankingList" class="small">랭킹을 불러오려면 새로고침을 눌러요</div>
+</div>
 <div class="filters"><button class="active" onclick="filter('전체',this)">전체</button><button onclick="filter('기사단',this)">기사단</button><button onclick="filter('수호좌',this)">수호좌</button><button onclick="filter('공허군',this)">공허군</button><button onclick="filter('각성자',this)">각성자</button><button onclick="filter('용병단',this)">희귀</button></div>
 
 <div class="photoBox">
@@ -561,6 +586,7 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
+<script src="rpg-quiz.js?v=2.4.0"></script>
 <script src="rpg-story.js?v=2.3.0"></script>
 <script>
 const chars=[
@@ -658,7 +684,7 @@ setTimeout(()=>{const ci=$("chatInput");if(ci){ci.dataset.chatInputEnterHook="1"
 norm();updateAdminPanel();updateAdminRoleList();setTimeout(openChatChannel,700);renderAll()}
 function store(){save.coins=coins;save.dia=dia;save.best=best;localStorage.setItem(sk(),JSON.stringify(save));ui();renderAllShops()}
 function ui(){let title=isAdmin()? " 🌈 관리자":"";
-$("user").innerHTML=`${adminLabel(user)}${title} / 코인 ${coins} / 다이아 ${dia} / 캐릭터 ${save.owned.length}명 / 희귀 ${save.rare.length}명 / 최고 ${best}`;updateAdminPanel();$("rankInfo").innerHTML=`현재 PvP 점수 ${save.pvp||0}점 / 티어 <b>${rankName()}</b><br>8단계: 브론즈→실버→골드→플래티넘→다이아→마스터→그랜드마스터→챌린저`}
+$("user").innerHTML=`${adminLabel(user)}${title} / 코인 ${coins} / 다이아 ${dia} / 캐릭터 ${save.owned.length}명 / 희귀 ${save.rare.length}명 / 최고 ${best}`;updateAdminPanel();$("rankInfo").innerHTML=`현재 PvP 점수 ${save.pvp||0}점 / 티어 <b>${rankName()}</b><br>브론즈 0 · 실버 100 · 골드 200 · 플래티넘 300 · 다이아 400 · 마스터 500 · 그랜드마스터 600 · 챌린저 700점 이상`}
 function owned(c){return save.owned.includes(c.name)||save.rare.includes(c.name)}function human(c){return c.side.includes("기사단")||c.side==="수호좌"}function kat(){return {name:"없음",bonus:0,emoji:"",color:"#ffffff",fx:"공명"}}function armor(){return equips.find(e=>e.name===save.eqArmor)||{hp:0,atk:0,name:"없음"}}
 function buyChar(i){let c=chars[i];if(c.rare)return alert("희귀 캐릭터는 희귀 뽑기나 거래소에서만 얻을 수 있습니다.");if(owned(c)){sel=i;renderChars();show();return}if(coins<c.price)return alert("코인 부족");coins-=c.price;save.owned.push(c.name);sel=i;store();show()}
 function filter(f,b){curFilter=f;document.querySelectorAll(".filters button").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderChars()}
@@ -1344,7 +1370,7 @@ function applyPvpHits(){let hits=pvpData.hits||{};Object.entries(hits).forEach((
 function sendPvpDamage(dmg,color){if(!pvpMode||!online||!db||!pvpOpponentId)return;dbRef('pvpRooms/'+safeKey(pvpRoom)+'/hits').push({from:myId,to:pvpOpponentId,dmg:Math.floor(dmg),color:color,ts:Date.now(),seen:false});}
 function finishPvp(win){if(!pvpMode)return;pvpMode=false;run=false;let delta=ranked?(win?30:-25):(win?10:-5);updateRank(delta);pvpRoomRef().child('result').push({name:user,win,delta,score:save.pvp,ts:Date.now()});alert((win?'승리! ':'패배! ')+(ranked?'랭크 ':'PvP ')+'점수 '+(delta>0?'+':'')+delta);back();}
 const _baseUpd=upd;upd=function(dt){if(!pvpMode){_baseUpd(dt);return}let vx=joy.x,vy=joy.y;if(keys.a||keys.ArrowLeft)vx=-1;if(keys.d||keys.ArrowRight)vx=1;if(keys.w||keys.ArrowUp)vy=-1;if(keys.s||keys.ArrowDown)vy=1;let l=Math.hypot(vx,vy)||1;player.x+=vx/l*player.spd*90*dt;player.y+=vy/l*player.spd*90*dt;player.x=Math.max(34,Math.min(w-34,player.x));player.y=Math.max(h*.25,Math.min(h-54,player.y));let op=(pvpData.players||{})[pvpOpponentId];if(op){enemy.x=op.x||enemy.x;enemy.y=op.y||enemy.y;enemy.hp=op.hp??enemy.hp;enemy.max=op.max??enemy.max;enemy.name=op.name||enemy.name;enemy.emoji=op.emoji||enemy.emoji;enemy.color=op.color||enemy.color;if(enemy.hp<=0)finishPvp(true)}player.hp=pvpMyHp;player.inv-=dt;c1-=dt;c2-=dt;bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(Math.hypot(b.x-enemy.x,b.y-enemy.y)<enemy.r+b.r){sendPvpDamage(b.dmg,b.color);b.life=0;effects.push([enemy.x,enemy.y,.35,b.color,Math.floor(b.dmg)])}});bullets=bullets.filter(b=>b.life>0);effects.forEach(e=>e[2]-=dt);effects=effects.filter(e=>e[2]>0);if(pvpMyHp<=0)finishPvp(false);hud();sendState();$('s1').classList.toggle('cool',c1>0);$('s2').classList.toggle('cool',c2>0);let s=Math.floor((Date.now()-startAt)/1000);$('time').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
-const _baseHud=hud;hud=function(){_baseHud();if(pvpMode){$('stage').textContent=ranked?'랭크전':'PvP';$('bossType').textContent='상대 유저 전투';$('coin').textContent='내 랭크 '+(save.pvp||0);$('dia').textContent=rankName();$('rec').textContent='승리 +30 / 패배 -25';}}
+const _baseHud=hud;hud=function(){_baseHud();if(pvpMode){$('stage').textContent=ranked?'랭크전':'PvP';$('bossType').textContent='상대 유저 전투';$('coin').textContent='내 랭크 '+(save.pvp||0);$('dia').textContent=rankName();$('rec').textContent=ranked?'승리 +20 / 패배 -5':'승리: 상대 점수 최대 10 획득 / 패배: 최대 10 잃음';}}
 const _baseAttack=attack;attack=function(){if(!pvpMode){_baseAttack();return}let c=chars[sel],h=human(c),k=kat(),color=h?breathFx(c):player.color,d=player.atk*(.8+Math.random()*.4),dist=Math.hypot(player.x-enemy.x,player.y-enemy.y);if(dist<115){sendPvpDamage(d,color);effects.push([enemy.x,enemy.y,.35,color,Math.floor(d)]);impactRing(enemy.x,enemy.y,color);if(h){kimetsuFx(c,false);anime(k.emoji,enemy.x,enemy.y,color)}else if(c.side==='각성자')jujutsuFx(c,1);else anime('💥',enemy.x,enemy.y,color)}else msg('상대에게 가까이 가세요')}
 const _baseSkill=skill;skill=function(n){if(!pvpMode){_baseSkill(n);return}let c=chars[sel];if(n===1&&c1>0)return;if(n===2&&c2>0)return;let dx=enemy.x-player.x,dy=enemy.y-player.y,l=Math.hypot(dx,dy)||1,h=human(c),color=h?breathFx(c):c.color,label=c.skill[n-1];if(n===1){c1=3;bullets.push({x:player.x,y:player.y,r:h?12:22,vx:dx/l*610,vy:dy/l*610,dmg:player.atk*2.0,life:1.15,color});if(h)kimetsuFx(c,false);else if(c.side==='각성자')jujutsuFx(c,1);msg(label)}else{c2=6;let dmg=player.atk*(c.name.includes('아스트라')?4.5:(h?3.2:3.8));sendPvpDamage(dmg,color);effects.push([enemy.x,enemy.y,.75,color,'필살']);if(h)kimetsuFx(c,true);else if(c.side==='각성자')jujutsuFx(c,2);else domainAnime(label,color);msg(label)}}
 
@@ -2304,7 +2330,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='2.3.0',APP_BUILD=230,APP_DATE='2026-11-21';
+const APP_VERSION='2.4.0',APP_BUILD=240,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2473,7 +2499,7 @@ function tabTargets(){
     home:[...q('#select .filters'),$('grid'),$('info'),$('startBar')],
     online:[...q('#select .room'),...q('#select .friend'),...q('#select .mailBox')],
     shop:[...q('#select .shop'),...q('#select .trade')],
-    battle:[...q('#select .tradeRoom'),...q('#select .pvp')],
+    battle:[...q('#select .tradeRoom'),...q('#select .pvp'),$('rankingBox')],
     event:[$('perkBox'),$('eventBox')],
     story:[$('storyBox')],
     account:[$('name').closest('.box'),$('pwBox'),$('blockBox'),...q('#select .photoBox')],
@@ -2942,7 +2968,7 @@ claimEvent=async function(id){
 };
 // 전투 보상: 시작 때 서버에 알리고, 끝나면 서버가 시간·스테이지를 확인해서 지급
 function onStageClear(rw,dr,baseLevel){
-  if(!SERVER()){coins+=rw;dia+=dr;stage++;best=Math.max(best,stage,baseLevel+1);save.coins=coins;save.dia=dia;save.best=best;store();msg(`승리! ${rw}코인 ${dr}다이아`);return}
+  if(!SERVER()){const wasD=!!(typeof dungeonPlace!=='undefined'&&dungeonPlace);coins+=rw;dia+=dr;stage++;best=Math.max(best,stage,baseLevel+1);save.coins=coins;save.dia=dia;save.best=best;store();msg(`승리! ${rw}코인 ${dr}다이아`);startQuizBonus(rw,wasD);return}
   stage++;
   serverEnqueue(()=>callFn('claimStage').then(r=>msg(`승리! ${r.coins}코인 ${r.dia}다이아`)).catch(e=>msg('보상을 받지 못했어요: '+e.message)));
 }
@@ -3080,6 +3106,113 @@ enterWorldPlace=function(){
   _enterPlaceStory();
 };
 setTimeout(()=>showPrologue(false),900);
+
+/* ===================== 처치 보너스 퀴즈 · 상자 ===================== */
+let quizUsed=[];
+function pickQuiz(){
+  if(typeof QUIZ==='undefined'||!QUIZ.length)return null;
+  if(quizUsed.length>=QUIZ.length)quizUsed=[];
+  let i;do{i=Math.floor(Math.random()*QUIZ.length)}while(quizUsed.includes(i));
+  quizUsed.push(i);
+  const q=QUIZ[i],order=q.c.map((t,k)=>({t,ok:k===q.a}));
+  for(let k=order.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[order[k],order[j]]=[order[j],order[k]]}
+  return {q:q.q,choices:order};
+}
+const BOX_TABLE=[
+  {w:40,make:rw=>({coins:rw*(1+Math.floor(Math.random()*3))})},                 // 코인 1~3배
+  {w:10,make:rw=>({coins:rw*5})},                                                 // 큰 코인
+  {w:25,make:()=>({dia:1+Math.floor(Math.random()*3)})},                          // 다이아 1~3
+  {w:20,make:()=>({score:3+Math.floor(Math.random()*6)})},                        // 랭크 점수 3~8
+  {w:5, make:rw=>({coins:rw*3,dia:10})}                                           // 대박
+];
+function drawBoxReward(rw){
+  let t=BOX_TABLE.reduce((a,b)=>a+b.w,0),r=Math.random()*t;
+  for(const e of BOX_TABLE){if((r-=e.w)<0)return e.make(rw)}
+  return BOX_TABLE[0].make(rw);
+}
+function boxText(r){return [r.coins?`코인 +${r.coins.toLocaleString()}`:'',r.dia?`다이아 +${r.dia}`:'',r.score?`랭크 점수 +${r.score}`:''].filter(Boolean).join('<br>')}
+function applyBoxReward(r){
+  if(r.coins)coins+=r.coins;
+  if(r.dia)dia+=r.dia;
+  if(r.score)save.pvp=(save.pvp||0)+r.score;
+  save.coins=coins;save.dia=dia;store();
+}
+function quizResume(wasDungeon){
+  if(!wasDungeon&&!run&&$('game').classList.contains('active')&&!pvpMode){run=true;last=performance.now();requestAnimationFrame(loop)}
+}
+function startQuizBonus(rw,wasDungeon){
+  if(typeof QUIZ==='undefined')return;
+  if(!wasDungeon)run=false;                     // 퀴즈를 푸는 동안 전투를 멈춰요
+  setTimeout(()=>openQuiz(rw,wasDungeon),400);
+}
+function openQuiz(rw,wasDungeon){
+  const Q=pickQuiz();
+  if(!Q){quizResume(wasDungeon);return}
+  const ov=document.createElement('div');ov.id='quizOv';
+  const card=document.createElement('div');card.className='quizCard';ov.appendChild(card);document.body.appendChild(ov);
+  let timer=null,answered=false,left=20;
+  const finish=()=>{clearInterval(timer);ov.remove();quizResume(wasDungeon)};
+  const boxes=()=>{
+    const rs=[0,1,2].map(()=>drawBoxReward(rw));
+    card.innerHTML=`<div class="quizHead">🎉 정답! 상자를 하나 골라요</div><div class="boxRow">${rs.map((_,i)=>`<button class="quizBox" data-i="${i}">🎁</button>`).join('')}</div><div class="small">셋 중 하나만 열 수 있어요</div>`;
+    card.querySelectorAll('.quizBox').forEach(b=>b.onclick=()=>{
+      const pick=Number(b.dataset.i);
+      card.querySelectorAll('.quizBox').forEach((x,i)=>{x.disabled=true;x.classList.add('open');x.innerHTML=boxText(rs[i]);if(i===pick)x.classList.add('picked')});
+      applyBoxReward(rs[pick]);
+      card.querySelector('.small').innerHTML='<button class="purple" id="quizDone" style="padding:12px 30px;margin-top:6px">계속</button>';
+      card.querySelector('#quizDone').onclick=finish;
+    });
+  };
+  const answer=idx=>{
+    if(answered)return;answered=true;clearInterval(timer);
+    const btns=[...card.querySelectorAll('.quizChoice')];
+    btns.forEach((b,i)=>{b.disabled=true;if(Q.choices[i].ok)b.classList.add('ok');else if(i===idx)b.classList.add('no')});
+    if(idx>=0&&Q.choices[idx].ok)setTimeout(boxes,800);
+    else{
+      const ans=Q.choices.find(c=>c.ok).t;
+      setTimeout(()=>{card.innerHTML=`<div class="quizHead">${idx<0?'⏰ 시간이 지났어요':'아쉬워요'}</div><div class="quizQ">정답은 <b>${escH(ans)}</b></div><button class="purple" id="quizDone" style="padding:12px 30px">계속</button>`;card.querySelector('#quizDone').onclick=finish},900);
+    }
+  };
+  card.innerHTML=`<div class="quizHead">👹 처치 보너스 퀴즈</div><div class="quizTimer"><div id="quizBar"></div></div><div class="quizQ">${escH(Q.q)}</div>${Q.choices.map((c,i)=>`<button class="quizChoice" data-i="${i}">${escH(c.t)}</button>`).join('')}<button id="quizSkip" class="small" style="margin-top:6px;background:transparent;box-shadow:none;border:0;color:#9ca3af">건너뛰기</button>`;
+  card.querySelectorAll('.quizChoice').forEach(b=>b.onclick=()=>answer(Number(b.dataset.i)));
+  card.querySelector('#quizSkip').onclick=finish;
+  timer=setInterval(()=>{left--;const bar=card.querySelector('#quizBar');if(bar)bar.style.width=Math.max(0,left/20*100)+'%';if(left<=0)answer(-1)},1000);
+}
+
+/* ===================== PvP 점수 규칙 · 랭킹 ===================== */
+// 일반 PvP: 이기면 진 사람의 점수를 최대 10점 가져와요. 랭크전: 이기면 판돈(10)의 2배, 지면 절반.
+function pvpDelta(win,isRanked,my,op){
+  const STAKE=10;
+  if(isRanked)return win?STAKE*2:-Math.min(my,Math.floor(STAKE/2));
+  return win?Math.min(STAKE,op):-Math.min(STAKE,my);
+}
+finishPvp=function(win){
+  if(!pvpMode)return;pvpMode=false;run=false;
+  const my=save.pvp||0,op=((pvpData.players||{})[pvpOpponentId]||{}).rank||0;
+  const delta=pvpDelta(win,ranked,my,op);
+  updateRank(delta);
+  try{pvpRoomRef().child('result').push({name:user,win,delta,score:save.pvp,ts:Date.now()})}catch(e){}
+  alert((win?'승리! ':'패배! ')+(ranked?'랭크전 ':'PvP ')+(SERVER()?'(서버 모드에서는 점수가 바뀌지 않아요)':'점수 '+(delta>0?'+':'')+delta));
+  back();
+};
+let lastRankLoad=0;
+async function loadRanking(){
+  const box=$('rankingList'),info=$('rankTierInfo');
+  if(info)info.textContent='티어: '+ranks.map((n,i)=>`${n} ${i*100}`).join(' · ')+'점 이상';
+  if(!box)return;
+  if(user==='guest'||!online||!db){box.textContent='로그인하면 랭킹을 볼 수 있어요';return}
+  box.textContent='불러오는 중...';
+  try{
+    const v=(await dbRef('users').orderByChild('pvp').limitToLast(30).get()).val()||{};
+    const list=Object.keys(v).map(n=>({n,pvp:Number(v[n].pvp)||0,char:v[n].char||''})).sort((a,b)=>b.pvp-a.pvp);
+    if(!list.length){box.textContent='아직 랭킹이 없어요';return}
+    const myIdx=list.findIndex(x=>x.n===user);
+    box.innerHTML=`<div style="margin:6px 0">내 순위: <b>${myIdx>=0?(myIdx+1)+'위':'30위 밖'}</b> · 내 점수 ${save.pvp||0} (${rankName()})</div>`+list.map((x,i)=>`<div class="rkRow ${x.n===user?'me':''}"><span class="rkNo">${i<3?['🥇','🥈','🥉'][i]:(i+1)}</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${adminLabel(x.n)}<br><small style="color:#9ca3af">${escH(x.char)}</small></span><span style="text-align:right"><b>${x.pvp}</b>점<br><small style="color:#c4b5fd">${rankNameByScore(x.pvp)}</small></span></div>`).join('');
+    lastRankLoad=Date.now();
+  }catch(e){box.textContent='랭킹을 불러오지 못했어요.'}
+}
+const _showTabRank=showTab;
+showTab=function(id){_showTabRank(id);if(id==='battle'&&Date.now()-lastRankLoad>20000)loadRanking()};
 norm();renderAll();setTimeout(()=>{let pc=$("photoChar");if(pc)pc.onchange=renderCharPhotoTools},0);
 </script>
 </body>
