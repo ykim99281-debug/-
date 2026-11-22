@@ -1,0 +1,19 @@
+<div class="box" id="premBox" data-guest="1">
+<h3>💎 프리미엄</h3>
+<div id="premStatus" class="small">불러오는 중...</div>
+<div id="premEdit" style="display:none">
+  <div class="small" style="margin-top:8px">칭호</div>
+  <select id="premTitle" onchange="premPreview()"></select>
+  <div class="small" style="margin-top:8px">이름 색</div>
+  <div id="premSwatches"></div>
+  <div class="small" style="margin-top:8px">이름 테두리</div>
+  <select id="premFrame" onchange="premPreview()"><option value="none">없음</option><option value="laurel">🌿 월계수</option><option value="star">⭐ 별</option><option value="flame">🔥 불꽃</option><option value="crown">👑 왕관</option></select>
+  <div class="small" style="margin-top:8px">한 줄 소개 (30자)</div>
+  <input id="premBio" maxlength="30" placeholder="나를 소개해 보세요" oninput="premPreview()">
+  <div class="small" style="margin-top:8px">미리보기</div>
+  <div id="premPreviewBox" class="chatMsg"></div>
+  <button class="green" onclick="savePremDeco()">저장</button>
+</div>
+<p class="small" style="margin-top:8px">프리미엄은 꾸미기와 편의 기능이에요. 능력치·보상은 바뀌지 않아요. 지금은 <b>결제 없이 관리자가 지급</b>해요(테스트 기간).</p>
+</div>
+

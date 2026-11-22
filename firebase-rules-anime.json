@@ -432,6 +432,42 @@
       },
       "ledger": {
         ".read": "auth!=null && root.child('hagil/admins/'+auth.uid).exists()"
+      },
+      "premium": {
+        ".read": "auth!=null",
+        "$n": {
+          ".write": "auth!=null && root.child('hagil/admins/'+auth.uid).exists()",
+          ".validate": "newData.hasChild('until')",
+          "until": {
+            ".validate": "newData.isNumber() && newData.val()>=0 && newData.val()<=4102444800000"
+          },
+          "titles": {
+            "$t": {
+              ".validate": "newData.val()===true && ($t==='pioneer' || $t==='patron' || $t==='guardian' || $t==='veteran')"
+            }
+          },
+          "deco": {
+            ".write": "auth!=null && root.child('hagil/names/'+$n).val()===auth.uid && (root.child('hagil/premium/'+$n+'/until').val()===0 || root.child('hagil/premium/'+$n+'/until').val()>now) && !(root.child('hagil/bans/'+$n).val()===true || (root.child('hagil/bans/'+$n).isNumber() && root.child('hagil/bans/'+$n).val()>now))",
+            "title": {
+              ".validate": "newData.isString() && root.child('hagil/premium/'+$n+'/titles/'+newData.val()).val()===true"
+            },
+            "nameColor": {
+              ".validate": "newData.isString() && newData.val().matches(/^#[0-9a-f]{6}$/)"
+            },
+            "frame": {
+              ".validate": "newData.isString() && newData.val().matches(/^[a-z]{1,10}$/)"
+            },
+            "bio": {
+              ".validate": "newData.isString() && newData.val().length<=30"
+            },
+            "$other": {
+              ".validate": "false"
+            }
+          },
+          "$other": {
+            ".validate": "false"
+          }
+        }
       }
     }
   }
