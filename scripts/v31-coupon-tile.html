@@ -1,0 +1,12 @@
+  <div class="adminTile">
+    <b>🎟️ 쿠폰 만들기 (관리자 이상)</b><br>
+    <div class="small">쿠폰 코드를 만들어 친구들에게 알려 주면, 한 사람이 한 번씩 선물을 받을 수 있어요.</div>
+    <input id="cpCode" class="adminInput" placeholder="코드 (비우면 자동으로 만들어요)" maxlength="16" style="text-transform:uppercase">
+    <input id="cpCoins" type="number" class="adminInput" placeholder="코인/점수 (0~1,000,000)" value="500">
+    <input id="cpDia" type="number" class="adminInput" placeholder="다이아 (0~200)" value="1">
+    <input id="cpDays" type="number" class="adminInput" placeholder="유효 기간(일, 1~365)" value="7">
+    <button class="gold" onclick="adminCouponMake()">쿠폰 만들기</button>
+    <button class="blue" onclick="adminCouponList()">쿠폰 목록</button>
+    <div id="cpInfo" class="small"></div>
+  </div>
+

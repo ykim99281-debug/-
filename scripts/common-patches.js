@@ -47,6 +47,8 @@ exports.apply = function (s, o) {
   s = require('./engage-patch').apply(s, o.coin);
   // 2-4) 성장(레벨)·출석·업적·몬스터 패턴
   s = require('./grow-patch').apply(s, o.coin);
+  // 2-5) 3.1: 쪽지·쿠폰·스테이지 순위·주간 도전·설정 (어린이 판은 쪽지·순위 없음)
+  s = require('./v31-patch').apply(s, { dm: !o.noDm, rank: !o.noRank });
   // 3) PC·모바일 같이 하기 (화면 크기와 상관없는 전투장)
   s = require('./multiscreen-patch').apply(s);
   return s;

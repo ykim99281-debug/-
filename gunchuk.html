@@ -302,6 +302,16 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 <button class="green" onclick="sendFeedback()">보내기</button>
 </div>
 
+<div class="box" id="setBox">
+<h3>⚙️ 설정</h3>
+<p class="small">내 기기에만 저장돼요.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button id="setSfx" onclick="toggleSfx()">🔊 효과음</button>
+<button id="setVib" onclick="toggleGs('vib')">📳 진동</button>
+<button id="setShake" onclick="toggleGs('shake')">💥 화면 흔들림</button>
+</div>
+</div>
+
 <div class="box" id="diagBox" data-guest="1">
 <h3>🔍 내 계정 점검</h3>
 <p class="small">권한이 이상할 때 눌러 보세요. 결과를 그대로 알려주면 원인을 찾을 수 있어요.</p>
@@ -449,6 +459,18 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
     <div class="small">날짜별 접속자 수와, 유저가 어디까지 왔는지(튜토리얼·첫 전투·첫 승리·5스테이지 등)를 보여요.</div>
     <button class="blue" onclick="adminStats()">통계 불러오기</button>
     <div id="statsInfo" class="small">아직 조회 안 함</div>
+  </div>
+
+  <div class="adminTile">
+    <b>🎟️ 쿠폰 만들기 (관리자 이상)</b><br>
+    <div class="small">쿠폰 코드를 만들어 친구들에게 알려 주면, 한 사람이 한 번씩 선물을 받을 수 있어요.</div>
+    <input id="cpCode" class="adminInput" placeholder="코드 (비우면 자동으로 만들어요)" maxlength="16" style="text-transform:uppercase">
+    <input id="cpCoins" type="number" class="adminInput" placeholder="코인/점수 (0~1,000,000)" value="500">
+    <input id="cpDia" type="number" class="adminInput" placeholder="다이아 (0~200)" value="1">
+    <input id="cpDays" type="number" class="adminInput" placeholder="유효 기간(일, 1~365)" value="7">
+    <button class="gold" onclick="adminCouponMake()">쿠폰 만들기</button>
+    <button class="blue" onclick="adminCouponList()">쿠폰 목록</button>
+    <div id="cpInfo" class="small"></div>
   </div>
 
   <div class="adminTile ownerOnly">
@@ -628,6 +650,35 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 <button class="purple" onclick="showTutorial(true)">❓ 도움말 다시 보기</button>
 <button id="sfxBtn" onclick="toggleSfx()">🔊 효과음 켜짐</button>
 </div>
+</div>
+
+<div class="box" id="weeklyBox">
+<h3>📆 주간 도전</h3>
+<div id="weeklyList" class="small">불러오는 중...</div>
+</div>
+
+<div class="box" id="couponBox">
+<h3>🎟️ 쿠폰 입력</h3>
+<p class="small">이벤트로 받은 쿠폰 코드를 적으면 선물을 받아요. (코드는 영문 대문자와 숫자예요)</p>
+<input id="couponCode" placeholder="쿠폰 코드" maxlength="16" style="text-transform:uppercase">
+<button class="gold" onclick="redeemCoupon()">선물 받기</button>
+</div>
+
+<div class="box" id="dmBox">
+<h3>💌 쪽지 <span id="dmBadge" class="small"></span></h3>
+<p class="small">친구에게 짧은 쪽지를 보낼 수 있어요. 받은 쪽지는 <b>30일 뒤 자동으로 지워져요</b>. 욕설·괴롭힘은 🚨 신고해 주세요.</p>
+<input id="dmTo" placeholder="받는 사람 닉네임" maxlength="12">
+<textarea id="dmMsg" maxlength="200" rows="3" placeholder="쪽지 내용 (최대 200자)" style="width:100%;margin:6px 0;padding:10px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:15px"></textarea>
+<button class="green" onclick="sendDm()">쪽지 보내기</button>
+<h4 style="margin:14px 0 6px">받은 쪽지</h4>
+<div id="dmList" class="small">로그인하면 받은 쪽지를 볼 수 있어요.</div>
+</div>
+
+<div class="box" id="stageRankBox">
+<h3>🗼 스테이지 순위</h3>
+<p class="small">가장 멀리 간 사람의 순위예요. (최고 스테이지 기준)</p>
+<button class="blue" onclick="loadStageRank()">순위 불러오기</button>
+<div id="stageRankList" class="small" style="margin-top:6px">버튼을 눌러 보세요.</div>
 </div>
 
 <div class="filters"><button class="active" onclick="filter('전체',this)">전체</button><button onclick="filter('고대',this)">고대</button><button onclick="filter('근세',this)">근세</button><button onclick="filter('근대',this)">근대</button><button onclick="filter('현대',this)">현대</button><button onclick="filter('장인',this)">희귀</button></div>
@@ -2431,7 +2482,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='2.0.0',APP_BUILD=200,APP_DATE='2026-11-21';
+const APP_VERSION='2.1.0',APP_BUILD=210,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2596,13 +2647,13 @@ let curTab='account';
 function tabTargets(){
   const q=x=>[...document.querySelectorAll(x)];
   return {
-    home:[$('growBox'),$('questBox'),...q('#select .filters'),$('grid'),$('info'),$('startBar')],
-    online:[...q('#select .room'),...q('#select .friend'),...q('#select .mailBox')],
+    home:[$('growBox'),$('questBox'),$('weeklyBox'),$('couponBox'),...q('#select .filters'),$('grid'),$('info'),$('startBar')],
+    online:[$('dmBox'),...q('#select .room'),...q('#select .friend'),...q('#select .mailBox')],
     shop:[...q('#select .shop'),...q('#select .trade')],
-    battle:[...q('#select .tradeRoom'),...q('#select .pvp'),$('rankingBox')],
+    battle:[$('stageRankBox'),...q('#select .tradeRoom'),...q('#select .pvp'),$('rankingBox')],
     event:[$('perkBox'),$('eventBox')],
     story:[$('storyBox')],
-    account:[$('name').closest('.box'),$('pwBox'),$('premBox'),$('feedBox'),$('diagBox'),$('blockBox'),...q('#select .photoBox')],
+    account:[$('name').closest('.box'),$('pwBox'),$('premBox'),$('feedBox'),$('setBox'),$('diagBox'),$('blockBox'),...q('#select .photoBox')],
     admin:[$('adminBox')]
   };
 }
@@ -2617,7 +2668,7 @@ function showTab(id){
 const ADMIN_GROUPS=[
   ['users','👤 유저',['유저 목록','유저 검색','유저 제재','직급 부여','관리자 임명']],
   ['report','🚨 신고·채팅',['신고 목록','채팅 기록','의심 계정','의견함']],
-  ['give','🎁 지급',['내 보상','특정 유저 지급','전체 유저 보상','프리미엄']],
+  ['give','🎁 지급',['내 보상','특정 유저 지급','전체 유저 보상','프리미엄','쿠폰']],
   ['notice','📢 공지·이벤트',['전체 공지','채팅 관리','이벤트 열기']],
   ['server','🛠️ 서버',['서버 관리','서버 정보','통계']]
 ];
@@ -3093,7 +3144,7 @@ function toggleSfx(){sfxOn=!sfxOn;try{localStorage.setItem('sfxOff',sfxOn?'0':'1
 /* ----- 타격감: 연속 공격 콤보, 치명타, 화면 흔들림 ----- */
 let comboN=0,lastHitAt=0,comboHide=null;
 function shake(px){
-  try{const c=$('cv');if(!c)return;let i=0;const it=setInterval(()=>{i++;c.style.transform=i>=5?'':`translate(${(Math.random()-.5)*px}px,${(Math.random()-.5)*px}px)`;if(i>=5)clearInterval(it)},24)}catch(e){}
+  try{if(typeof GS!=='undefined'&&!GS.shake)return;const c=$('cv');if(!c)return;let i=0;const it=setInterval(()=>{i++;c.style.transform=i>=5?'':`translate(${(Math.random()-.5)*px}px,${(Math.random()-.5)*px}px)`;if(i>=5)clearInterval(it)},24)}catch(e){}
 }
 function showCombo(n,crit){
   let e=$('comboTxt');
@@ -3110,7 +3161,7 @@ function featHit(dmg){
   if(comboN>=3)extra+=dmg*Math.min(.2,(comboN-2)*.02);
   if(extra>0)enemy.hp-=extra;
   if(crit)effects.push([enemy.x,enemy.y-34,.6,'#facc15','치명타! '+Math.floor(dmg+extra)]);
-  if(crit&&typeof achAdd==='function')achAdd('crits',1);if(typeof achMax==='function')achMax('maxCombo',comboN);
+  if(crit&&typeof achAdd==='function')achAdd('crits',1);if(crit&&typeof wqAdd==='function')wqAdd('crit',1);if(crit&&typeof vib==='function')vib(30);if(typeof achMax==='function')achMax('maxCombo',comboN);
   showCombo(comboN,crit);
   if(crit||dmg>(player?player.atk*2:1e9)||comboN%5===0)shake(crit?9:5);
   sfx(crit?'crit':'hit');
@@ -3362,7 +3413,7 @@ function patOn(){return typeof run!=='undefined'&&run&&enemy&&player&&!(typeof p
 let eBullets=[];
 function hurtPlayer(dmg,label){
   if(player.inv>0)return false;
-  player.hp-=dmg;player.inv=.45;effects.push([player.x,player.y,.3,'#ef4444',label||'피격']);shake(7);sfx('hit');return true;
+  player.hp-=dmg;player.inv=.45;effects.push([player.x,player.y,.3,'#ef4444',label||'피격']);shake(7);sfx('hit');if(typeof vib==='function')vib(70);return true;
 }
 {const _u2=upd;upd=function(dt){
   _u2(dt);
@@ -3400,6 +3451,192 @@ function hurtPlayer(dmg,label){
   }catch(e){}
 }}
 {const _su3=setup;setup=function(){eBullets=[];return _su3.apply(this,arguments)}}
+/* ===================== 📆 주간 도전 (매주 월요일 0시, 한국시간에 새로) + ⚙️ 설정 ===================== */
+const WQ_MS=7*864e5,WQ_OFF=4*864e5-9*36e5;
+const wqWeek=()=>Math.floor((Date.now()-WQ_OFF)/WQ_MS);
+const wqEnd=()=>(wqWeek()+1)*WQ_MS+WQ_OFF;
+const WQ=[{id:'kills',t:'몬스터 40마리 쓰러뜨리기',n:40,r:{d:3}},{id:'skills',t:'기술 150번 쓰기',n:150,r:{c:1000}},{id:'crit',t:'치명타 40번',n:40,r:{d:2}}];
+function wqState(){
+  if(!save)return null;
+  const w=wqWeek();if(!save.wq||save.wq.w!==w)save.wq={w,p:{},c:{}};
+  save.wq.p=save.wq.p||{};save.wq.c=save.wq.c||{};return save.wq;
+}
+let _wqT=null;
+function wqAdd(id,v){
+  const s=wqState();if(!s)return;const d=WQ.find(x=>x.id===id);if(!d)return;
+  const cur=s.p[id]||0;s.p[id]=Math.min(d.n,cur+v);
+  if(s.p[id]>=d.n&&cur<d.n){try{msg('📆 주간 도전 달성! 홈 탭에서 보상을 받아요')}catch(e){}}
+  clearTimeout(_wqT);_wqT=setTimeout(()=>{try{store()}catch(e){}},8000);renderWeekly();
+}
+{const _dq=dqAdd;dqAdd=function(id,v,max){const r=_dq.apply(this,arguments);try{if(id==='kills'||id==='skills')wqAdd(id,v)}catch(e){}return r}}
+function claimWq(id){
+  const s=wqState(),d=WQ.find(x=>x.id===id);if(!s||!d)return;
+  if(typeof SERVER==='function'&&SERVER())return alert('서버 모드에서는 주간 도전 보상이 잠시 쉬어요.');
+  if(s.c[id]||(s.p[id]||0)<d.n)return;
+  s.c[id]=1;if(d.r.c){coins+=d.r.c;save.coins=coins}if(d.r.d){dia+=d.r.d;save.dia=dia}
+  store();sfx('coin');renderWeekly();
+}
+function renderWeekly(){
+  const box=$('weeklyList');if(!box)return;const s=wqState();if(!s)return;
+  const left=Math.max(0,wqEnd()-Date.now()),dd=Math.floor(left/864e5),hh=Math.floor(left%864e5/36e5);
+  box.innerHTML=WQ.map(q=>{const p=Math.min(q.n,s.p[q.id]||0),done=p>=q.n,got=!!s.c[q.id],rw=(q.r.c?q.r.c+' '+CUR2:'')+(q.r.d?'다이아 '+q.r.d:'');
+    return `<div style="margin:8px 0;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.07)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><span>${got?'✅':done?'🎁':'⬜'} <b>${q.t}</b> <small style="color:#9ca3af">(${p}/${q.n})</small></span>${got?'<small>받았어요</small>':done?`<button class="green" onclick="claimWq('${q.id}')">${rw} 받기</button>`:`<small style="color:#9ca3af">보상: ${rw}</small>`}</div><div style="height:6px;margin-top:6px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden"><div style="height:100%;width:${p/q.n*100}%;background:linear-gradient(90deg,#60a5fa,#a78bfa)"></div></div></div>`}).join('')+`<div class="small">월요일 0시(한국시간)에 새로 바뀌어요. (${dd}일 ${hh}시간 남음)</div>`;
+}
+{const _st5=showTab;showTab=function(id){_st5(id);if(id==='home')renderWeekly();if(id==='account')renderSettings()}}
+setTimeout(renderWeekly,800);
+
+/* ----- 설정: 효과음·진동·화면 흔들림 (내 기기에만 저장) ----- */
+let GS={vib:1,shake:1};
+try{GS=Object.assign(GS,JSON.parse(localStorage.getItem('gs')||'{}'))}catch(e){}
+function toggleGs(k){GS[k]=GS[k]?0:1;try{localStorage.setItem('gs',JSON.stringify(GS))}catch(e){}renderSettings();if(GS[k]&&k==='vib')vib(40)}
+function vib(ms){if(GS.vib&&typeof navigator!=='undefined'&&navigator.vibrate){try{navigator.vibrate(ms)}catch(e){}}}
+function renderSettings(){
+  const set=(id,on,label)=>{const b=$(id);if(b)b.textContent=(on?'✅ ':'⬜ ')+label+(on?' 켜짐':' 꺼짐')};
+  set('setSfx',sfxOn,'🔊 효과음');set('setVib',!!GS.vib,'📳 진동');set('setShake',!!GS.shake,'💥 화면 흔들림');
+}
+{const _ts=toggleSfx;toggleSfx=function(){_ts.apply(this,arguments);renderSettings()}}
+setTimeout(renderSettings,800);
+/* ===================== 🎟️ 쿠폰: 관리자가 코드를 만들고, 유저가 한 번씩 받아요 ===================== */
+const CP_RE=/^[A-Z0-9]{4,16}$/;
+const cpNorm=t=>String(t||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,16);
+async function redeemCoupon(){
+  if(user==='guest')return alert('로그인 후 쓸 수 있어요.');
+  if(!online||!db)return alert('온라인 연결이 필요해요.');
+  if(typeof SERVER==='function'&&SERVER())return alert('서버 모드에서는 쿠폰이 잠시 쉬어요.');
+  const code=cpNorm($('couponCode').value);
+  if(!CP_RE.test(code))return alert('쿠폰 코드를 확인해 주세요. (영문 대문자와 숫자 4~16자)');
+  let cp;
+  try{cp=(await dbRef('coupons/'+code).get()).val()}catch(e){return alert('쿠폰을 확인하지 못했어요: '+(e.code||e.message))}
+  if(!cp)return alert('없는 쿠폰이에요.');
+  if(!(cp.endsAt>Date.now()))return alert('기간이 끝난 쿠폰이에요.');
+  try{await dbRef('couponClaims/'+code+'/'+safeKey(user)).set(true)}
+  catch(e){return alert('이미 받았거나 받을 수 없는 쿠폰이에요.')}
+  const c=Math.max(0,Math.min(1000000,Math.floor(cp.coins||0))),d=Math.max(0,Math.min(200,Math.floor(cp.dia||0)));
+  coins+=c;dia+=d;save.coins=coins;save.dia=dia;store();sfx('coin');$('couponCode').value='';
+  alert('🎁 쿠폰 선물! '+(c?c+' '+CUR2+' ':'')+(d?'다이아 '+d:''));
+}
+function cpAuto(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<8;i++)s+=A[Math.floor(Math.random()*A.length)];return s}
+async function adminCouponMake(){
+  if(!isAdmin())return alert('권한이 없어요.');
+  let code=cpNorm($('cpCode').value)||cpAuto();
+  const c=Math.floor(Number($('cpCoins').value)||0),d=Math.floor(Number($('cpDia').value)||0),days=Math.floor(Number($('cpDays').value));
+  if(!CP_RE.test(code))return alert('코드는 영문 대문자와 숫자 4~16자예요.');
+  if(c<0||c>1000000||d<0||d>200)return alert('코인은 0~1,000,000, 다이아는 0~200으로 적어 주세요.');
+  if(c===0&&d===0)return alert('코인이나 다이아 중 하나는 있어야 해요.');
+  if(!Number.isFinite(days)||days<1||days>365)return alert('유효 기간은 1~365일이에요.');
+  try{
+    if((await dbRef('coupons/'+code).get()).exists())return alert('이미 있는 코드예요. 다른 코드를 써 주세요.');
+    await dbRef('coupons/'+code).set({coins:c,dia:d,endsAt:Date.now()+days*864e5,by:user,ts:Date.now()});
+    $('cpInfo').innerHTML='✅ 만들었어요! 쿠폰 코드: <b style="font-size:18px;color:#fde047">'+code+'</b> ('+days+'일 동안)';
+    $('cpCode').value='';
+  }catch(e){alert('만들지 못했어요: '+(e.code||e.message))}
+}
+async function adminCouponList(){
+  if(!isAdmin())return alert('권한이 없어요.');
+  const box=$('cpInfo');box.textContent='불러오는 중...';
+  try{
+    const [cs,cl]=await Promise.all([dbRef('coupons').get(),dbRef('couponClaims').get()]);
+    const cps=cs.val()||{},claims=cl.val()||{},keys=Object.keys(cps).sort((a,b)=>(cps[b].ts||0)-(cps[a].ts||0)).slice(0,50);
+    if(!keys.length){box.textContent='만든 쿠폰이 없어요.';return}
+    box.innerHTML=keys.map(k=>{const x=cps[k],on=x.endsAt>Date.now(),n=Object.keys(claims[k]||{}).length;return `<div style="padding:6px 8px;margin:4px 0;border-radius:8px;background:rgba(255,255,255,.07)"><b>${escH(k)}</b> ${on?'🟢':'⚪ 만료'} · ${x.coins||0} ${CUR2} / 다이아 ${x.dia||0} · 받은 사람 ${n}명 · ~${new Date(x.endsAt).toLocaleDateString()} <button class="red" onclick="adminCouponDel('${escH(k)}')">삭제</button></div>`}).join('');
+  }catch(e){box.textContent='불러오지 못했어요. ('+(e.code||e.message)+')'}
+}
+async function adminCouponDel(code){
+  if(!isAdmin()||!CP_RE.test(code))return;
+  if(!confirm(code+' 쿠폰을 삭제할까요?'))return;
+  try{await dbRef('coupons/'+code).remove();adminCouponList()}catch(e){alert('삭제하지 못했어요: '+(e.code||e.message))}
+}
+/* ===================== 💌 개인 쪽지 (받은 사람만 읽을 수 있고, 30일 뒤 지워져요) ===================== */
+const DM_DAYS=30;
+let dmRef=null,dmCache={},dmKnown=null,lastDmAt=0;
+function dmSeenTs(){try{return Number(localStorage.getItem('dmSeen_'+user))||0}catch(e){return 0}}
+function dmVisible(){return Object.keys(dmCache).map(k=>({k,...dmCache[k]})).filter(m=>m&&m.from&&m.msg&&!(typeof isBlocked==='function'&&isBlocked(m.from))).sort((a,b)=>(b.ts||0)-(a.ts||0))}
+function dmUnread(){const t=dmSeenTs();return dmVisible().filter(m=>(m.ts||0)>t).length}
+function updateDmBadge(){
+  const n=dmUnread(),b=$('dmBadge');if(b)b.textContent=n?'('+n+'개 새 쪽지)':'';
+  const tb=$('tab_online');if(tb){if(tb.dataset.base===undefined)tb.dataset.base=tb.textContent;tb.textContent=tb.dataset.base+(n?' 💌'+n:'')}
+}
+function renderDm(){
+  const box=$('dmList');if(!box)return;
+  if(user==='guest'){box.textContent='로그인하면 받은 쪽지를 볼 수 있어요.';return}
+  const list=dmVisible().slice(0,30);
+  box.innerHTML=list.length?list.map(m=>`<div style="padding:8px 10px;margin:6px 0;border-radius:10px;background:rgba(255,255,255,.07)"><b>${adminLabel(m.from)}</b> <small style="color:#9ca3af">· ${m.ts?new Date(m.ts).toLocaleString():''}</small><div style="margin:6px 0;white-space:pre-wrap;word-break:break-word">${escH(m.msg)}</div><button class="blue" onclick="dmReply('${encodeURIComponent(m.from).replace(/'/g,'%27')}')">답장</button> <button class="red" onclick="dmReport('${encodeURIComponent(m.k).replace(/'/g,'%27')}')">🚨 신고</button> <button class="gold" onclick="dmBlock('${encodeURIComponent(m.from).replace(/'/g,'%27')}')">🚫 차단</button> <button onclick="dmDelete('${encodeURIComponent(m.k).replace(/'/g,'%27')}')">🗑 삭제</button></div>`).join(''):'받은 쪽지가 없어요.';
+  updateDmBadge();
+}
+function stopDm(){if(dmRef){try{dmRef.off()}catch(e){}dmRef=null}dmCache={};dmKnown=null;renderDm();updateDmBadge()}
+function startDm(){
+  stopDm();
+  if(user==='guest'||!online||!db||!auth||!auth.currentUser)return;
+  dmRef=dbRef('dm/'+safeKey(user)).limitToLast(60);
+  dmRef.on('value',s=>{
+    dmCache=s.val()||{};
+    const keys=Object.keys(dmCache);
+    if(dmKnown){keys.filter(k=>!dmKnown.has(k)).forEach(k=>{const m=dmCache[k];if(m&&m.from&&!(typeof isBlocked==='function'&&isBlocked(m.from))){try{msg('💌 새 쪽지: '+String(m.from).replace(/[<>&"']/g,''));sfx('coin')}catch(e){}}})}
+    dmKnown=new Set(keys);
+    renderDm();
+    // 30일이 지난 쪽지는 내 쪽지함에서 지워요
+    const cut=Date.now()-DM_DAYS*864e5,old=keys.filter(k=>Number(dmCache[k]&&dmCache[k].ts)>0&&dmCache[k].ts<cut);
+    if(old.length){const part={};old.forEach(k=>{part[k]=null});dbRef('dm/'+safeKey(user)).update(part).catch(()=>{})}
+  },()=>{});
+}
+async function sendDm(){
+  if(user==='guest')return alert('로그인 후 보낼 수 있어요.');
+  if(!online||!db)return alert('온라인 연결이 필요해요.');
+  if(typeof isBanned==='function'&&isBanned())return alert('이용이 정지된 계정은 쪽지를 보낼 수 없어요.');
+  if(typeof isMuted==='function'&&isMuted())return alert('채팅이 금지된 계정은 쪽지를 보낼 수 없어요.');
+  const to=safeKey(String($('dmTo').value||'').trim()),msgText=String($('dmMsg').value||'').trim();
+  if(!to)return alert('받는 사람 닉네임을 적어 주세요.');
+  if(to===safeKey(user))return alert('나에게는 보낼 수 없어요.');
+  if(msgText.length<1)return alert('쪽지 내용을 적어 주세요.');
+  if(msgText.length>200)return alert('쪽지는 200자까지 보낼 수 있어요.');
+  if(Date.now()-lastDmAt<3000)return alert('너무 빨라요. 잠시 후 다시 보내 주세요.');
+  try{
+    if(!(await dbRef('names/'+to).get()).exists())return alert('없는 닉네임이에요.');
+    await dbRef('dm/'+to).push({from:user,msg:msgText,ts:Date.now()});
+    lastDmAt=Date.now();$('dmMsg').value='';alert('쪽지를 보냈어요! 💌');
+  }catch(e){alert('보내지 못했어요: '+(e.code||e.message))}
+}
+function dmReply(enc){const e=$('dmTo');if(e){e.value=decodeURIComponent(enc);const m=$('dmMsg');if(m)m.focus()}}
+async function dmDelete(enc){
+  try{await dbRef('dm/'+safeKey(user)+'/'+decodeURIComponent(enc)).remove()}catch(e){alert('지우지 못했어요: '+(e.code||e.message))}
+}
+async function dmReport(enc){
+  const k=decodeURIComponent(enc),m=dmCache[k];if(!m)return;
+  if(!confirm('"'+String(m.from)+'"님의 이 쪽지를 신고할까요? 쪽지 내용이 운영자에게 전달돼요.'))return;
+  try{
+    await dbRef('reports/'+safeKey(user+'_dm_'+k)).set({by:user,target:m.from,reason:'쪽지',msg:String(m.msg).slice(0,200),key:k,ts:Date.now()});
+    alert('신고했어요. 운영자가 확인할게요.');
+  }catch(e){alert('신고하지 못했어요: '+(e.code||e.message))}
+}
+function dmBlock(enc){const n=decodeURIComponent(enc);if(confirm('"'+n+'"님을 차단할까요? 차단하면 이 사람의 쪽지와 채팅이 보이지 않아요.')){blockUser(n);renderDm()}}
+{const _fl=finishLogin;finishLogin=async function(n,uid){const r=await _fl(n,uid);try{startDm()}catch(e){}return r}}
+{const _rg=resetToGuest;resetToGuest=function(){try{stopDm()}catch(e){}return _rg.apply(this,arguments)}}
+{const _st=showTab;showTab=function(id){_st(id);if(id==='online'){try{localStorage.setItem('dmSeen_'+user,String(Date.now()))}catch(e){}renderDm()}}}
+/* ===================== 🗼 스테이지 순위 (최고 스테이지) ===================== */
+let _bestPushed=0;
+function pushBest(){
+  try{
+    if(user==='guest'||!online||!db||!auth||!auth.currentUser||!save)return;
+    const b=Math.max(1,Math.floor(save.best||1));if(b<=_bestPushed)return;
+    _bestPushed=b;dbRef('users/'+safeKey(user)).update({best:b}).catch(()=>{});
+  }catch(e){}
+}
+{const _sc4=onStageClear;onStageClear=function(){const r=_sc4.apply(this,arguments);try{setTimeout(pushBest,400)}catch(e){}return r}}
+{const _fl2=finishLogin;finishLogin=async function(n,uid){_bestPushed=0;const r=await _fl2(n,uid);try{setTimeout(pushBest,1500)}catch(e){}return r}}
+async function loadStageRank(){
+  const box=$('stageRankList');if(!box)return;
+  if(user==='guest'||!online||!db){box.textContent='로그인하면 순위를 볼 수 있어요.';return}
+  box.textContent='불러오는 중...';
+  try{
+    let v;
+    try{v=(await dbRef('users').orderByChild('best').limitToLast(30).get()).val()||{}}
+    catch(e1){v=(await dbRef('users').get()).val()||{}}
+    const list=Object.keys(v).map(n=>({n,best:Number(v[n]&&v[n].best)||0,char:(v[n]&&v[n].char)||''})).filter(x=>x.best>0).sort((a,b)=>b.best-a.best).slice(0,30);
+    if(!list.length){box.textContent='아직 순위가 없어요. 전투에서 이기면 기록돼요!';return}
+    const my=list.findIndex(x=>x.n===user);
+    box.innerHTML=`<div style="margin:6px 0">내 순위: <b>${my>=0?(my+1)+'위':'30위 밖'}</b> · 내 최고 ${save.best||1}스테이지</div>`+list.map((x,i)=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 8px;margin:4px 0;border-radius:8px;background:${x.n===user?'rgba(250,204,21,.18)':'rgba(255,255,255,.07)'}"><span style="width:28px;text-align:center">${i<3?['🥇','🥈','🥉'][i]:(i+1)}</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${adminLabel(x.n)}<br><small style="color:#9ca3af">${escH(x.char)}</small></span><b>${x.best}스테이지</b></div>`).join('');
+  }catch(e){box.textContent='순위를 불러오지 못했어요. ('+(e.code||e.message)+')'}
+}
 /* ===================== PC·모바일 같이 하기: 화면 크기와 상관없는 공정한 전투장 ===================== */
 // 전투장(아레나): 화면 안에 16:9 상자를 가운데에 놓고, 위치를 이 상자 기준으로 주고받아요.
 // 그래서 PC(큰 화면)와 모바일(작은 화면)에서 서로 같은 자리에 보이고, 이동 속도·공격 범위도 상자 크기에 맞춰 똑같이 계산돼요.

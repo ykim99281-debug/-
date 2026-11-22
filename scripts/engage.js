@@ -21,7 +21,7 @@ function toggleSfx(){sfxOn=!sfxOn;try{localStorage.setItem('sfxOff',sfxOn?'0':'1
 /* ----- 타격감: 연속 공격 콤보, 치명타, 화면 흔들림 ----- */
 let comboN=0,lastHitAt=0,comboHide=null;
 function shake(px){
-  try{const c=$('cv');if(!c)return;let i=0;const it=setInterval(()=>{i++;c.style.transform=i>=5?'':`translate(${(Math.random()-.5)*px}px,${(Math.random()-.5)*px}px)`;if(i>=5)clearInterval(it)},24)}catch(e){}
+  try{if(typeof GS!=='undefined'&&!GS.shake)return;const c=$('cv');if(!c)return;let i=0;const it=setInterval(()=>{i++;c.style.transform=i>=5?'':`translate(${(Math.random()-.5)*px}px,${(Math.random()-.5)*px}px)`;if(i>=5)clearInterval(it)},24)}catch(e){}
 }
 function showCombo(n,crit){
   let e=$('comboTxt');
@@ -38,7 +38,7 @@ function featHit(dmg){
   if(comboN>=3)extra+=dmg*Math.min(.2,(comboN-2)*.02);
   if(extra>0)enemy.hp-=extra;
   if(crit)effects.push([enemy.x,enemy.y-34,.6,'#facc15','치명타! '+Math.floor(dmg+extra)]);
-  if(crit&&typeof achAdd==='function')achAdd('crits',1);if(typeof achMax==='function')achMax('maxCombo',comboN);
+  if(crit&&typeof achAdd==='function')achAdd('crits',1);if(crit&&typeof wqAdd==='function')wqAdd('crit',1);if(crit&&typeof vib==='function')vib(30);if(typeof achMax==='function')achMax('maxCombo',comboN);
   showCombo(comboN,crit);
   if(crit||dmg>(player?player.atk*2:1e9)||comboN%5===0)shake(crit?9:5);
   sfx(crit?'crit':'hit');

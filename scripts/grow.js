@@ -109,7 +109,7 @@ function patOn(){return typeof run!=='undefined'&&run&&enemy&&player&&!(typeof p
 let eBullets=[];
 function hurtPlayer(dmg,label){
   if(player.inv>0)return false;
-  player.hp-=dmg;player.inv=.45;effects.push([player.x,player.y,.3,'#ef4444',label||'피격']);shake(7);sfx('hit');return true;
+  player.hp-=dmg;player.inv=.45;effects.push([player.x,player.y,.3,'#ef4444',label||'피격']);shake(7);sfx('hit');if(typeof vib==='function')vib(70);return true;
 }
 {const _u2=upd;upd=function(dt){
   _u2(dt);
