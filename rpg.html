@@ -866,8 +866,8 @@ function removeFriend(n){save.friends=(save.friends||[]).filter(x=>x!==n);store(
 function inviteFriend(n){if(user==="guest")return alert("로그인 필요");if(!(save.friends||[]).includes(n))return alert("친구 목록에 있는 계정만 초대 가능");if(!room){$("roomName").value="친구방_"+user+"_"+Date.now().toString(36).slice(-4);joinRoom()}let inv={from:user,room:room,ts:Date.now()};localStorage.setItem("rpgInvite_"+n,JSON.stringify(inv));$("inviteStatus").textContent=n+"님에게 ["+room+"] 방 초대 전송";alert(n+"님을 방으로 초대했습니다.")}
 function checkInvites(){if(user==="guest")return alert("로그인 필요");let raw=localStorage.getItem("rpgInvite_"+user);if(!raw){$("inviteStatus").textContent="받은 초대 없음";return}let inv=JSON.parse(raw);if(Date.now()-inv.ts>1000*60*10){localStorage.removeItem("rpgInvite_"+user);$("inviteStatus").textContent="초대가 만료되었습니다.";return}$("inviteStatus").innerHTML=`${inv.from}님의 방 [${inv.room}] 초대 <button class=green onclick="acceptInvite('${inv.room}')">참가</button>`}
 function acceptInvite(r){$("roomName").value=r;joinRoom();localStorage.removeItem("rpgInvite_"+user);$("inviteStatus").textContent="초대받은 방 ["+r+"] 참가 완료"}
-function joinRoom(){let r=$("roomName").value.trim();if(!r)return alert("방 이름 입력");leaveRoom(false);room=r;chan=new BroadcastChannel("anime_rpg_room_"+room);chan.onmessage=e=>{let m=e.data;if(!m||m.id===myId)return;if(m.type==="state"){peerPlayers[m.id]=m;peerPlayers[m.id].lastSeen=Date.now()}if(m.type==="leave")delete peerPlayers[m.id]};$("roomStatus").textContent="방 ["+room+"] 참가 중";openChatChannel()}function leaveRoom(show=true){if(chan){chan.postMessage({type:"leave",id:myId});chan.close()}chan=null,tradeRoom="";room="";peerPlayers={};if(show)$("roomStatus").textContent="방 없음";addChatMessage("system","방에서 나갔습니다. 전체 채팅은 유지됩니다.",true)}function randomMatch(){let r="랜덤방_"+(Math.floor(Date.now()/30000)%100);$("roomName").value=r;joinRoom();$("roomStatus").textContent="랜덤 매칭 대기/참가: "+r}
-function sendState(){if(chan&&player)chan.postMessage({type:"state",id:myId,name:user,emoji:player.emoji,color:player.color,x:player.x,y:player.y,char:player.name})}
+function joinRoom(){let r=$("roomName").value.trim();if(!r)return alert("방 이름 입력");leaveRoom(false);room=r;chan=new BroadcastChannel("anime_rpg_room_"+room);chan.onmessage=e=>{let m=e.data;if(!m||m.id===myId)return;if(m.type==="state"){peerPlayers[m.id]=fixPeer(m);peerPlayers[m.id].lastSeen=Date.now()}if(m.type==="leave")delete peerPlayers[m.id]};$("roomStatus").textContent="방 ["+room+"] 참가 중";openChatChannel()}function leaveRoom(show=true){if(chan){chan.postMessage({type:"leave",id:myId});chan.close()}chan=null,tradeRoom="";room="";peerPlayers={};if(show)$("roomStatus").textContent="방 없음";addChatMessage("system","방에서 나갔습니다. 전체 채팅은 유지됩니다.",true)}function randomMatch(){let r="랜덤방_"+(Math.floor(Date.now()/30000)%100);$("roomName").value=r;joinRoom();$("roomStatus").textContent="랜덤 매칭 대기/참가: "+r}
+function sendState(){if(chan&&player)chan.postMessage({type:"state",id:myId,name:user,emoji:player.emoji,color:player.color,x:player.x,y:player.y,sw:innerWidth,sh:innerHeight,char:player.name})}
 
 /* === 전체 서버 채팅 시스템 === */
 let chatChan=null,chatMessages=[],globalChatOpened=false;
@@ -1281,9 +1281,9 @@ else if(!getLocalAcc(n))return alert('없는 계정입니다. 온라인 연결 �
 inviteFriend=function(n){if(user==='guest')return alert('로그인 필요');if(!(save.friends||[]).includes(n))return alert('친구 목록에 있는 계정만 초대 가능');if(!room){$('roomName').value='친구방_'+user+'_'+Date.now().toString(36).slice(-4);joinRoom()}let inv={type:'room',from:user,room:room,ts:Date.now()};if(online&&db)dbRef('invites/'+safeKey(n)).push(inv);else localStorage.setItem('rpgInvite_'+n,JSON.stringify(inv));$('inviteStatus').textContent=n+'님에게 ['+room+'] 방 초대 전송';}
 inviteTradeFriend=function(){if(user==='guest')return alert('로그인 필요');let n=$('tradePartner').value.trim()||$('friendName').value.trim();if(!n)return alert('상대 닉네임 입력');if(!(save.friends||[]).includes(n))return alert('친구 목록에 있는 계정만 초대 가능');if(!tradeRoom){$('tradeRoomName').value='거래방_'+user+'_'+Date.now().toString(36).slice(-4);joinTradeRoom()}let inv={type:'trade',from:user,room:tradeRoom,ts:Date.now()};if(online&&db)dbRef('invites/'+safeKey(n)).push(inv);else localStorage.setItem('rpgTradeInvite_'+n,JSON.stringify(inv));$('tradeStatus').textContent=n+'님에게 거래 방 ['+tradeRoom+'] 초대 전송'}
 joinRoom=function(){let r=$('roomName').value.trim();if(!r)return alert('방 이름 입력');leaveRoom(false);room=r;peerPlayers={};if(online&&db){let ref=dbRef('rooms/'+safeKey(room)+'/players');roomSub=ref;ref.on('value',snap=>{let data=snap.val()||{};peerPlayers={};Object.keys(data).forEach(id=>{if(id!==myId){peerPlayers[id]=data[id];peerPlayers[id].lastSeen=Date.now()}})});dbRef('rooms/'+safeKey(room)+'/players/'+myId).onDisconnect().remove();$('roomStatus').innerHTML='온라인 방 ['+room+'] 참가 중';}
-else{chan=new BroadcastChannel('anime_rpg_room_'+room);chan.onmessage=e=>{let m=e.data;if(!m||m.id===myId)return;if(m.type==='state'){peerPlayers[m.id]=m;peerPlayers[m.id].lastSeen=Date.now()}if(m.type==='leave')delete peerPlayers[m.id]};$('roomStatus').textContent='로컬 방 ['+room+'] 참가 중'} }
+else{chan=new BroadcastChannel('anime_rpg_room_'+room);chan.onmessage=e=>{let m=e.data;if(!m||m.id===myId)return;if(m.type==='state'){peerPlayers[m.id]=fixPeer(m);peerPlayers[m.id].lastSeen=Date.now()}if(m.type==='leave')delete peerPlayers[m.id]};$('roomStatus').textContent='로컬 방 ['+room+'] 참가 중'} }
 leaveRoom=function(show=true){if(chan){chan.postMessage({type:'leave',id:myId});chan.close()}if(roomSub&&online&&db){dbRef('rooms/'+safeKey(room)+'/players/'+myId).remove();roomSub.off();}chan=null;roomSub=null;room='';peerPlayers={};if(show)$('roomStatus').textContent='방 없음'}
-sendState=function(){if(!player)return;let st={type:'state',id:myId,name:user,emoji:player.emoji,color:player.color,x:player.x,y:player.y,char:player.name,hp:pvpMode?pvpMyHp:player.hp,ts:Date.now()};if(online&&db&&room)dbRef('rooms/'+safeKey(room)+'/players/'+myId).set(st);else if(chan)chan.postMessage(st);if(pvpMode&&online&&db&&pvpRoom)dbRef('pvpRooms/'+safeKey(pvpRoom)+'/players/'+myId).update(st)}
+sendState=function(){if(!player)return;let st={type:'state',id:myId,name:user,emoji:player.emoji,color:player.color,x:player.x,y:player.y,sw:innerWidth,sh:innerHeight,char:player.name,hp:pvpMode?pvpMyHp:player.hp,ts:Date.now()};if(online&&db&&room)dbRef('rooms/'+safeKey(room)+'/players/'+myId).set(st);else if(chan)chan.postMessage(st);if(pvpMode&&online&&db&&pvpRoom)dbRef('pvpRooms/'+safeKey(pvpRoom)+'/players/'+myId).update(st)}
 function pvpRankScore(){return save.pvp||0}function rankNameByScore(p){return ranks[Math.max(0,Math.min(7,Math.floor((p||0)/100)))]}
 rankName=function(){return rankNameByScore(save.pvp||0)}
 function updateRank(delta){if(SERVER()){ui();return}save.pvp=Math.max(0,(save.pvp||0)+delta);store();ui();}
@@ -1306,7 +1306,7 @@ function joinPvpRoom(isRanked=false){
    let updates={};
    if(!data.host)updates.host=host;
    updates.mode=($('pvpMatchMode')&&$('pvpMatchMode').value)||data.mode||'ffa';
-   updates['players/'+myId]={id:myId,name:user,char:c.name,emoji:c.emoji,color:c.color,x:innerWidth*.25,y:innerHeight*.62,hp:pvpMyHp,max:pvpMaxHp,rank:save.pvp||0,ready:false,team:'',ts:Date.now()};
+   updates['players/'+myId]={id:myId,name:user,char:c.name,emoji:c.emoji,color:c.color,x:myArena().x+myArena().w*.25,y:myArena().y+myArena().h*.62,sw:innerWidth,sh:innerHeight,hp:pvpMyHp,max:pvpMaxHp,rank:save.pvp||0,ready:false,team:'',ts:Date.now()};
    if(data.status==='playing'||data.status==='started'){updates.status='waiting';updates.gameStart=null;updates.hits=null;updates.result=null;}
    pvpSub.update(updates);
    pvpSub.child('players/'+myId).onDisconnect().remove();
@@ -1378,19 +1378,19 @@ function startPvpLocal(fromRemote){
  $('select').classList.remove('active');$('game').classList.add('active');cv=$('cv');ctx=cv.getContext('2d');resize();addEventListener('resize',resize);
  pvpMode=true;pvpMyHp=c.hp+armor().hp+500;pvpMaxHp=pvpMyHp;
  let op=ps[pvpOpponentId]||{};
- player={x:w*.25,y:h*.62,r:34,hp:pvpMyHp,max:pvpMaxHp,atk:c.atk+(human(c)?kat().bonus:0)+armor().atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:human(c),inv:0};
- enemy={x:w*.72,y:h*.62,r:34,hp:op.hp||pvpMyHp,max:op.max||pvpMyHp,atk:0,spd:0,name:op.name||'상대',emoji:op.emoji||'❔',color:op.color||'#fff'};
+ player={x:myArena().x+myArena().w*.25,y:myArena().y+myArena().h*.62,r:34,hp:pvpMyHp,max:pvpMaxHp,atk:c.atk+(human(c)?kat().bonus:0)+armor().atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:human(c),inv:0};
+ enemy={x:myArena().x+myArena().w*.72,y:myArena().y+myArena().h*.62,r:34,hp:op.hp||pvpMyHp,max:op.max||pvpMyHp,atk:0,spd:0,name:op.name||'상대',emoji:op.emoji||'❔',color:op.color||'#fff'};
  bullets=[];effects=[];c1=c2=0;run=true;last=performance.now();startAt=Date.now();
- pvpRoomRef().child('players/'+myId).update({ready:true,hp:pvpMyHp,max:pvpMaxHp,x:player.x,y:player.y,started:true});
+ pvpRoomRef().child('players/'+myId).update({ready:true,hp:pvpMyHp,max:pvpMaxHp,x:player.x,y:player.y,sw:innerWidth,sh:innerHeight,started:true});
  msg('PvP 전투 시작! 상대를 쓰러뜨리세요');requestAnimationFrame(loop)
 }
 function applyPvpHits(){let hits=pvpData.hits||{};Object.entries(hits).forEach(([hid,h])=>{if(h.to===myId&&!h.seen){pvpMyHp=Math.max(0,pvpMyHp-(h.dmg||0));if(player){player.hp=pvpMyHp;effects.push([player.x,player.y,.45,h.color||'#ef4444','-'+Math.floor(h.dmg||0)]);impactRing(player.x,player.y,h.color||'#ef4444')}dbRef('pvpRooms/'+safeKey(pvpRoom)+'/hits/'+hid+'/seen').set(true);if(pvpMyHp<=0)finishPvp(false);}})}
 function sendPvpDamage(dmg,color){if(!pvpMode||!online||!db||!pvpOpponentId)return;dbRef('pvpRooms/'+safeKey(pvpRoom)+'/hits').push({from:myId,to:pvpOpponentId,dmg:Math.floor(dmg),color:color,ts:Date.now(),seen:false});}
 function finishPvp(win){if(!pvpMode)return;pvpMode=false;run=false;let delta=ranked?(win?30:-25):(win?10:-5);updateRank(delta);pvpRoomRef().child('result').push({name:user,win,delta,score:save.pvp,ts:Date.now()});alert((win?'승리! ':'패배! ')+(ranked?'랭크 ':'PvP ')+'점수 '+(delta>0?'+':'')+delta);back();}
-const _baseUpd=upd;upd=function(dt){if(!pvpMode){_baseUpd(dt);return}let vx=joy.x,vy=joy.y;if(keys.a||keys.ArrowLeft)vx=-1;if(keys.d||keys.ArrowRight)vx=1;if(keys.w||keys.ArrowUp)vy=-1;if(keys.s||keys.ArrowDown)vy=1;let l=Math.hypot(vx,vy)||1;player.x+=vx/l*player.spd*90*dt;player.y+=vy/l*player.spd*90*dt;player.x=Math.max(34,Math.min(w-34,player.x));player.y=Math.max(h*.25,Math.min(h-54,player.y));let op=(pvpData.players||{})[pvpOpponentId];if(op){enemy.x=op.x||enemy.x;enemy.y=op.y||enemy.y;enemy.hp=op.hp??enemy.hp;enemy.max=op.max??enemy.max;enemy.name=op.name||enemy.name;enemy.emoji=op.emoji||enemy.emoji;enemy.color=op.color||enemy.color;if(enemy.hp<=0)finishPvp(true)}player.hp=pvpMyHp;player.inv-=dt;c1-=dt;c2-=dt;bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(Math.hypot(b.x-enemy.x,b.y-enemy.y)<enemy.r+b.r){sendPvpDamage(b.dmg,b.color);b.life=0;effects.push([enemy.x,enemy.y,.35,b.color,Math.floor(b.dmg)])}});bullets=bullets.filter(b=>b.life>0);effects.forEach(e=>e[2]-=dt);effects=effects.filter(e=>e[2]>0);if(pvpMyHp<=0)finishPvp(false);hud();sendState();$('s1').classList.toggle('cool',c1>0);$('s2').classList.toggle('cool',c2>0);let s=Math.floor((Date.now()-startAt)/1000);$('time').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+const _baseUpd=upd;upd=function(dt){if(!pvpMode){_baseUpd(dt);return}let vx=joy.x,vy=joy.y;if(keys.a||keys.ArrowLeft)vx=-1;if(keys.d||keys.ArrowRight)vx=1;if(keys.w||keys.ArrowUp)vy=-1;if(keys.s||keys.ArrowDown)vy=1;let l=Math.hypot(vx,vy)||1;{const A=myArena();player.x+=vx/l*player.spd*90*dt*A.sc;player.y+=vy/l*player.spd*90*dt*A.sc;player.x=Math.max(A.x,Math.min(A.x+A.w,player.x));player.y=Math.max(A.y,Math.min(A.y+A.h,player.y));}let op=(pvpData.players||{})[pvpOpponentId];if(op){{const q=netPos(op);enemy.x=q.x||enemy.x;enemy.y=q.y||enemy.y}enemy.hp=op.hp??enemy.hp;enemy.max=op.max??enemy.max;enemy.name=op.name||enemy.name;enemy.emoji=op.emoji||enemy.emoji;enemy.color=op.color||enemy.color;if(enemy.hp<=0)finishPvp(true)}player.hp=pvpMyHp;player.inv-=dt;c1-=dt;c2-=dt;bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(Math.hypot(b.x-enemy.x,b.y-enemy.y)<(enemy.r+b.r)*myArena().sc){sendPvpDamage(b.dmg,b.color);b.life=0;effects.push([enemy.x,enemy.y,.35,b.color,Math.floor(b.dmg)])}});bullets=bullets.filter(b=>b.life>0);effects.forEach(e=>e[2]-=dt);effects=effects.filter(e=>e[2]>0);if(pvpMyHp<=0)finishPvp(false);hud();sendState();$('s1').classList.toggle('cool',c1>0);$('s2').classList.toggle('cool',c2>0);let s=Math.floor((Date.now()-startAt)/1000);$('time').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 const _baseHud=hud;hud=function(){_baseHud();if(pvpMode){$('stage').textContent=ranked?'랭크전':'PvP';$('bossType').textContent='상대 유저 전투';$('coin').textContent='내 랭크 '+(save.pvp||0);$('dia').textContent=rankName();$('rec').textContent='승리 +30 / 패배 -25';}}
-const _baseAttack=attack;attack=function(){if(!pvpMode){_baseAttack();return}let c=chars[sel],h=human(c),k=kat(),color=h?breathFx(c):player.color,d=player.atk*(.8+Math.random()*.4),dist=Math.hypot(player.x-enemy.x,player.y-enemy.y);if(dist<115){sendPvpDamage(d,color);effects.push([enemy.x,enemy.y,.35,color,Math.floor(d)]);impactRing(enemy.x,enemy.y,color);if(h){kimetsuFx(c,false);anime(k.emoji,enemy.x,enemy.y,color)}else if(c.side==='각성자')jujutsuFx(c,1);else anime('💥',enemy.x,enemy.y,color)}else msg('상대에게 가까이 가세요')}
-const _baseSkill=skill;skill=function(n){if(!pvpMode){_baseSkill(n);return}let c=chars[sel];if(n===1&&c1>0)return;if(n===2&&c2>0)return;let dx=enemy.x-player.x,dy=enemy.y-player.y,l=Math.hypot(dx,dy)||1,h=human(c),color=h?breathFx(c):c.color,label=c.skill[n-1];if(n===1){c1=3;bullets.push({x:player.x,y:player.y,r:h?12:22,vx:dx/l*610,vy:dy/l*610,dmg:player.atk*2.0,life:1.15,color});if(h)kimetsuFx(c,false);else if(c.side==='각성자')jujutsuFx(c,1);msg(label)}else{c2=6;let dmg=player.atk*(c.name.includes('아스트라')?4.5:(h?3.2:3.8));sendPvpDamage(dmg,color);effects.push([enemy.x,enemy.y,.75,color,'필살']);if(h)kimetsuFx(c,true);else if(c.side==='각성자')jujutsuFx(c,2);else domainAnime(label,color);msg(label)}}
+const _baseAttack=attack;attack=function(){if(!pvpMode){_baseAttack();return}let c=chars[sel],h=human(c),k=kat(),color=h?breathFx(c):player.color,d=player.atk*(.8+Math.random()*.4),dist=Math.hypot(player.x-enemy.x,player.y-enemy.y);if(dist<115*myArena().sc){sendPvpDamage(d,color);effects.push([enemy.x,enemy.y,.35,color,Math.floor(d)]);impactRing(enemy.x,enemy.y,color);if(h){kimetsuFx(c,false);anime(k.emoji,enemy.x,enemy.y,color)}else if(c.side==='각성자')jujutsuFx(c,1);else anime('💥',enemy.x,enemy.y,color)}else msg('상대에게 가까이 가세요')}
+const _baseSkill=skill;skill=function(n){if(!pvpMode){_baseSkill(n);return}let c=chars[sel];if(n===1&&c1>0)return;if(n===2&&c2>0)return;let dx=enemy.x-player.x,dy=enemy.y-player.y,l=Math.hypot(dx,dy)||1,h=human(c),color=h?breathFx(c):c.color,label=c.skill[n-1];if(n===1){c1=3;bullets.push({x:player.x,y:player.y,r:h?12:22,vx:dx/l*610*myArena().sc,vy:dy/l*610*myArena().sc,dmg:player.atk*2.0,life:1.15,color});if(h)kimetsuFx(c,false);else if(c.side==='각성자')jujutsuFx(c,1);msg(label)}else{c2=6;let dmg=player.atk*(c.name.includes('아스트라')?4.5:(h?3.2:3.8));sendPvpDamage(dmg,color);effects.push([enemy.x,enemy.y,.75,color,'필살']);if(h)kimetsuFx(c,true);else if(c.side==='각성자')jujutsuFx(c,2);else domainAnime(label,color);msg(label)}}
 
 
 // === 온라인 일반 방: 방장 시작 기능 ===
@@ -1444,14 +1444,14 @@ joinRoom=function(){
       let host=data.host||Object.keys(ps)[0]||myId; roomHostId=host;
       let c=chars[sel]||chars[0];
       let updates={}; if(!data.host) updates.host=host; if(!data.status) updates.status='waiting';
-      updates['players/'+myId]={id:myId,name:user,emoji:c.emoji,color:c.color,char:c.name,x:innerWidth*.25,y:innerHeight*.62,hp:0,ts:Date.now()};
+      updates['players/'+myId]={id:myId,name:user,emoji:c.emoji,color:c.color,char:c.name,x:myArena().x+myArena().w*.25,y:myArena().y+myArena().h*.62,sw:innerWidth,sh:innerHeight,hp:0,ts:Date.now()};
       base.update(updates);
       base.child('players/'+myId).onDisconnect().remove();
     });
     base.on('value',snap=>{
       roomData=snap.val()||{}; roomHostId=roomData.host||roomHostId||myId;
       let ps=roomData.players||{}; peerPlayers={};
-      Object.keys(ps).forEach(id=>{ if(id!==myId){ peerPlayers[id]=ps[id]; peerPlayers[id].lastSeen=Date.now(); } });
+      Object.keys(ps).forEach(id=>{ if(id!==myId){ peerPlayers[id]=fixPeer(ps[id]); peerPlayers[id].lastSeen=Date.now(); } });
       renderOnlineRoomStatus();
       let gs=roomData.gameStart;
       if(gs&&gs.status==='start'){
@@ -1462,7 +1462,7 @@ joinRoom=function(){
   }else{
     roomHostId=myId;
     chan=new BroadcastChannel('anime_rpg_room_'+room);
-    chan.onmessage=e=>{let m=e.data;if(!m||m.id===myId)return;if(m.type==='state'){peerPlayers[m.id]=m;peerPlayers[m.id].lastSeen=Date.now()}if(m.type==='leave')delete peerPlayers[m.id];if(m.type==='roomStart')startOnlineRoomLocal(true)};
+    chan.onmessage=e=>{let m=e.data;if(!m||m.id===myId)return;if(m.type==='state'){peerPlayers[m.id]=fixPeer(m);peerPlayers[m.id].lastSeen=Date.now()}if(m.type==='leave')delete peerPlayers[m.id];if(m.type==='roomStart')startOnlineRoomLocal(true)};
     $('roomStatus').innerHTML='로컬 방 ['+room+'] 참가 중<br>온라인 연결이 없으면 같은 브라우저 탭끼리만 됩니다.';
   }
 }
@@ -1600,7 +1600,7 @@ function makeCoopEnemyData(st){
   else if(st%5===0)idx=Math.min(demons.length-1,4+Math.floor(st/10));
   let d=demons[idx], mult=st%10===0?2.35:st%5===0?1.75:1.18;
   let max=Math.floor((780+st*320+Math.floor(st/3)*220)*mult);
-  return {name:d[0],emoji:d[1],color:d[2],hp:max,max:max,x:Math.floor(innerWidth*.72),y:Math.floor(innerHeight*.62),r:st%10===0?52:st%5===0?45:38,stage:st,updatedAt:Date.now()};
+  return {name:d[0],emoji:d[1],color:d[2],hp:max,max:max,x:Math.floor(myArena().x+myArena().w*.72),y:Math.floor(myArena().y+myArena().h*.62),sw:innerWidth,sh:innerHeight,r:st%10===0?52:st%5===0?45:38,stage:st,updatedAt:Date.now()};
 }
 function coopBossKind(st){if(st%10===0)return '협동 최종보스'; if(st%5===0)return '협동 중간보스'; return '협동 일반 공허체'}
 function coopRewardFor(st){return {coins:70+st*22+(st%5===0?220:0)+(st%10===0?500:0),dia:st%10===0?12:(st%5===0?5:0)}}
@@ -1665,9 +1665,9 @@ startOnlineRoomLocal=function(fromRemote=false){
   let coop=(roomData&&roomData.coop)||{}; stage=coop.stage||best||1;
   player={x:w*.25+Math.random()*50,y:h*.62,r:34,hp:c.hp+ar.hp+250,max:c.hp+ar.hp+250,atk:c.atk+kb+ar.atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:human(c),inv:0};
   let ed=(coop.enemy)||makeCoopEnemyData(stage);
-  enemy={x:ed.x||w*.72,y:ed.y||h*.62,r:ed.r||40,hp:ed.hp,max:ed.max,atk:0,spd:0,name:ed.name,emoji:ed.emoji,color:ed.color};
+  enemy={x:netPos(ed).x||w*.72,y:netPos(ed).y||h*.62,r:ed.r||40,hp:ed.hp,max:ed.max,atk:0,spd:0,name:ed.name,emoji:ed.emoji,color:ed.color};
   bullets=[];effects=[];c1=c2=0;run=true;last=performance.now();startAt=Date.now();
-  if(coopMode)coopRoomRef().child('players/'+myId).update({started:true,hp:player.hp,max:player.max,x:player.x,y:player.y,char:player.name,emoji:player.emoji,color:player.color,name:user,ts:Date.now()});
+  if(coopMode)coopRoomRef().child('players/'+myId).update({started:true,hp:player.hp,max:player.max,x:player.x,y:player.y,sw:innerWidth,sh:innerHeight,char:player.name,emoji:player.emoji,color:player.color,name:user,ts:Date.now()});
   msg(fromRemote?'방장이 협동 전투를 시작했습니다!':'협동 전투 시작! 보스 체력/스테이지 공유');
   requestAnimationFrame(loop);
 }
@@ -1688,7 +1688,7 @@ async function sendCoopDamage(dmg,color,fx,label){
 }
 function updateCoopPlayerState(){
   if(!coopMode||!online||!db||!room||!player)return;
-  dbRef('rooms/'+safeKey(room)+'/players/'+myId).update({x:player.x,y:player.y,hp:player.hp,max:player.max,char:player.name,emoji:player.emoji,color:player.color,name:user,ts:Date.now()});
+  dbRef('rooms/'+safeKey(room)+'/players/'+myId).update({x:player.x,y:player.y,sw:innerWidth,sh:innerHeight,hp:player.hp,max:player.max,char:player.name,emoji:player.emoji,color:player.color,name:user,ts:Date.now()});
 }
 function hostUpdateCoopEnemy(dt){
   if(!coopMode||roomHostId!==myId||!enemy)return;
@@ -1820,9 +1820,9 @@ function drawAnimeCharacter(o,opt={}){
 drawC=function(o){drawAnimeCharacter(o,{peer:false});}
 drawPeers=function(){let now=Date.now();Object.keys(peerPlayers||{}).forEach(id=>{let p=peerPlayers[id];if(now-(p.lastSeen||p.ts||0)>6000){delete peerPlayers[id];return;}p.dx??=p.x;p.dy??=p.y;p.dx+=(p.x-p.dx)*.22;p.dy+=(p.y-p.dy)*.22;drawAnimeCharacter({...p,x:p.dx,y:p.dy,r:30,char:p.char||p.name,action:p.action,actionUntil:p.actionUntil||0},{peer:true});});}
 const _charOldSendState=sendState;
-sendState=function(){if(player){player.actionUntil??=0;}if(chan&&player)chan.postMessage({type:'state',id:myId,name:user,emoji:player.emoji,color:player.color,x:player.x,y:player.y,char:player.name,action:player.action||'',actionUntil:player.actionUntil||0});if(typeof _charOldSendState==='function'&&!chan)_charOldSendState();}
+sendState=function(){if(player){player.actionUntil??=0;}if(chan&&player)chan.postMessage({type:'state',id:myId,name:user,emoji:player.emoji,color:player.color,x:player.x,y:player.y,sw:innerWidth,sh:innerHeight,char:player.name,action:player.action||'',actionUntil:player.actionUntil||0});if(typeof _charOldSendState==='function'&&!chan)_charOldSendState();}
 const _charOldCoopUpdate=updateCoopPlayerState;
-updateCoopPlayerState=function(){if(!coopMode||!online||!db||!room||!player){if(typeof _charOldCoopUpdate==='function')_charOldCoopUpdate();return;}dbRef('rooms/'+safeKey(room)+'/players/'+myId).update({x:player.x,y:player.y,hp:player.hp,max:player.max,char:player.name,emoji:player.emoji,color:player.color,name:user,action:player.action||'',actionUntil:player.actionUntil||0,ts:Date.now()});}
+updateCoopPlayerState=function(){if(!coopMode||!online||!db||!room||!player){if(typeof _charOldCoopUpdate==='function')_charOldCoopUpdate();return;}dbRef('rooms/'+safeKey(room)+'/players/'+myId).update({x:player.x,y:player.y,sw:innerWidth,sh:innerHeight,hp:player.hp,max:player.max,char:player.name,emoji:player.emoji,color:player.color,name:user,action:player.action||'',actionUntil:player.actionUntil||0,ts:Date.now()});}
 function setAction(a,ms){if(player){player.action=a;player.actionUntil=Date.now()+ms;}}
 const _charOldAttack=attack;attack=function(){setAction('atk',420);return _charOldAttack();}
 const _charOldSkill=skill;skill=function(n){setAction('skill',n===2?900:520);return _charOldSkill(n);}
@@ -2349,7 +2349,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='2.7.0',APP_BUILD=270,APP_DATE='2026-11-21';
+const APP_VERSION='2.7.1',APP_BUILD=271,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2893,6 +2893,29 @@ function storyReplay(startName){
   ov.querySelector('#rpClose').onclick=()=>ov.remove();
   draw();
 }
+/* ===================== PC·모바일 같이 하기: 화면 크기와 상관없는 공정한 전투장 ===================== */
+// 전투장(아레나): 화면 안에 16:9 상자를 가운데에 놓고, 위치를 이 상자 기준으로 주고받아요.
+// 그래서 PC(큰 화면)와 모바일(작은 화면)에서 서로 같은 자리에 보이고, 이동 속도·공격 범위도 상자 크기에 맞춰 똑같이 계산돼요.
+function arenaOf(sw,sh){
+  const rw=Math.max(120,sw-68),rh=Math.max(120,sh*.75-54),aw=Math.max(100,Math.min(rw,rh*16/9)),ah=aw*9/16;
+  return {x:34+(rw-aw)/2,y:sh*.25+(rh-ah)/2,w:aw,h:ah,sc:aw/1000};
+}
+function myArena(){return arenaOf(innerWidth,innerHeight)}
+function netPos(o){ // 다른 화면에서 온 위치 → 내 화면 위치
+  if(!o||typeof o.x!=='number'||typeof o.y!=='number')return {x:o&&o.x,y:o&&o.y};
+  if(!o.sw||!o.sh)return {x:o.x,y:o.y};
+  const a=arenaOf(o.sw,o.sh),m=myArena();
+  return {x:m.x+(o.x-a.x)/a.w*m.w,y:m.y+(o.y-a.y)/a.h*m.h};
+}
+function fixPeer(o){ // 받은 위치를 내 화면에 맞춰 바꾸고, 다시 바꾸지 않도록 표시해요
+  if(!o)return o;
+  const q=netPos(o);
+  if(typeof q.x==='number'&&typeof q.y==='number'){o.x=q.x;o.y=q.y;o.sw=innerWidth;o.sh=innerHeight}
+  return o;
+}
+{const _drawArena=draw;draw=function(){_drawArena();
+  if(typeof pvpMode!=='undefined'&&pvpMode&&ctx){const A=myArena();ctx.save();ctx.strokeStyle='rgba(255,255,255,.2)';ctx.setLineDash([10,8]);ctx.lineWidth=2;ctx.strokeRect(A.x,A.y,A.w,A.h);ctx.restore()}
+}}
 /* ===================== 비밀번호 변경 ===================== */
 changePassword=async function(){
   if(user==='guest'||!auth||!auth.currentUser)return alert('로그인 후 사용할 수 있어요.');
