@@ -12,4 +12,4 @@ const equips=grab('equips').map(e=>({name:e.name,price:e.price}));
 const katanas=grab('katanas').map(k=>k.name);
 const out={chars,equips,katanas};
 fs.writeFileSync(path.join(__dirname,'..','functions','gamedata.json'),JSON.stringify(out,null,1));
-console.log('내보냄:',chars.length,'캐릭터,',equips.length,'장비,',katanas.length,'호흡 장비');
+console.log('내보냄:',chars.length,'캐릭터,',equips.length,'장비,',katanas.length,'공명 장비');

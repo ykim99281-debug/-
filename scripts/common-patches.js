@@ -32,6 +32,12 @@ exports.apply = function (s, o) {
   { const n = s.split('`<span class="chatName">${safeName}</span>`').length - 1; if (n < 1) throw new Error('채팅 이름 위치 없음'); s = s.split('`<span class="chatName">${safeName}</span>`').join('premLabel(safeName)'); }
   rep("  add(dbRef('mutes'),s=>{muteMap=s.val()||{}});", "  add(dbRef('mutes'),s=>{muteMap=s.val()||{}});\n  add(dbRef('premium'),s=>{premiumMap=s.val()||{};renderPremium()});");
   rep('/* ===================== 내 계정 점검 ===================== */', theme(read('prem.js')) + '/* ===================== 내 계정 점검 ===================== */');
+  // 2-1) 링크 미리보기(공유할 때 나오는 제목·설명·그림)
+  if (o.og) {
+    const esc = t => String(t).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+    const tags = '\n<meta property="og:type" content="website">\n<meta property="og:title" content="' + esc(o.og.title) + '">\n<meta property="og:description" content="' + esc(o.og.desc) + '">\n<meta property="og:image" content="' + esc(o.og.image) + '">\n<meta property="og:url" content="' + esc(o.og.url) + '">\n<meta name="twitter:card" content="summary_large_image">\n<meta name="description" content="' + esc(o.og.desc) + '">';
+    rep('</title>', '</title>' + tags);
+  }
   // 3) PC·모바일 같이 하기 (화면 크기와 상관없는 전투장)
   s = require('./multiscreen-patch').apply(s);
   return s;
