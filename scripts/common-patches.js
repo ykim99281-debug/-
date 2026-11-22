@@ -45,6 +45,8 @@ exports.apply = function (s, o) {
   s = require('./feedback-patch').apply(s);
   // 2-3) 재미(타격감·오늘의 목표)·첫 5분(튜토리얼)·이용 기록(통계)
   s = require('./engage-patch').apply(s, o.coin);
+  // 2-4) 성장(레벨)·출석·업적·몬스터 패턴
+  s = require('./grow-patch').apply(s, o.coin);
   // 3) PC·모바일 같이 하기 (화면 크기와 상관없는 전투장)
   s = require('./multiscreen-patch').apply(s);
   return s;

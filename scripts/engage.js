@@ -38,6 +38,7 @@ function featHit(dmg){
   if(comboN>=3)extra+=dmg*Math.min(.2,(comboN-2)*.02);
   if(extra>0)enemy.hp-=extra;
   if(crit)effects.push([enemy.x,enemy.y-34,.6,'#facc15','치명타! '+Math.floor(dmg+extra)]);
+  if(crit&&typeof achAdd==='function')achAdd('crits',1);if(typeof achMax==='function')achMax('maxCombo',comboN);
   showCombo(comboN,crit);
   if(crit||dmg>(player?player.atk*2:1e9)||comboN%5===0)shake(crit?9:5);
   sfx(crit?'crit':'hit');
@@ -98,9 +99,9 @@ function showTutorial(force,done){
   const pages=[
     ['① 전투 시작','캐릭터를 고르고 <b>🔥 전투 시작</b>을 눌러요.<br>처음에는 몬스터가 약해서 쉽게 이길 수 있어요!'],
     ['② 움직이기','왼쪽 아래 <b>조이스틱</b>(컴퓨터는 <b>W A S D</b>)으로 움직여요.<br>몬스터에게 가까이 다가가 보세요.'],
-    ['③ 공격과 기술','<b>공격</b> 버튼은 몬스터에 <b>가까이</b> 가서 눌러요.<br><b>기술1·기술2</b>는 멀리서도 맞고 더 강해요.<br>연속으로 맞히면 <b>🔥 콤보</b>와 <b>💥 치명타</b>가 터져요!'],
+    ['③ 공격과 기술','<b>공격</b> 버튼은 몬스터에 <b>가까이</b> 가서 눌러요.<br><b>기술1·기술2</b>는 멀리서도 맞고 더 강해요.<br>연속으로 맞히면 <b>🔥 콤보</b>와 <b>💥 치명타</b>가 터져요!<br>몬스터에 <b>⚠️ 붉은 경고</b>가 뜨면 옆으로 피하거나 <b>회피</b> 버튼을 눌러요. (세 번 이긴 뒤부터 나와요)'],
     ['④ 보상','몬스터를 쓰러뜨리면 <b>'+CUR+'</b>와 <b>다이아</b>를 받아요.'+(quiz?'<br>가끔 보너스 <b>퀴즈</b>가 나와요. 맞히면 상자를 열어요!':'')+'<br><b>🛒 상점</b>에서 새 캐릭터를 살 수 있어요.'],
-    ['⑤ 오늘의 목표','<b>🏠 홈</b> 탭의 <b>🎯 오늘의 목표</b>를 달성하면 선물을 받아요.<br>이상한 점은 <b>👤 계정 → 💬 의견 보내기</b>로 알려 주세요!']
+    ['⑤ 성장과 목표','<b>🏠 홈</b> 탭에서 <b>🌱 내 성장</b>(레벨·출석·업적)과 <b>🎯 오늘의 목표</b>를 확인하고 선물을 받아요.<br>이상한 점은 <b>👤 계정 → 💬 의견 보내기</b>로 알려 주세요!']
   ];
   let i=0;
   const ov=storyOverlay('<div id="tutNo" style="font-size:13px;letter-spacing:3px;color:#c4b5fd"></div><h2 id="tutHead" style="margin:8px 0 12px;color:#fff;text-shadow:0 2px 12px #000"></h2><div id="tutText" style="font-size:18px;line-height:1.9;min-height:130px;color:#f5f3ff;text-shadow:0 2px 10px #000;word-break:keep-all"></div><div style="display:flex;gap:8px;justify-content:center;margin:14px 0 8px"><button id="tutPrev" class="blue">◀ 이전</button><button id="tutNext" class="purple">다음 ▶</button><button id="tutSkip" class="red">건너뛰기</button></div>',100003);
