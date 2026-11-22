@@ -258,6 +258,27 @@
             ".validate": "false"
           }
         }
+      },
+      "stats": {
+        ".read": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
+        ".write": "auth!=null && root.child('anime/admins/'+auth.uid).exists()",
+        "daily": {
+          "$d": {
+            ".validate": "$d.matches(/^[0-9]{8}$/)",
+            "$n": {
+              ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid && newData.val()===true",
+              ".validate": "newData.val()===true"
+            }
+          }
+        },
+        "milestones": {
+          "$n": {
+            "$k": {
+              ".write": "auth!=null && root.child('anime/names/'+$n).val()===auth.uid && !data.exists() && ($k==='tutDone' || $k==='firstBattle' || $k==='firstWin' || $k==='stage5' || $k==='stage10' || $k==='quiz' || $k==='feedback') && newData.isNumber()",
+              ".validate": "newData.isNumber() && newData.val()<=now+60000"
+            }
+          }
+        }
       }
     },
     "hagil": {
@@ -526,6 +547,27 @@
             ".validate": "false"
           }
         }
+      },
+      "stats": {
+        ".read": "auth!=null && root.child('hagil/admins/'+auth.uid).exists()",
+        ".write": "auth!=null && root.child('hagil/admins/'+auth.uid).exists()",
+        "daily": {
+          "$d": {
+            ".validate": "$d.matches(/^[0-9]{8}$/)",
+            "$n": {
+              ".write": "auth!=null && root.child('hagil/names/'+$n).val()===auth.uid && newData.val()===true",
+              ".validate": "newData.val()===true"
+            }
+          }
+        },
+        "milestones": {
+          "$n": {
+            "$k": {
+              ".write": "auth!=null && root.child('hagil/names/'+$n).val()===auth.uid && !data.exists() && ($k==='tutDone' || $k==='firstBattle' || $k==='firstWin' || $k==='stage5' || $k==='stage10' || $k==='quiz' || $k==='feedback') && newData.isNumber()",
+              ".validate": "newData.isNumber() && newData.val()<=now+60000"
+            }
+          }
+        }
       }
     },
     "gunchuk": {
@@ -786,6 +828,27 @@
             ".validate": "false"
           }
         }
+      },
+      "stats": {
+        ".read": "auth!=null && root.child('gunchuk/admins/'+auth.uid).exists()",
+        ".write": "auth!=null && root.child('gunchuk/admins/'+auth.uid).exists()",
+        "daily": {
+          "$d": {
+            ".validate": "$d.matches(/^[0-9]{8}$/)",
+            "$n": {
+              ".write": "auth!=null && root.child('gunchuk/names/'+$n).val()===auth.uid && newData.val()===true",
+              ".validate": "newData.val()===true"
+            }
+          }
+        },
+        "milestones": {
+          "$n": {
+            "$k": {
+              ".write": "auth!=null && root.child('gunchuk/names/'+$n).val()===auth.uid && !data.exists() && ($k==='tutDone' || $k==='firstBattle' || $k==='firstWin' || $k==='stage5' || $k==='stage10' || $k==='quiz' || $k==='feedback') && newData.isNumber()",
+              ".validate": "newData.isNumber() && newData.val()<=now+60000"
+            }
+          }
+        }
       }
     },
     "kids": {
@@ -1044,6 +1107,27 @@
           },
           "$other": {
             ".validate": "false"
+          }
+        }
+      },
+      "stats": {
+        ".read": "auth!=null && root.child('kids/admins/'+auth.uid).exists()",
+        ".write": "auth!=null && root.child('kids/admins/'+auth.uid).exists()",
+        "daily": {
+          "$d": {
+            ".validate": "$d.matches(/^[0-9]{8}$/)",
+            "$n": {
+              ".write": "auth!=null && root.child('kids/names/'+$n).val()===auth.uid && newData.val()===true",
+              ".validate": "newData.val()===true"
+            }
+          }
+        },
+        "milestones": {
+          "$n": {
+            "$k": {
+              ".write": "auth!=null && root.child('kids/names/'+$n).val()===auth.uid && !data.exists() && ($k==='tutDone' || $k==='firstBattle' || $k==='firstWin' || $k==='stage5' || $k==='stage10' || $k==='quiz' || $k==='feedback') && newData.isNumber()",
+              ".validate": "newData.isNumber() && newData.val()<=now+60000"
+            }
           }
         }
       }
