@@ -151,13 +151,12 @@ for (const [a, b] of [['星界解放', '설계 해방'], ['魔力解放', '공�
 
 // 8-1) 예전 이름 → 새 이름 옛 세이브 이전표는 이 판에서는 필요 없어서 비워요 (새 게임이라 옛 세이브가 없고, 소스에 남기지 않기 위해서예요)
 {
-  const before = s;
+  if (!/const OLD_TO_NEW=\{[^}]*\};/.test(s)) throw new Error('이전표(OLD_TO_NEW)를 못 찾았어요');
   s = s.replace(/const OLD_TO_NEW=\{[^}]*\};/, 'const OLD_TO_NEW={};');
-  if (s === before) throw new Error('이전표(OLD_TO_NEW)를 못 찾았어요');
 }
 
 // 9) 공통 패치: 내 계정 점검 칸 + 프리미엄 1단계 (칭호 이름만 건축 분위기로)
-s = require('./common-patches').apply(s, { version: '1.2.0', build: 120, root: 'gunchuk',
+s = require('./common-patches').apply(s, { version: '1.2.1', build: 121, root: 'gunchuk',
   titles: [['🌱 개척자', '🌱 첫 기초를 놓은 사람'], ['💎 후원자', '🏗️ 건축 후원자'], ['✨ 별빛 수호자', '🏛️ 건축의 수호자'], ['🏅 베테랑', '📐 베테랑 설계사']] });
 
 fs.writeFileSync(out, s);

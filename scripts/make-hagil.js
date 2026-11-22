@@ -160,13 +160,12 @@ for (const [a, b] of [['星界解放', '하늘의 군대'], ['魔力解放', '�
 
 // 8-1) 예전 이름 → 새 이름 옛 세이브 이전표는 이 판에서는 필요 없어서 비워요 (새 게임이라 옛 세이브가 없고, 소스에 남기지 않기 위해서예요)
 {
-  const before = s;
+  if (!/const OLD_TO_NEW=\{[^}]*\};/.test(s)) throw new Error('이전표(OLD_TO_NEW)를 못 찾았어요');
   s = s.replace(/const OLD_TO_NEW=\{[^}]*\};/, 'const OLD_TO_NEW={};');
-  if (s === before) throw new Error('이전표(OLD_TO_NEW)를 못 찾았어요');
 }
 
 // 9) 공통 패치: 내 계정 점검 칸 + 프리미엄 1단계 (칭호 이름만 하길 분위기로)
-s = require('./common-patches').apply(s, { version: '2.8.0', build: 280, root: 'hagil',
+s = require('./common-patches').apply(s, { version: '2.8.1', build: 281, root: 'hagil',
   titles: [['🌱 개척자', '🌱 믿음의 개척자'], ['💎 후원자', '🕊️ 평화의 사람'], ['✨ 별빛 수호자', '✝️ 길의 수호자'], ['🏅 베테랑', '📖 말씀의 사람']] });
 
 fs.writeFileSync(out, s);
