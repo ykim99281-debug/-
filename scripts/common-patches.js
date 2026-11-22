@@ -13,6 +13,9 @@ exports.apply = function (s, o) {
   rep('${open?`<p class="storyText">${escH(c.text)}</p>`:`', '${open?`<p class="storyText">${escH(c.text)}</p><button class="purple" onclick="storyReplay(decodeURIComponent(\'${encodeURIComponent(p.name)}\'))">▶ 이 장 다시 보기</button>`:`');
   rep('<button class="purple" onclick="showPrologue(true)">프롤로그 다시 보기</button>', '<h4>다시 보기</h4><button class="gold" onclick="storyReplay()">▶ 처음부터 이어 보기</button> <button class="purple" onclick="showPrologue(true)">프롤로그 다시 보기</button>');
   rep('/* ===================== 비밀번호 변경 ===================== */', read('story-replay.js') + '/* ===================== 비밀번호 변경 ===================== */');
+  // 0-2) 오래된 채팅·신고 기록 정리
+  rep('  <div class="adminTile ownerOnly">\n    <b>🛡️ 관리자 임명 (제작자 전용)</b>', read('purge-old.html') + '  <div class="adminTile ownerOnly">\n    <b>🛡️ 관리자 임명 (제작자 전용)</b>');
+  rep('/* ===================== 비밀번호 변경 ===================== */', read('purge-old.js') + '/* ===================== 비밀번호 변경 ===================== */');
   // 1) 내 계정 점검 칸
   rep('<div class="box" id="pwBox" data-guest="1">', read('diag-box.html') + '<div class="box" id="pwBox" data-guest="1">');
   rep('/* ===================== 비밀번호 변경 ===================== */', read('diag.js') + '/* ===================== 비밀번호 변경 ===================== */');
