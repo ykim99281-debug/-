@@ -238,10 +238,14 @@
         ".read": "auth!=null",
         "$n": {
           ".write": "auth!=null && root.child('hagil/names/'+$n).val()===auth.uid && !(root.child('hagil/bans/'+$n).val()===true || (root.child('hagil/bans/'+$n).isNumber() && root.child('hagil/bans/'+$n).val()>now)) && (!root.child('hagil/config/maint/on').exists() || root.child('hagil/staff/'+root.child('hagil/uids/'+auth.uid).val()).val()==='owner' || root.child('hagil/staff/'+root.child('hagil/uids/'+auth.uid).val()).val()==='mod' || root.child('hagil/staff/'+root.child('hagil/uids/'+auth.uid).val()).val()==='noble' || root.child('hagil/staff/'+root.child('hagil/uids/'+auth.uid).val()).val()==='knight')",
-          ".validate": "newData.child('name').val()===$n && (!root.child('hagil/config/minVersion').exists() || newData.child('v').val()>=root.child('hagil/config/minVersion').val())"
+          ".validate": "newData.child('name').val()===$n && (!root.child('hagil/config/minVersion').exists() || newData.child('v').val()>=root.child('hagil/config/minVersion').val())",
+          "score": {
+            ".validate": "newData.isNumber() && newData.val()>=0 && newData.val()<=100000000000"
+          }
         },
         ".indexOn": [
-          "pvp"
+          "pvp",
+          "score"
         ]
       },
       "saves": {

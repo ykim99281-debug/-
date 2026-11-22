@@ -249,7 +249,7 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 <img class="heroArt" src="rpg-art-hero.jpg" alt="하길 공명 연대기 대표 그림">
 <h1 class="title">⚔️ 하길 공명 연대기</h1>
 <p class="sub" style="margin-top:-4px;color:#c4b5fd">하나님의 길을 따라 걷는 공명의 여정</p>
-<p class="sub">공명 이펙트·친구 초대·장비·코인 거래소·다이아·보스 보상·랜덤 매칭·희귀 캐릭터 거래</p>
+<p class="sub">공명 이펙트·친구 초대·장비·점수 거래소·다이아·보스 보상·랜덤 매칭·희귀 캐릭터 거래</p>
 <p class="sub" id="verLabel" style="font-size:12px;color:#9ca3af"></p>
 
 <div class="box">
@@ -293,7 +293,7 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 <div class="adminGrid">
   <div class="adminTile">
     <b>💰 내 보상</b><br>
-    <button class="gold" onclick="adminGiveMoney()">코인/다이아 지급</button>
+    <button class="gold" onclick="adminGiveMoney()">점수/다이아 지급</button>
     <button class="purple" onclick="adminUnlockAll()">모든 캐릭터 해금</button>
   </div>
 
@@ -321,7 +321,7 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 
   <div class="adminTile">
     <b>🎁 전체 유저 보상</b><br>
-    <input id="adminAllCoins" type="number" class="adminInput" placeholder="지급 코인">
+    <input id="adminAllCoins" type="number" class="adminInput" placeholder="지급 점수">
     <input id="adminAllDia" type="number" class="adminInput" placeholder="지급 다이아">
     <button class="green" onclick="adminRewardAllUsers()">모든 계정에 지급</button>
   </div>
@@ -341,8 +341,8 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 
   <div class="adminTile" style="grid-column:1/-1">
     <b>🕵️ 의심 계정</b><br>
-    <button class="blue" onclick="adminSuspicious()">코인·다이아 상위 불러오기</button>
-    <div class="small">코인 300만 이상 또는 다이아 3,000 이상이면 ⚠ 표시돼요. 값이 비정상이면 선택해서 검색·제재하세요.</div>
+    <button class="blue" onclick="adminSuspicious()">점수·다이아 상위 불러오기</button>
+    <div class="small">점수 300만 이상 또는 다이아 3,000 이상이면 ⚠ 표시돼요. 값이 비정상이면 선택해서 검색·제재하세요.</div>
     <div id="suspList" class="small">아직 조회 안 함</div>
   </div>
 
@@ -364,7 +364,7 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
   <div class="adminTile">
     <b>🎯 특정 유저 지급</b><br>
     <input id="adminGiveTarget" class="adminInput" placeholder="대상 닉네임">
-    <input id="adminGiveCoins" type="number" class="adminInput" placeholder="지급 코인">
+    <input id="adminGiveCoins" type="number" class="adminInput" placeholder="지급 점수">
     <input id="adminGiveDia" type="number" class="adminInput" placeholder="지급 다이아">
     <button class="green" onclick="adminGiveToUser()">해당 유저에게 지급</button>
   </div>
@@ -388,7 +388,7 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
   <div class="adminTile">
     <b>🎉 이벤트 열기 (관리자 이상)</b><br>
     <input id="evTitle" class="adminInput" placeholder="이벤트 이름">
-    <input id="evCoins" type="number" class="adminInput" placeholder="보상 코인">
+    <input id="evCoins" type="number" class="adminInput" placeholder="보상 점수">
     <input id="evDia" type="number" class="adminInput" placeholder="보상 다이아">
     <input id="evHours" type="number" class="adminInput" placeholder="진행 시간(시간)" value="24">
     <select id="evMin"><option value="all" selected>모두 참여</option><option value="noble">하급 귀족 이상만</option><option value="knight">기사 이상만</option><option value="elite">상급 평민 이상만</option></select>
@@ -472,10 +472,10 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 </div>
 
 <div class="trade">
-<h3>💱 코인 거래소 / 희귀 캐릭터 거래소</h3>
-<p class="small">코인↔다이아 교환, 희귀 캐릭터 거래 기능입니다. 실제 온라인 거래는 Firebase DB 연결 후 확장 가능합니다.</p>
-<button class="gold" onclick="coinToDia()">1000코인 → 1다이아</button>
-<button class="green" onclick="diaToCoin()">1다이아 → 800코인</button>
+<h3>💱 점수 거래소 / 희귀 캐릭터 거래소</h3>
+<p class="small">점수↔다이아 교환, 희귀 캐릭터 거래 기능입니다. 실제 온라인 거래는 Firebase DB 연결 후 확장 가능합니다.</p>
+<button class="gold" onclick="coinToDia()">1000 점수 → 1다이아</button>
+<button class="green" onclick="diaToCoin()">1다이아 → 800 점수</button>
 <button class="purple" onclick="rareEvent()">희귀 캐릭터 뽑기 30다이아</button>
 <div class="small">🎲 확률 안내: 성공 25% / 실패 75%. 성공하면 희귀 캐릭터 중 1종이 같은 확률로 지급돼요. 이미 가지고 있는 캐릭터가 나오면 추가 지급은 없어요.</div>
 <div id="market" class="shopgrid"></div>
@@ -484,7 +484,7 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 
 <div class="tradeRoom">
 <h3>🤝 유저 거래 방</h3>
-<p class="small">친구나 다른 계정과 거래 방을 만들고 캐릭터·공명 장비·장비·골드를 서로 올린 뒤 양쪽이 확정하면 교환됩니다. 골드는 현재 코인으로 처리됩니다.</p>
+<p class="small">친구나 다른 계정과 거래 방을 만들고 캐릭터·공명 장비·장비·골드를 서로 올린 뒤 양쪽이 확정하면 교환됩니다. 골드는 현재 점수으로 처리됩니다.</p>
 <input id="tradeRoomName" placeholder="거래 방 이름">
 <input id="tradePartner" placeholder="상대 닉네임">
 <button class="blue" onclick="joinTradeRoom()">거래 방 만들기/입장</button>
@@ -494,7 +494,7 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 <div id="tradeStatus" class="user">거래 방 없음</div>
 <hr style="border-color:rgba(255,255,255,.2)">
 <select id="offerType" onchange="renderOfferSelect()">
-<option value="coins">골드/코인</option>
+<option value="coins">골드/점수</option>
 <option value="char">캐릭터</option>
 <option value="katana">공명 장비</option>
 <option value="equip">장비</option>
@@ -527,9 +527,9 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 </div>
 
 <div class="box" id="rankingBox">
-<h3>🏆 랭킹</h3>
-<p class="small"><b>점수 규칙</b><br>· 일반 PvP: 이기면 진 사람의 점수를 <b>최대 10점 가져와요</b> (진 사람은 그만큼 잃어요)<br>· 랭크전: 이기면 판돈 10점의 <b>2배(+20)</b>, 지면 판돈의 <b>절반(-5)</b><br>· 퀴즈 상자에서도 랭크 점수를 얻을 수 있어요<br><span id="rankTierInfo"></span></p>
-<button class="blue" onclick="loadRanking()">랭킹 새로고침</button>
+<h3>🏆 순위표</h3>
+<p class="small"><b>승점 규칙</b><br>· 일반 PvP: 이기면 진 사람의 승점을 <b>최대 10점 가져와요</b> (진 사람은 그만큼 잃어요)<br>· 랭크전: 이기면 판돈 10점의 <b>2배(+20)</b>, 지면 판돈의 <b>절반(-5)</b><br>· 퀴즈 상자에서도 승점을 얻을 수 있어요<br><span id="rankTierInfo"></span></p>
+<button class="blue" onclick="loadRanking()">🏅 승점 순위</button> <button class="gold" onclick="loadScoreRanking()">⭐ 점수 순위</button>
 <div id="rankingList" class="small">랭킹을 불러오려면 새로고침을 눌러요</div>
 </div>
 <div class="filters"><button class="active" onclick="filter('전체',this)">전체</button><button onclick="filter('용사',this)">용사</button><button onclick="filter('선지자',this)">선지자</button><button onclick="filter('회개자',this)">회개자</button><button onclick="filter('천사',this)">천사</button><button onclick="filter('나그네',this)">희귀</button></div>
@@ -686,9 +686,9 @@ setTimeout(()=>{const ci=$("chatInput");if(ci){ci.dataset.chatInputEnterHook="1"
 norm();updateAdminPanel();updateAdminRoleList();setTimeout(openChatChannel,700);renderAll()}
 function store(){save.coins=coins;save.dia=dia;save.best=best;localStorage.setItem(sk(),JSON.stringify(save));ui();renderAllShops()}
 function ui(){let title=isAdmin()? " 🌈 관리자":"";
-$("user").innerHTML=`${adminLabel(user)}${title} / 코인 ${coins} / 다이아 ${dia} / 캐릭터 ${save.owned.length}명 / 희귀 ${save.rare.length}명 / 최고 ${best}`;updateAdminPanel();$("rankInfo").innerHTML=`현재 PvP 점수 ${save.pvp||0}점 / 티어 <b>${rankName()}</b><br>브론즈 0 · 실버 100 · 골드 200 · 플래티넘 300 · 다이아 400 · 마스터 500 · 그랜드마스터 600 · 챌린저 700점 이상`}
+$("user").innerHTML=`${adminLabel(user)}${title} / 점수 ${coins} / 다이아 ${dia} / 캐릭터 ${save.owned.length}명 / 희귀 ${save.rare.length}명 / 최고 ${best}`;updateAdminPanel();$("rankInfo").innerHTML=`현재 PvP 승점 ${save.pvp||0}점 / 티어 <b>${rankName()}</b><br>브론즈 0 · 실버 100 · 골드 200 · 플래티넘 300 · 다이아 400 · 마스터 500 · 그랜드마스터 600 · 챌린저 700점 이상`}
 function owned(c){return save.owned.includes(c.name)||save.rare.includes(c.name)}function human(c){return c.side.includes("용사")||c.side==="선지자"}function kat(){return {name:"없음",bonus:0,emoji:"",color:"#ffffff",fx:"공명"}}function armor(){return equips.find(e=>e.name===save.eqArmor)||{hp:0,atk:0,name:"없음"}}
-function buyChar(i){let c=chars[i];if(c.rare)return alert("희귀 캐릭터는 희귀 뽑기나 거래소에서만 얻을 수 있습니다.");if(owned(c)){sel=i;renderChars();show();return}if(coins<c.price)return alert("코인 부족");coins-=c.price;save.owned.push(c.name);sel=i;store();show()}
+function buyChar(i){let c=chars[i];if(c.rare)return alert("희귀 캐릭터는 희귀 뽑기나 거래소에서만 얻을 수 있습니다.");if(owned(c)){sel=i;renderChars();show();return}if(coins<c.price)return alert("점수 부족");coins-=c.price;save.owned.push(c.name);sel=i;store();show()}
 function filter(f,b){curFilter=f;document.querySelectorAll(".filters button").forEach(x=>x.classList.remove("active"));b.classList.add("active");renderChars()}
 function imgKey(n){return "hgCharImg_"+n}
 function autoPortrait(c){
@@ -719,7 +719,7 @@ function renderCharPhotoTools(){let selBox=$("photoChar"),url=$("photoUrl"),prev
 function setCharPhotoUrl(){let n=$("photoChar").value,u=$("photoUrl").value.trim();if(!n)return alert("캐릭터 선택");if(!u)return alert("이미지 URL 입력");localStorage.setItem(imgKey(n),u);renderChars();renderCharPhotoTools();alert(n+" 사진 적용 완료")}
 function uploadCharPhoto(e){let n=$("photoChar").value,f=e.target.files&&e.target.files[0];if(!n||!f)return;let r=new FileReader();r.onload=()=>{localStorage.setItem(imgKey(n),r.result);renderChars();renderCharPhotoTools();alert(n+" 사진 저장 완료")};r.readAsDataURL(f)}
 function resetCharPhoto(){let n=$("photoChar").value;if(!n)return;localStorage.removeItem(imgKey(n));renderChars();renderCharPhotoTools();}
-function renderChars(){let g=$("grid");g.innerHTML="";chars.forEach((c,i)=>{if(curFilter!=="전체"&&!c.side.includes(curFilter))return;let o=owned(c),img=getCharImg(c.name);let face=img?`<img src="${img}" onerror="this.parentElement.textContent='${c.emoji}'">`:c.emoji;let d=document.createElement("div");d.className="card "+(i===sel?"selected ":"")+(o?"":"locked");d.onclick=()=>{if(o){sel=i;renderChars();show();renderCharPhotoTools()}};d.innerHTML=`<div class=face style="box-shadow:0 0 14px ${c.color}">${face}</div><b>${c.name}</b><br>${c.side}<br><small>${c.breath}</small><br><span class=price>${o?"보유중":c.rare?"희귀 전용":"가격 "+c.price+"코인"}</span><br>${o?"":`<button class=green onclick="event.stopPropagation();buyChar(${i})">${c.rare?"희귀":"구매"}</button>`}`;g.appendChild(d)})}
+function renderChars(){let g=$("grid");g.innerHTML="";chars.forEach((c,i)=>{if(curFilter!=="전체"&&!c.side.includes(curFilter))return;let o=owned(c),img=getCharImg(c.name);let face=img?`<img src="${img}" onerror="this.parentElement.textContent='${c.emoji}'">`:c.emoji;let d=document.createElement("div");d.className="card "+(i===sel?"selected ":"")+(o?"":"locked");d.onclick=()=>{if(o){sel=i;renderChars();show();renderCharPhotoTools()}};d.innerHTML=`<div class=face style="box-shadow:0 0 14px ${c.color}">${face}</div><b>${c.name}</b><br>${c.side}<br><small>${c.breath}</small><br><span class=price>${o?"보유중":c.rare?"희귀 전용":"가격 "+c.price+"점수"}</span><br>${o?"":`<button class=green onclick="event.stopPropagation();buyChar(${i})">${c.rare?"희귀":"구매"}</button>`}`;g.appendChild(d)})}
 function show(){let c=chars[sel];$("info").innerHTML=`<h3>${c.emoji} ${c.name}</h3><p>진영: ${(typeof STORY!=='undefined'&&STORY.factions[c.side])?STORY.factions[c.side].name:c.side} / 전투력 ${c.power} / 속성: ${c.breath}</p><p>기술: ${c.skill.join(", ")}</p><p>상태: ${owned(c)?"보유중":"잠김"}</p><p>공격 방식: ${human(c)?"공명 이펙트 공격":"고유 애니 공격"}</p><p>장비: ${save.eqArmor||"없음"}</p><p class="storyText">${(typeof escH==='function'?escH:(x=>x))((typeof STORY!=='undefined'&&STORY.chars[c.name])||'')}</p>`}
 function renderKat(){return}
 function buyKat(i){alert("공명 장비 아이템은 삭제되었습니다.")}
@@ -727,7 +727,7 @@ function renderEquip(){let e=$("equipshop");e.innerHTML=equips.map((it,i)=>{let 
 function buyEquip(i){let it=equips[i],o=save.equips.includes(it.name);if(!o){if(dia<it.price)return alert("다이아 부족");dia-=it.price;save.equips.push(it.name)}save.eqArmor=it.name;store()}
 function renderMarket(){let m=$("market");m.innerHTML=chars.filter(c=>c.rare).map((c,i)=>`<div class=marketCard><div style=font-size:34px>${c.emoji}</div><b>${c.name}</b><br>희귀 캐릭터<br><span class=dia>${owned(c)?"보유/거래 가능":"미보유"}</span><br><button class=gold onclick="sellRare('${c.name}')">판매 50다이아</button></div>`).join("")}
 function renderAllShops(){renderKat();renderEquip();renderMarket();renderFriends();renderOfferSelect();renderTradeView();renderCharPhotoTools();ui()}function renderAll(){renderChars();show();renderAllShops()}
-function coinToDia(){if(coins<1000)return alert("코인 부족");coins-=1000;dia+=1;store()}function diaToCoin(){if(dia<1)return alert("다이아 부족");dia-=1;coins+=800;store()}
+function coinToDia(){if(coins<1000)return alert("점수 부족");coins-=1000;dia+=1;store()}function diaToCoin(){if(dia<1)return alert("다이아 부족");dia-=1;coins+=800;store()}
 function rareEvent(){if(dia<30)return alert("다이아 부족");dia-=30;let pool=chars.filter(c=>c.rare);if(Math.random()<.25){let c=pool[Math.floor(Math.random()*pool.length)];if(!save.rare.includes(c.name))save.rare.push(c.name);alert("희귀 획득! "+c.name)}else alert("실패! 다음에 다시 도전");store()}
 function sellRare(name){if(!save.rare.includes(name))return alert("보유한 희귀 캐릭터만 거래 가능");if(confirm(name+" 판매하고 50다이아를 받을까요?")){save.rare=save.rare.filter(x=>x!==name);dia+=50;store()}}
 
@@ -736,7 +736,7 @@ function writeSaveOf(n,obj){localStorage.setItem("hgSave_"+n,JSON.stringify(obj)
 function trKey(){return "hgTradeRoom_"+tradeRoom}
 function readTradeRoom(){if(!tradeRoom)return null;let r=localStorage.getItem(trKey());return r?JSON.parse(r):{room:tradeRoom,users:[],offers:{},ready:{},done:false,log:""}}
 function saveTradeRoomData(t){if(tradeRoom)localStorage.setItem(trKey(),JSON.stringify(t));renderTradeView()}
-function offerLabel(o){if(!o)return "아직 안 올림";if(o.type==="coins")return "골드/코인 "+o.amount;let names={char:"캐릭터",katana:"공명 장비",equip:"장비"};return names[o.type]+" : "+o.item}
+function offerLabel(o){if(!o)return "아직 안 올림";if(o.type==="coins")return "골드/점수 "+o.amount;let names={char:"캐릭터",katana:"공명 장비",equip:"장비"};return names[o.type]+" : "+o.item}
 function myTradeItems(type){if(type==="char")return [...new Set([...(save.owned||[]),...(save.rare||[])])];if(type==="katana")return save.katanas||[];if(type==="equip")return save.equips||[];return []}
 function renderOfferSelect(){let t=$("offerType"),item=$("offerItem"),amt=$("offerAmount");if(!t||!item||!amt)return;let type=t.value;amt.style.display=type==="coins"?"inline-block":"none";item.style.display=type==="coins"?"none":"inline-block";item.innerHTML=myTradeItems(type).map(x=>`<option value="${x}">${x}</option>`).join("")||'<option value="">거래 가능 물건 없음</option>'}
 function joinTradeRoom(){if(user==="guest")return alert("로그인 후 거래 가능");let r=$("tradeRoomName").value.trim();if(!r)return alert("거래 방 이름 입력");tradeRoom=r;let t=readTradeRoom();if(!t.users.includes(user))t.users.push(user);t.users=t.users.slice(-2);t.done=false;saveTradeRoomData(t);$("tradeStatus").textContent="거래 방 ["+tradeRoom+"] 입장 중"}
@@ -744,7 +744,7 @@ function leaveTradeRoom(){tradeRoom="";$("tradeStatus").textContent="거래 방 
 function inviteTradeFriend(){if(user==="guest")return alert("로그인 필요");let n=$("tradePartner").value.trim()||$("friendName").value.trim();if(!n)return alert("상대 닉네임 입력");if(!(save.friends||[]).includes(n))return alert("친구 목록에 있는 계정만 초대 가능");if(!tradeRoom){$("tradeRoomName").value="거래방_"+user+"_"+Date.now().toString(36).slice(-4);joinTradeRoom()}localStorage.setItem("hgTradeInvite_"+n,JSON.stringify({from:user,room:tradeRoom,ts:Date.now()}));$("tradeStatus").textContent=n+"님에게 거래 방 ["+tradeRoom+"] 초대 전송"}
 function checkTradeInvites(){if(user==="guest")return alert("로그인 필요");let raw=localStorage.getItem("hgTradeInvite_"+user);if(!raw){$("tradeStatus").textContent="받은 거래 초대 없음";return}let inv=JSON.parse(raw);if(Date.now()-inv.ts>1000*60*10){localStorage.removeItem("hgTradeInvite_"+user);$("tradeStatus").textContent="거래 초대 만료";return}$("tradeStatus").innerHTML=`${inv.from}님의 거래 방 [${inv.room}] 초대 <button class=green onclick="acceptTradeInvite('${inv.room}')">입장</button>`}
 function acceptTradeInvite(r){$("tradeRoomName").value=r;joinTradeRoom();localStorage.removeItem("hgTradeInvite_"+user)}
-function setTradeOffer(){if(!tradeRoom)return alert("거래 방에 먼저 입장하세요");let t=readTradeRoom(),type=$("offerType").value,o={type};if(type==="coins"){let a=Math.floor(Number($("offerAmount").value));if(!a||a<1)return alert("골드/코인 수량 입력");if(coins<a)return alert("코인 부족");o.amount=a}else{let item=$("offerItem").value;if(!item)return alert("거래할 물건 없음");if(!myTradeItems(type).includes(item))return alert("보유하지 않은 물건입니다");o.item=item}if(!t.users.includes(user))t.users.push(user);t.offers[user]=o;t.ready[user]=false;saveTradeRoomData(t);$("tradeStatus").textContent="내 거래품을 올렸습니다. 상대도 올린 뒤 확정하세요."}
+function setTradeOffer(){if(!tradeRoom)return alert("거래 방에 먼저 입장하세요");let t=readTradeRoom(),type=$("offerType").value,o={type};if(type==="coins"){let a=Math.floor(Number($("offerAmount").value));if(!a||a<1)return alert("골드/점수 수량 입력");if(coins<a)return alert("점수 부족");o.amount=a}else{let item=$("offerItem").value;if(!item)return alert("거래할 물건 없음");if(!myTradeItems(type).includes(item))return alert("보유하지 않은 물건입니다");o.item=item}if(!t.users.includes(user))t.users.push(user);t.offers[user]=o;t.ready[user]=false;saveTradeRoomData(t);$("tradeStatus").textContent="내 거래품을 올렸습니다. 상대도 올린 뒤 확정하세요."}
 function clearTradeOffer(){if(!tradeRoom)return;let t=readTradeRoom();delete t.offers[user];t.ready[user]=false;saveTradeRoomData(t)}
 function cancelTradeReady(){if(!tradeRoom)return;let t=readTradeRoom();t.ready[user]=false;saveTradeRoomData(t)}
 function hasOffer(n,o){let s=readSaveOf(n);if(o.type==="coins")return (s.coins||0)>=o.amount;if(o.type==="char")return (s.owned||[]).includes(o.item)||(s.rare||[]).includes(o.item);if(o.type==="katana")return (s.katanas||[]).includes(o.item);if(o.type==="equip")return (s.equips||[]).includes(o.item);return false}
@@ -1176,7 +1176,7 @@ function back(){run=false;dungeonPlace=null;$("game").classList.remove("active")
 function resize(){w=cv.width=innerWidth;h=cv.height=innerHeight}
 function bossKind(){if(stage%10===0)return"최종보스";if(stage%5===0)return"중간보스";return"일반 어둠의 세력"}
 function setup(){let c=chars[sel],kb=0,ar=armor();player={x:w*.25,y:h*.62,r:34,hp:c.hp+ar.hp,max:c.hp+ar.hp,atk:c.atk+ar.atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:false,inv:0};let idx=Math.min(demons.length-1,Math.floor((stage-1)/2));if(stage%10===0)idx=Math.min(demons.length-1,10+Math.floor(stage/30));else if(stage%5===0)idx=Math.min(demons.length-1,4+Math.floor(stage/10));let d=demons[idx];let mult=stage%10===0?2.1:stage%5===0?1.55:1;let eh=(650+stage*260+Math.floor(stage/3)*180)*mult;enemy={x:w*.72,y:h*.62,r:stage%10===0?48:stage%5===0?42:36,hp:eh,max:eh,atk:(26+stage*9)*mult,spd:1.45+stage*.16,name:d[0],emoji:d[1],color:d[2]};bullets=[];effects=[];c1=c2=0;msg(`스테이지 ${stage} ${bossKind()} : ${enemy.name}`);hud()}
-function hud(){$("pn").textContent=player.name;$("en").textContent=enemy.name;$("stage").textContent="스테이지 "+stage;$("bossType").textContent=bossKind();$("coin").textContent="코인 "+coins;$("dia").textContent="다이아 "+dia;$("rec").textContent="최고 "+best;$("eq").textContent=player.isSword?save.eq:player.breath;$("ph").style.width=Math.max(0,player.hp/player.max*100)+"%";$("eh").style.width=Math.max(0,enemy.hp/enemy.max*100)+"%";$("pt").textContent=Math.floor(Math.max(0,player.hp))+" / "+player.max;$("et").textContent=Math.floor(Math.max(0,enemy.hp))+" / "+Math.floor(enemy.max)}
+function hud(){$("pn").textContent=player.name;$("en").textContent=enemy.name;$("stage").textContent="스테이지 "+stage;$("bossType").textContent=bossKind();$("coin").textContent="점수 "+coins;$("dia").textContent="다이아 "+dia;$("rec").textContent="최고 "+best;$("eq").textContent=player.isSword?save.eq:player.breath;$("ph").style.width=Math.max(0,player.hp/player.max*100)+"%";$("eh").style.width=Math.max(0,enemy.hp/enemy.max*100)+"%";$("pt").textContent=Math.floor(Math.max(0,player.hp))+" / "+player.max;$("et").textContent=Math.floor(Math.max(0,enemy.hp))+" / "+Math.floor(enemy.max)}
 function msg(t){$("msg").textContent=t;clearTimeout($("msg")._t);$("msg").style.display="block";$("msg")._t=setTimeout(()=>$("msg").style.display="none",1600)}
 function loop(n){if(!run)return;let dt=Math.min(.033,(n-last)/1000);last=n;upd(dt);draw();requestAnimationFrame(loop)}
 function upd(dt){let vx=joy.x,vy=joy.y;if(keys.a||keys.ArrowLeft)vx=-1;if(keys.d||keys.ArrowRight)vx=1;if(keys.w||keys.ArrowUp)vy=-1;if(keys.s||keys.ArrowDown)vy=1;let l=Math.hypot(vx,vy)||1;player.x+=vx/l*player.spd*90*dt;player.y+=vy/l*player.spd*90*dt;player.x=Math.max(34,Math.min(w-34,player.x));player.y=Math.max(h*.25,Math.min(h-54,player.y));let dx=player.x-enemy.x,dy=player.y-enemy.y,dl=Math.hypot(dx,dy)||1;enemy.x+=dx/dl*enemy.spd*70*dt;enemy.y+=dy/dl*enemy.spd*70*dt;if(dl<player.r+enemy.r+6&&player.inv<=0){player.hp-=enemy.atk*dt*7;player.inv=.25;effects.push([player.x,player.y,.25,"#ef4444","피격"])}player.inv-=dt;c1-=dt;c2-=dt;bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(Math.hypot(b.x-enemy.x,b.y-enemy.y)<enemy.r+b.r){enemy.hp-=b.dmg;b.life=0;effects.push([enemy.x,enemy.y,.35,b.color,Math.floor(b.dmg)])}});bullets=bullets.filter(b=>b.life>0);effects.forEach(e=>e[2]-=dt);effects=effects.filter(e=>e[2]>0);if(enemy.hp<=0){
@@ -1252,11 +1252,11 @@ function fbPath(...a){return a.map(safeKey).join('/')}
 function loadFirebaseConfig(){let v=localStorage.getItem('animeRpgFirebaseConfig')||JSON.stringify(DEFAULT_FIREBASE_CONFIG,null,2);if($('fbConfig'))$('fbConfig').value=v;return v}
 function connectFirebase(silent=false){try{let raw=($('fbConfig')&&$('fbConfig').value.trim())||loadFirebaseConfig()||JSON.stringify(DEFAULT_FIREBASE_CONFIG);let cfg=typeof raw==='string'?JSON.parse(raw):raw;if(!cfg.databaseURL)cfg.databaseURL=DEFAULT_FIREBASE_CONFIG.databaseURL;if(!firebase.apps.length)fbApp=firebase.initializeApp(cfg);else fbApp=firebase.app();db=firebase.database();online=true;localStorage.setItem('animeRpgFirebaseConfig',JSON.stringify(cfg,null,2));if($('fbConfig'))$('fbConfig').value=JSON.stringify(cfg,null,2);$('onlineStatus').innerHTML='<span class=onlineOk>온라인 자동 연결됨</span> / 다른 기기 친구·방·PvP 가능';if(user!=='guest'){onlineRegisterUser();listenOnlineInvites();syncOnlineSave();}if(!silent)alert('온라인 연결 완료');}catch(e){online=false;$('onlineStatus').innerHTML='<span class=onlineBad>연결 실패:</span> '+e.message;if(!silent)alert('Firebase 연결 실패: '+e.message)}}
 function disconnectFirebase(){online=false;db=null;if(roomSub)roomSub.off();if(pvpSub)pvpSub.off();$('onlineStatus').textContent='온라인 꺼짐: 같은 브라우저 테스트만 가능'}
-function onlineRegisterUser(){if(!online||!db||user==='guest')return;dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'다윗'});}
+function onlineRegisterUser(){if(!online||!db||user==='guest')return;dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,score:save.total||0,rank:rankName(),char:chars[sel]?.name||'다윗'});}
 
 async function syncOnlineSave(){if(!online||!db||user==='guest')return;let ref=dbRef('saves/'+safeKey(user));let snap=await ref.get();if(snap.exists()){let remote=snap.val();if(remote&&typeof remote==='object'){save={...fresh(),...remote};norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll();}}
 else{await ref.set({...save,updatedAt:Date.now()});}}
-async function pushOnlineSave(){if(!online||!db||user==='guest')return;await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:Date.now()});await dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'다윗'});}
+async function pushOnlineSave(){if(!online||!db||user==='guest')return;await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:Date.now()});await dbRef('users/'+safeKey(user)).update({name:user,ts:Date.now(),pvp:save.pvp||0,score:save.total||0,rank:rankName(),char:chars[sel]?.name||'다윗'});}
 const _oldStore=store;store=function(){_oldStore();onlineRegisterUser();pushOnlineSave();}
 function listenOnlineInvites(){if(!online||!db||user==='guest')return;dbRef('invites/'+safeKey(user)).limitToLast(1).on('child_added',snap=>{let inv=snap.val();if(!inv||Date.now()-inv.ts>600000||isBlocked(inv.from))return;if(inv.type==='room')$('inviteStatus').innerHTML=`${escH(inv.from)}님의 방 [${escH(inv.room)}] 초대 <button class=green data-room="${encodeURIComponent(String(inv.room||''))}" onclick="acceptInvite(decodeURIComponent(this.dataset.room))">참가</button>`;if(inv.type==='trade')$('tradeStatus').innerHTML=`${escH(inv.from)}님의 거래 방 [${escH(inv.room)}] 초대 <button class=green data-room="${encodeURIComponent(String(inv.room||''))}" onclick="acceptTradeInvite(decodeURIComponent(this.dataset.room))">입장</button>`;})}
 function getLocalAcc(n){return localStorage.getItem(ak(n))}
@@ -1370,7 +1370,7 @@ function startPvpLocal(fromRemote){
 }
 function applyPvpHits(){let hits=pvpData.hits||{};Object.entries(hits).forEach(([hid,h])=>{if(h.to===myId&&!h.seen){pvpMyHp=Math.max(0,pvpMyHp-(h.dmg||0));if(player){player.hp=pvpMyHp;effects.push([player.x,player.y,.45,h.color||'#ef4444','-'+Math.floor(h.dmg||0)]);impactRing(player.x,player.y,h.color||'#ef4444')}dbRef('pvpRooms/'+safeKey(pvpRoom)+'/hits/'+hid+'/seen').set(true);if(pvpMyHp<=0)finishPvp(false);}})}
 function sendPvpDamage(dmg,color){if(!pvpMode||!online||!db||!pvpOpponentId)return;dbRef('pvpRooms/'+safeKey(pvpRoom)+'/hits').push({from:myId,to:pvpOpponentId,dmg:Math.floor(dmg),color:color,ts:Date.now(),seen:false});}
-function finishPvp(win){if(!pvpMode)return;pvpMode=false;run=false;let delta=ranked?(win?30:-25):(win?10:-5);updateRank(delta);pvpRoomRef().child('result').push({name:user,win,delta,score:save.pvp,ts:Date.now()});alert((win?'승리! ':'패배! ')+(ranked?'랭크 ':'PvP ')+'점수 '+(delta>0?'+':'')+delta);back();}
+function finishPvp(win){if(!pvpMode)return;pvpMode=false;run=false;let delta=ranked?(win?30:-25):(win?10:-5);updateRank(delta);pvpRoomRef().child('result').push({name:user,win,delta,score:save.pvp,ts:Date.now()});alert((win?'승리! ':'패배! ')+(ranked?'랭크 ':'PvP ')+'승점 '+(delta>0?'+':'')+delta);back();}
 const _baseUpd=upd;upd=function(dt){if(!pvpMode){_baseUpd(dt);return}let vx=joy.x,vy=joy.y;if(keys.a||keys.ArrowLeft)vx=-1;if(keys.d||keys.ArrowRight)vx=1;if(keys.w||keys.ArrowUp)vy=-1;if(keys.s||keys.ArrowDown)vy=1;let l=Math.hypot(vx,vy)||1;player.x+=vx/l*player.spd*90*dt;player.y+=vy/l*player.spd*90*dt;player.x=Math.max(34,Math.min(w-34,player.x));player.y=Math.max(h*.25,Math.min(h-54,player.y));let op=(pvpData.players||{})[pvpOpponentId];if(op){enemy.x=op.x||enemy.x;enemy.y=op.y||enemy.y;enemy.hp=op.hp??enemy.hp;enemy.max=op.max??enemy.max;enemy.name=op.name||enemy.name;enemy.emoji=op.emoji||enemy.emoji;enemy.color=op.color||enemy.color;if(enemy.hp<=0)finishPvp(true)}player.hp=pvpMyHp;player.inv-=dt;c1-=dt;c2-=dt;bullets.forEach(b=>{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(Math.hypot(b.x-enemy.x,b.y-enemy.y)<enemy.r+b.r){sendPvpDamage(b.dmg,b.color);b.life=0;effects.push([enemy.x,enemy.y,.35,b.color,Math.floor(b.dmg)])}});bullets=bullets.filter(b=>b.life>0);effects.forEach(e=>e[2]-=dt);effects=effects.filter(e=>e[2]>0);if(pvpMyHp<=0)finishPvp(false);hud();sendState();$('s1').classList.toggle('cool',c1>0);$('s2').classList.toggle('cool',c2>0);let s=Math.floor((Date.now()-startAt)/1000);$('time').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
 const _baseHud=hud;hud=function(){_baseHud();if(pvpMode){$('stage').textContent=ranked?'랭크전':'PvP';$('bossType').textContent='상대 유저 전투';$('coin').textContent='내 랭크 '+(save.pvp||0);$('dia').textContent=rankName();$('rec').textContent=ranked?'승리 +20 / 패배 -5':'승리: 상대 점수 최대 10 획득 / 패배: 최대 10 잃음';}}
 const _baseAttack=attack;attack=function(){if(!pvpMode){_baseAttack();return}let c=chars[sel],h=human(c),k=kat(),color=h?breathFx(c):player.color,d=player.atk*(.8+Math.random()*.4),dist=Math.hypot(player.x-enemy.x,player.y-enemy.y);if(dist<115){sendPvpDamage(d,color);effects.push([enemy.x,enemy.y,.35,color,Math.floor(d)]);impactRing(enemy.x,enemy.y,color);if(h){kimetsuFx(c,false);anime(k.emoji,enemy.x,enemy.y,color)}else if(c.side==='천사')jujutsuFx(c,1);else anime('💥',enemy.x,enemy.y,color)}else msg('상대에게 가까이 가세요')}
@@ -1539,7 +1539,7 @@ setTradeOffer=async function(){
   if(!(online&&db))return _localSetTradeOffer();
   if(!tradeRoom)return alert('거래 방에 먼저 입장하세요');
   let type=$('offerType').value,o={type};
-  if(type==='coins'){let a=Math.floor(Number($('offerAmount').value));if(!a||a<1)return alert('골드/코인 수량 입력');if(coins<a)return alert('코인 부족');o.amount=a;}
+  if(type==='coins'){let a=Math.floor(Number($('offerAmount').value));if(!a||a<1)return alert('골드/점수 수량 입력');if(coins<a)return alert('점수 부족');o.amount=a;}
   else{let item=$('offerItem').value;if(!item)return alert('거래할 물건 없음');if(!myTradeItems(type).includes(item))return alert('보유하지 않은 물건입니다');o.item=item;}
   await tradeRoomBase().update({['users/'+safeKey(user)]:tradeUserProfile(),['offers/'+safeKey(user)]:o,['ready/'+safeKey(user)]:false,done:false,log:''});
   $('tradeStatus').textContent='내 거래품을 올렸습니다. 상대도 올린 뒤 확정하세요.';
@@ -1620,7 +1620,7 @@ function processCoopReward(clearStage,rewardKey){
   if(SERVER()){delete save.coopRewards[key];msg('서버 모드에서는 협동 보상이 잠시 중단돼요');return}
   coins+=r.coins; dia+=r.dia; best=Math.max(best,clearStage+1);
   save.coins=coins; save.dia=dia; save.best=best;
-  store(); msg(`협동 클리어! ${r.coins}코인 ${r.dia}다이아`);
+  store(); msg(`협동 클리어! ${r.coins} 점수 ${r.dia}다이아`);
 }
 async function initCoopRoomStart(){
   let st=Math.max(1,best||1);
@@ -1697,7 +1697,7 @@ upd=function(dt){
   hud();updateCoopPlayerState();$('s1').classList.toggle('cool',c1>0);$('s2').classList.toggle('cool',c2>0);let s=Math.floor((Date.now()-startAt)/1000);$('time').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
 }
 const _prevHudForCoop=hud;
-hud=function(){_prevHudForCoop();if(coopMode){$('stage').textContent='협동 스테이지 '+stage;$('bossType').textContent=coopBossKind(stage);$('coin').textContent='코인 '+coins;$('dia').textContent='다이아 '+dia;$('rec').textContent='공유 보스 HP';}}
+hud=function(){_prevHudForCoop();if(coopMode){$('stage').textContent='협동 스테이지 '+stage;$('bossType').textContent=coopBossKind(stage);$('coin').textContent='점수 '+coins;$('dia').textContent='다이아 '+dia;$('rec').textContent='공유 보스 HP';}}
 const _prevAttackForCoop=attack;
 attack=function(){
   if(!coopMode){_prevAttackForCoop();return;}
@@ -1879,19 +1879,19 @@ function stopServerListeners(){
 /* ---------- 세이브 동기화 (본인 세이브만 씀) ---------- */
 pushOnlineSave=async function(){
   if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;
-  if(SERVER()){const tt=Date.now();await dbRef('prefs/'+safeKey(user)).set({eq:save.eq||'',eqArmor:save.eqArmor||'',friends:save.friends||[],blocked:save.blocked||[],updatedAt:tt,v:APP_BUILD});await dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:tt,pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'다윗'});return}
+  if(SERVER()){const tt=Date.now();await dbRef('prefs/'+safeKey(user)).set({eq:save.eq||'',eqArmor:save.eqArmor||'',friends:save.friends||[],blocked:save.blocked||[],updatedAt:tt,v:APP_BUILD});await dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:tt,pvp:save.pvp||0,score:save.total||0,rank:rankName(),char:chars[sel]?.name||'다윗'});return}
   const t=Date.now();mySavePushes.add(t);if(mySavePushes.size>50)mySavePushes.delete(mySavePushes.values().next().value);
   await dbRef('saves/'+safeKey(user)).set({...save,updatedAt:t,v:APP_BUILD});
-  await dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:t,pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'다윗'});
+  await dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:t,pvp:save.pvp||0,score:save.total||0,rank:rankName(),char:chars[sel]?.name||'다윗'});
 };
-onlineRegisterUser=function(){if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:Date.now(),pvp:save.pvp||0,rank:rankName(),char:chars[sel]?.name||'다윗'})};
+onlineRegisterUser=function(){if(!online||!db||user==='guest'||!auth||!auth.currentUser)return;dbRef('users/'+safeKey(user)).update({v:APP_BUILD,name:user,ts:Date.now(),pvp:save.pvp||0,score:save.total||0,rank:rankName(),char:chars[sel]?.name||'다윗'})};
 syncOnlineSave=async function(){
   if(!online||!db||user==='guest')return;
   const ref=dbRef('saves/'+safeKey(user));
   const snap=await ref.get();
   if(snap.exists()){const r=snap.val();if(r&&typeof r==='object'){save={...fresh(),...r};norm();localStorage.setItem(sk(),JSON.stringify(save));renderAll()}}
   else await pushOnlineSave();
-  // 관리자가 내 세이브를 바꾸면(코인 지급/몰수/초기화) 바로 반영
+  // 관리자가 내 세이브를 바꾸면(점수 지급/몰수/초기화) 바로 반영
   mySaveRef=ref;
   prefsRef=dbRef('prefs/'+safeKey(user));prefsRef.on('value',ps=>{prefsCache=ps.val();if(SERVER()&&prefsCache&&!prefsApplied){prefsApplied=true;['eq','eqArmor','friends','blocked'].forEach(k=>{if(prefsCache[k]!==undefined)save[k]=prefsCache[k]});norm();renderAll()}});
   ref.on('value',s=>{
@@ -1990,7 +1990,7 @@ delAcc=async function(){
 resetSaveData=()=>fresh();
 resetMyAccount=function(){
   if(user==="guest")return alert("로그인 후 초기화 가능해.");
-  if(!confirm("내 계정 데이터를 초기화할까? 코인, 다이아, 캐릭터, 장비, 친구, 최고기록이 초기화돼."))return;
+  if(!confirm("내 계정 데이터를 초기화할까? 점수, 다이아, 캐릭터, 장비, 친구, 최고기록이 초기화돼."))return;
   save=fresh();coins=0;dia=0;best=1;norm();store();renderAll();alert("내 계정 초기화 완료");
 };
 
@@ -2156,7 +2156,7 @@ adminTakeAllItems=async function(){
   if(!isAdmin())return alert('관리자만 사용 가능');
   const n=adminTarget();if(!n)return;
   if(!(await nickExists(n)))return alert('없는 계정이야.');
-  if(!confirm(n+'의 아이템/코인/다이아/희귀 캐릭터를 전부 뺏을까?'))return;
+  if(!confirm(n+'의 아이템/점수/다이아/희귀 캐릭터를 전부 뺏을까?'))return;
   await adminWriteSave(n,fresh());
   adminNoticeTextAuto(n+' 계정의 아이템을 전체 몰수했습니다.');alert(n+' 아이템 전체 몰수 완료');
 };
@@ -2174,25 +2174,25 @@ adminGiveToUser=async function(){
   const c=Math.max(0,Math.floor(Number(($('adminGiveCoins')&&$('adminGiveCoins').value)||0)));
   const d=Math.max(0,Math.floor(Number(($('adminGiveDia')&&$('adminGiveDia').value)||0)));
   if(!n)return alert('대상 닉네임을 입력해.');
-  if(!c&&!d)return alert('지급할 코인이나 다이아를 입력해.');
+  if(!c&&!d)return alert('지급할 점수이나 다이아를 입력해.');
   if(!(await nickExists(n)))return alert('없는 계정이야.');
   if(n!==user&&!canPunish(n))return alert('이 계정에는 현재 권한으로 지급할 수 없어.');
   const s=await adminReadSave(n);s.coins=(s.coins||0)+c;s.dia=(s.dia||0)+d;
   await adminWriteSave(n,s);
-  adminNoticeTextAuto(`${n}님에게 코인 ${c}, 다이아 ${d} 지급`);alert(`${n}에게 지급 완료!`);
+  adminNoticeTextAuto(`${n}님에게 점수 ${c}, 다이아 ${d} 지급`);alert(`${n}에게 지급 완료!`);
 };
 adminRewardAllUsers=async function(){
   if(!isAdmin())return alert('관리자만 사용 가능');
   const c=Math.max(0,Math.floor(Number(($('adminAllCoins')&&$('adminAllCoins').value)||0)));
   const d=Math.max(0,Math.floor(Number(($('adminAllDia')&&$('adminAllDia').value)||0)));
-  if(!c&&!d)return alert('지급할 코인이나 다이아를 입력해.');
+  if(!c&&!d)return alert('지급할 점수이나 다이아를 입력해.');
   const names=Object.keys((await dbRef('users').get()).val()||{});
   let ok=0;
   for(const n of names){
     if(n!==user&&!canPunish(n))continue;
     try{const s=await adminReadSave(n);s.coins=(s.coins||0)+c;s.dia=(s.dia||0)+d;await adminWriteSave(n,s);ok++}catch(e){console.warn(n,e)}
   }
-  adminNoticeTextAuto(`모든 유저에게 코인 ${c}, 다이아 ${d} 지급`);alert(`${ok}개 계정에 보상 지급 완료`);
+  adminNoticeTextAuto(`모든 유저에게 점수 ${c}, 다이아 ${d} 지급`);alert(`${ok}개 계정에 보상 지급 완료`);
 };
 adminSearchUser=async function(){
   if(!isAdmin())return alert('관리자만 사용 가능');
@@ -2201,7 +2201,7 @@ adminSearchUser=async function(){
   if(!n){box.textContent='닉네임을 입력해.';return}
   if(!(await nickExists(n))){box.textContent=n+': 계정 없음';return}
   const s=await adminReadSave(n),esc=x=>String(x).replace(/[<>&"']/g,'');
-  box.innerHTML=`<b>${esc(n)}</b><br>상태: ${isBanned(n)?'🚫 밴':'정상'} / ${isMuted(n)?'🔇 채팅금지':'채팅 가능'}<br>코인: ${s.coins||0}<br>다이아: ${s.dia||0}<br>캐릭터: ${(s.owned||[]).length}명 / 희귀: ${(s.rare||[]).length}명<br>최고 스테이지: ${s.best||1}`;
+  box.innerHTML=`<b>${esc(n)}</b><br>상태: ${isBanned(n)?'🚫 밴':'정상'} / ${isMuted(n)?'🔇 채팅금지':'채팅 가능'}<br>점수: ${s.coins||0}<br>다이아: ${s.dia||0}<br>캐릭터: ${(s.owned||[]).length}명 / 희귀: ${(s.rare||[]).length}명<br>최고 스테이지: ${s.best||1}`;
 };
 adminServerInfo=async function(){
   if(!isAdmin())return alert('관리자만 사용 가능');
@@ -2299,7 +2299,7 @@ adminCreateEvent=async function(){
   const coins=Math.min(1000000,Math.max(0,Math.floor(Number($('evCoins').value)||0))),d=Math.min(200,Math.max(0,Math.floor(Number($('evDia').value)||0)));
   const hours=Math.max(1,Math.min(720,Math.floor(Number($('evHours').value)||24))),min=$('evMin').value;
   if(!title)return alert('이벤트 이름을 입력해.');
-  if(!coins&&!d)return alert('보상 코인이나 다이아를 입력해.');
+  if(!coins&&!d)return alert('보상 점수이나 다이아를 입력해.');
   const now=Date.now();
   await dbRef('events').push({title,coins,dia:d,min,ts:now,endsAt:now+hours*3600000,by:user});
   adminNoticeTextAuto(`🎉 이벤트 시작: ${title} (${minLabel(min)})`);
@@ -2317,7 +2317,7 @@ async function renderEvents(){
     const e=eventsCache[id],over=(e.endsAt||0)<=now,ok=rankAtLeast(user,e.min);
     let btn=claimed[id]?'<span class="onlineOk">✅ 수령 완료</span>':over?'<span class="onlineBad">종료됨</span>':ok?`<button class="green" onclick="claimEvent('${esc(id)}')">보상 받기</button>`:`<span class="onlineBad">🔒 ${minLabel(e.min)}</span>`;
     const del=isAdmin()?` <button class="red" onclick="deleteEvent('${esc(id)}')">삭제</button>`:'';
-    return `<div class="friendItem"><b>${esc(e.title)}</b><br>보상: 코인 ${e.coins||0} / 다이아 ${e.dia||0}<br>참여: ${minLabel(e.min)}<br>종료: ${new Date(e.endsAt||0).toLocaleString()}<br>${btn}${del}</div>`;
+    return `<div class="friendItem"><b>${esc(e.title)}</b><br>보상: 점수 ${e.coins||0} / 다이아 ${e.dia||0}<br>참여: ${minLabel(e.min)}<br>종료: ${new Date(e.endsAt||0).toLocaleString()}<br>${btn}${del}</div>`;
   }).join('');
 }
 claimEvent=async function(id){
@@ -2327,7 +2327,7 @@ claimEvent=async function(id){
   if((e.endsAt||0)<=Date.now())return alert('종료된 이벤트예요.');
   try{await dbRef('eventClaims/'+id+'/'+safeKey(user)).set(true)}catch(err){return alert('이미 받았거나 자격이 없어요.')}
   coins+=e.coins||0;dia+=e.dia||0;store();
-  alert(`보상 수령! 코인 ${e.coins||0}, 다이아 ${e.dia||0}`);renderEvents();
+  alert(`보상 수령! 점수 ${e.coins||0}, 다이아 ${e.dia||0}`);renderEvents();
 };
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
@@ -2887,7 +2887,7 @@ draw=function(){_drawBoss();bossFrameTick()};
 const _hudBoss=hud;
 hud=function(){_hudBoss();if(bossNow()){const e=$('en');if(e)e.textContent='👑 '+e.textContent}};
 
-/* ===================== 의심 계정 (코인·다이아 상위) ===================== */
+/* ===================== 의심 계정 (점수·다이아 상위) ===================== */
 adminSuspicious=async function(){
   if(!isAdmin())return alert('관리자만 사용 가능');
   const box=$('suspList');if(box)box.textContent='불러오는 중...';
@@ -2898,7 +2898,7 @@ adminSuspicious=async function(){
   if(!names.length){box.textContent='데이터 없음';return}
   box.innerHTML=names.map(n=>{
     const v=all[n],flag=(v.coins||0)>=3000000||(v.dia||0)>=3000;
-    return `<div class="rpItem">${flag?'⚠ ':''}<b>${escH(n)}</b> · 코인 ${(v.coins||0).toLocaleString()} · 다이아 ${(v.dia||0).toLocaleString()} · 캐릭터 ${((v.owned||[]).length)+((v.rare||[]).length)}명 · PvP ${v.pvp||0}<br><small>마지막 저장: ${v.updatedAt?new Date(v.updatedAt).toLocaleString():'-'}</small><br><button class="blue" onclick="adminPickUser('${escH(n)}')">선택</button></div>`;
+    return `<div class="rpItem">${flag?'⚠ ':''}<b>${escH(n)}</b> · 점수 ${(v.coins||0).toLocaleString()} · 다이아 ${(v.dia||0).toLocaleString()} · 캐릭터 ${((v.owned||[]).length)+((v.rare||[]).length)}명 · PvP ${v.pvp||0}<br><small>마지막 저장: ${v.updatedAt?new Date(v.updatedAt).toLocaleString():'-'}</small><br><button class="blue" onclick="adminPickUser('${escH(n)}')">선택</button></div>`;
   }).join('');
 };
 
@@ -2987,14 +2987,14 @@ const _claimEvSrv=claimEvent;
 claimEvent=async function(id){
   if(!SERVER())return _claimEvSrv(id);
   const e=eventsCache[id];if(user==='guest'||!e)return;
-  try{const r=await callFn('claimEvent',{id});alert(`보상 수령! 코인 ${r.coins}, 다이아 ${r.dia}`);renderEvents()}
+  try{const r=await callFn('claimEvent',{id});alert(`보상 수령! 점수 ${r.coins}, 다이아 ${r.dia}`);renderEvents()}
   catch(err){srvErr(err);renderEvents()}
 };
 // 전투 보상: 시작 때 서버에 알리고, 끝나면 서버가 시간·스테이지를 확인해서 지급
 function onStageClear(rw,dr,baseLevel){
-  if(!SERVER()){const wasD=!!(typeof dungeonPlace!=='undefined'&&dungeonPlace);coins+=rw;dia+=dr;stage++;best=Math.max(best,stage,baseLevel+1);save.coins=coins;save.dia=dia;save.best=best;store();msg(`승리! ${rw}코인 ${dr}다이아`);startQuizBonus(rw,wasD);return}
+  if(!SERVER()){const wasD=!!(typeof dungeonPlace!=='undefined'&&dungeonPlace);coins+=rw;dia+=dr;stage++;best=Math.max(best,stage,baseLevel+1);save.coins=coins;save.dia=dia;save.best=best;store();msg(`승리! ${rw} 점수 ${dr}다이아`);startQuizBonus(rw,wasD);return}
   stage++;
-  serverEnqueue(()=>callFn('claimStage').then(r=>msg(`승리! ${r.coins}코인 ${r.dia}다이아`)).catch(e=>msg('보상을 받지 못했어요: '+e.message)));
+  serverEnqueue(()=>callFn('claimStage').then(r=>msg(`승리! ${r.coins} 점수 ${r.dia}다이아`)).catch(e=>msg('보상을 받지 못했어요: '+e.message)));
 }
 let _srvBattleEnemy=null;
 function serverBattleTick(){
@@ -3030,9 +3030,9 @@ adminUnlockAll=function(){if(SERVER())return alert('서버 모드에서는 내 �
 adminServerModeOn=async function(){
   if(!isAdmin())return alert('관리자만 사용 가능');
   try{await callFn('ping')}catch(e){return alert('서버 함수에 연결하지 못했어요. 서버 함수를 먼저 배포했는지 확인하세요. (SERVER_SETUP.md)\n\n'+e.message)}
-  if(!confirm('서버 모드를 켤까요? 켜면 돈이 오가는 모든 동작을 서버 함수가 처리하고, 브라우저에서 코인·아이템을 직접 저장할 수 없게 돼요.'))return;
+  if(!confirm('서버 모드를 켤까요? 켜면 돈이 오가는 모든 동작을 서버 함수가 처리하고, 브라우저에서 점수·아이템을 직접 저장할 수 없게 돼요.'))return;
   await dbRef('config/serverMode').set(true);
-  adminNoticeTextAuto('🔒 서버 모드가 켜졌어요. 이제 코인·아이템은 서버가 관리해요.');alert('서버 모드를 켰어요.');
+  adminNoticeTextAuto('🔒 서버 모드가 켜졌어요. 이제 점수·아이템은 서버가 관리해요.');alert('서버 모드를 켰어요.');
 };
 adminServerModeOff=async function(){
   if(!isAdmin())return alert('관리자만 사용 가능');
@@ -3143,8 +3143,8 @@ function pickQuiz(){
   return {q:q.q,choices:order};
 }
 const BOX_TABLE=[
-  {w:40,make:rw=>({coins:rw*(1+Math.floor(Math.random()*3))})},                 // 코인 1~3배
-  {w:10,make:rw=>({coins:rw*5})},                                                 // 큰 코인
+  {w:40,make:rw=>({coins:rw*(1+Math.floor(Math.random()*3))})},                 // 점수 1~3배
+  {w:10,make:rw=>({coins:rw*5})},                                                 // 큰 점수
   {w:25,make:()=>({dia:1+Math.floor(Math.random()*3)})},                          // 다이아 1~3
   {w:20,make:()=>({score:3+Math.floor(Math.random()*6)})},                        // 랭크 점수 3~8
   {w:5, make:rw=>({coins:rw*3,dia:10})}                                           // 대박
@@ -3154,7 +3154,7 @@ function drawBoxReward(rw){
   for(const e of BOX_TABLE){if((r-=e.w)<0)return e.make(rw)}
   return BOX_TABLE[0].make(rw);
 }
-function boxText(r){return [r.coins?`코인 +${r.coins.toLocaleString()}`:'',r.dia?`다이아 +${r.dia}`:'',r.score?`랭크 점수 +${r.score}`:''].filter(Boolean).join('<br>')}
+function boxText(r){return [r.coins?`점수 +${r.coins.toLocaleString()}`:'',r.dia?`다이아 +${r.dia}`:'',r.score?`승점 +${r.score}`:''].filter(Boolean).join('<br>')}
 function applyBoxReward(r){
   if(r.coins)coins+=r.coins;
   if(r.dia)dia+=r.dia;
@@ -3216,7 +3216,7 @@ finishPvp=function(win){
   const delta=pvpDelta(win,ranked,my,op);
   updateRank(delta);
   try{pvpRoomRef().child('result').push({name:user,win,delta,score:save.pvp,ts:Date.now()})}catch(e){}
-  alert((win?'승리! ':'패배! ')+(ranked?'랭크전 ':'PvP ')+(SERVER()?'(서버 모드에서는 점수가 바뀌지 않아요)':'점수 '+(delta>0?'+':'')+delta));
+  alert((win?'승리! ':'패배! ')+(ranked?'랭크전 ':'PvP ')+(SERVER()?'(서버 모드에서는 승점이 바뀌지 않아요)':'승점 '+(delta>0?'+':'')+delta));
   back();
 };
 let lastRankLoad=0;
@@ -3231,12 +3231,34 @@ async function loadRanking(){
     const list=Object.keys(v).map(n=>({n,pvp:Number(v[n].pvp)||0,char:v[n].char||''})).sort((a,b)=>b.pvp-a.pvp);
     if(!list.length){box.textContent='아직 랭킹이 없어요';return}
     const myIdx=list.findIndex(x=>x.n===user);
-    box.innerHTML=`<div style="margin:6px 0">내 순위: <b>${myIdx>=0?(myIdx+1)+'위':'30위 밖'}</b> · 내 점수 ${save.pvp||0} (${rankName()})</div>`+list.map((x,i)=>`<div class="rkRow ${x.n===user?'me':''}"><span class="rkNo">${i<3?['🥇','🥈','🥉'][i]:(i+1)}</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${adminLabel(x.n)}<br><small style="color:#9ca3af">${escH(x.char)}</small></span><span style="text-align:right"><b>${x.pvp}</b>점<br><small style="color:#c4b5fd">${rankNameByScore(x.pvp)}</small></span></div>`).join('');
+    box.innerHTML=`<div style="margin:6px 0">내 순위: <b>${myIdx>=0?(myIdx+1)+'위':'30위 밖'}</b> · 내 승점 ${save.pvp||0} (${rankName()})</div>`+list.map((x,i)=>`<div class="rkRow ${x.n===user?'me':''}"><span class="rkNo">${i<3?['🥇','🥈','🥉'][i]:(i+1)}</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${adminLabel(x.n)}<br><small style="color:#9ca3af">${escH(x.char)}</small></span><span style="text-align:right"><b>${x.pvp}</b>점<br><small style="color:#c4b5fd">${rankNameByScore(x.pvp)}</small></span></div>`).join('');
     lastRankLoad=Date.now();
   }catch(e){box.textContent='랭킹을 불러오지 못했어요.'}
 }
 const _showTabRank=showTab;
 showTab=function(id){_showTabRank(id);if(id==='battle'&&Date.now()-lastRankLoad>20000)loadRanking()};
+/* ===================== 하길: 점수(누적) 순위표 ===================== */
+// 점수를 얻은 만큼만 누적해요(쓰면 줄어들지 않아요). 순위표는 이 누적 점수로 매겨요.
+{const _storeTot=store;store=function(){
+  const c=Number(coins)||0;
+  if(save.lc===undefined)save.lc=c;
+  if(save.total===undefined)save.total=c;
+  if(c>save.lc)save.total+=c-save.lc;
+  save.lc=c;
+  _storeTot();
+}}
+async function loadScoreRanking(){
+  const box=$('rankingList');if(!box)return;
+  if(user==='guest'||!online||!db){box.textContent='로그인하면 순위표를 볼 수 있어요';return}
+  box.textContent='불러오는 중...';
+  try{
+    const v=(await dbRef('users').orderByChild('score').limitToLast(30).get()).val()||{};
+    const list=Object.keys(v).map(n=>({n,score:Number(v[n].score)||0,char:v[n].char||''})).filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
+    if(!list.length){box.textContent='아직 점수 순위가 없어요';return}
+    const myIdx=list.findIndex(x=>x.n===user);
+    box.innerHTML=`<div style="margin:6px 0">⭐ 점수 순위(누적) · 내 순위: <b>${myIdx>=0?(myIdx+1)+'위':'30위 밖'}</b> · 내 누적 점수 ${(save.total||0).toLocaleString()}</div>`+list.map((x,i)=>`<div class="rkRow ${x.n===user?'me':''}"><span class="rkNo">${i<3?['🥇','🥈','🥉'][i]:(i+1)}</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${adminLabel(x.n)}<br><small style="color:#9ca3af">${escH(x.char)}</small></span><span style="text-align:right"><b>${x.score.toLocaleString()}</b>점</span></div>`).join('');
+  }catch(e){box.textContent='순위표를 불러오지 못했어요.'}
+}
 SERVER=function(){return false};
 adminServerModeOn=function(){alert("하길 판에서는 서버 모드를 지원하지 않아요.")};
 adminSetServerUrl=function(){alert("하길 판에서는 서버 주소를 쓰지 않아요.")};
