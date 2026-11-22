@@ -285,13 +285,15 @@ function resolve(p,r){
 const WEAPONS=[
   {name:"CLASSIC",dmg:26,head:78,rof:.16,mag:12,res:48,reload:1.5,spread:.012,recoil:.012,auto:false,color:0x333a44,len:.35,vol:.5,freq:2500},
   {name:"VANDAL",dmg:40,head:160,rof:.1,mag:25,res:50,reload:2.4,spread:.016,recoil:.016,auto:true,color:0x2a2f38,len:.6,vol:.8,freq:1800,kick:.008},
-  {name:"OPERATOR",dmg:150,head:250,rof:1.1,mag:5,res:15,reload:3.2,spread:.001,recoil:.07,auto:false,color:0x222a22,len:.9,vol:1,freq:900,scope:true}
+  {name:"OPERATOR",dmg:150,head:250,rof:1.1,mag:5,res:15,reload:3.2,spread:.001,recoil:.07,auto:false,color:0x222a22,len:.9,vol:1,freq:900,scope:true},
+  {name:"STINGER",dmg:22,head:66,rof:.065,mag:30,res:60,reload:2,spread:.028,recoil:.009,auto:true,color:0x3a3340,len:.45,vol:.6,freq:2800,kick:.006},
+  {name:"BREAKER",dmg:16,head:32,rof:.85,mag:6,res:24,reload:2.8,spread:.055,recoil:.05,auto:false,color:0x4a3a2a,len:.65,vol:1,freq:1100,pellets:9}
 ];
 WEAPONS.forEach(w=>{w.ammo=w.mag;w.reserve=w.res});
 
 /* ---------- 플레이어 ---------- */
 const P={pos:new THREE.Vector3(0,0,HALF-4),vel:new THREE.Vector3(),vy:0,yaw:0,pitch:0,hp:100,onGround:true,
-  eye:1.7,w:0,lastShot:0,reloading:0,recoil:0,dash:new THREE.Vector3(),dashT:0,dashCd:0,smokes:2,scoped:false,alive:true,walk:false,bob:0,slots:[],scanT:0,credits:1000,armor:0,owned:[true,false,false]};
+  eye:1.7,w:0,lastShot:0,reloading:0,recoil:0,dash:new THREE.Vector3(),dashT:0,dashCd:0,smokes:2,scoped:false,alive:true,walk:false,bob:0,slots:[],scanT:0,cloak:0,credits:1000,armor:0,owned:[true,false,false,false,false]};
 const keys={};let mouseDown=false,playing=false,locked=false;const joy={x:0,y:0};
 
 // 총 모델
@@ -321,7 +323,7 @@ function switchWeapon(i){
   if(i===P.w||!P.alive||!P.owned[i])return;
   P.w=i;P.reloading=0;P.scoped=false;buildGun();updateAmmoHud();$("reload").style.display="none";
 }
-function nextWeapon(step){for(let k=1;k<=3;k++){const i=(P.w+step*k)%3;if(P.owned[i]){switchWeapon(i);return}}}
+function nextWeapon(step){for(let k=1;k<=WEAPONS.length;k++){const i=(P.w+step*k)%WEAPONS.length;if(P.owned[i]){switchWeapon(i);return}}}
 function startReload(){
   const w=WEAPONS[P.w];
   if(P.reloading>0||w.ammo>=w.mag||w.reserve<=0)return;
@@ -331,10 +333,19 @@ function startReload(){
 /* ---------- 적(봇) ---------- */
 const bots=[];
 const botMats={body:new THREE.MeshLambertMaterial({color:0xc23a48}),dark:new THREE.MeshLambertMaterial({color:0x2a2a33}),skin:new THREE.MeshLambertMaterial({color:0xe8b894})};
-function makeBot(x,z){
-  const g=new THREE.Group();
+const BTYPES={
+  grunt:{id:"grunt",name:"GRUNT",hp:100,color:0xc23a48,scale:1,speed:1,fire:1,dmg:[8,16],range:[8,20],reward:150},
+  rusher:{id:"rusher",name:"RUSHER",hp:70,color:0xe8832a,scale:.95,speed:1.55,fire:.7,dmg:[6,11],range:[0,6],reward:150},
+  sniper:{id:"sniper",name:"SNIPER",hp:80,color:0x2f8f5b,scale:1,speed:.9,fire:3.2,dmg:[30,45],range:[24,45],reward:200},
+  heavy:{id:"heavy",name:"HEAVY",hp:220,color:0x3a5a9a,scale:1.3,speed:.7,fire:.45,dmg:[7,11],range:[10,24],reward:250}
+};
+const typeMats={};
+function makeBot(x,z,type){
+  const T=BTYPES[type||"grunt"];
+  const bodyMat=typeMats[T.id]||(typeMats[T.id]=new THREE.MeshLambertMaterial({color:T.color}));
+  const g=new THREE.Group();g.scale.setScalar(T.scale);
   const legs=new THREE.Mesh(new THREE.BoxGeometry(.5,.85,.3),botMats.dark);legs.position.y=.43;
-  const torso=new THREE.Mesh(new THREE.BoxGeometry(.6,.7,.35),botMats.body);torso.position.y=1.2;
+  const torso=new THREE.Mesh(new THREE.BoxGeometry(.6,.7,.35),bodyMat);torso.position.y=1.2;
   const head=new THREE.Mesh(new THREE.SphereGeometry(.17,12,10),botMats.skin);head.position.y=1.78;
   const gun=new THREE.Mesh(new THREE.BoxGeometry(.07,.1,.6),botMats.dark);gun.position.set(.3,1.25,-.35);
   [legs,torso,head,gun].forEach(m=>{m.castShadow=true});
@@ -342,7 +353,7 @@ function makeBot(x,z){
   g.add(legs,torso,head,gun);g.position.set(x,0,z);scene.add(g);
   const mark=new THREE.Mesh(new THREE.OctahedronGeometry(.6),new THREE.MeshBasicMaterial({color:0xff2244,depthTest:false,transparent:true}));
   mark.position.y=2.8;mark.renderOrder=999;mark.visible=false;g.add(mark);
-  const b={g,parts:[legs,torso,head],hp:100,pos:g.position,target:null,shootT:1+Math.random(),strafe:0,strafeT:0,seen:0,alive:true,dead:0,name:"BOT-"+(bots.length+1),yaw:0,hpbar:null,mark};
+  const b={g,parts:[legs,torso,head],hp:T.hp,type:T.id,t:T,pos:g.position,target:null,shootT:1+Math.random(),strafe:0,strafeT:0,seen:0,alive:true,dead:0,name:T.name+"-"+(bots.length+1),yaw:0,hpbar:null,mark};
   [legs,torso,head].forEach(m=>m.userData.bot=b);
   return b;
 }
@@ -384,11 +395,13 @@ function segBlockedBySmoke(a,b){
 }
 
 /* ---------- 에이전트 ---------- */
-const SK={dash:{name:"대시"},smoke:{name:"연막"},heal:{name:"치료"},scan:{name:"스캔"}};
+const SK={dash:{name:"대시"},smoke:{name:"연막"},heal:{name:"치료"},scan:{name:"스캔"},flash:{name:"섬광"},cloak:{name:"은신"}};
 const AGENTS=[
  {name:"SPECTER",desc:"Q 대시 · E 연막 ×2",q:{id:"dash",ch:-1,cd:7},e:{id:"smoke",ch:2,cd:0}},
  {name:"MEDIC",desc:"Q 치료 +60 ×2 · E 연막 ×1",q:{id:"heal",ch:2,cd:5},e:{id:"smoke",ch:1,cd:0}},
- {name:"SCOUT",desc:"Q 스캔(벽 너머 적 표시) · E 대시",q:{id:"scan",ch:-1,cd:18},e:{id:"dash",ch:-1,cd:7}}
+ {name:"SCOUT",desc:"Q 스캔(벽 너머 적 표시) · E 대시",q:{id:"scan",ch:-1,cd:18},e:{id:"dash",ch:-1,cd:7}},
+ {name:"BLAZE",desc:"Q 섬광(시야 내 적 3초 실명) ×2 · E 연막 ×1",q:{id:"flash",ch:2,cd:3},e:{id:"smoke",ch:1,cd:0}},
+ {name:"GHOST",desc:"Q 은신 6초(사격하면 해제) · E 대시",q:{id:"cloak",ch:-1,cd:25},e:{id:"dash",ch:-1,cd:7}}
 ];
 function applyAgent(){
   if(!AGENTS[settings.agent])settings.agent=0;
@@ -402,6 +415,15 @@ function useSkill(i){
   else if(id==="smoke")throwSmoke();
   else if(id==="heal"){if(P.hp>=100)return;P.hp=Math.min(100,P.hp+60);updateHud();beep(500,.3,.15,"sine",500)}
   else if(id==="scan"){P.scanT=4;beep(300,.5,.15,"sine",600)}
+  else if(id==="cloak"){P.cloak=6;beep(250,.5,.12,"sine",-120)}
+  else if(id==="flash"){
+    const fw=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).setY(0).normalize();let n=0;
+    bots.forEach(b=>{if(!b.alive)return;const dv=new THREE.Vector3().subVectors(b.pos,P.pos).setY(0),L=dv.length();
+      if(L<32&&dv.normalize().dot(fw)>.25&&canSee(b)){b.blind=3;n++}});
+    const v=$("vig");v.style.transition="none";v.style.boxShadow="inset 0 0 0 999px rgba(255,255,255,.7)";
+    requestAnimationFrame(()=>{v.style.transition="box-shadow .5s";v.style.boxShadow="inset 0 0 160px 40px rgba(255,0,30,0)"});
+    beep(1800,.25,.15,"square",-1200);if(n>0)feed("섬광 적중 "+n+"명");
+  }
   sl.t=sl.def.cd;if(sl.ch>0)sl.ch--;
 }
 const abCache={};
@@ -416,13 +438,15 @@ function setAb(id,key,sl){
 const SHOP={
   vandal:{name:"VANDAL",price:2000,msg:"보유",can:()=>!P.owned[1],give:()=>{P.owned[1]=true;switchWeapon(1)}},
   operator:{name:"OPERATOR",price:3500,msg:"보유",can:()=>!P.owned[2],give:()=>{P.owned[2]=true;switchWeapon(2)}},
+  stinger:{name:"STINGER",price:1100,msg:"보유",can:()=>!P.owned[3],give:()=>{P.owned[3]=true;switchWeapon(3)}},
+  breaker:{name:"BREAKER",price:900,msg:"보유",can:()=>!P.owned[4],give:()=>{P.owned[4]=true;switchWeapon(4)}},
   armor:{name:"아머 +50",price:600,msg:"보유",can:()=>P.armor<50,give:()=>{P.armor=50}},
   skill:{name:"스킬 +1",price:300,msg:"해당없음",can:()=>P.slots.some(x=>x.ch>=0),give:()=>{P.slots.forEach(x=>{if(x.ch>=0)x.ch++})}}
 };
 function renderBuy(){
   $("buyCr").textContent="$"+P.credits;
   const el=$("buyItems");el.innerHTML="";
-  [["vandal","4"],["operator","5"],["armor","6"],["skill","7"]].forEach(([k,key])=>{
+  [["vandal","Z"],["operator","X"],["stinger","C"],["breaker","V"],["armor","B"],["skill","N"]].forEach(([k,key])=>{
     const it=SHOP[k],ok=it.can();
     const d=document.createElement("div");d.className="bi"+(ok&&P.credits>=it.price?"":" dis");
     d.innerHTML="<span>"+key+" · "+it.name+"</span><b>"+(ok?"$"+it.price:it.msg)+"</b>";
@@ -455,9 +479,12 @@ function newRound(){
   smokes.forEach(s=>scene.remove(s.grp));smokes.length=0;
   grenades.forEach(g=>scene.remove(g.m));grenades.length=0;
   const n=Math.min(2+round,9);
-  for(let i=0;i<n;i++){const p=randFree(-HALF+3,-6);bots.push(makeBot(p.x,p.z))}
+  for(let i=0;i<n;i++){
+    const type=(i===0&&round>=4)?"heavy":(i===1&&round>=3)?"sniper":(i%3===2&&round>=2)?"rusher":"grunt";
+    const p=randFree(-HALF+3,-6);bots.push(makeBot(p.x,p.z,type));
+  }
   P.pos.set((Math.random()-.5)*10,0,HALF-4);P.vel.set(0,0,0);P.vy=0;P.yaw=0;P.pitch=0;P.hp=100;P.alive=true;
-  {const ag=AGENTS[settings.agent]||AGENTS[0];P.slots=[ag.q,ag.e].map(d=>({def:d,t:0,ch:d.ch}));P.scanT=0;}
+  {const ag=AGENTS[settings.agent]||AGENTS[0];P.slots=[ag.q,ag.e].map(d=>({def:d,t:0,ch:d.ch}));P.scanT=0;P.cloak=0;}
   WEAPONS.forEach(w=>{w.ammo=w.mag;w.reserve=w.res});
   P.reloading=0;$("reload").style.display="none";
   if(!P.owned[P.w]){P.w=0;buildGun()}
@@ -476,7 +503,7 @@ function updateHud(){
 function endRound(win){
   state="end";stateT=3.2;
   if(win){P.credits+=1800;winP++;round++;msg("ROUND WIN","#3cffd0");beep(660,.3,.2,"triangle",400)}
-  else{P.credits+=1000;P.owned=[true,false,false];P.armor=0;winB++;msg("ROUND LOSS","#ff4655");beep(200,.6,.2,"sawtooth",-100)}
+  else{P.credits+=1000;P.owned=[true,false,false,false,false];P.armor=0;winB++;msg("ROUND LOSS","#ff4655");beep(200,.6,.2,"sawtooth",-100)}
   updateHud();
 }
 
@@ -514,19 +541,25 @@ function shoot(){
   let sp=w.spread+(P.walk?0:speed*.0025)+(P.onGround?0:.04)+P.recoil*.05;
   if(w.scope&&!P.scoped)sp+=.06;
   if(P.scoped||(P.w===0&&!speed&&P.onGround))sp*=.4;
-  const d=new THREE.Vector3((Math.random()-.5)*2*sp,(Math.random()-.5)*2*sp,-1).normalize().applyQuaternion(camera.quaternion);
-  ray.set(camera.position,d);ray.far=200;
-  const hits=ray.intersectObjects([...wallMeshes,...botTargets()],false);
-  const end=camera.position.clone().addScaledVector(d,hits[0]?hits[0].distance:80);
-  if(hits[0]){
-    const o=hits[0].object;
-    if(o.userData.bot){
-      const b=o.userData.bot,head=o.userData.part==="head";
-      const dmg=head?w.head:w.dmg;b.hp-=dmg;b.seen=6;showHit(head);spark(hits[0].point,0xff3344);
-      if(b.hp<=0&&b.alive){killBot(b,head)}
-    }else spark(hits[0].point,0xffe0a0);
+  const npel=w.pellets||1;let hitShown=false;P.cloak=0;
+  for(let k=0;k<npel;k++){
+    const d=new THREE.Vector3((Math.random()-.5)*2*sp,(Math.random()-.5)*2*sp,-1).normalize().applyQuaternion(camera.quaternion);
+    ray.set(camera.position,d);ray.far=200;
+    const hits=ray.intersectObjects([...wallMeshes,...botTargets()],false);
+    const end=camera.position.clone().addScaledVector(d,hits[0]?hits[0].distance:80);
+    if(hits[0]){
+      const o=hits[0].object;
+      if(o.userData.bot){
+        const b=o.userData.bot,head=o.userData.part==="head";
+        const fall=w.pellets?Math.max(.2,Math.min(1,1.35-hits[0].distance/22)):1;
+        const dmg=(head?w.head:w.dmg)*fall;b.hp-=dmg;b.seen=6;
+        if(!hitShown){showHit(head);hitShown=true}
+        spark(hits[0].point,0xff3344);
+        if(b.hp<=0&&b.alive){killBot(b,head)}
+      }else spark(hits[0].point,0xffe0a0);
+    }
+    tracer(gunGroup.localToWorld(new THREE.Vector3(0,.02,-w.len-.2)),end,0xffe9a0);
   }
-  tracer(gunGroup.localToWorld(new THREE.Vector3(0,.02,-w.len-.2)),end,0xffe9a0);
   flash.material.opacity=1;flash.rotation.z=Math.random()*6;flashLight.intensity=2;
   // 반동
   P.recoil=Math.min(P.recoil+(w.kick||w.recoil)*8,1);
@@ -538,7 +571,7 @@ function shoot(){
   bots.forEach(b=>{if(b.alive&&b.pos.distanceTo(P.pos)<(P.walk?8:30))b.seen=Math.max(b.seen,3)});
 }
 function killBot(b,head){
-  game.kills++;if(head)game.heads++;P.credits+=150;
+  game.kills++;if(head)game.heads++;P.credits+=b.t.reward;
   b.alive=false;b.dead=0;feed("<b style='color:#3cffd0'>YOU</b> ▸ "+b.name+(head?" <span style='color:#ff4655'>💀HEADSHOT</span>":""));
   beep(500,.25,.2,"triangle",600);updateHud();
   if(!bots.some(x=>x.alive)&&state==="play")endRound(true);
@@ -547,6 +580,7 @@ function killBot(b,head){
 /* ---------- 봇 AI ---------- */
 const eye=new THREE.Vector3(),pEye=new THREE.Vector3();
 function canSee(b){
+  if(P.cloak>0&&b.pos.distanceTo(P.pos)>5)return false;
   eye.set(b.pos.x,1.6,b.pos.z);pEye.set(P.pos.x,P.pos.y+P.eye-.1,P.pos.z);
   if(segBlockedBySmoke(eye,pEye))return false;
   const d=new THREE.Vector3().subVectors(pEye,eye),len=d.length();d.normalize();
@@ -559,7 +593,9 @@ function updateBot(b,dt){
     if(b.dead>4)b.g.visible=false;return;
   }
   const toP=new THREE.Vector3().subVectors(P.pos,b.pos);toP.y=0;const dist=toP.length();
-  const vis=P.alive&&dist<55&&canSee(b);
+  b.blind=Math.max(0,(b.blind||0)-dt);if(b.blind>0)b.seen=0;
+  const T=b.t;
+  const vis=P.alive&&b.blind<=0&&dist<55&&canSee(b);
   if(vis)b.seen=4;else b.seen=Math.max(0,b.seen-dt);
   let move=new THREE.Vector3(),speed=3;
   if(vis&&P.alive){
@@ -570,21 +606,21 @@ function updateBot(b,dt){
     b.strafeT-=dt;if(b.strafeT<=0){b.strafe=[-1,0,1][Math.floor(Math.random()*3)];b.strafeT=.6+Math.random()*1.2}
     const side=new THREE.Vector3(-toP.z,0,toP.x).normalize();
     move.copy(side).multiplyScalar(b.strafe);
-    if(dist>20)move.addScaledVector(toP.clone().normalize(),.8);else if(dist<8)move.addScaledVector(toP.clone().normalize(),-.6);
-    speed=2.6;
+    if(dist>T.range[1])move.addScaledVector(toP.clone().normalize(),.8);else if(dist<T.range[0])move.addScaledVector(toP.clone().normalize(),-.6);
+    speed=2.6*T.speed;
     b.shootT-=dt;
     if(b.shootT<=0&&Math.abs(dy)<.35){
-      b.shootT=(.55+Math.random()*.5)/diff;
+      b.shootT=(.55+Math.random()*.5)*T.fire/diff;
       botFire(b,dist);
     }
   }else if(b.seen>0){ // 마지막 위치 추적
     b.target=P.pos.clone();
     move.subVectors(b.target,b.pos).setY(0);if(move.lengthSq()>1)move.normalize();
-    b.yaw=Math.atan2(-move.x,-move.z);speed=3.4;
+    b.yaw=Math.atan2(-move.x,-move.z);speed=3.4*T.speed;
   }else{ // 순찰
     if(!b.target||b.pos.distanceTo(b.target)<1.5||Math.random()<dt*.05)b.target=randFree(-HALF+3,HALF-3);
     move.subVectors(b.target,b.pos).setY(0);if(move.lengthSq()>0)move.normalize();
-    b.yaw=Math.atan2(-move.x,-move.z);speed=2.4;
+    b.yaw=Math.atan2(-move.x,-move.z);speed=2.4*T.speed;
   }
   const old=b.pos.clone();
   b.pos.addScaledVector(move,speed*dt);resolve(b.pos,.45);
@@ -592,13 +628,15 @@ function updateBot(b,dt){
   b.g.rotation.y=b.yaw;b.g.rotation.x=0;
 }
 function botFire(b,dist){
-  const hitChance=Math.max(.1,Math.min(.6,.55-dist*.012))*diff*(P.walk?1.1:1)*(Math.hypot(P.vel.x,P.vel.z)>4?.7:1);
+  const T=b.t;
+  const base=T.id==="sniper"?.5:Math.max(.1,Math.min(.6,.55-dist*.012));
+  const hitChance=Math.min(.9,base*diff*(P.walk?1.1:1)*(Math.hypot(P.vel.x,P.vel.z)>4?.7:1));
   const vol=Math.max(0,.35-dist*.006);
   noise(.15,vol,1600);
   eye.set(b.pos.x,1.5,b.pos.z);
   const end=P.pos.clone().setY(1.3);
   if(Math.random()<hitChance){
-    const dmg=(8+Math.random()*8)*(diff>1?1.1:1);
+    const dmg=(T.dmg[0]+Math.random()*(T.dmg[1]-T.dmg[0]))*(diff>1?1.1:1);
     tracer(eye.clone(),end,0xff6655);hurt(dmg,b);
   }else{
     end.add(new THREE.Vector3((Math.random()-.5)*3,(Math.random()-.5)*2,(Math.random()-.5)*3));
@@ -626,12 +664,14 @@ addEventListener("keydown",e=>{
   if(e.code==="Digit1")switchWeapon(0);
   if(e.code==="Digit2")switchWeapon(1);
   if(e.code==="Digit3")switchWeapon(2);
+  if(e.code==="Digit4")switchWeapon(3);
+  if(e.code==="Digit5")switchWeapon(4);
   if(e.code==="KeyR")startReload();
   if(e.code==="KeyQ")useSkill(0);
   if(e.code==="KeyE")useSkill(1);
   if(state==="buy"){
-    if(e.code==="Digit4")buy("vandal");if(e.code==="Digit5")buy("operator");
-    if(e.code==="Digit6")buy("armor");if(e.code==="Digit7")buy("skill");
+    if(e.code==="KeyZ")buy("vandal");if(e.code==="KeyX")buy("operator");if(e.code==="KeyC")buy("stinger");
+    if(e.code==="KeyV")buy("breaker");if(e.code==="KeyB")buy("armor");if(e.code==="KeyN")buy("skill");
     if(e.code==="Enter")endBuy();
   }
 });
@@ -660,7 +700,7 @@ addEventListener("mousedown",e=>{
 });
 addEventListener("mouseup",e=>{if(e.button===0)mouseDown=false});
 addEventListener("contextmenu",e=>e.preventDefault());
-addEventListener("wheel",e=>{if(playing)nextWeapon(e.deltaY>0?1:2)});
+addEventListener("wheel",e=>{if(playing)nextWeapon(e.deltaY>0?1:WEAPONS.length-1)});
 
 const isTouch=("ontouchstart" in window)||navigator.maxTouchPoints>0;
 function show(id,v){$(id).style.display=v?"flex":"none"}
@@ -683,7 +723,7 @@ function lockPointer(){
 function startGame(){
   audio()&&audio().resume();
   round=1;winP=0;winB=0;game.kills=0;game.heads=0;
-  P.credits=1000;P.owned=[true,false,false];P.armor=0;P.w=0;buildGun();applyAgent();
+  P.credits=1000;P.owned=[true,false,false,false,false];P.armor=0;P.w=0;buildGun();applyAgent();
   started=true;newRound();lockPointer();setPlaying(true);
 }
 function endGame(over){
@@ -697,6 +737,7 @@ function endGame(over){
   setPlaying(false);showHome();
 }
 function showHome(){
+  P.cloak=0;renderer.domElement.style.filter="";renderer.domElement.dataset.f="";
   if(!AGENTS[settings.agent])settings.agent=0;applyAgent();$("buy").style.display="none";
   $("mAgent").textContent="에이전트 · "+AGENTS[settings.agent].name;$("mMap").textContent="맵 · "+MAPS[settings.map].name;
   bots.forEach(b=>scene.remove(b.g));bots.length=0;
@@ -711,7 +752,7 @@ function showHome(){
 /* 모달 */
 function openModal(html,init){$("mbox").innerHTML=html+'<button class="mbtn" id="mClose" style="width:100%;margin-top:6px">닫기</button>';$("modal").style.display="flex";$("mClose").onclick=closeModal;init&&init()}
 function closeModal(){$("modal").style.display="none"}
-const CTL_HTML=`<table><tr><td>W A S D</td><td>이동</td></tr><tr><td>방향키</td><td>시점 이동 (마우스 잠금이 안 될 때)</td></tr><tr><td>마우스</td><td>시점 · 좌클릭 발사 · 우클릭 줌</td></tr><tr><td>Shift</td><td>걷기 (정확도↑, 소음↓)</td></tr><tr><td>Space</td><td>점프</td></tr><tr><td>1 · 2 · 3 / 휠</td><td>권총 · 라이플 · 스나이퍼</td></tr><tr><td>R</td><td>재장전</td></tr><tr><td>Q · E</td><td>에이전트 스킬 (대시 / 연막 / 치료 / 스캔)</td></tr><tr><td>4~7 · Enter</td><td>구매 단계: 4 VANDAL · 5 OPERATOR · 6 아머 · 7 스킬충전 · Enter 시작</td></tr><tr><td>Esc</td><td>일시정지</td></tr><tr><td>모바일</td><td>왼쪽 조이스틱 이동 · 화면 드래그 시점 · 오른쪽 버튼</td></tr></table>`;
+const CTL_HTML=`<table><tr><td>W A S D</td><td>이동</td></tr><tr><td>방향키</td><td>시점 이동 (마우스 잠금이 안 될 때)</td></tr><tr><td>마우스</td><td>시점 · 좌클릭 발사 · 우클릭 줌</td></tr><tr><td>Shift</td><td>걷기 (정확도↑, 소음↓)</td></tr><tr><td>Space</td><td>점프</td></tr><tr><td>1~5 / 휠</td><td>권총 · 라이플 · 스나이퍼 · SMG · 샷건</td></tr><tr><td>R</td><td>재장전</td></tr><tr><td>Q · E</td><td>에이전트 스킬 (대시 / 연막 / 치료 / 스캔)</td></tr><tr><td>Z X C V B N</td><td>구매 단계: VANDAL · OPERATOR · STINGER · BREAKER · 아머 · 스킬충전</td></tr><tr><td>Enter</td><td>구매 완료 / 라운드 시작</td></tr><tr><td>Esc</td><td>일시정지</td></tr><tr><td>모바일</td><td>왼쪽 조이스틱 이동 · 화면 드래그 시점 · 오른쪽 버튼</td></tr></table>`;
 function openCtl(){openModal("<h3>조작법</h3>"+CTL_HTML)}
 function openSet(){
   openModal(`<h3>설정</h3><label>감도 <b id="sensV"></b><input type="range" id="sensR" min="0.3" max="2" step="0.1"></label><label>볼륨 <b id="volV"></b><input type="range" id="volR" min="0" max="1" step="0.05"></label>`,()=>{
@@ -818,7 +859,8 @@ function loop(){
       if(P.pos.y<=0){P.pos.y=0;P.vy=0;P.onGround=true}
       P.pos.addScaledVector(P.vel,dt);
       if(P.dashT>0){P.dashT-=dt;P.pos.addScaledVector(P.dash,dt)}
-      P.slots.forEach(x=>{x.t=Math.max(0,x.t-dt)});P.scanT=Math.max(0,P.scanT-dt);
+      P.slots.forEach(x=>{x.t=Math.max(0,x.t-dt)});P.scanT=Math.max(0,P.scanT-dt);P.cloak=Math.max(0,P.cloak-dt);
+    {const f=P.cloak>0?"hue-rotate(170deg) saturate(.6) brightness(.9)":"";if(renderer.domElement.dataset.f!==f){renderer.domElement.dataset.f=f;renderer.domElement.style.filter=f}}
       resolve(P.pos,.4);
       const spd=Math.hypot(P.vel.x,P.vel.z);
       if(P.onGround&&spd>1)P.bob+=dt*spd*1.8;
