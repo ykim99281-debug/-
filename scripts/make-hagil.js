@@ -166,7 +166,7 @@ for (const [a, b] of [['星界解放', '하늘의 군대'], ['魔力解放', '�
 }
 
 // 9) 공통 패치: 내 계정 점검 칸 + 프리미엄 1단계 (칭호 이름만 하길 분위기로)
-s = require('./common-patches').apply(s, { version: '2.6.0', build: 260, root: 'hagil',
+s = require('./common-patches').apply(s, { version: '2.6.1', build: 261, root: 'hagil',
   titles: [['🌱 개척자', '🌱 믿음의 개척자'], ['💎 후원자', '🕊️ 평화의 사람'], ['✨ 별빛 수호자', '✝️ 길의 수호자'], ['🏅 베테랑', '📖 말씀의 사람']] });
 
 fs.writeFileSync(out, s);
