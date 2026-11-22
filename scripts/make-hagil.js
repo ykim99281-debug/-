@@ -168,7 +168,7 @@ for (const [a, b] of [['星界解放', '하늘의 군대'], ['魔力解放', '�
   rep('#pwBox[data-guest="1"],#blockBox', '#pwBox[data-guest="1"],#diagBox[data-guest="1"],#blockBox');
   rep("$('pwBox'),$('blockBox')", "$('pwBox'),$('diagBox'),$('blockBox')");
   rep("const pb=$('pwBox');if(pb)pb.dataset.guest=(user==='guest')?'1':''}", "for(const id of['pwBox','diagBox']){const pb=$(id);if(pb)pb.dataset.guest=(user==='guest')?'1':''}}");
-  rep("const APP_VERSION='2.4.0',APP_BUILD=240", "const APP_VERSION='2.5.0',APP_BUILD=250");
+  rep("const APP_VERSION='2.4.0',APP_BUILD=240", "const APP_VERSION='2.6.0',APP_BUILD=260");
 }
 
 // 11) 프리미엄 1단계 (별빛 2.5.0과 같은 기능, 칭호 이름만 하길 분위기로)

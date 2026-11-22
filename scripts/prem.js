@@ -4,6 +4,7 @@
 let premiumMap={};
 const PREM_TITLES={pioneer:'🌱 개척자',patron:'💎 후원자',guardian:'✨ 별빛 수호자',veteran:'🏅 베테랑'};
 const PREM_COLORS=['#ffffff','#ff9ecb','#ffd86b','#8be9fd','#b8ff9f','#c4a1ff','#ff8a8a'];
+const PREM_AURAS={none:'없음',gold:'✨ 황금',blue:'🌊 푸른 물결',pink:'🌸 분홍',rainbow:'🌈 무지개'};
 const PREM_FRAMES={none:['',''],laurel:['🌿','🌿'],star:['⭐','⭐'],flame:['🔥','🔥'],crown:['👑','']};
 function premActive(n){const m=premiumMap[n];return !!(m&&typeof m.until==='number'&&(m.until===0||m.until>Date.now()))}
 function premDaysLeft(m){return m.until===0?'영구':Math.max(0,Math.ceil((m.until-Date.now())/864e5))+'일 남음'}
@@ -40,12 +41,13 @@ function renderPremium(){
   $('premSwatches').innerHTML=PREM_COLORS.map(c=>`<button class="swatch" data-c="${c}" style="background:${c}" onclick="premDirty=true;premPickColor('${c}')"></button>`).join('');
   premPickColor(PREM_COLORS.includes(d.nameColor)?d.nameColor:PREM_COLORS[0]);
   $('premFrame').value=PREM_FRAMES[d.frame]?d.frame:'none';
+  $('premAura').value=PREM_AURAS[d.aura]?d.aura:'none';
   $('premBio').value=d.bio||'';
   premPreview();
 }
 async function savePremDeco(){
   if(!premActive(user))return alert('프리미엄 회원만 쓸 수 있어요.');
-  const sw=document.querySelector('#premSwatches .swatch.on'),deco={nameColor:sw?sw.dataset.c:PREM_COLORS[0],frame:$('premFrame').value||'none',bio:String($('premBio').value||'').replace(/[<>&"']/g,'').trim().slice(0,30)};
+  const sw=document.querySelector('#premSwatches .swatch.on'),deco={nameColor:sw?sw.dataset.c:PREM_COLORS[0],frame:$('premFrame').value||'none',aura:$('premAura').value||'none',bio:String($('premBio').value||'').replace(/[<>&"']/g,'').trim().slice(0,30)};
   if($('premTitle').value)deco.title=$('premTitle').value;
   try{await dbRef('premium/'+safeKey(user)+'/deco').set(deco);premDirty=false;alert('저장했어요!')}
   catch(e){alert('저장하지 못했어요: '+(e.code||e.message))}
@@ -63,6 +65,18 @@ function applyPremBuff(){
   const o=window[f];if(typeof o!=='function')return;
   window[f]=function(){const r=o.apply(this,arguments);applyPremBuff();return r};
 });
+// ----- 캐릭터 오라: 전투 중 내 캐릭터 주변 효과 (꾸미기만, 능력치 없음) -----
+function drawPremAura(o){
+  const m=premiumMap[user],a=m&&m.deco&&m.deco.aura;
+  if(!a||a==='none'||!PREM_AURAS[a]||!premActive(user))return;
+  const t=Date.now()/400,col=a==='gold'?'#ffd86b':a==='blue'?'#60a5fa':a==='pink'?'#ff9ecb':`hsl(${(Date.now()/8)%360},90%,65%)`;
+  ctx.save();ctx.strokeStyle=col;ctx.fillStyle=col;ctx.shadowColor=col;ctx.shadowBlur=22;ctx.lineWidth=3;
+  for(let i=0;i<2;i++){ctx.globalAlpha=.55-i*.2;ctx.beginPath();ctx.arc(o.x,o.y,o.r+10+i*9+Math.sin(t+i)*3,0,7);ctx.stroke()}
+  ctx.globalAlpha=.9;
+  for(let i=0;i<5;i++){const g=t*.8+i*1.2566;ctx.beginPath();ctx.arc(o.x+Math.cos(g)*(o.r+22),o.y+Math.sin(g)*(o.r+22),2.5,0,7);ctx.fill()}
+  ctx.restore();
+}
+{const _dc=drawC;drawC=function(o){try{if(typeof player!=='undefined'&&o===player)drawPremAura(o)}catch(e){}return _dc.apply(this,arguments)}}
 // ----- 관리자: 지급 / 해제 / 조회 (닉네임 앞뒤 공백은 자동으로 지워요) -----
 async function adminPremGrant(){
   if(!isAdmin())return alert('권한이 없어요.');
