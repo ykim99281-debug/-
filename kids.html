@@ -402,6 +402,15 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
   </div>
 
   <div class="adminTile">
+    <b>🧹 오래된 기록 정리 (관리자 이상)</b><br>
+    <div class="small">개인정보처리방침의 보관 기간이 지난 채팅 메시지와 신고 기록을 지워요. 먼저 <b>조회</b>로 몇 개인지 확인하세요.</div>
+    <input id="purgeDays" type="number" class="adminInput" placeholder="보관 기간(일, 30~3650)" value="365">
+    <button class="blue" onclick="adminPurgeOld(false)">조회</button>
+    <button class="red" onclick="adminPurgeOld(true)">🧹 정리하기</button>
+    <div id="purgeInfo" class="small"></div>
+  </div>
+
+  <div class="adminTile">
     <b>💎 프리미엄 지급 (관리자 이상)</b><br>
     <input id="premTarget" class="adminInput" placeholder="대상 닉네임">
     <input id="premDays" type="number" class="adminInput" placeholder="기간(일, 0=영구)">
@@ -2387,7 +2396,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='1.1.1',APP_BUILD=111,APP_DATE='2026-11-21';
+const APP_VERSION='1.2.0',APP_BUILD=120,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2793,6 +2802,36 @@ function storyReplay(startName){
   ov.querySelector('#rpNext').onclick=()=>{if(i<pages.length-1){i++;draw()}else ov.remove()};
   ov.querySelector('#rpClose').onclick=()=>ov.remove();
   draw();
+}
+/* ===================== 오래된 채팅·신고 기록 정리 (보관 기간이 지난 것 삭제) ===================== */
+async function adminPurgeOld(doIt){
+  if(!isAdmin())return alert('권한이 없어요.');
+  const days=Math.floor(Number($('purgeDays').value)),box=$('purgeInfo');
+  if(!Number.isFinite(days)||days<30||days>3650)return alert('보관 기간은 30~3650일로 입력해 주세요.');
+  const cutoff=Date.now()-days*864e5;
+  let chat,reps;
+  try{chat=(await dbRef('globalChat').get()).val()||{};reps=(await dbRef('reports').get()).val()||{}}
+  catch(e){return alert('기록을 불러오지 못했어요: '+(e.code||e.message))}
+  const old=(o)=>Object.keys(o).filter(k=>{const t=Number(o[k]&&o[k].ts);return t>0&&t<cutoff});
+  const oc=old(chat),or=old(reps);
+  const ds=ks=>ks.length?' (가장 오래된 것: '+new Date(Math.min(...ks.map(k=>Number((ks===oc?chat:reps)[k].ts)))).toLocaleDateString()+')':'';
+  const txt='채팅 '+oc.length+'개'+ds(oc)+', 신고 '+or.length+'개'+ds(or)+' ('+days+'일이 지난 기록)';
+  if(box)box.textContent=txt;
+  if(!doIt)return;
+  if(!oc.length&&!or.length)return alert('지울 기록이 없어요.');
+  if(!confirm(txt+'\n\n정말 지울까요? 되돌릴 수 없어요.'))return;
+  let done=0;
+  try{
+    for(const [name,ks] of [['globalChat',oc],['reports',or]]){
+      for(let i=0;i<ks.length;i+=200){
+        const part={};ks.slice(i,i+200).forEach(k=>{part[k]=null});
+        await dbRef(name).update(part);done+=Math.min(200,ks.length-i);
+        if(box)box.textContent='지우는 중... '+done+' / '+(oc.length+or.length);
+      }
+    }
+  }catch(e){if(box)box.textContent='중간에 멈췄어요('+done+'개 삭제): '+(e.code||e.message);return alert('지우지 못했어요: '+(e.code||e.message))}
+  if(box)box.textContent='✅ '+done+'개를 지웠어요.';
+  alert(done+'개를 지웠어요.');
 }
 /* ===================== 프리미엄 (1단계: 결제 없이 관리자 지급) ===================== */
 // 데이터: kids/premium/<닉네임> = {until(0=영구 또는 만료 시각), titles:{id:true}, deco:{title,nameColor,frame,bio}}
