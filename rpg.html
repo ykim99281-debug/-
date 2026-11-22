@@ -198,7 +198,7 @@ input:focus,select:focus{outline:0;border-color:#f87171;box-shadow:0 0 0 3px rgb
 .rpItem button{padding:4px 10px;font-size:12px;margin:2px}
 #adminBtn .cnt{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:999px;background:#ef4444;font-size:11px}
 </style>
-<style id="pwUi">#pwBox[data-guest="1"],#diagBox[data-guest="1"],#premBox[data-guest="1"],#blockBox[data-guest="1"]{display:none!important}</style>
+<style id="pwUi">#pwBox[data-guest="1"],#diagBox[data-guest="1"],#premBox[data-guest="1"],#feedBox[data-guest="1"],#blockBox[data-guest="1"]{display:none!important}</style>
 
 <style id="domainUi">
 .lbBar{position:fixed;left:0;right:0;height:11vh;background:#000;z-index:99989;pointer-events:none}
@@ -271,6 +271,14 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
   <button class="green" onclick="savePremDeco()">저장</button>
 </div>
 <p class="small" style="margin-top:8px">💎 <b>혜택</b>: 몬스터·던전·협동 전투에서 <b>체력·공격 +5%</b> (대인전 PvP·랭크전에는 적용되지 않아 공정해요) + 칭호·이름·오라 꾸미기. 지금은 <b>결제 없이 관리자가 지급</b>해요(테스트 기간).</p>
+</div>
+
+<div class="box" id="feedBox" data-guest="1">
+<h3>💬 의견 보내기</h3>
+<p class="small">버그, 아이디어, 하고 싶은 말을 보내 주세요. 만든 사람이 읽고 업데이트에 반영해요. (개인정보는 적지 마세요)</p>
+<select id="fbCat"><option value="bug">🐞 버그·이상한 점</option><option value="idea">💡 이런 게 있으면 좋겠어요</option><option value="etc">💬 기타</option></select>
+<textarea id="fbMsg" maxlength="400" rows="4" placeholder="여기에 적어 주세요 (최대 400자)" style="width:100%;margin:6px 0;padding:10px;border-radius:10px;border:1px solid #475569;background:#0f172a;color:#fff;font-size:15px"></textarea>
+<button class="green" onclick="sendFeedback()">보내기</button>
 </div>
 
 <div class="box" id="diagBox" data-guest="1">
@@ -401,11 +409,18 @@ details.chapter summary{cursor:pointer;font-weight:700}details.locked summary{op
 
   <div class="adminTile">
     <b>🧹 오래된 기록 정리 (관리자 이상)</b><br>
-    <div class="small">개인정보처리방침의 보관 기간이 지난 채팅 메시지와 신고 기록을 지워요. 먼저 <b>조회</b>로 몇 개인지 확인하세요.</div>
+    <div class="small">개인정보처리방침의 보관 기간이 지난 채팅 메시지, 신고, 의견 기록을 지워요. 먼저 <b>조회</b>로 몇 개인지 확인하세요.</div>
     <input id="purgeDays" type="number" class="adminInput" placeholder="보관 기간(일, 30~3650)" value="365">
     <button class="blue" onclick="adminPurgeOld(false)">조회</button>
     <button class="red" onclick="adminPurgeOld(true)">🧹 정리하기</button>
     <div id="purgeInfo" class="small"></div>
+  </div>
+
+  <div class="adminTile">
+    <b>💬 의견함 (관리자 이상)</b><br>
+    <div class="small">유저가 보낸 의견을 최신순으로 보여요. 읽고 나서 <b>처리</b>를 누르면 지워져요.</div>
+    <button class="blue" onclick="adminFeedList()">의견 불러오기</button>
+    <div id="feedList" class="small">아직 조회 안 함</div>
   </div>
 
   <div class="adminTile ownerOnly">
@@ -2367,7 +2382,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='2.9.0',APP_BUILD=290,APP_DATE='2026-11-21';
+const APP_VERSION='2.10.0',APP_BUILD=300,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -2539,7 +2554,7 @@ function tabTargets(){
     battle:[...q('#select .tradeRoom'),...q('#select .pvp')],
     event:[$('perkBox'),$('eventBox')],
     story:[$('storyBox')],
-    account:[$('name').closest('.box'),$('pwBox'),$('premBox'),$('diagBox'),$('blockBox'),...q('#select .photoBox')],
+    account:[$('name').closest('.box'),$('pwBox'),$('premBox'),$('feedBox'),$('diagBox'),$('blockBox'),...q('#select .photoBox')],
     admin:[$('adminBox')]
   };
 }
@@ -2553,7 +2568,7 @@ function showTab(id){
 }
 const ADMIN_GROUPS=[
   ['users','👤 유저',['유저 목록','유저 검색','유저 제재','직급 부여','관리자 임명']],
-  ['report','🚨 신고·채팅',['신고 목록','채팅 기록','의심 계정']],
+  ['report','🚨 신고·채팅',['신고 목록','채팅 기록','의심 계정','의견함']],
   ['give','🎁 지급',['내 보상','특정 유저 지급','전체 유저 보상','프리미엄']],
   ['notice','📢 공지·이벤트',['전체 공지','채팅 관리','이벤트 열기']],
   ['server','🛠️ 서버',['서버 관리','서버 정보']]
@@ -2971,29 +2986,62 @@ async function adminPurgeOld(doIt){
   const days=Math.floor(Number($('purgeDays').value)),box=$('purgeInfo');
   if(!Number.isFinite(days)||days<30||days>3650)return alert('보관 기간은 30~3650일로 입력해 주세요.');
   const cutoff=Date.now()-days*864e5;
-  let chat,reps;
-  try{chat=(await dbRef('globalChat').get()).val()||{};reps=(await dbRef('reports').get()).val()||{}}
+  let chat,reps,fbs;
+  try{chat=(await dbRef('globalChat').get()).val()||{};reps=(await dbRef('reports').get()).val()||{};fbs=(await dbRef('feedback').get()).val()||{}}
   catch(e){return alert('기록을 불러오지 못했어요: '+(e.code||e.message))}
   const old=(o)=>Object.keys(o).filter(k=>{const t=Number(o[k]&&o[k].ts);return t>0&&t<cutoff});
-  const oc=old(chat),or=old(reps);
-  const ds=ks=>ks.length?' (가장 오래된 것: '+new Date(Math.min(...ks.map(k=>Number((ks===oc?chat:reps)[k].ts)))).toLocaleDateString()+')':'';
-  const txt='채팅 '+oc.length+'개'+ds(oc)+', 신고 '+or.length+'개'+ds(or)+' ('+days+'일이 지난 기록)';
+  const oc=old(chat),or=old(reps),of=old(fbs);
+  const ds=ks=>ks.length?' (가장 오래된 것: '+new Date(Math.min(...ks.map(k=>Number((ks===oc?chat:ks===or?reps:fbs)[k].ts)))).toLocaleDateString()+')':'';
+  const txt='채팅 '+oc.length+'개'+ds(oc)+', 신고 '+or.length+'개'+ds(or)+', 의견 '+of.length+'개'+ds(of)+' ('+days+'일이 지난 기록)';
   if(box)box.textContent=txt;
   if(!doIt)return;
-  if(!oc.length&&!or.length)return alert('지울 기록이 없어요.');
+  if(!oc.length&&!or.length&&!of.length)return alert('지울 기록이 없어요.');
   if(!confirm(txt+'\n\n정말 지울까요? 되돌릴 수 없어요.'))return;
   let done=0;
   try{
-    for(const [name,ks] of [['globalChat',oc],['reports',or]]){
+    for(const [name,ks] of [['globalChat',oc],['reports',or],['feedback',of]]){
       for(let i=0;i<ks.length;i+=200){
         const part={};ks.slice(i,i+200).forEach(k=>{part[k]=null});
         await dbRef(name).update(part);done+=Math.min(200,ks.length-i);
-        if(box)box.textContent='지우는 중... '+done+' / '+(oc.length+or.length);
+        if(box)box.textContent='지우는 중... '+done+' / '+(oc.length+or.length+of.length);
       }
     }
   }catch(e){if(box)box.textContent='중간에 멈췄어요('+done+'개 삭제): '+(e.code||e.message);return alert('지우지 못했어요: '+(e.code||e.message))}
   if(box)box.textContent='✅ '+done+'개를 지웠어요.';
   alert(done+'개를 지웠어요.');
+}
+/* ===================== 의견 보내기 · 의견함 ===================== */
+let lastFeedAt=0;
+const FEED_CATS={bug:'🐞 버그',idea:'💡 아이디어',etc:'💬 기타'};
+async function sendFeedback(){
+  if(user==='guest')return alert('로그인 후 보낼 수 있어요.');
+  if(!online||!db)return alert('온라인 연결이 필요해요.');
+  const cat=$('fbCat').value,msg=String($('fbMsg').value||'').trim();
+  if(!FEED_CATS[cat])return alert('종류를 골라 주세요.');
+  if(msg.length<2)return alert('의견을 두 글자 이상 적어 주세요.');
+  if(msg.length>400)return alert('의견은 400자까지 보낼 수 있어요.');
+  if(Date.now()-lastFeedAt<60000)return alert('조금 있다가 다시 보내 주세요. (1분에 한 번)');
+  try{
+    const ts=Date.now();
+    await dbRef('feedback/'+safeKey(user+'_'+ts)).set({by:user,msg,cat,ts,v:APP_VERSION});
+    lastFeedAt=ts;$('fbMsg').value='';alert('의견을 보냈어요. 고마워요! 🙏');
+  }catch(e){alert('보내지 못했어요: '+(e.code||e.message))}
+}
+async function adminFeedList(){
+  if(!isAdmin())return alert('권한이 없어요.');
+  const box=$('feedList');if(!box)return;
+  box.textContent='불러오는 중...';
+  try{
+    const v=(await dbRef('feedback').get()).val()||{};
+    const rows=Object.keys(v).map(k=>({k,...v[k]})).sort((a,b)=>(b.ts||0)-(a.ts||0)).slice(0,100);
+    if(!rows.length){box.textContent='받은 의견이 없어요.';return}
+    box.innerHTML='<div style="margin:4px 0">최근 '+rows.length+'개</div>'+rows.map(r=>`<div style="padding:8px;margin:6px 0;border-radius:10px;background:rgba(255,255,255,.07)"><b>${FEED_CATS[r.cat]||'💬'} ${escH(r.by)}</b> <small style="color:#9ca3af">· ${r.ts?new Date(r.ts).toLocaleString():''} · v${escH(r.v||'')}</small><div style="margin:6px 0;white-space:pre-wrap;word-break:break-word">${escH(r.msg)}</div><button class="green" onclick="adminFeedDone('${encodeURIComponent(r.k).replace(/'/g,'%27')}')">✅ 처리(삭제)</button></div>`).join('');
+  }catch(e){box.textContent='불러오지 못했어요. ('+(e.code||e.message)+')'}
+}
+async function adminFeedDone(enc){
+  if(!isAdmin())return alert('권한이 없어요.');
+  try{await dbRef('feedback/'+decodeURIComponent(enc)).remove();adminFeedList()}
+  catch(e){alert('처리하지 못했어요: '+(e.code||e.message))}
 }
 /* ===================== 비밀번호 변경 ===================== */
 changePassword=async function(){
@@ -3016,7 +3064,7 @@ changePassword=async function(){
   }finally{authBusy=false}
 };
 const _uapPw=updateAdminPanel;
-updateAdminPanel=function(){_uapPw();for(const id of['pwBox','diagBox','premBox']){const pb=$(id);if(pb)pb.dataset.guest=(user==='guest')?'1':''}};
+updateAdminPanel=function(){_uapPw();for(const id of['pwBox','diagBox','premBox','feedBox']){const pb=$(id);if(pb)pb.dataset.guest=(user==='guest')?'1':''}};
 
 /* ===================== 이펙트 개선: 번개 · 바람 · 안개 ===================== */
 function boltPoints(x1,y1,x2,y2,segs,jit){
