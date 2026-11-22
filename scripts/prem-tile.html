@@ -8,4 +8,13 @@
     <button class="blue" onclick="adminPremInfo()">조회</button>
     <div id="premAdminInfo" class="small"></div>
   </div>
+  <div class="adminTile">
+    <b>🎉 프리미엄 이벤트 뿌리기 (관리자 이상)</b><br>
+    <div class="small">가입한 유저에게 프리미엄과 칭호를 한꺼번에 선물해요. (이미 프리미엄이면 기간이 더해져요)</div>
+    <select id="premEvTitle" class="adminInput"><option value="pioneer">🌱 개척자</option><option value="patron">💎 후원자</option><option value="guardian">✨ 별빛 수호자</option><option value="veteran">🏅 베테랑</option></select>
+    <input id="premEvDays" type="number" class="adminInput" placeholder="기간(일, 1~365)" value="7">
+    <input id="premEvRecent" type="number" class="adminInput" placeholder="최근 N일 안에 접속한 유저만 (0=모두)" value="0">
+    <button class="gold" onclick="adminPremEvent()">🎁 이벤트 지급</button>
+    <div id="premEvInfo" class="small"></div>
+  </div>
 

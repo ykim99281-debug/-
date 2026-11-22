@@ -92,6 +92,37 @@ async function adminPremGrant(){
     adminPremInfo();alert(`${n}님에게 프리미엄을 ${days===0?'영구':days+'일'} 지급했어요.`);
   }catch(e){alert('지급하지 못했어요: '+(e.code||e.message))}
 }
+// ----- 관리자: 이벤트 뿌리기 (전체 또는 최근 접속자에게 프리미엄 + 칭호) -----
+async function adminPremEvent(){
+  if(!isAdmin())return alert('권한이 없어요.');
+  const t=$('premEvTitle').value,days=Math.floor(Number($('premEvDays').value)),recent=Math.floor(Number($('premEvRecent').value)||0),info=$('premEvInfo');
+  if(!PREM_TITLES[t])return alert('칭호를 골라 주세요.');
+  if(!Number.isFinite(days)||days<1||days>365)return alert('기간은 1~365일로 입력해 주세요.');
+  if(recent<0||recent>3650)return alert('최근 접속 기간은 0~3650일로 입력해 주세요.');
+  let users;
+  try{users=(await dbRef('users').get()).val()||{}}catch(e){return alert('유저 목록을 불러오지 못했어요: '+(e.code||e.message))}
+  const now=Date.now();
+  const names=Object.keys(users).filter(n=>recent<=0||now-(Number(users[n]&&users[n].ts)||0)<=recent*864e5);
+  if(!names.length)return alert('조건에 맞는 유저가 없어요.');
+  if(names.length>500)return alert('대상이 '+names.length+'명이에요. 한 번에 500명까지만 지급할 수 있어요. 최근 접속 기간을 줄여 주세요.');
+  if(!confirm(names.length+'명에게 프리미엄 '+days+'일과 「'+PREM_TITLES[t]+'」 칭호를 지급할까요?\n(되돌리려면 한 명씩 해제해야 해요)'))return;
+  const ups=names.map(n=>{
+    const cur=premiumMap[n]||{},base=Math.max(now,typeof cur.until==='number'?cur.until:0);
+    return [n,cur.until===0?0:base+days*864e5];
+  });
+  let done=0;
+  try{
+    for(let i=0;i<ups.length;i+=100){
+      const part={};
+      ups.slice(i,i+100).forEach(([n,until])=>{part[n+'/until']=until;part[n+'/titles/'+t]=true});
+      await dbRef('premium').update(part);done+=Math.min(100,ups.length-i);
+      if(info)info.textContent='지급 중... '+done+' / '+ups.length;
+    }
+  }catch(e){if(info)info.textContent='중간에 멈췄어요('+done+'명 완료): '+(e.code||e.message);return alert('지급하지 못했어요: '+(e.code||e.message))}
+  if(info)info.textContent='✅ '+done+'명에게 지급 완료';
+  try{if(typeof adminNoticeTextAuto==='function')adminNoticeTextAuto('🎉 이벤트! 모두에게 프리미엄 '+days+'일과 「'+PREM_TITLES[t]+'」 칭호를 선물했어요!')}catch(e){}
+  alert(done+'명에게 지급했어요!');
+}
 async function adminPremRevoke(){
   if(!isAdmin())return alert('권한이 없어요.');
   const n=safeKey($('premTarget').value.trim());if(!n)return alert('닉네임을 입력해 주세요.');
