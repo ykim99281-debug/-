@@ -167,3 +167,49 @@ class Agent {
   }
   dispose() { const i = agents.indexOf(this); if (i >= 0) agents.splice(i, 1); scene.remove(this.m.group); }
 }
+
+// ===== 실제 자동차 (신차 기준 대략가 · 대략적인 제원) =====
+const CAR_SPECS = {
+  morning: { brand: '기아', name: '모닝', type: 'hatch', price: 14000000, len: 3.6, w: 1.64, h: 1.5, vmax: 43, accel: 3.0, r: 0.29, colors: [0xe8e8ee, 0xf2c230, 0x2e86de, 0xc0392b, 0x2d3436], info: '경차 · 연비 좋은 첫 차' },
+  avante: { brand: '현대', name: '아반떼', type: 'sedan', price: 21000000, len: 4.7, w: 1.83, h: 1.42, vmax: 52, accel: 3.6, r: 0.32, colors: [0xf4f4f6, 0x1f2937, 0x9ca3af, 0xb91c1c, 0x1d4ed8], info: '준중형 세단 · 국민 첫 세단' },
+  sonata: { brand: '현대', name: '쏘나타', type: 'sedan', price: 29000000, len: 4.9, w: 1.86, h: 1.45, vmax: 57, accel: 4.0, r: 0.33, colors: [0xf4f4f6, 0x111827, 0x6b7280, 0x7f1d1d, 0x1e3a8a], info: '중형 세단' },
+  k5: { brand: '기아', name: 'K5', type: 'sedan', price: 28000000, len: 4.9, w: 1.86, h: 1.45, vmax: 58, accel: 4.4, r: 0.33, colors: [0xf4f4f6, 0x111827, 0xb91c1c, 0x0f766e, 0x6b7280], info: '중형 세단 · 스포티' },
+  grandeur: { brand: '현대', name: '그랜저', type: 'sedan', price: 41000000, len: 5.0, w: 1.88, h: 1.46, vmax: 61, accel: 4.4, r: 0.34, colors: [0xf4f4f6, 0x111827, 0x4b5563, 0x1e3a8a, 0x7c2d12], info: '준대형 세단' },
+  carnival: { brand: '기아', name: '카니발', type: 'van', price: 38000000, len: 5.16, w: 1.99, h: 1.76, vmax: 53, accel: 3.4, r: 0.35, colors: [0xf4f4f6, 0x111827, 0x6b7280, 0x7f1d1d, 0x14532d], info: '대형 미니밴 · 11인승' },
+  santafe: { brand: '현대', name: '싼타페', type: 'suv', price: 37000000, len: 4.83, w: 1.9, h: 1.72, vmax: 56, accel: 3.7, r: 0.36, colors: [0xf4f4f6, 0x111827, 0x78716c, 0x1e3a8a, 0x14532d], info: '중형 SUV' },
+  g80: { brand: '제네시스', name: 'G80', type: 'sedan', price: 60000000, len: 5.0, w: 1.93, h: 1.46, vmax: 67, accel: 5.5, r: 0.35, colors: [0x0b0b0d, 0xf4f4f6, 0x374151, 0x3f1d1d, 0x1e293b], info: '프리미엄 대형 세단' },
+  model3: { brand: '테슬라', name: '모델 3', type: 'sedan', price: 53000000, len: 4.72, w: 1.85, h: 1.44, vmax: 62, accel: 6.5, r: 0.33, colors: [0xf4f4f6, 0x111827, 0xb91c1c, 0x1e3a8a, 0x9ca3af], info: '전기차 · 강력한 가속', ev: 1 },
+  bmw5: { brand: 'BMW', name: '5시리즈', type: 'sedan', price: 78000000, len: 5.06, w: 1.9, h: 1.48, vmax: 69, accel: 5.8, r: 0.35, colors: [0xf4f4f6, 0x0b0b0d, 0x1e3a8a, 0x6b7280, 0x7f1d1d], info: '독일 프리미엄 세단' },
+  eclass: { brand: '메르세데스-벤츠', name: 'E클래스', type: 'sedan', price: 85000000, len: 4.95, w: 1.88, h: 1.47, vmax: 69, accel: 5.9, r: 0.35, colors: [0xd1d5db, 0x0b0b0d, 0xf4f4f6, 0x1e293b, 0x7f1d1d], info: '독일 프리미엄 세단' },
+  p911: { brand: '포르쉐', name: '911 카레라', type: 'coupe', price: 170000000, len: 4.55, w: 1.85, h: 1.3, vmax: 81, accel: 8.5, r: 0.36, colors: [0xfacc15, 0xdc2626, 0xf4f4f6, 0x0b0b0d, 0x2563eb], info: '스포츠카 · 리어엔진' },
+  huracan: { brand: '람보르기니', name: '우라칸', type: 'super', price: 350000000, len: 4.52, w: 1.93, h: 1.16, vmax: 90, accel: 10.5, r: 0.36, colors: [0x84cc16, 0xf97316, 0xfacc15, 0x0b0b0d, 0xdc2626], info: '슈퍼카 · 최고 시속 325km' }
+};
+const CAR_TP = { sedan: { clr: .17, bh: .55, cab: [.86, .5, .46, -.06] }, hatch: { clr: .18, bh: .58, cab: [.88, .62, .52, -.08] }, suv: { clr: .26, bh: .72, cab: [.9, .62, .52, -.08] }, van: { clr: .24, bh: .85, cab: [.94, .84, .75, -.02] }, coupe: { clr: .13, bh: .46, cab: [.84, .42, .36, -.06] }, super: { clr: .1, bh: .4, cab: [.8, .4, .3, -.05] } };
+const carType = s => ({ name: s.brand + ' ' + s.name, len: s.len, w: s.w, h: s.h, vmax: s.vmax, cap: 5, accel: s.accel, brake: 9, steerSpeed: 28 });
+
+function makeCarModel(spec, color) {
+  const L = spec.len, W = spec.w, tp = CAR_TP[spec.type], sc = spec.h / (tp.clr + tp.bh + tp.cab[2]), clr = tp.clr * sc, bh = tp.bh * sc, ch = tp.cab[2] * sc, cw = tp.cab[0] * W, cl = tp.cab[1] * L, cz = tp.cab[3] * L;
+  const g = new THREE.Group(), shell = [], inner = new THREE.Group(); g.add(inner);
+  const paint = mk(color), glass = mk(0x222d3a), dark = mk(0x131418);
+  const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; g.add(m); shell.push(m); return m; };
+  add(bgeo(W, bh, L), paint, 0, clr + bh / 2, 0);
+  add(bgeo(cw, ch, cl), glass, 0, clr + bh + ch / 2, cz);
+  add(bgeo(cw - 0.06, 0.06, cl - 0.35), paint, 0, clr + bh + ch + 0.02, cz);
+  add(bgeo(W + 0.04, bh * 0.45, 0.22), dark, 0, clr + bh * 0.3, L / 2 - 0.05); add(bgeo(W + 0.04, bh * 0.45, 0.22), dark, 0, clr + bh * 0.3, -L / 2 + 0.05);
+  if (spec.type === 'super' || spec.type === 'coupe') { add(bgeo(W - 0.2, 0.05, 0.4), dark, 0, clr + bh + 0.18, -L / 2 + 0.3); for (const s of [-1, 1]) add(bgeo(0.05, 0.2, 0.3), dark, s * (W / 2 - 0.3), clr + bh + 0.08, -L / 2 + 0.3); }
+  const head = new THREE.MeshBasicMaterial({ color: 0xfff4c8 }), tail = new THREE.MeshBasicMaterial({ color: 0x771111 });
+  for (const s of [-1, 1]) { add(bgeo(0.4, 0.13, 0.06), head, s * (W / 2 - 0.35), clr + bh * 0.7, L / 2 + 0.01); add(bgeo(0.4, 0.12, 0.06), tail, s * (W / 2 - 0.35), clr + bh * 0.72, -L / 2 - 0.01); }
+  const wheels = [], front = [], r = spec.r, wg = new THREE.CylinderGeometry(r, r, 0.26, 16); wg.rotateZ(Math.PI / 2); const tire = mk(0x141518), rim = mk(0xc9ccd2), rg = new THREE.CylinderGeometry(r * 0.6, r * 0.6, 0.28, 8); rg.rotateZ(Math.PI / 2);
+  for (const [z, f] of [[L * 0.31, 1], [-L * 0.31, 0]]) for (const s of [-1, 1]) { const p = new THREE.Group(); p.position.set(s * (W / 2 - 0.12), r, z); const w = new THREE.Mesh(wg, tire); w.castShadow = true; w.add(new THREE.Mesh(rg, rim)); p.add(w); g.add(p); wheels.push(w); if (f) front.push(p); shell.push(p); }
+  // 실내 (운전석 시점용)
+  const front0 = cz + cl / 2, im = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); inner.add(m); return m; };
+  im(bgeo(cw - 0.1, 0.28, 0.55), mk(0x1c1f26), 0, clr + bh + 0.1, front0 - 0.35);
+  const wp = new THREE.Group(); wp.position.set(0.38, clr + bh + 0.3, front0 - 0.95); wp.rotation.x = -1.15; inner.add(wp);
+  const sw = new THREE.Group(); wp.add(sw); sw.add(new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.022, 8, 18), mk(0x101114)));
+  for (const s of [-1, 1]) { const p = new THREE.Mesh(bgeo(0.1, ch + 0.05, 0.1), dark); p.position.set(s * (cw / 2 - 0.05), clr + bh + ch / 2, front0 - 0.05); inner.add(p); }
+  const spot = new THREE.SpotLight(0xfff2cc, 0, 70, 0.5, 0.5, 1); spot.position.set(0, 0.8, L / 2); spot.target.position.set(0, 0, L / 2 + 20); g.add(spot, spot.target);
+  return {
+    group: g, shell, keep: [], inner, wheels, front, steerWheel: sw, spot, len: L, w: W, fa: 0.31 * L, ra: -0.31 * L, cockpit: { x: 0.38, y: clr + bh + ch * 0.62, z: front0 - 1.25 }, doorZ: 0,
+    setBrake(on) { tail.color.setHex(on ? 0xff2a2a : 0x771111); }, setDoor() { }, setLoad() { }, setCockpit(on) { for (const m of shell) m.visible = !on; }
+  };
+}

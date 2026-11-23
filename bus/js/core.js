@@ -1,6 +1,6 @@
 'use strict';
 // ===== 상수 · 유틸 =====
-const GN = 7, SP = 80, ROAD = 16, OFF = 3.9, RC = 14, HC = (GN - 1) / 2, EXT = HC * SP + ROAD / 2;
+const GN = 11, SP = 80, ROAD = 16, OFF = 3.9, RC = 14, HC = (GN - 1) / 2, EXT = HC * SP + ROAD / 2;
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -20,7 +20,7 @@ const dirOf = (u, v) => ({ x: Math.sign(NP[v].x - NP[u].x), z: Math.sign(NP[v].z
 const rightOf = d => ({ x: -d.z, z: d.x });   // 진행방향의 오른쪽
 
 // ===== 정류장 (고정 생성) =====
-const STOP_NAMES = ['시청앞', '중앙역', '대학로', '시장입구', '공원앞', '병원앞', '도서관', '터미널', '은행사거리', '체육관', '박물관', '호수공원', '신도시', '아파트단지', '학교앞', '소방서', '우체국', '백화점', '영화관', '강변', '구청', '약수터', '꽃시장', '과학관', '번화가', '동물원', '놀이공원', '야구장', '항구', '공항입구', '신촌', '문화회관', '버스터미널', '법원', '수영장', '전통시장'];
+const STOP_NAMES = ['시청앞', '중앙역', '대학로', '시장입구', '공원앞', '병원앞', '도서관', '터미널', '은행사거리', '체육관', '박물관', '호수공원', '신도시', '아파트단지', '학교앞', '소방서', '우체국', '백화점', '영화관', '강변', '구청', '약수터', '꽃시장', '과학관', '번화가', '동물원', '놀이공원', '야구장', '항구', '공항입구', '신촌', '문화회관', '버스터미널', '법원', '수영장', '전통시장', '시청역', '북문', '남문', '동문', '서문', '중앙시장', '고속터미널', '역전광장', '문화의거리', '대학병원', '체육공원', '시민공원', '보건소', '주민센터', '시립미술관', '호반공원', '샛강', '한강공원', '월드컵공원', '신도시광장', '테크노밸리', '산업단지', '물류센터', '환승센터', '해돋이공원', '솔숲', '벚꽃길', '은행나무길', '느티나무', '한빛마을', '푸른마을', '꿈나무', '햇살마을', '달빛마을', '별빛마을', '무지개마을', '새롬동', '가람동', '다솜동', '한울동', '나래동', '보람동', '이음동', '소담동', '온누리', '아름동'];
 const STOPS = [];
 (function () {
   let ni = 0; const nameOf = {};
@@ -32,9 +32,9 @@ const STOPS = [];
     STOPS.push({
       id: STOPS.length, key, name: nameOf[key] + (rev ? ' 건너편' : ''), u, v, dir: d, right: r, mid: { x: mx, z: mz },
       lane: { x: mx + r.x * OFF, z: mz + r.z * OFF }, curb: { x: mx + r.x * (ROAD / 2 + 1.6), z: mz + r.z * (ROAD / 2 + 1.6) },
-      pop: 0.06 + 0.16 * Math.exp(-dc / 170) + srnd() * 0.04, waiting: Math.floor(srnd() * 6)
+      pop: 0.06 + 0.16 * Math.exp(-dc / 260) + srnd() * 0.04, waiting: Math.floor(srnd() * 6)
     });
-    return Math.hypot(mx, mz) < 135;
+    return Math.hypot(mx, mz) < 230;
   };
   const edges = [];
   for (let j = 0; j < GN; j++) for (let i = 0; i < GN - 1; i++) if ((i + 2 * j) % 4 === 1) edges.push([nid(i, j), nid(i + 1, j), (i + j) % 2]);
@@ -45,7 +45,7 @@ const STOPS = [];
 // ===== 경로 탐색 (U턴 금지 BFS) : b에서 c까지 노드 목록 =====
 function connect(a, b, c, d) {
   if (b === c && a !== d) return [b];
-  const key = (n, p) => n * 64 + p, q = [[b, a]], par = new Map([[key(b, a), null]]);
+  const key = (n, p) => n * 256 + p, q = [[b, a]], par = new Map([[key(b, a), null]]);
   for (let qi = 0; qi < q.length; qi++) {
     const [n, p] = q[qi];
     for (const w of neighbors(n)) {

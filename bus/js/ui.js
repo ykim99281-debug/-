@@ -37,9 +37,10 @@ function announce(text) { try { if (muted || !window.speechSynthesis) return; co
 
 // ===== 지도 그리기 (미니맵 · 편집기 공용) =====
 function drawMap(ctx, size, o) {
-  o = o || {}; const sc = size / (2 * EXT + 60), M = (x, z) => [(x + EXT + 30) * sc, (z + EXT + 30) * sc], k = size / 760;
-  ctx.clearRect(0, 0, size, size); ctx.fillStyle = '#1b2230'; ctx.fillRect(0, 0, size, size);
-  ctx.fillStyle = '#262e40'; for (const b of world.blocks.slice(0, 36)) { const [x, y] = M(b.minx, b.minz); ctx.fillRect(x, y, (b.maxx - b.minx) * sc, (b.maxz - b.minz) * sc); }
+  o = o || {}; const sc = size / (2 * EXT + 60), M = (x, z) => [(x + EXT + 30) * sc, (z + EXT + 30) * sc], vz = o.view ? o.view.z : 1, k = size / 760 / vz;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, size, size); ctx.fillStyle = '#1b2230'; ctx.fillRect(0, 0, size, size);
+  ctx.save(); if (o.view) { ctx.translate(o.view.ox, o.view.oy); ctx.scale(vz, vz); }
+  ctx.fillStyle = '#262e40'; for (const b of world.blocks.slice(0, (GN - 1) * (GN - 1))) { const [x, y] = M(b.minx, b.minz); ctx.fillRect(x, y, (b.maxx - b.minx) * sc, (b.maxz - b.minz) * sc); }
   ctx.strokeStyle = '#4a5468'; ctx.lineWidth = ROAD * sc * 0.55; ctx.lineCap = 'butt';
   for (let j = 0; j < GN; j++) for (let i = 0; i < GN; i++) { const n = NP[nid(i, j)]; for (const m of [i < GN - 1 && NP[nid(i + 1, j)], j < GN - 1 && NP[nid(i, j + 1)]]) if (m) { const [a, b] = M(n.x, n.z), [c, d] = M(m.x, m.z); ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke(); } }
   const poly = (path, col, w, al) => { ctx.strokeStyle = hex(col); ctx.globalAlpha = al; ctx.lineWidth = w * k; ctx.lineJoin = 'round'; ctx.beginPath(); path.pts.forEach((p, i) => { const [x, y] = M(p.x, p.z); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); ctx.globalAlpha = 1; };
@@ -57,7 +58,7 @@ function drawMap(ctx, size, o) {
   if (o.target !== undefined) { const s = STOPS[o.target], [x, y] = M(s.curb.x, s.curb.z); ctx.beginPath(); ctx.arc(x, y, 10, 0, 7); ctx.strokeStyle = '#ffb020'; ctx.lineWidth = 3; ctx.stroke(); }
   if (o.buses) for (const b of o.buses) { const [x, y] = M(b.agent.x, b.agent.z); ctx.beginPath(); ctx.arc(x, y, 3.5 * (o.mini ? 1 : k * 1.2), 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); }
   if (o.player) { const [x, y] = M(P.x, P.z), dx = Math.sin(P.h), dz = Math.cos(P.h), r = 9; ctx.fillStyle = '#ffb020'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + dx * r, y + dz * r); ctx.lineTo(x - dx * r * .6 + dz * r * .6, y - dz * r * .6 - dx * r * .6); ctx.lineTo(x - dx * r * .6 - dz * r * .6, y - dz * r * .6 + dx * r * .6); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  return { M, sc };
+  ctx.restore(); return { M, sc };
 }
 
 // ===== UI 객체 =====
@@ -67,7 +68,7 @@ const UI = {
   showTitle() {
     this.hideAll(); $('title').classList.remove('hide'); G.state = 'title'; this.follow = null;
     const s = loadSaved(); $('bCont').disabled = !s; $('contInfo').textContent = s ? `${s.name} · ${fmtMoney(s.money)}` : '저장된 회사 없음';
-    const n = Object.keys(SCHOOL.done).length; $('schoolInfo').textContent = SCHOOL.license ? '🪪 면허 취득 완료!' : `수료 ${n}/4`;
+    $('carInfo').textContent = `👛 ${fmtMoney(SCHOOL.wallet)} · 보유 ${SCHOOL.cars.length}대`; const n = Object.keys(SCHOOL.done).length; $('schoolInfo').textContent = SCHOOL.license ? '🪪 면허 취득 완료!' : `수료 ${n}/4`;
   },
   showMgmt() { this.hideAll(); $('mgmt').classList.remove('hide'); G.state = 'company'; this.refreshTop(); this.renderTab(true); },
   showDrive() {
@@ -80,14 +81,16 @@ const UI = {
   // --- 상단바
   initTop() {
     $('topbar').innerHTML = `<span class="co" id="tCo"></span><span class="stat" id="tMoney"></span><span class="stat" id="tLv"></span><span class="stat" id="tRep"></span><span class="stat" id="tRate"></span><span class="stat" id="tTime"></span><span class="sp"></span>
-      <span class="spd">${[1, 2, 4].map(x => `<button data-sp="${x}">${x}×</button>`).join(' ')}</span><button class="btn sm" id="tbSave">💾 저장</button><button class="btn sm" id="tbMenu">메뉴</button>`;
+      <span class="spd">${[1, 2, 4].map(x => `<button data-sp="${x}">${x}×</button>`).join(' ')}</span><button class="btn sm" id="tbWallet">👛 <span id="tWal"></span></button><button class="btn sm" id="tbSave">💾 저장</button><button class="btn sm" id="tbMenu">메뉴</button>`;
     $('topbar').querySelectorAll('[data-sp]').forEach(b => b.onclick = () => { G.speed = +b.dataset.sp; this.refreshTop(); });
+    $('tbWallet').onclick = () => this.walletModal('wallet');
     $('tbSave').onclick = () => { saveCompany(); toast('저장했어요', 'good'); }; $('tbMenu').onclick = () => { saveCompany(); this.showTitle(); };
   },
   refreshTop() {
     const l = level(), nl = LEVELS[l] !== undefined ? LEVELS[l] : null, h = Math.floor(G.hour), m = Math.floor((G.hour % 1) * 60);
     $('tCo').textContent = '🚌 ' + G.name; $('tMoney').textContent = '💰 ' + fmtMoney(G.money); $('tLv').textContent = '⭐ Lv.' + l + (nl ? ` (${G.pax}/${nl})` : '');
     $('tRep').textContent = '👍 평판 ' + Math.round(G.rep); $('tRate').textContent = '📈 ' + fmtMoney(G.rate) + '/분'; $('tTime').textContent = '🕒 ' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+    $('tWal').textContent = fmtMoney(SCHOOL.wallet);
     $('topbar').querySelectorAll('[data-sp]').forEach(b => b.classList.toggle('on', +b.dataset.sp === G.speed));
   },
   // --- 탭
@@ -148,6 +151,7 @@ const UI = {
   html_company() {
     const last = G.reports[0], fm = Math.pow(1500 / G.fare, 0.8) * (1 + 0.08 * G.up.info);
     let h = `<div class="card"><h4>💼 재무 현황</h4><table class="tbl"><tr><td>보유 자금</td><td>${fmtMoney(G.money)}</td></tr><tr><td>대출 잔액 (일 이자 2%)</td><td>${fmtMoney(G.loan)}</td></tr><tr><td>차고지</td><td>${G.buses.length} / ${garageCap()}대</td></tr><tr><td>오늘 수입 / 지출</td><td>${fmtMoney(G.day.rev)} / ${fmtMoney(G.day.fuel + G.day.wage + G.day.maint)}</td></tr></table></div>`;
+    h += `<div class="card"><h4>👛 대표 인출 (배당)</h4><small>회사 자금을 내 지갑으로 옮겨요. 배당소득세 15.4%가 빠지고, 지갑 돈으로 자동차를 살 수 있어요. 운영 자금이 부족해지지 않게 주의!</small><div class="row" style="margin-top:6px"><small>내 지갑</small><b class="tnum">${fmtMoney(SCHOOL.wallet)}</b></div><div class="acts"><button class="btn sm" data-wd="1000000">100만</button><button class="btn sm" data-wd="5000000">500만</button><button class="btn sm" data-wd="20000000">2천만</button><button class="btn sm" data-wd="-1">가능한 만큼</button><button class="btn sm" data-dep="1000000">↩ 100만 투자</button><button class="btn sm" id="wMore">🚗 자동차 매장</button></div></div>`;
     h += `<div class="card"><h4>🎫 요금 정책 <small>(${G.dayNo}일차)</small></h4><div class="row"><input type="range" id="fareR" min="1000" max="2500" step="50" value="${G.fare}" style="flex:1"><b id="fareV" class="tnum">${fmtMoney(G.fare)}</b></div><small id="fareS">승객 수요 ×${fm.toFixed(2)} · 요금을 올리면 건당 수입은 늘지만 승객이 줄어요</small></div>`;
     h += `<h4 style="margin:14px 0 8px">🏗 회사 업그레이드</h4>`;
     for (const k in UPGRADES) {
@@ -165,6 +169,9 @@ const UI = {
   },
   bind_company(b) {
     const r = b.querySelector('#fareR'); if (r) r.oninput = () => { G.fare = +r.value; $('fareV').textContent = fmtMoney(G.fare); $('fareS').textContent = '승객 수요 ×' + (Math.pow(1500 / G.fare, 0.8) * (1 + 0.08 * G.up.info)).toFixed(2) + ' · 요금을 올리면 건당 수입은 늘지만 승객이 줄어요'; };
+    b.querySelectorAll('[data-wd]').forEach(x => x.onclick = () => { const n = +x.dataset.wd; withdraw(n < 0 ? Math.max(0, G.money - 300000) : n); this.renderTab(true); this.refreshTop(); });
+    b.querySelectorAll('[data-dep]').forEach(x => x.onclick = () => { deposit(+x.dataset.dep); this.renderTab(true); this.refreshTop(); });
+    const wm = b.querySelector('#wMore'); if (wm) wm.onclick = () => this.walletModal('dealer');
     b.querySelectorAll('[data-up]').forEach(x => x.onclick = () => { if (buyUpgrade(x.dataset.up)) this.renderTab(true); });
     b.querySelectorAll('[data-loan]').forEach(x => x.onclick = () => { borrow(+x.dataset.loan); this.renderTab(true); });
     b.querySelectorAll('[data-repay]').forEach(x => x.onclick = () => { repay(+x.dataset.repay); this.renderTab(true); });
@@ -193,7 +200,7 @@ const UI = {
   // --- 노선 편집기
   openEditor(route) {
     const E = this.edState = { stops: route ? route.stopIds.slice() : [], name: route ? route.name : '노선 ' + (G.nextRoute), color: route ? route.color : ROUTE_COLORS[(G.nextRoute - 1) % ROUTE_COLORS.length], route, path: null, hover: -1 };
-    $('editor').classList.remove('hide'); $('edName').value = E.name;
+    $('editor').classList.remove('hide'); $('edName').value = E.name; this.edReset();
     $('edColors').innerHTML = ROUTE_COLORS.map(c => `<i data-c="${c}" style="background:${hex(c)}" class="${c === E.color ? 'on' : ''}"></i>`).join('');
     $('edColors').querySelectorAll('i').forEach(i => i.onclick = () => { E.color = +i.dataset.c; $('edColors').querySelectorAll('i').forEach(q => q.classList.toggle('on', q === i)); this.edUpdate(); });
     $('edName').oninput = () => { E.name = $('edName').value; };
@@ -216,12 +223,55 @@ const UI = {
     $('edInfo').innerHTML = `총 거리 <b>${(len / 1000).toFixed(2)}km</b> · 1바퀴 약 <b>${len ? Math.round(len / 10 + E.stops.length * 6) : 0}초</b><br>예상 유동 <b>${(demand * 60).toFixed(0)}명/분</b><br>개설 비용 <b>${fmtMoney(cost)}</b>${cost > G.money ? ' <span style="color:var(--bad)">(자금 부족)</span>' : ''}`;
     $('edSave').textContent = E.route ? '변경 저장' : '노선 개설'; $('edSave').disabled = E.stops.length < 2; this.edDraw();
   },
-  edDraw() { const E = this.edState; if (!E) return; const c = $('mapC'); this.mapT = drawMap(c.getContext('2d'), 760, { routes: G.routes, skip: E.route, dim: .35, edit: { stops: E.stops, color: E.color, path: E.path }, hover: E.hover, crowd: true }); },
+  edDraw() { const E = this.edState; if (!E) return; const c = $('mapC'); this.mapT = drawMap(c.getContext('2d'), 760, { routes: G.routes, skip: E.route, dim: .35, edit: { stops: E.stops, color: E.color, path: E.path }, hover: E.hover, crowd: true, view: this.mv }); },
+  mv: { z: 1, ox: 0, oy: 0 },
+  edXY(e) { const c = $('mapC'), r = c.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * 760, (e.clientY - r.top) / r.height * 760]; },
   edPointer(e, click) {
-    const E = this.edState, c = $('mapC'), r = c.getBoundingClientRect(), mx = (e.clientX - r.left) / r.width * 760, my = (e.clientY - r.top) / r.height * 760, sc = 760 / (2 * EXT + 60);
-    let best = -1, bd = 16; for (const s of STOPS) { const d = Math.hypot((s.curb.x + EXT + 30) * sc - mx, (s.curb.z + EXT + 30) * sc - my); if (d < bd) { bd = d; best = s.id; } }
+    const E = this.edState, [px, py] = this.edXY(e), v = this.mv, mx = (px - v.ox) / v.z, my = (py - v.oy) / v.z, sc = 760 / (2 * EXT + 60);
+    let best = -1, bd = 16 / v.z; for (const s of STOPS) { const d = Math.hypot((s.curb.x + EXT + 30) * sc - mx, (s.curb.z + EXT + 30) * sc - my); if (d < bd) { bd = d; best = s.id; } }
     if (click && best >= 0) { const i = E.stops.indexOf(best); if (i >= 0) E.stops.splice(i, 1); else E.stops.push(best); this.edUpdate(); }
     else if (E.hover !== best) { E.hover = best; this.edDraw(); }
+  },
+  edZoom(f, px, py) { const v = this.mv, z2 = clamp(v.z * f, 0.7, 10); px = px === undefined ? 380 : px; py = py === undefined ? 380 : py; v.ox = px - (px - v.ox) * z2 / v.z; v.oy = py - (py - v.oy) * z2 / v.z; v.z = z2; this.edDraw(); },
+  edReset() { this.mv.z = 1; this.mv.ox = this.mv.oy = 0; this.edDraw(); },
+  bindMap() {
+    const c = $('mapC'); let drag = null;
+    c.onpointerdown = e => { const [x, y] = this.edXY(e); drag = { x, y, ox: this.mv.ox, oy: this.mv.oy, moved: false }; c.setPointerCapture(e.pointerId); };
+    c.onpointermove = e => { if (drag && e.buttons) { const [x, y] = this.edXY(e); if (Math.hypot(x - drag.x, y - drag.y) > 5) drag.moved = true; if (drag.moved) { this.mv.ox = drag.ox + x - drag.x; this.mv.oy = drag.oy + y - drag.y; this.edDraw(); } } else this.edPointer(e, false); };
+    c.onpointerup = e => { if (drag && !drag.moved) this.edPointer(e, true); drag = null; };
+    c.onwheel = e => { e.preventDefault(); const [x, y] = this.edXY(e); this.edZoom(Math.exp(-e.deltaY * 0.0015), x, y); };
+    $('mZoomIn').onclick = () => this.edZoom(1.4); $('mZoomOut').onclick = () => this.edZoom(1 / 1.4); $('mReset').onclick = () => this.edReset();
+  },
+
+  // --- 지갑 · 자동차 매장 · 내 차고
+  dc: {},
+  walletModal(tab) {
+    tab = tab || this.wtab || 'wallet'; this.wtab = tab;
+    const T = [['wallet', '👛 지갑'], ['dealer', '🏬 자동차 매장'], ['garage', '🚗 내 차고 (' + SCHOOL.cars.length + ')']];
+    let h = `<div class="row" style="margin-bottom:12px;flex-wrap:wrap">${T.map(([k, n]) => `<button class="btn sm ${k === tab ? 'pri' : ''}" data-wt="${k}">${n}</button>`).join('')}<span style="flex:1"></span><button class="btn sm" id="wClose">닫기</button></div>`;
+    if (tab === 'wallet') {
+      h += `<h2>👛 내 지갑</h2><div style="font-size:34px;font-weight:800" class="tnum">${fmtMoney(SCHOOL.wallet)}</div><p class="muted">회사 돈과는 별개의 개인 자금이에요. 회사 탭의 '대표 인출'로 회사 자금을 가져오거나(세금 15.4%), 운전교실 합격 보상으로 모을 수 있어요.</p>`;
+      if (!G.school) h += `<div class="card"><div class="row" style="justify-content:space-between"><span>🏢 ${esc(G.name)} 자금</span><b class="tnum">${fmtMoney(G.money)}</b></div><div class="acts"><button class="btn sm" data-wd="1000000">100만 인출</button><button class="btn sm" data-wd="5000000">500만</button><button class="btn sm" data-wd="20000000">2천만</button><button class="btn sm" data-wd="-1">가능한 만큼</button><button class="btn sm" data-dep="1000000">100만 투자</button></div></div>`;
+      else h += `<div class="card"><small class="muted">경영 모드에서 회사 자금을 인출할 수 있어요. 지금은 운전교실/타이틀이에요.</small></div>`;
+    } else if (tab === 'dealer') {
+      h += `<h2>🏬 자동차 매장</h2><p class="muted" style="margin-top:0">실제 모델(신차 기준 대략가). 내 지갑 ${fmtMoney(SCHOOL.wallet)}</p>`;
+      for (const k in CAR_SPECS) {
+        const s = CAR_SPECS[k], col = this.dc[k] === undefined ? s.colors[0] : this.dc[k], ok = SCHOOL.wallet >= s.price;
+        h += `<div class="card"><div class="row" style="justify-content:space-between"><div><b>${s.brand} ${s.name}</b> ${s.ev ? '⚡' : ''}<br><small>${s.info} · 최고 ${Math.round(s.vmax * 3.6)}km/h · 0→100km/h ${(27.8 / s.accel * 1.15).toFixed(1)}초 · ${s.len}m</small></div><button class="btn sm ${ok ? 'pri' : ''}" data-buy="${k}" ${ok ? '' : 'disabled'}>${fmtMoney(s.price)}</button></div><div class="sw" style="margin-top:8px">${s.colors.map(c => `<i data-dcm="${k}" data-c="${c}" style="background:${hex(c)};${c === 0x0b0b0d || c === 0x111827 ? 'border-color:#555' : ''}" class="${c === col ? 'on' : ''}"></i>`).join('')}</div>${ok ? '' : `<small style="color:var(--bad)">부족 ${fmtMoney(s.price - SCHOOL.wallet)}</small>`}</div>`;
+      }
+    } else {
+      h += `<h2>🚗 내 차고</h2>`;
+      if (!SCHOOL.cars.length) h += `<p class="muted">보유한 자동차가 없어요. 매장에서 구매해 보세요!</p>`;
+      for (const c of SCHOOL.cars) { const s = CAR_SPECS[c.model]; h += `<div class="card"><div class="row" style="justify-content:space-between"><div><b>${s.brand} ${s.name}</b><br><small>주행 ${(c.km / 1000).toFixed(1)}km · 중고 시세 ${fmtMoney(carValue(c))}</small></div><span style="width:22px;height:22px;border-radius:50%;background:${hex(c.color)};border:2px solid #fff4"></span></div><div class="acts"><button class="btn sm pri" data-cdrive="${c.id}">🎮 운전하기</button><button class="btn sm bad" data-csell="${c.id}">매각</button></div></div>`; }
+    }
+    this.modal(h); const mb = $('modalBox');
+    mb.querySelectorAll('[data-wt]').forEach(b => b.onclick = () => this.walletModal(b.dataset.wt)); $('wClose').onclick = () => { this.closeModal(); if (G.state === 'title') this.showTitle(); else if (G.state === 'company') this.refreshTop(); };
+    mb.querySelectorAll('[data-wd]').forEach(x => x.onclick = () => { const n = +x.dataset.wd; withdraw(n < 0 ? Math.max(0, G.money - 300000) : n); this.walletModal(); this.refreshTop(); });
+    mb.querySelectorAll('[data-dep]').forEach(x => x.onclick = () => { deposit(+x.dataset.dep); this.walletModal(); this.refreshTop(); });
+    mb.querySelectorAll('[data-dcm]').forEach(i => i.onclick = () => { this.dc[i.dataset.dcm] = +i.dataset.c; this.walletModal(); mb.scrollTop = mb.scrollTop; });
+    mb.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => { const k = b.dataset.buy; if (buyCar(k, this.dc[k] === undefined ? CAR_SPECS[k].colors[0] : this.dc[k])) this.walletModal('garage'); });
+    mb.querySelectorAll('[data-cdrive]').forEach(b => b.onclick = () => { const c = SCHOOL.cars.find(q => q.id === +b.dataset.cdrive); if (P.active) return; this.closeModal(); this.follow = null; initAudio(); startCar(c); });
+    mb.querySelectorAll('[data-csell]').forEach(b => b.onclick = () => { const c = SCHOOL.cars.find(q => q.id === +b.dataset.csell); if (confirm(CAR_SPECS[c.model].name + ' 을(를) ' + fmtMoney(carValue(c)) + '에 매각할까요?')) { sellCar(c); this.walletModal('garage'); } });
   },
 
   // --- 운전교실
@@ -243,15 +293,18 @@ const UI = {
     $('lExit').onclick = () => { this.closeModal(); stopManual(); };
   },
   pauseModal() {
-    P.paused = true; this.modal(`<h2>⏸ 일시정지</h2><p class="muted">현재 점수 ${Math.round(P.score)}점 · 승차감 ${Math.round(P.comfort)}%</p><div class="row"><button class="btn pri" id="pGo">계속</button><button class="btn" id="pMute">${muted ? '🔇' : '🔊'} 소리</button><button class="btn bad" id="pEnd">${G.school ? '교습 포기' : '운행 종료'}</button></div>`);
+    P.paused = true; this.modal(`<h2>⏸ 일시정지</h2><p class="muted">현재 점수 ${Math.round(P.score)}점 · 승차감 ${Math.round(P.comfort)}%</p><div class="row"><button class="btn pri" id="pGo">계속</button><button class="btn" id="pMute">${muted ? '🔇' : '🔊'} 소리</button><button class="btn bad" id="pEnd">${P.free ? '주행 종료' : G.school ? '교습 포기' : '운행 종료'}</button></div>`);
     $('pGo').onclick = () => { this.closeModal(); P.paused = false; }; $('pMute').onclick = () => { muted = !muted; this.pauseModal(); };
     $('pEnd').onclick = () => { this.closeModal(); stopManual(); };
   },
 
   // --- HUD
   updateHUD() {
-    const b = P.bus, T = BUS_TYPES[b.type], r = P.lesson ? P.lesson.route : routeById(b.routeId), si = P.stopInfo, kmh = Math.round(Math.abs(P.v) * 3.6);
+    const b = P.bus, T = vt(b), r = P.lesson ? P.lesson.route : routeById(b.routeId), si = P.stopInfo, kmh = Math.round(Math.abs(P.v) * 3.6);
     $('hudL').innerHTML = `<span class="chip" style="background:${hex(r ? r.color : 0xffb020)}">${r ? r.num : ''}</span><b>${r ? esc(r.name) : ''}</b> <small class="muted">${T.name}</small><br>🚏 다음: <b>${si ? esc(si.name) : '-'}</b> <span class="tnum">${si ? Math.max(0, Math.round(si.dist)) + 'm' : ''}</span><br>👥 탑승 <b>${b.pax.length}</b>/${T.cap} · 대기 ${si ? Math.floor(si.waiting) : 0}명${P.lesson ? `<br><small class="muted">${P.lesson.title}</small>` : ''}`;
+    if (b.isCar) $('hudL').innerHTML = `🚗 <b>${esc(T.name)}</b><br><small class="muted">주행 ${(b.carRef.km / 1000).toFixed(1)}km · 내 차량</small>`;
+    if (P.auto) $('hudL').innerHTML += '<br>🤖 <b style="color:#4ade80">자율주행 중</b>';
+    $('hudScore').style.display = b.isCar ? 'none' : ''; $('doorTag').style.display = b.isCar ? 'none' : '';
     $('hint').textContent = P.hint;
     $('spd').firstChild.nodeValue = kmh; const gear = P.v < -0.2 ? 'R' : (Math.abs(P.v) < 0.2 ? (keys.Space ? 'P' : 'N') : 'D');
     $('gear').querySelectorAll('b').forEach(x => x.classList.toggle('on', x.textContent === gear)); $('limit').classList.toggle('over', kmh > 52);
@@ -268,10 +321,11 @@ const UI = {
     $('bNew').onclick = () => { initAudio(); startCompany(($('coName').value || '버스 회사').trim()); this.showMgmt(); toast('환영합니다 사장님! 오른쪽에서 노선을 설계해 보세요', 'gold'); };
     $('bCont').onclick = () => { initAudio(); const s = loadSaved(); if (s) { startCompany(s.name, s); this.showMgmt(); } };
     $('bSchool').onclick = () => { initAudio(); this.schoolModal(); };
+    $('bCar').onclick = () => { initAudio(); this.walletModal('wallet'); };
     $('bHelp').onclick = () => $('help').classList.toggle('hide');
     addEventListener('pointerdown', () => { UI.down = true; }, true); addEventListener('pointerup', () => { UI.down = false; }, true); addEventListener('pointercancel', () => { UI.down = false; }, true);
     document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { this.tab = b.dataset.t; this.renderTab(true); });
-    const mc = $('mapC'); mc.onmousemove = e => this.edPointer(e, false); mc.onclick = e => this.edPointer(e, true);
+    this.bindMap();
     setInterval(() => { if (G && G.state === 'company') { this.refreshTop(); this.renderTab(false); } }, 1200);
   }
 };

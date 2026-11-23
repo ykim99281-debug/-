@@ -6,8 +6,8 @@ renderer.shadowMap.enabled = true; renderer.shadowMap.autoUpdate = false;
 $('gl').appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x8fd0ff);
-scene.fog = new THREE.Fog(0x8fd0ff, 160, 760);
-const camera = new THREE.PerspectiveCamera(60, 1, 0.5, 1400);
+scene.fog = new THREE.Fog(0x8fd0ff, 220, 1100);
+const camera = new THREE.PerspectiveCamera(60, 1, 0.5, 3000);
 const hemi = new THREE.HemisphereLight(0xdff2ff, 0x55663f, 0.64); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff0d0, 0.8); sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0006;
@@ -95,10 +95,10 @@ function buildCity() {
   const wt = winTex();
   windowMat = new THREE.MeshLambertMaterial({ map: wt.map, emissiveMap: wt.em, emissive: 0xffffff, emissiveIntensity: 0, vertexColors: true, side: THREE.DoubleSide });
   const city = new Merge(), slabs = [], R = srnd, BW = SP - ROAD;
-  const parks = { '1,4': 1, '4,1': 1, '0,0': 1 };
+  const parks = { '2,7': 1, '7,2': 1, '0,0': 1, '5,0': 1, '0,5': 1, '8,5': 1, '5,8': 1, '1,3': 1 };
   for (let bj = 0; bj < GN - 1; bj++) for (let bi = 0; bi < GN - 1; bi++) {
-    const cx = (bi - 2.5) * SP, cz = (bj - 2.5) * SP, dc = Math.max(Math.abs(bi - 2.5), Math.abs(bj - 2.5)), key = bi + ',' + bj;
-    const park = parks[key], depot = key === '5,5';
+    const CB = (GN - 2) / 2, cx = (bi - CB) * SP, cz = (bj - CB) * SP, dc = Math.max(Math.abs(bi - CB), Math.abs(bj - CB)), key = bi + ',' + bj;
+    const park = parks[key], depot = key === (GN - 2) + ',' + (GN - 2);
     slabs.push({ x: cx, y: 0.15, z: cz, sx: BW, sz: BW, col: park ? 0x5aa45a : depot ? 0x6b6f78 : 0x9fa2a9 });
     world.blocks.push({ minx: cx - BW / 2, maxx: cx + BW / 2, minz: cz - BW / 2, maxz: cz + BW / 2 });
     if (park) {
@@ -109,13 +109,13 @@ function buildCity() {
       const sg = labelSprite('버스 차고지', { w: 16, bg: 'rgba(255,176,32,.95)', fg: '#1a1200' }); sg.position.set(cx - 6, 11, cz - 8); scene.add(sg);
       const bm = [0x3b82f6, 0xef4444, 0x22c55e, 0xf59e0b, 0x8b5cf6, 0x14b8a6];
       bm.forEach((c, i) => { const g = new THREE.Mesh(new THREE.BoxGeometry(2.55, 3, 12), mk(c)); g.position.set(cx - 22 + i * 6.5, 1.8, cz + 8); g.castShadow = true; scene.add(g); });
-    } else if (dc < 1) {   // 도심: 고층
+    } else if (dc < 2) {   // 도심: 고층
       for (const [ox, oz] of [[-14, -14], [14, -14], [-14, 14], [14, 14]]) {
         const w = 15 + R() * 6, d = 15 + R() * 6, h = 38 + R() * 62;
         city.box(cx + ox, cz + oz, w, d, h, BUILD_COL[Math.floor(R() * BUILD_COL.length)], ROOF_COL[Math.floor(R() * 4)]);
-        if (bi === 2 && bj === 2 && ox < 0 && oz < 0) world.hq = { x: cx + ox, z: cz + oz, h: h + 0.3 };
+        if (bi === 4 && bj === 4 && ox < 0 && oz < 0) world.hq = { x: cx + ox, z: cz + oz, h: h + 0.3 };
       }
-    } else if (dc < 2) {   // 중간
+    } else if (dc < 3.6) {   // 중간
       for (const [ox, oz] of [[-14, -14], [14, -14], [-14, 14], [14, 14]]) {
         const w = 17 + R() * 5, d = 17 + R() * 5, h = 14 + R() * 18;
         city.box(cx + ox, cz + oz, w, d, h, BUILD_COL[Math.floor(R() * BUILD_COL.length)], ROOF_COL[Math.floor(R() * 4)]);
@@ -185,9 +185,9 @@ function buildCity() {
   inst(new THREE.ConeGeometry(2.2, 6, 8), mk(0xffffff), all.map((t, i) => ({ x: t.x, y: 0.3 + 5 * t.s, z: t.z, sx: t.s, sy: t.s, sz: t.s, col: new THREE.Color().setHSL(0.27 + (i % 7) * .015, 0.5, 0.26 + (i % 5) * .02).getHex() })), true);
 
   // 먼 산 · 구름
-  for (let i = 0; i < 20; i++) { const a = i / 20 * 6.283, r = 700 + (i % 3) * 40, h = 90 + (i * 37 % 90); const m = new THREE.Mesh(new THREE.ConeGeometry(110 + (i % 4) * 25, h, 6), mk(0x6d7b92, { flatShading: true })); m.position.set(Math.cos(a) * r, h / 2 - 5, Math.sin(a) * r); scene.add(m); }
+  for (let i = 0; i < 20; i++) { const a = i / 20 * 6.283, r = EXT + 430 + (i % 3) * 50, h = 90 + (i * 37 % 90); const m = new THREE.Mesh(new THREE.ConeGeometry(110 + (i % 4) * 25, h, 6), mk(0x6d7b92, { flatShading: true })); m.position.set(Math.cos(a) * r, h / 2 - 5, Math.sin(a) * r); scene.add(m); }
   world.clouds = [];
-  for (let i = 0; i < 14; i++) { const g = new THREE.Group(); for (let k = 0; k < 4; k++) { const s = new THREE.Mesh(new THREE.SphereGeometry(10 + Math.random() * 8, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .85, fog: false })); s.position.set(k * 14, Math.random() * 4, Math.random() * 8); s.scale.y = .55; g.add(s); } g.position.set(rand(-600, 600), rand(110, 170), rand(-600, 600)); scene.add(g); world.clouds.push(g); }
+  for (let i = 0; i < 14; i++) { const g = new THREE.Group(); for (let k = 0; k < 4; k++) { const s = new THREE.Mesh(new THREE.SphereGeometry(10 + Math.random() * 8, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .85, fog: false })); s.position.set(k * 14, Math.random() * 4, Math.random() * 8); s.scale.y = .55; g.add(s); } g.position.set(rand(-EXT - 300, EXT + 300), rand(110, 170), rand(-EXT - 300, EXT + 300)); scene.add(g); world.clouds.push(g); }
   // 본사 간판
   if (world.hq) { world.hqSign = labelSprite('', { w: 30, bg: 'rgba(255,176,32,.95)', fg: '#1a1200' }); world.hqSign.position.set(world.hq.x, world.hq.h + 7, world.hq.z); scene.add(world.hqSign); }
 }

@@ -102,6 +102,7 @@
   #editor{position:fixed;inset:0;z-index:20;background:rgba(5,8,16,.78);display:flex;align-items:center;justify-content:center;padding:14px}
   #editor .win{display:flex;gap:14px;width:min(1080px,100%);max-height:100%;padding:14px}
   #mapWrap{flex:1;min-width:0;display:flex;align-items:center;justify-content:center}
+  #mapWrap{position:relative}#mapBtns{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;gap:6px}#mapBtns .btn{width:36px;padding:6px 0;font-size:16px}
   #mapC{width:min(100%,calc(100vh - 100px));aspect-ratio:1;border-radius:12px;cursor:crosshair;background:#1b2230}
   #edSide{width:320px;display:flex;flex-direction:column;gap:8px;overflow:auto}
   #edStops li{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:14px}
@@ -135,14 +136,15 @@
     <button class="btn pri" id="bNew">🏢 새 버스 회사 시작 <span>노선 설계 · 버스 구매 · 직접 운전</span></button>
     <button class="btn" id="bCont">▶ 이어하기 <span id="contInfo"></span></button>
     <button class="btn" id="bSchool">🎓 운전교실 <span id="schoolInfo">기본 조작부터 면허 시험까지</span></button>
+    <button class="btn" id="bCar">🚗 내 차고 · 지갑 <span id="carInfo"></span></button>
     <button class="btn" id="bHelp">⌨ 조작법</button>
   </div>
   <div id="help" class="hide">
     <b style="color:var(--fg)">운전</b><br>
     <kbd>W</kbd><kbd>↑</kbd> 가속 · <kbd>S</kbd><kbd>↓</kbd> 브레이크/후진 · <kbd>A</kbd><kbd>D</kbd><kbd>←</kbd><kbd>→</kbd> 조향 · <kbd>Space</kbd> 파킹 브레이크<br>
-    <kbd>F</kbd> 문 열기/닫기 · <kbd>H</kbd> 경적 · <kbd>C</kbd> 카메라(추적/낮은/운전석/원거리) · <kbd>R</kbd> 노선 복귀(감점) · <kbd>Esc</kbd> 일시정지<br>
+    <kbd>F</kbd> 문 열기/닫기 · <kbd>T</kbd> 자율주행 · <kbd>H</kbd> 경적 · <kbd>C</kbd> 카메라(추적/낮은/운전석/원거리) · <kbd>R</kbd> 노선 복귀(감점) · <kbd>Esc</kbd> 일시정지<br>
     <b style="color:var(--fg)">경영</b><br>
-    마우스 드래그 시점 회전 · 휠 확대/축소 · 오른쪽 패널에서 노선/버스/정류장 관리
+    마우스 드래그 회전 · <kbd>우클릭</kbd>드래그/<kbd>WASD</kbd> 이동 · 휠 확대/축소 · <kbd>Q</kbd><kbd>E</kbd> 회전 · 더블클릭 시점 초기화<br>노선 지도: 휠 확대 · 드래그 이동 · 정류장 클릭
   </div>
 </div></div>
 
@@ -158,7 +160,7 @@
     <div id="limit">50</div>
   </div>
   <div id="hudScore" class="panel"></div>
-  <div id="hudR"><span id="doorTag">문 닫힘</span><br><kbd>F</kbd> 문 · <kbd>H</kbd> 경적 · <kbd>C</kbd> 카메라 · <kbd>R</kbd> 복귀 · <kbd>Esc</kbd> 메뉴</div>
+  <div id="hudR"><span id="doorTag">문 닫힘</span><br><kbd>F</kbd> 문 · <kbd>T</kbd> 자율주행 · <kbd>H</kbd> 경적 · <kbd>C</kbd> 카메라 · <kbd>R</kbd> 복귀 · <kbd>Esc</kbd> 메뉴</div>
 </div>
 
 <!-- 경영 -->
@@ -172,7 +174,7 @@
 </div>
 
 <div id="editor" class="hide"><div class="win panel">
-  <div id="mapWrap"><canvas id="mapC" width="760" height="760"></canvas></div>
+  <div id="mapWrap"><canvas id="mapC" width="760" height="760"></canvas><div id="mapBtns"><button class="btn sm" id="mZoomIn">＋</button><button class="btn sm" id="mZoomOut">－</button><button class="btn sm" id="mReset">⟲</button></div></div>
   <div id="edSide">
     <h3 style="margin:0">🗺 노선 설계</h3>
     <div class="muted" style="font-size:13px;line-height:1.6">지도의 정류장을 <b>순서대로 클릭</b>해 순환 노선을 만드세요. 마지막 정류장은 첫 정류장으로 되돌아옵니다. 도시 중심부일수록 승객이 많아요.</div>
@@ -188,7 +190,7 @@
 <div id="toasts"></div>
 <div id="center"></div>
 <div id="touch"><div class="grp"><button data-k="ArrowLeft">◀</button><button data-k="ArrowRight">▶</button></div>
-<div class="grp"><button data-k="KeyF" style="font-size:12px">문</button><button data-k="ArrowDown">■</button><button data-k="ArrowUp">▲</button></div></div>
+<div class="grp"><button data-k="KeyF" style="font-size:12px">문</button><button data-k="KeyT" style="font-size:12px">자율</button><button data-k="ArrowDown">■</button><button data-k="ArrowUp">▲</button></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/core.js"></script>

@@ -3,7 +3,7 @@ const FARE = 1500, HPS = 1 / 25, SAVE_KEY = 'bus_company_v1', SCHOOL_KEY = 'bus_
 const LEVELS = [0, 100, 400, 1000, 2500, 6000, 15000];
 const ROUTE_COLORS = [0x3b82f6, 0xef4444, 0x22c55e, 0xf59e0b, 0x8b5cf6, 0x14b8a6, 0xec4899, 0x64748b];
 let G = null, cars = [];
-const SCHOOL = (() => { try { return Object.assign({ done: {}, best: {}, license: 0 }, JSON.parse(localStorage.getItem(SCHOOL_KEY))); } catch (e) { return { done: {}, best: {}, license: 0 }; } })();
+const SCHOOL = (() => { try { return Object.assign({ done: {}, best: {}, license: 0, wallet: 0, cars: [], nextCar: 1 }, JSON.parse(localStorage.getItem(SCHOOL_KEY))); } catch (e) { return { done: {}, best: {}, license: 0, wallet: 0, cars: [], nextCar: 1 }; } })();
 const saveSchool = () => { try { localStorage.setItem(SCHOOL_KEY, JSON.stringify(SCHOOL)); } catch (e) { } };
 
 function newState(name, school) {
@@ -20,7 +20,7 @@ function resetWorld() {
 }
 function spawnCars(n) {
   for (let i = 0; i < n; i++) {
-    const i0 = Math.floor(Math.random() * 4), j0 = Math.floor(Math.random() * 4), i1 = Math.min(GN - 1, i0 + 2 + Math.floor(Math.random() * 3)), j1 = Math.min(GN - 1, j0 + 2 + Math.floor(Math.random() * 3));
+    const i0 = Math.floor(Math.random() * (GN - 3)), j0 = Math.floor(Math.random() * (GN - 3)), i1 = Math.min(GN - 1, i0 + 2 + Math.floor(Math.random() * 4)), j1 = Math.min(GN - 1, j0 + 2 + Math.floor(Math.random() * 4));
     const path = buildPath(rectLoop(i0, j0, i1, j1, Math.random() < 0.5), {});
     const m = makeCar(); scene.add(m.group); const a = new Agent('car', m); a.setPath(path, Math.random() * path.L); cars.push(a);
   }
@@ -127,7 +127,7 @@ function updateWorld(dt) {
   for (const b of G.buses) updateBus(b, dt);
   for (const c of cars) c.step(dt, G.gt);
   if (!G.school) {
-    let wage = 0; for (const b of G.buses) if (!b.manual) wage += BUS_TYPES[b.type].wage * dt;
+    let wage = 0; for (const b of G.buses) if (!b.manual && !(P.active && P.auto && P.bus === b)) wage += BUS_TYPES[b.type].wage * dt;
     G.money -= wage; G.stats.expense += wage; G.day.wage += wage;
   }
   const rev0 = G.stats.revenue; G._r0 = G._r0 === undefined ? rev0 : G._r0;
@@ -138,7 +138,7 @@ function updateWorld(dt) {
   if ((G.pedT -= dt) < 0) { G.pedT = 0.7; updatePeds(); G.repT = (G.repT || 0) + 0.7; if (G.repT > 30) { G.repT = 0; for (const s of STOPS) if (s.waiting > 30 && G.routes.some(r => r.stopIds.includes(s.id))) G.rep = Math.max(0, G.rep - 0.4); } }
   if (!G.school && (G.goalT -= dt) < 0) { G.goalT = 1; checkGoals(); const l = level(); if (l > lastLvl) { toast('⭐ 회사 레벨 ' + l + ' 달성!', 'gold'); for (const k in BUS_TYPES) if (BUS_TYPES[k].lvl === l) toast('🚌 ' + BUS_TYPES[k].name + ' 구매 가능!', 'good'); } lastLvl = l; }
   if (!G.school && (G.saveT -= dt) < 0) { G.saveT = 20; saveCompany(); }
-  for (const c of world.clouds) { c.position.x += dt * 2; if (c.position.x > 700) c.position.x = -700; }
+  for (const c of world.clouds) { c.position.x += dt * 2; if (c.position.x > EXT + 400) c.position.x = -EXT - 400; }
   sun.position.copy(world.sunDir || sun.position);
 }
 
@@ -168,9 +168,9 @@ function startCompany(name, saved) {
     for (const [ax, az] of anchors) { let best = null, bd = 1e9; for (const s of STOPS) { if (ids.includes(s.id)) continue; const d = Math.hypot(s.mid.x - ax, s.mid.z - az); if (d < bd) { bd = d; best = s; } } ids.push(best.id); }
     const r = addRoute('시범 순환', ROUTE_COLORS[0], ids, true); addBus('city', r.id, true);
   }
-  spawnCars(16); setHQName(G.name); applyTime(G.hour);
+  spawnCars(30); setHQName(G.name); applyTime(G.hour);
 }
-function startSchoolWorld() { resetWorld(); G = newState('운전교실', true); G.hour = 10; spawnCars(14); applyTime(G.hour); setHQName('운전교실'); }
+function startSchoolWorld() { resetWorld(); G = newState('운전교실', true); G.hour = 10; spawnCars(24); applyTime(G.hour); setHQName('운전교실'); }
 
 // ===== 현실적 경영: 업그레이드 · 정비 · 대출 · 결산 =====
 const UPGRADES = {
@@ -207,3 +207,18 @@ function settle() {
   for (const b of G.buses) b.age++;
   toast(`📒 ${rep.day}일차 결산: 순이익 ${fmtMoney(rep.net)}`, rep.net >= 0 ? 'gold' : 'bad');
 }
+
+// ===== 개인 지갑 · 내 차 =====
+const DIV_TAX = 0.154;
+function withdraw(amt) {
+  amt = Math.min(amt, Math.floor(Math.max(0, G.money))); if (G.school || amt <= 0) { toast('인출할 회사 자금이 없어요', 'bad'); return false; }
+  const net = Math.round(amt * (1 - DIV_TAX)); G.money -= amt; G.stats.dividend = (G.stats.dividend || 0) + amt; SCHOOL.wallet += net; saveSchool();
+  toast(`👛 ${fmtMoney(amt)} 인출 → 세후 ${fmtMoney(net)} 입금 (배당소득세 15.4%)`, 'gold'); sfx('chime'); return true;
+}
+function deposit(amt) { amt = Math.min(amt, SCHOOL.wallet); if (G.school || amt <= 0) { toast('입금할 수 없어요', 'bad'); return false; } SCHOOL.wallet -= amt; G.money += amt; saveSchool(); toast('🏢 회사에 ' + fmtMoney(amt) + ' 투자(입금)', 'good'); return true; }
+const carValue = c => Math.round(CAR_SPECS[c.model].price * Math.max(0.45, 0.85 - c.km / 1000 * 0.002));
+function buyCar(key, color) {
+  const s = CAR_SPECS[key]; if (SCHOOL.wallet < s.price) { toast('내 지갑 잔액이 부족해요', 'bad'); return false; }
+  SCHOOL.wallet -= s.price; SCHOOL.cars.push({ id: SCHOOL.nextCar++, model: key, color, km: 0 }); saveSchool(); toast('🚗 ' + s.brand + ' ' + s.name + ' 출고! 내 차고에서 운전해 보세요', 'gold'); sfx('chime'); return true;
+}
+function sellCar(c) { SCHOOL.wallet += carValue(c); SCHOOL.cars.splice(SCHOOL.cars.indexOf(c), 1); saveSchool(); toast('중고차 매각 완료', 'good'); }
