@@ -2482,7 +2482,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='2.3.0',APP_BUILD=230,APP_DATE='2026-11-21';
+const APP_VERSION='2.3.1',APP_BUILD=231,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -3696,7 +3696,7 @@ setTimeout(()=>{
     const d=document.createElement('div');d.id='connInfo';d.className='small';d.style.cssText='margin-top:6px';b.insertAdjacentElement('afterend',d);
   }catch(e){}
 },300);
-/* ===================== 🎲 랜덤 대전 · 🤖 AI 연습 대전 · 🤖 AI 동료 (협동) ===================== */
+/* ===================== 🎲 랜덤 대전 · 🤖 AI 대전 · 🤖 AI 동료 (협동) ===================== */
 const AI_LV=[{k:1,label:'쉬움',hp:2.2,atk:.055,spd:2.4},{k:2,label:'보통',hp:3,atk:.075,spd:2.9},{k:3,label:'어려움',hp:3.8,atk:.095,spd:3.4},{k:4,label:'도전',hp:4.8,atk:.115,spd:3.9}];
 let aiDuel=null,qm=null;
 function aiBots(){
@@ -3705,12 +3705,12 @@ function aiBots(){
   return AI_LV.map((L,i)=>{const c=chars[(day*7+i*11)%n];return {L,c,name:'🤖 '+c.name+' 봇'}});
 }
 function aiRosterHtml(){
-  return '<div style="margin:10px 0 4px"><b>🤖 AI 연습 상대</b> <small style="color:#9ca3af">(순위·승점에는 영향이 없어요)</small></div>'+aiBots().map((b,i)=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 8px;margin:4px 0;border-radius:10px;background:rgba(99,102,241,.14)"><span style="flex:1;min-width:0">${escH(b.c.emoji)} <b>${escH(b.name)}</b><br><small style="color:#a5b4fc">${b.L.label}</small></span><button class="purple" onclick="startAiDuel(${i})">대전</button></div>`).join('');
+  return '<div style="margin:10px 0 4px"><b>🤖 AI 상대</b> <small style="color:#9ca3af">(순위·승점에는 영향이 없어요)</small></div>'+aiBots().map((b,i)=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 8px;margin:4px 0;border-radius:10px;background:rgba(99,102,241,.14)"><span style="flex:1;min-width:0">${escH(b.c.emoji)} <b>${escH(b.name)}</b><br><small style="color:#a5b4fc">${b.L.label}</small></span><button class="purple" onclick="startAiDuel(${i})">대전</button></div>`).join('');
 }
 function showAiRoster(){const box=$('pvpRoomList');if(box)box.innerHTML=aiRosterHtml()}
 {const _lr=loadPvpRooms;loadPvpRooms=async function(){await _lr.apply(this,arguments);try{const box=$('pvpRoomList');if(box&&!box.querySelector('.aiRoster')){const d=document.createElement('div');d.className='aiRoster';d.innerHTML=aiRosterHtml();box.appendChild(d)}}catch(e){}}}
 
-/* ----- AI 연습 대전: 내 능력치를 본뜬 상대와 1대1 (혼자 하는 전투 엔진을 써요) ----- */
+/* ----- AI 대전: 내 능력치를 본뜬 상대와 1대1 (혼자 하는 전투 엔진을 써요) ----- */
 function startAiDuel(i){
   if(typeof isBanned==='function'&&isBanned())return alert('이용이 정지된 계정은 시작할 수 없어요.');
   const c=chars[sel];if(!owned(c))return alert('구매하지 않은 캐릭터입니다.');
@@ -3752,12 +3752,13 @@ function finishAiDuel(won){
 {const _u=upd;upd=function(dt){const r=_u.apply(this,arguments);try{if(aiDuel&&!aiDuel.done&&player&&player.hp<=0)finishAiDuel(false)}catch(e){}return r}}
 {const _h=hud;hud=function(){_h.apply(this,arguments);try{if(aiDuel){const s=$('stage');if(s)s.textContent='🤖 AI 대전 · '+aiDuel.L.label;const t=$('bossType');if(t)t.textContent=enemy.name}}catch(e){}}}
 
-/* ----- 🎲 랜덤 대전: 기다리는 사람이 있으면 바로 들어가고, 없으면 방을 만들어 기다려요. 못 찾으면 AI와 연습 ----- */
-let QM_WAIT_MS=12000;
+/* ----- 🎲 랜덤 대전: 기다리는 사람이 있으면 바로 들어가고, 없으면 방을 만들어 기다려요. 못 찾으면 AI와 ----- */
+let QM_WAIT_MS=10000;
+function aiLevelFor(){const p=save.pvp||0;return p>=300?3:p>=150?2:p>=50?1:0}
 function qmStatus(t){const e=$('qmStatus');if(e)e.textContent=t||''}
 function cancelQm(){if(qm){clearInterval(qm.timer);qm=null}qmStatus('')}
 async function quickMatch(){
-  if(user==='guest')return alert('로그인 후 쓸 수 있어요. 로그인 없이도 🤖 AI 연습 대전은 할 수 있어요!');
+  if(user==='guest')return alert('로그인 후 쓸 수 있어요. 로그인 없이도 🤖 AI 대전은 할 수 있어요!');
   if(!online||!db)return alert('온라인 연결이 필요해요.');
   if(typeof isBanned==='function'&&isBanned())return alert('이용이 정지된 계정은 시작할 수 없어요.');
   const c=chars[sel];if(!owned(c))return alert('구매하지 않은 캐릭터입니다.');
@@ -3795,7 +3796,7 @@ async function quickMatch(){
     if(Date.now()-mine.t0>=QM_WAIT_MS){
       clearInterval(mine.timer);qm=null;qmStatus('');
       try{leavePvpRoom(true)}catch(e){}
-      if(confirm('지금은 기다리는 상대가 없어요. 🤖 AI와 연습 대전을 할까요?'))startAiDuel(1);
+      try{msg('🤖 상대가 없어서 AI와 매칭됐어요!')}catch(e){}startAiDuel(aiLevelFor());
     }
   },1000);
 }
@@ -3803,7 +3804,7 @@ setTimeout(()=>{
   try{
     const lb=document.querySelector('button[onclick="loadPvpRooms()"]');if(!lb||$('qmBtn'))return;
     const q=document.createElement('button');q.id='qmBtn';q.className='purple';q.textContent='🎲 랜덤 대전';q.onclick=quickMatch;
-    const a=document.createElement('button');a.className='gold';a.textContent='🤖 AI 연습 대전';a.onclick=showAiRoster;
+    const a=document.createElement('button');a.className='gold';a.textContent='🤖 AI 대전';a.onclick=showAiRoster;
     const st=document.createElement('div');st.id='qmStatus';st.className='small';st.style.margin='4px 0';
     lb.insertAdjacentElement('afterend',q);q.insertAdjacentElement('afterend',a);a.insertAdjacentElement('afterend',st);
   }catch(e){}
