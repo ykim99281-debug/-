@@ -51,6 +51,8 @@ exports.apply = function (s, o) {
   s = require('./v31-patch').apply(s, { dm: !o.noDm, rank: !o.noRank });
   // 2-6) 밸런스 패치
   s = require('./balance-patch').apply(s);
+  // 2-7) 알림 말풍선 + 연결 점검
+  rep('/* ===================== 비밀번호 변경 ===================== */', read('v32-help.js') + '/* ===================== 비밀번호 변경 ===================== */');
   // 3) PC·모바일 같이 하기 (화면 크기와 상관없는 전투장)
   s = require('./multiscreen-patch').apply(s);
   return s;
