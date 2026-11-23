@@ -49,6 +49,8 @@ exports.apply = function (s, o) {
   s = require('./grow-patch').apply(s, o.coin);
   // 2-5) 3.1: 쪽지·쿠폰·스테이지 순위·주간 도전·설정 (어린이 판은 쪽지·순위 없음)
   s = require('./v31-patch').apply(s, { dm: !o.noDm, rank: !o.noRank });
+  // 2-6) 밸런스 패치
+  s = require('./balance-patch').apply(s);
   // 3) PC·모바일 같이 하기 (화면 크기와 상관없는 전투장)
   s = require('./multiscreen-patch').apply(s);
   return s;

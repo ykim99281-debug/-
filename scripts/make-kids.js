@@ -172,7 +172,7 @@ rep('이용약관과 개인정보처리방침에 동의합니다. (만 14세 미
 rep("alert('이용약관과 개인정보처리방침에 동의해야 가입할 수 있어요.')", "alert('보호자와 함께 이용약관과 개인정보처리방침을 읽고 동의해야 가입할 수 있어요.')", 1);
 
 // 9) 공통 패치: 내 계정 점검 + 프리미엄 + PvP 방 목록 + 이야기 다시 보기 + 같이 하기
-s = require('./common-patches').apply(s, { version: '2.1.0', build: 210, root: 'kids', noDm: true, noRank: true,
+s = require('./common-patches').apply(s, { version: '2.2.0', build: 220, root: 'kids', noDm: true, noRank: true,
   og: { title: '어린이 공명 연대기', desc: '심술 구름을 달래 주는 귀여운 친구들의 쉬운 모험. 채팅 없는 안전한 놀이, 쉬운 퀴즈. 무료!', image: 'https://ykim99281-debug.github.io/-/promo/og-kids.jpg', url: 'https://ykim99281-debug.github.io/-/kids.html' },
   titles: [['🌱 개척자', '🌱 첫 친구'], ['💎 후원자', '💖 마음 후원자'], ['✨ 별빛 수호자', '✨ 반짝 수호자'], ['🏅 베테랑', '🏅 척척박사']] });
 

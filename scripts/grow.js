@@ -1,7 +1,7 @@
 /* ===================== 대규모 업데이트: 성장(레벨), 출석 보상, 업적, 몬스터 패턴 ===================== */
 const CUR2='{{COIN}}';
 const LV_MAX=30,LV_BONUS=.03;
-const xpNeed=l=>60+l*40;                         // 다음 레벨까지 필요한 경험치
+const xpNeed=l=>50+l*30;                         // 다음 레벨까지 필요한 경험치
 function lvInfo(name){
   if(!save)return {l:1,x:0};
   save.lv=save.lv||{};const o=save.lv[name]=save.lv[name]||{l:1,x:0};

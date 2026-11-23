@@ -1283,8 +1283,8 @@ function setupDungeonBattle(place){
   let diff=Math.max(1,place.level);
   let boss=place.level>=70 || place.name.includes("오블리비온") || place.name.includes("카오스") || place.name.includes("레이드");
   let demonName=boss?place.name+" 보스":place.name+" 공허체";
-  let eh=(900+diff*420)*(boss?2.2:1.35);
-  enemy={x:w*.72,y:h*.62,r:boss?52:40,hp:eh,max:eh,atk:(35+diff*13)*(boss?1.65:1.2),spd:1.55+diff*.025,name:demonName,emoji:place.emoji,color:place.color};
+  let eh=(900+diff*420)*(boss?1.8:1.35);
+  enemy={x:w*.72,y:h*.62,r:boss?52:40,hp:eh,max:eh,atk:(35+diff*13)*(boss?1.4:1.2),spd:1.55+diff*.025,name:demonName,emoji:place.emoji,color:place.color};
   bullets=[];effects=[];c1=c2=0;
   msg(`입장: ${place.name} / 필요 Lv.${place.level} / ${boss?"보스전":"어려운 전투장"}`);
   hud();
@@ -1296,7 +1296,7 @@ function startGame(){if(isBanned())return alert("밴된 계정은 게임을 시�
 function back(){run=false;dungeonPlace=null;$("game").classList.remove("active");$("select").classList.add("active")}
 function resize(){w=cv.width=innerWidth;h=cv.height=innerHeight}
 function bossKind(){if(stage%10===0)return"최종보스";if(stage%5===0)return"중간보스";return"일반 공허체"}
-function setup(){let c=chars[sel],kb=0,ar=armor();player={x:w*.25,y:h*.62,r:34,hp:c.hp+ar.hp,max:c.hp+ar.hp,atk:c.atk+ar.atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:false,inv:0};let idx=Math.min(demons.length-1,Math.floor((stage-1)/2));if(stage%10===0)idx=Math.min(demons.length-1,10+Math.floor(stage/30));else if(stage%5===0)idx=Math.min(demons.length-1,4+Math.floor(stage/10));let d=demons[idx];let mult=stage%10===0?2.1:stage%5===0?1.55:1;let eh=(650+stage*260+Math.floor(stage/3)*180)*mult;enemy={x:w*.72,y:h*.62,r:stage%10===0?48:stage%5===0?42:36,hp:eh,max:eh,atk:(26+stage*9)*mult,spd:1.45+stage*.16,name:d[0],emoji:d[1],color:d[2]};bullets=[];effects=[];c1=c2=0;msg(`스테이지 ${stage} ${bossKind()} : ${enemy.name}`);hud()}
+function setup(){let c=chars[sel],kb=0,ar=armor();player={x:w*.25,y:h*.62,r:34,hp:c.hp+ar.hp,max:c.hp+ar.hp,atk:c.atk+ar.atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:false,inv:0};let idx=Math.min(demons.length-1,Math.floor((stage-1)/2));if(stage%10===0)idx=Math.min(demons.length-1,10+Math.floor(stage/30));else if(stage%5===0)idx=Math.min(demons.length-1,4+Math.floor(stage/10));let d=demons[idx];let mult=stage%10===0?1.6:stage%5===0?1.3:1,amult=stage%10===0?1.3:stage%5===0?1.15:1;let eh=(650+stage*260+Math.floor(stage/3)*180)*mult;enemy={x:w*.72,y:h*.62,r:stage%10===0?48:stage%5===0?42:36,hp:eh,max:eh,atk:(26+stage*7)*amult,spd:Math.min(4.8,1.45+stage*.16),name:d[0],emoji:d[1],color:d[2]};bullets=[];effects=[];c1=c2=0;msg(`스테이지 ${stage} ${bossKind()} : ${enemy.name}`);hud()}
 function hud(){$("pn").textContent=player.name;$("en").textContent=enemy.name;$("stage").textContent="스테이지 "+stage;$("bossType").textContent=bossKind();$("coin").textContent="코인 "+coins;$("dia").textContent="다이아 "+dia;$("rec").textContent="최고 "+best;$("eq").textContent=player.isSword?save.eq:player.breath;$("ph").style.width=Math.max(0,player.hp/player.max*100)+"%";$("eh").style.width=Math.max(0,enemy.hp/enemy.max*100)+"%";$("pt").textContent=Math.floor(Math.max(0,player.hp))+" / "+player.max;$("et").textContent=Math.floor(Math.max(0,enemy.hp))+" / "+Math.floor(enemy.max)}
 function msg(t){$("msg").textContent=t;clearTimeout($("msg")._t);$("msg").style.display="block";$("msg")._t=setTimeout(()=>$("msg").style.display="none",1600)}
 function loop(n){if(!run)return;let dt=Math.min(.033,(n-last)/1000);last=n;upd(dt);draw();requestAnimationFrame(loop)}
@@ -1703,7 +1703,7 @@ function makeCoopEnemyData(st){
   let idx=Math.min(demons.length-1,Math.floor((st-1)/2));
   if(st%10===0)idx=Math.min(demons.length-1,10+Math.floor(st/30));
   else if(st%5===0)idx=Math.min(demons.length-1,4+Math.floor(st/10));
-  let d=demons[idx], mult=st%10===0?2.35:st%5===0?1.75:1.18;
+  let d=demons[idx], mult=st%10===0?2.0:st%5===0?1.55:1.18;
   let max=Math.floor((780+st*320+Math.floor(st/3)*220)*mult);
   return {name:d[0],emoji:d[1],color:d[2],hp:max,max:max,x:Math.floor(myArena().x+myArena().w*.72),y:Math.floor(myArena().y+myArena().h*.62),sw:innerWidth,sh:innerHeight,r:st%10===0?52:st%5===0?45:38,stage:st,updatedAt:Date.now()};
 }
@@ -2454,7 +2454,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='3.1.0',APP_BUILD=410,APP_DATE='2026-11-21';
+const APP_VERSION='3.2.0',APP_BUILD=420,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -3301,7 +3301,7 @@ async function adminStats(){
 /* ===================== 대규모 업데이트: 성장(레벨), 출석 보상, 업적, 몬스터 패턴 ===================== */
 const CUR2='코인';
 const LV_MAX=30,LV_BONUS=.03;
-const xpNeed=l=>60+l*40;                         // 다음 레벨까지 필요한 경험치
+const xpNeed=l=>50+l*30;                         // 다음 레벨까지 필요한 경험치
 function lvInfo(name){
   if(!save)return {l:1,x:0};
   save.lv=save.lv||{};const o=save.lv[name]=save.lv[name]||{l:1,x:0};
@@ -3633,6 +3633,12 @@ async function loadStageRank(){
     box.innerHTML=`<div style="margin:6px 0">내 순위: <b>${my>=0?(my+1)+'위':'30위 밖'}</b> · 내 최고 ${save.best||1}스테이지</div>`+list.map((x,i)=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 8px;margin:4px 0;border-radius:8px;background:${x.n===user?'rgba(250,204,21,.18)':'rgba(255,255,255,.07)'}"><span style="width:28px;text-align:center">${i<3?['🥇','🥈','🥉'][i]:(i+1)}</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${adminLabel(x.n)}<br><small style="color:#9ca3af">${escH(x.char)}</small></span><b>${x.best}스테이지</b></div>`).join('');
   }catch(e){box.textContent='순위를 불러오지 못했어요. ('+(e.code||e.message)+')'}
 }
+/* ===================== 밸런스 패치: 공격 연타 제한, 회피 재사용 대기 ===================== */
+const BAL_ATK_CD=.18,BAL_DASH_CD=1.6;          // 공격은 초당 5~6번까지, 회피는 1.6초에 한 번
+let atkCd=0,dashCd=0;
+{const _u=upd;upd=function(dt){atkCd=Math.max(0,atkCd-dt);dashCd=Math.max(0,dashCd-dt);return _u.apply(this,arguments)}}
+{const _a=attack;attack=function(){if(atkCd>0)return;atkCd=BAL_ATK_CD;return _a.apply(this,arguments)}}
+{const _d=dash;dash=function(){if(dashCd>0){try{msg('회피는 잠시 뒤에 다시 쓸 수 있어요')}catch(e){}return}dashCd=BAL_DASH_CD;return _d.apply(this,arguments)}}
 /* ===================== 비밀번호 변경 ===================== */
 changePassword=async function(){
   if(user==='guest'||!auth||!auth.currentUser)return alert('로그인 후 사용할 수 있어요.');
