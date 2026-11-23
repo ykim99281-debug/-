@@ -89,7 +89,7 @@ function updatePlayer(dt) {
   const thr = keys.KeyW || keys.ArrowUp, brk = keys.KeyS || keys.ArrowDown, hb = keys.Space, ending = P.ending > 0;
   const load = 1 - 0.12 * b.pax.length / T.cap; let acc = 0;
   if (!brk) P.revWait = false;
-  if (thr && !ending) acc = P.v < -0.2 ? 7 : 3.0 * load * clamp(1 - P.v / T.vmax, 0, 1) + 0.15;
+  if (thr && !ending) acc = P.v < -0.2 ? 7 : (b.cond < 25 ? 0.75 : 1) * 3.0 * load * clamp(1 - P.v / T.vmax, 0, 1) + 0.15;
   else if (brk) { if (P.v > 0.05 && !P.revWait) { acc = -7.5; if (P.v + acc * dt <= 0) { P.v = 0; acc = 0; P.revWait = true; } } else if (P.revWait) acc = 0; else acc = P.v > -4.5 ? -2.4 : 0; }
   acc -= 0.05 * P.v + 0.0009 * P.v * Math.abs(P.v) + Math.sign(P.v) * 0.22;
   if (hb) acc -= Math.sign(P.v) * 9;
@@ -114,10 +114,11 @@ function updatePlayer(dt) {
   if (pm > 0.001) {
     P.x += clamp(out.x, -1, 1); P.z += clamp(out.z, -1, 1);
     if (Math.abs(P.v) > 1.5) { pen(P.carHit ? 'hitcar' : 'crash', 5 + Math.round(Math.abs(P.v) * 0.6), P.carHit ? '차량과 충돌' : '구조물 충돌', 1.2); P.shake = Math.min(1, Math.abs(P.v) / 10); sfx('crash'); }
-    P.v *= 0.55;
+    P.v *= 0.55; if (!G.school) b.cond = Math.max(0, b.cond - 2);
   }
   P.carHit = false;
   // --- 경로 진행
+  if (!G.school) { addRun(b, Math.abs(P.v) * dt); if (b.cond < 25 && !(P.cd.cond > 0)) { P.cd.cond = 20; toast('🔧 정비 불량! 출력이 떨어졌어요', 'bad'); } }
   const pr = projectPath(path, P.x, P.z, P.s, 40); P.s = pr.s; P.offRoute = pr.d > 14;
   // --- 승차감
   const alat = P.v * yaw, along = (P.v - v0) / dt;
@@ -153,7 +154,7 @@ function updatePlayer(dt) {
   // 정류장 완료 / 놓침
   if (P.graded && !P.doorOpen && (!inZone || Math.abs(P.v) > 2)) {
     P.graded = false; P.served++; P.si = (P.si + 1) % path.stops.length; a.si = P.si;
-    if (!G.school && b.pax.length >= 0) { const tip = Math.round(P.boarded * 120 * (P.comfort / 100) * (P.score / 100)); if (tip > 0) { G.money += tip; G.stats.revenue += tip; toast('💰 팁 ' + fmtMoney(tip), 'gold'); } }
+    if (!G.school && b.pax.length >= 0) { const tip = Math.round(P.boarded * 120 * (P.comfort / 100) * (P.score / 100)); if (tip > 0) { G.money += tip * (SCHOOL.license ? 1.25 : 1); G.day.rev += tip; G.stats.revenue += tip; toast('💰 팁 ' + fmtMoney(tip), 'gold'); } }
     P.boarded = 0; sfx('chime'); P.stopsDone = (P.stopsDone || 0) + 1;
     if (P.lesson && P.lesson.route && P.served >= path.stops.length && P.lesson.id !== 'L1') finishLesson();
   } else if (!P.graded && st.s - a.doorZ - P.s < -18 && wrapS(st.s - a.doorZ - P.s, path.L) < -18) {

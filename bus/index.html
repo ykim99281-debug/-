@@ -84,7 +84,7 @@
   #topbar .spd button.on{background:var(--accent);color:#1a1200;border-color:var(--accent)}
   #side{position:absolute;right:14px;top:68px;bottom:14px;width:min(440px,calc(100vw - 28px));pointer-events:auto;display:flex;flex-direction:column;overflow:hidden}
   #tabs{display:flex;border-bottom:1px solid var(--line)}
-  #tabs button{flex:1;padding:11px 4px;background:none;border:0;border-bottom:3px solid transparent;font-weight:700;color:var(--muted)}
+  #tabs button{flex:1;padding:11px 2px;font-size:13px;background:none;border:0;border-bottom:3px solid transparent;font-weight:700;color:var(--muted)}
   #tabs button.on{color:var(--fg);border-bottom-color:var(--accent)}
   #tabBody{flex:1;overflow:auto;padding:12px}
   .card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px}
@@ -92,6 +92,9 @@
   .chip{display:inline-block;min-width:34px;text-align:center;padding:1px 8px;border-radius:7px;font-weight:800;color:#111;font-size:13px}
   .card .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .card small{color:var(--muted)}
+  .pips{display:inline-flex;gap:3px;margin-left:6px}.pips i{width:12px;height:6px;border-radius:3px;background:rgba(255,255,255,.18)}.pips i.on{background:var(--accent)}
+  .tbl{width:100%;border-collapse:collapse;font-size:13px}.tbl td{padding:3px 0}.tbl td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  .bars{display:flex;gap:5px;align-items:flex-end;height:60px;margin-top:8px}.bars i{flex:1;background:var(--ok);border-radius:3px 3px 0 0;min-height:2px}.bars i.neg{background:var(--bad)}
   .meter{height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:4px}.meter i{display:block;height:100%;background:var(--blue)}
   #leftHint{position:absolute;left:14px;bottom:14px;font-size:12px;color:var(--muted);pointer-events:none;line-height:1.7}
 
@@ -162,7 +165,7 @@
 <div id="mgmt" class="hide">
   <div id="topbar" class="panel"></div>
   <div id="side" class="panel">
-    <div id="tabs"><button data-t="routes" class="on">🗺 노선</button><button data-t="fleet">🚌 버스</button><button data-t="stops">🚏 정류장</button><button data-t="goals">🏆 목표</button></div>
+    <div id="tabs"><button data-t="routes" class="on">🗺 노선</button><button data-t="fleet">🚌 버스</button><button data-t="stops">🚏 정류장</button><button data-t="company">🏢 회사</button><button data-t="goals">🏆 목표</button></div>
     <div id="tabBody"></div>
   </div>
   <div id="leftHint">🖱 드래그: 회전 · 휠: 확대 · 버스 목록의 '관제'로 따라가기</div>

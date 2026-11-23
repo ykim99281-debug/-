@@ -119,12 +119,15 @@ const UI = {
   html_fleet() {
     let h = `<button class="btn pri" id="buyBus" style="width:100%;margin-bottom:10px">＋ 버스 구매</button>`;
     if (!G.buses.length) h += `<p class="muted">보유한 버스가 없어요.</p>`;
+    h += `<p class="muted" style="margin:0 0 8px;font-size:12px">🅿 차고지 ${G.buses.length}/${garageCap()}대 · 달리면 연료비가 들고 정비 상태가 떨어져요. 25% 아래면 고장 위험!</p>`;
     for (const b of G.buses) {
-      const T = BUS_TYPES[b.type], r = routeById(b.routeId), st = b.manual ? '🎮 직접 운전 중' : b.phase === 'run' ? '운행 중' : '정차 · 승하차';
+      const T = BUS_TYPES[b.type], st = b.manual ? '🎮 직접 운전 중' : b.phase === 'broken' ? '🔧 고장 · 수리 중' : b.phase === 'run' ? '운행 중' : '정차 · 승하차', cc = b.cond > 60 ? '#4ade80' : b.cond > 25 ? '#facc15' : '#f87171';
       h += `<div class="card"><h4>${T.name} #${b.id} <small>${st}</small></h4>
         <div class="row"><select data-route="${b.id}" ${b.manual ? 'disabled' : ''}>${G.routes.map(q => `<option value="${q.id}" ${q.id === b.routeId ? 'selected' : ''}>${q.num} ${esc(q.name)}</option>`).join('')}</select><small>승객 ${b.pax.length}/${T.cap}</small></div>
-        <div class="meter"><i style="width:${b.pax.length / T.cap * 100}%"></i></div><small>누적 수입 ${fmtMoney(b.income)} · 인건비 ${fmtMoney(T.wage)}/초</small>
-        <div class="acts"><button class="btn sm" data-bdrive="${b.id}">🎮 운전하기</button><button class="btn sm" data-bfollow="${b.id}">👁 관제</button><button class="btn sm bad" data-bsell="${b.id}">매각 ${fmtMoney(T.price * .5)}</button></div></div>`;
+        <div class="meter"><i style="width:${b.pax.length / T.cap * 100}%"></i></div>
+        <small>정비 상태 <b style="color:${cc}">${Math.round(b.cond)}%</b> · 주행 ${(b.km / 1000).toFixed(1)}km · 연식 ${b.age}일</small><div class="meter"><i style="width:${b.cond}%;background:${cc}"></i></div>
+        <small>누적 수입 ${fmtMoney(b.income)} · 인건비 ${fmtMoney(T.wage)}/초</small>
+        <div class="acts"><button class="btn sm" data-bdrive="${b.id}">🎮 운전하기</button><button class="btn sm" data-bfollow="${b.id}">👁 관제</button><button class="btn sm" data-bsvc="${b.id}" ${b.cond >= 95 ? 'disabled' : ''}>🔧 정비 ${fmtMoney(serviceCost(b))}</button><button class="btn sm bad" data-bsell="${b.id}">매각 ${fmtMoney(busValue(b))}</button></div></div>`;
     }
     return h;
   },
@@ -133,6 +136,7 @@ const UI = {
     b.querySelectorAll('[data-route]').forEach(x => x.onchange = () => { reassignBus(busById(+x.dataset.route), +x.value); this.renderTab(true); });
     b.querySelectorAll('[data-bdrive]').forEach(x => x.onclick = () => this.driveBus(busById(+x.dataset.bdrive)));
     b.querySelectorAll('[data-bfollow]').forEach(x => x.onclick = () => { this.follow = busById(+x.dataset.bfollow); CAM.dist = 40; toast('버스를 따라가는 중 · 휠로 확대/축소'); });
+    b.querySelectorAll('[data-bsvc]').forEach(x => x.onclick = () => { serviceBus(busById(+x.dataset.bsvc)); this.renderTab(true); });
     b.querySelectorAll('[data-bsell]').forEach(x => x.onclick = () => { if (confirm('이 버스를 매각할까요?')) { const bs = busById(+x.dataset.bsell); if (this.follow === bs) this.follow = null; sellBus(bs); this.renderTab(true); } });
   },
   html_stops() {
@@ -141,6 +145,30 @@ const UI = {
     return h;
   },
   bind_stops() { },
+  html_company() {
+    const last = G.reports[0], fm = Math.pow(1500 / G.fare, 0.8) * (1 + 0.08 * G.up.info);
+    let h = `<div class="card"><h4>💼 재무 현황</h4><table class="tbl"><tr><td>보유 자금</td><td>${fmtMoney(G.money)}</td></tr><tr><td>대출 잔액 (일 이자 2%)</td><td>${fmtMoney(G.loan)}</td></tr><tr><td>차고지</td><td>${G.buses.length} / ${garageCap()}대</td></tr><tr><td>오늘 수입 / 지출</td><td>${fmtMoney(G.day.rev)} / ${fmtMoney(G.day.fuel + G.day.wage + G.day.maint)}</td></tr></table></div>`;
+    h += `<div class="card"><h4>🎫 요금 정책 <small>(${G.dayNo}일차)</small></h4><div class="row"><input type="range" id="fareR" min="1000" max="2500" step="50" value="${G.fare}" style="flex:1"><b id="fareV" class="tnum">${fmtMoney(G.fare)}</b></div><small id="fareS">승객 수요 ×${fm.toFixed(2)} · 요금을 올리면 건당 수입은 늘지만 승객이 줄어요</small></div>`;
+    h += `<h4 style="margin:14px 0 8px">🏗 회사 업그레이드</h4>`;
+    for (const k in UPGRADES) {
+      const U = UPGRADES[k], l = G.up[k], c = l < U.max ? U.cost(l) : 0;
+      h += `<div class="card"><h4>${U.name}<span class="pips">${Array.from({ length: U.max }, (_, i) => `<i class="${i < l ? 'on' : ''}"></i>`).join('')}</span></h4><small>${U.desc}</small><div class="acts"><button class="btn sm pri" data-up="${k}" ${l >= U.max || G.money < c ? 'disabled' : ''}>${l >= U.max ? '최대 레벨' : '업그레이드 ' + fmtMoney(c)}</button></div></div>`;
+    }
+    h += `<div class="card"><h4>🏦 은행 대출 <small>한도 ${fmtMoney(loanLimit())}</small></h4><small>자금이 부족할 때 빌려 버스를 먼저 사세요. 이자는 매일 결산 때 빠져나가요.</small><div class="acts"><button class="btn sm" data-loan="500000">＋ 50만 대출</button><button class="btn sm" data-repay="500000">− 50만 상환</button><button class="btn sm" data-repay="${G.loan}" ${G.loan ? '' : 'disabled'}>전액 상환</button></div></div>`;
+    h += `<div class="card"><h4>📒 일일 결산</h4>`;
+    if (!last) h += `<small class="muted">자정(00:00)에 하루 결산이 이뤄져요. 연료·인건비·정비·임대료·보험·이자를 제하고 이익의 10%가 세금으로 나가요.</small>`;
+    else {
+      h += `<small>${last.day}일차</small><table class="tbl"><tr><td>운임 수입</td><td>${fmtMoney(last.rev)}</td></tr><tr><td>연료비</td><td>-${fmtMoney(last.fuel)}</td></tr><tr><td>기사 인건비</td><td>-${fmtMoney(last.wage)}</td></tr><tr><td>정비비</td><td>-${fmtMoney(last.maint)}</td></tr><tr><td>차고지 임대료 · 보험</td><td>-${fmtMoney(last.rent + last.ins)}</td></tr><tr><td>대출 이자</td><td>-${fmtMoney(last.interest)}</td></tr><tr><td>법인세 (10%)</td><td>-${fmtMoney(last.tax)}</td></tr><tr><td><b>순이익</b></td><td><b style="color:${last.net >= 0 ? 'var(--ok)' : 'var(--bad)'}">${fmtMoney(last.net)}</b></td></tr></table>`;
+      const mx = Math.max(1, ...G.reports.map(r => Math.abs(r.net))); h += `<div class="bars">${G.reports.slice().reverse().map(r => `<i class="${r.net < 0 ? 'neg' : ''}" style="height:${Math.max(4, Math.abs(r.net) / mx * 100)}%" title="${r.day}일차 ${fmtMoney(r.net)}"></i>`).join('')}</div>`;
+    }
+    return h + '</div>';
+  },
+  bind_company(b) {
+    const r = b.querySelector('#fareR'); if (r) r.oninput = () => { G.fare = +r.value; $('fareV').textContent = fmtMoney(G.fare); $('fareS').textContent = '승객 수요 ×' + (Math.pow(1500 / G.fare, 0.8) * (1 + 0.08 * G.up.info)).toFixed(2) + ' · 요금을 올리면 건당 수입은 늘지만 승객이 줄어요'; };
+    b.querySelectorAll('[data-up]').forEach(x => x.onclick = () => { if (buyUpgrade(x.dataset.up)) this.renderTab(true); });
+    b.querySelectorAll('[data-loan]').forEach(x => x.onclick = () => { borrow(+x.dataset.loan); this.renderTab(true); });
+    b.querySelectorAll('[data-repay]').forEach(x => x.onclick = () => { repay(+x.dataset.repay); this.renderTab(true); });
+  },
   html_goals() {
     const l = level(); let h = `<div class="card"><h4>🏢 ${esc(G.name)} <small>Lv.${l} · 누적 승객 ${G.pax}명</small></h4><small>수입 ${fmtMoney(G.stats.revenue)} · 지출 ${fmtMoney(G.stats.expense)} · 운전 ${SCHOOL.license ? '🪪 면허 보유(팁 보너스)' : '면허 없음 (운전교실에서 취득)'}</small></div>`;
     for (const g of GOALS) h += `<div class="card" style="padding:8px 12px;${G.goals[g.id] ? 'opacity:.6' : ''}"><div class="row" style="justify-content:space-between"><span>${G.goals[g.id] ? '✅' : '⬜'} ${g.t}</span><small>+${fmtMoney(g.rw)}</small></div></div>`;
@@ -152,7 +180,7 @@ const UI = {
     if (!G.routes.length) { toast('먼저 노선을 만드세요', 'bad'); return; }
     let sel = 'city'; const l = level();
     const draw = () => {
-      this.modal(`<h2>🚌 버스 구매</h2>` + Object.entries(BUS_TYPES).map(([k, T]) => { const lock = l < T.lvl; return `<div class="card"><div class="row" style="justify-content:space-between"><div><b>${T.name}</b> <small>${T.len}m · ${T.cap}명 · 인건비 ${fmtMoney(T.wage)}/초</small></div><button class="btn sm ${k === sel ? 'pri' : ''}" data-t="${k}" ${lock ? 'disabled' : ''}>${lock ? '🔒 Lv.' + T.lvl : fmtMoney(T.price)}</button></div></div>`; }).join('') +
+      this.modal(`<h2>🚌 버스 구매</h2><p class="muted" style="margin:0 0 8px">🅿 차고지 ${G.buses.length}/${garageCap()}대 · 보유 자금 ${fmtMoney(G.money)}</p>` + Object.entries(BUS_TYPES).map(([k, T]) => { const lock = l < T.lvl; return `<div class="card"><div class="row" style="justify-content:space-between"><div><b>${T.name}</b> <small>${T.len}m · ${T.cap}명 · 인건비 ${fmtMoney(T.wage)}/초 · 연료 ${fmtMoney(T.fuel * 1000 * (1 - 0.08 * G.up.fuel))}/km</small></div><button class="btn sm ${k === sel ? 'pri' : ''}" data-t="${k}" ${lock ? 'disabled' : ''}>${lock ? '🔒 Lv.' + T.lvl : fmtMoney(T.price)}</button></div></div>`; }).join('') +
         `<div class="row" style="margin:10px 0"><span>배치 노선</span><select id="mRoute">${G.routes.map(q => `<option value="${q.id}" ${q.id === routeId ? 'selected' : ''}>${q.num} ${esc(q.name)}</option>`).join('')}</select></div>
          <div class="row"><button class="btn pri" id="mBuy" style="flex:1">${BUS_TYPES[sel].name} 구매 (${fmtMoney(BUS_TYPES[sel].price)})</button><button class="btn" id="mX">닫기</button></div>`);
       $('modalBox').querySelectorAll('[data-t]').forEach(b => b.onclick = () => { routeId = +$('mRoute').value; sel = b.dataset.t; draw(); });

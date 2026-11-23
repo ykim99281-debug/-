@@ -1,8 +1,9 @@
 'use strict';
 const BUS_TYPES = {
-  mini: { name: '마을버스', len: 8.4, w: 2.3, h: 3.0, cap: 24, price: 500000, wage: 60, vmax: 20, lvl: 1, deck: 1 },
-  city: { name: '시내버스', len: 12, w: 2.55, h: 3.2, cap: 45, price: 800000, wage: 90, vmax: 22, lvl: 1, deck: 1 },
-  dd: { name: '2층 버스', len: 11, w: 2.55, h: 4.5, cap: 72, price: 1500000, wage: 140, vmax: 19, lvl: 3, deck: 2 }
+  mini: { name: '마을버스', len: 8.4, w: 2.3, h: 3.0, cap: 24, price: 500000, wage: 60, vmax: 20, lvl: 1, deck: 1, fuel: 2.4 },
+  city: { name: '시내버스', len: 12, w: 2.55, h: 3.2, cap: 45, price: 800000, wage: 90, vmax: 22, lvl: 1, deck: 1, fuel: 3.5 },
+  ev: { name: '전기버스', len: 12, w: 2.55, h: 3.2, cap: 45, price: 1400000, wage: 90, vmax: 22, lvl: 2, deck: 1, fuel: 1.2 },
+  dd: { name: '2층 버스', len: 11, w: 2.55, h: 4.5, cap: 72, price: 1500000, wage: 140, vmax: 19, lvl: 3, deck: 2, fuel: 5.5 }
 };
 const _gc = {};
 const bgeo = (w, h, d) => _gc['b' + w + h + d] || (_gc['b' + w + h + d] = new THREE.BoxGeometry(w, h, d));
