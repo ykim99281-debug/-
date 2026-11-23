@@ -1311,8 +1311,8 @@ function setupDungeonBattle(place){
   let diff=Math.max(1,place.level);
   let boss=place.level>=70 || place.name.includes("대적자") || place.name.includes("금 신상") || place.name.includes("레이드");
   let demonName=boss?place.name+" 보스":place.name+" 어둠의 세력";
-  let eh=(900+diff*420)*(boss?2.2:1.35);
-  enemy={x:w*.72,y:h*.62,r:boss?52:40,hp:eh,max:eh,atk:(35+diff*13)*(boss?1.65:1.2),spd:1.55+diff*.025,name:demonName,emoji:place.emoji,color:place.color};
+  let eh=(900+diff*420)*(boss?1.8:1.35);
+  enemy={x:w*.72,y:h*.62,r:boss?52:40,hp:eh,max:eh,atk:(35+diff*13)*(boss?1.4:1.2),spd:1.55+diff*.025,name:demonName,emoji:place.emoji,color:place.color};
   bullets=[];effects=[];c1=c2=0;
   msg(`입장: ${place.name} / 필요 Lv.${place.level} / ${boss?"보스전":"어려운 전투장"}`);
   hud();
@@ -1324,7 +1324,7 @@ function startGame(){if(isBanned())return alert("밴된 계정은 게임을 시�
 function back(){run=false;dungeonPlace=null;$("game").classList.remove("active");$("select").classList.add("active")}
 function resize(){w=cv.width=innerWidth;h=cv.height=innerHeight}
 function bossKind(){if(stage%10===0)return"최종보스";if(stage%5===0)return"중간보스";return"일반 어둠의 세력"}
-function setup(){let c=chars[sel],kb=0,ar=armor();player={x:w*.25,y:h*.62,r:34,hp:c.hp+ar.hp,max:c.hp+ar.hp,atk:c.atk+ar.atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:false,inv:0};let idx=Math.min(demons.length-1,Math.floor((stage-1)/2));if(stage%10===0)idx=Math.min(demons.length-1,10+Math.floor(stage/30));else if(stage%5===0)idx=Math.min(demons.length-1,4+Math.floor(stage/10));let d=demons[idx];let mult=stage%10===0?2.1:stage%5===0?1.55:1;let eh=(650+stage*260+Math.floor(stage/3)*180)*mult;enemy={x:w*.72,y:h*.62,r:stage%10===0?48:stage%5===0?42:36,hp:eh,max:eh,atk:(26+stage*9)*mult,spd:1.45+stage*.16,name:d[0],emoji:d[1],color:d[2]};bullets=[];effects=[];c1=c2=0;msg(`스테이지 ${stage} ${bossKind()} : ${enemy.name}`);hud()}
+function setup(){let c=chars[sel],kb=0,ar=armor();player={x:w*.25,y:h*.62,r:34,hp:c.hp+ar.hp,max:c.hp+ar.hp,atk:c.atk+ar.atk,spd:c.spd,name:c.name,side:c.side,emoji:c.emoji,color:c.color,breath:c.breath,isSword:false,inv:0};let idx=Math.min(demons.length-1,Math.floor((stage-1)/2));if(stage%10===0)idx=Math.min(demons.length-1,10+Math.floor(stage/30));else if(stage%5===0)idx=Math.min(demons.length-1,4+Math.floor(stage/10));let d=demons[idx];let mult=stage%10===0?1.6:stage%5===0?1.3:1,amult=stage%10===0?1.3:stage%5===0?1.15:1;let eh=(650+stage*260+Math.floor(stage/3)*180)*mult;enemy={x:w*.72,y:h*.62,r:stage%10===0?48:stage%5===0?42:36,hp:eh,max:eh,atk:(26+stage*7)*amult,spd:Math.min(4.8,1.45+stage*.16),name:d[0],emoji:d[1],color:d[2]};bullets=[];effects=[];c1=c2=0;msg(`스테이지 ${stage} ${bossKind()} : ${enemy.name}`);hud()}
 function hud(){$("pn").textContent=player.name;$("en").textContent=enemy.name;$("stage").textContent="스테이지 "+stage;$("bossType").textContent=bossKind();$("coin").textContent="점수 "+coins;$("dia").textContent="다이아 "+dia;$("rec").textContent="최고 "+best;$("eq").textContent=player.isSword?save.eq:player.breath;$("ph").style.width=Math.max(0,player.hp/player.max*100)+"%";$("eh").style.width=Math.max(0,enemy.hp/enemy.max*100)+"%";$("pt").textContent=Math.floor(Math.max(0,player.hp))+" / "+player.max;$("et").textContent=Math.floor(Math.max(0,enemy.hp))+" / "+Math.floor(enemy.max)}
 function msg(t){$("msg").textContent=t;clearTimeout($("msg")._t);$("msg").style.display="block";$("msg")._t=setTimeout(()=>$("msg").style.display="none",1600)}
 function loop(n){if(!run)return;let dt=Math.min(.033,(n-last)/1000);last=n;upd(dt);draw();requestAnimationFrame(loop)}
@@ -1731,7 +1731,7 @@ function makeCoopEnemyData(st){
   let idx=Math.min(demons.length-1,Math.floor((st-1)/2));
   if(st%10===0)idx=Math.min(demons.length-1,10+Math.floor(st/30));
   else if(st%5===0)idx=Math.min(demons.length-1,4+Math.floor(st/10));
-  let d=demons[idx], mult=st%10===0?2.35:st%5===0?1.75:1.18;
+  let d=demons[idx], mult=st%10===0?2.0:st%5===0?1.55:1.18;
   let max=Math.floor((780+st*320+Math.floor(st/3)*220)*mult);
   return {name:d[0],emoji:d[1],color:d[2],hp:max,max:max,x:Math.floor(myArena().x+myArena().w*.72),y:Math.floor(myArena().y+myArena().h*.62),sw:innerWidth,sh:innerHeight,r:st%10===0?52:st%5===0?45:38,stage:st,updatedAt:Date.now()};
 }
@@ -2482,7 +2482,7 @@ claimEvent=async function(id){
 deleteEvent=async function(id){if(!isAdmin()||!confirm('이 이벤트를 삭제할까요?'))return;await dbRef('events/'+id).remove()};
 
 /* ---------- 버전 표시 / 새 버전 알림 ---------- */
-const APP_VERSION='3.1.0',APP_BUILD=410,APP_DATE='2026-11-21';
+const APP_VERSION='3.2.1',APP_BUILD=421,APP_DATE='2026-11-21';
 function showVersion(){const e=$('verLabel');if(e)e.textContent='버전 '+APP_VERSION+' · '+APP_DATE}
 async function checkNewVersion(){
   if(!/^https?:$/.test(location.protocol))return;
@@ -3305,7 +3305,7 @@ async function adminStats(){
 /* ===================== 대규모 업데이트: 성장(레벨), 출석 보상, 업적, 몬스터 패턴 ===================== */
 const CUR2='점수';
 const LV_MAX=30,LV_BONUS=.03;
-const xpNeed=l=>60+l*40;                         // 다음 레벨까지 필요한 경험치
+const xpNeed=l=>50+l*30;                         // 다음 레벨까지 필요한 경험치
 function lvInfo(name){
   if(!save)return {l:1,x:0};
   save.lv=save.lv||{};const o=save.lv[name]=save.lv[name]||{l:1,x:0};
@@ -3637,6 +3637,65 @@ async function loadStageRank(){
     box.innerHTML=`<div style="margin:6px 0">내 순위: <b>${my>=0?(my+1)+'위':'30위 밖'}</b> · 내 최고 ${save.best||1}스테이지</div>`+list.map((x,i)=>`<div style="display:flex;gap:8px;align-items:center;padding:6px 8px;margin:4px 0;border-radius:8px;background:${x.n===user?'rgba(250,204,21,.18)':'rgba(255,255,255,.07)'}"><span style="width:28px;text-align:center">${i<3?['🥇','🥈','🥉'][i]:(i+1)}</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis">${adminLabel(x.n)}<br><small style="color:#9ca3af">${escH(x.char)}</small></span><b>${x.best}스테이지</b></div>`).join('');
   }catch(e){box.textContent='순위를 불러오지 못했어요. ('+(e.code||e.message)+')'}
 }
+/* ===================== 밸런스 패치: 공격 연타 제한, 회피 재사용 대기 ===================== */
+const BAL_ATK_CD=.18,BAL_DASH_CD=1.6;          // 공격은 초당 5~6번까지, 회피는 1.6초에 한 번
+let atkCd=0,dashCd=0;
+{const _u=upd;upd=function(dt){atkCd=Math.max(0,atkCd-dt);dashCd=Math.max(0,dashCd-dt);return _u.apply(this,arguments)}}
+{const _a=attack;attack=function(){if(atkCd>0)return;atkCd=BAL_ATK_CD;return _a.apply(this,arguments)}}
+{const _d=dash;dash=function(){if(dashCd>0){try{msg('회피는 잠시 뒤에 다시 쓸 수 있어요')}catch(e){}return}dashCd=BAL_DASH_CD;return _d.apply(this,arguments)}}
+/* ===================== 알림은 화면 말풍선으로 + 🔌 연결 점검 (알림창이 막힌 브라우저에서도 메시지가 보여요) ===================== */
+(function(){
+  const box=document.createElement('div');
+  box.id='toastBox';box.style.cssText='position:fixed;left:0;right:0;bottom:70px;z-index:2147483000;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 12px';
+  document.body.appendChild(box);
+  window.__toasts=[];
+  window.alert=function(m){
+    const t=String(m==null?'':m);window.__toasts.push(t);
+    const e=document.createElement('div');e.textContent=t;
+    e.style.cssText='max-width:520px;width:100%;box-sizing:border-box;padding:12px 16px;border-radius:14px;background:rgba(15,23,42,.97);color:#fff;border:1px solid rgba(250,204,21,.65);box-shadow:0 8px 24px rgba(0,0,0,.6);font-size:15px;line-height:1.55;white-space:pre-line;pointer-events:auto;word-break:keep-all';
+    e.onclick=()=>e.remove();box.appendChild(e);
+    while(box.children.length>3)box.firstChild.remove();
+    setTimeout(()=>e.remove(),Math.min(10000,3200+t.length*70));
+  };
+})();
+// 로그인이 오래 걸리면(연결이 막혔거나 느리면) 알려 줘요
+{const _login=login;login=async function(){
+  const t=setTimeout(()=>alert('아직 연결 중이에요. 네트워크를 확인하고, 로그인 칸의 🔌 연결 점검을 눌러 보세요.'),8000);
+  try{return await _login.apply(this,arguments)}finally{clearTimeout(t)}
+}}
+async function connCheck(){
+  const out=$('connInfo');if(!out)return;
+  const L=[];const show=()=>{out.textContent=L.join('\n')};
+  out.style.whiteSpace='pre-line';L.push('점검 중...');show();L.length=0;
+  L.push('1) 인터넷 도구(Firebase): '+(typeof firebase!=='undefined'?'✅ 불러옴':'❌ 불러오지 못했어요 (인터넷이 막혔거나 광고 차단 앱이 있어요)'));
+  L.push('2) 온라인 연결: '+(online?'✅':'❌')+' / 로그인 도구: '+(auth?'✅':'❌'));
+  try{L.push('3) 프로젝트: '+firebase.app().options.projectId)}catch(e){L.push('3) 프로젝트: 확인 못 함')}
+  show();
+  // 로그인 서버에 닿는지 (없는 계정으로 시도 → '계정 없음/비밀번호 틀림' 계열이면 서버에 닿은 거예요)
+  try{
+    if(!auth)throw new Error('로그인 도구 없음');
+    await Promise.race([auth.signInWithEmailAndPassword('check'+Date.now()+'@conn-test.local','x1y2z3w4'),new Promise((_,r)=>setTimeout(()=>r({code:'timeout'}),9000))]);
+    L.push('4) 로그인 서버: ✅');
+  }catch(e){
+    const c=e&&e.code||e&&e.message||'?';
+    const reach=/invalid-credential|user-not-found|wrong-password|invalid-email|too-many-requests/.test(c);
+    L.push('4) 로그인 서버: '+(reach?'✅ 닿았어요 ('+c+')':'❌ '+c+(c==='timeout'?' (9초 안에 답이 없어요)':'')));
+  }
+  show();
+  // 데이터베이스 연결
+  try{
+    const ok=await new Promise(res=>{let done=false;const r=db.ref('.info/connected'),h=s=>{if(s.val()===true&&!done){done=true;r.off('value',h);res(true)}};r.on('value',h);setTimeout(()=>{if(!done){r.off('value',h);res(false)}},7000)});
+    L.push('5) 데이터베이스: '+(ok?'✅ 연결됨':'❌ 7초 안에 연결되지 않았어요'));
+  }catch(e){L.push('5) 데이터베이스: ❌ '+(e.code||e.message))}
+  L.push('\n❌가 있으면 그 줄 번호를 알려주세요.');show();
+}
+setTimeout(()=>{
+  try{
+    const lb=document.querySelector('button[onclick="login()"]');if(!lb||$('connBtn'))return;
+    const b=document.createElement('button');b.id='connBtn';b.textContent='🔌 연결 점검';b.onclick=connCheck;lb.insertAdjacentElement('afterend',b);
+    const d=document.createElement('div');d.id='connInfo';d.className='small';d.style.cssText='margin-top:6px';b.insertAdjacentElement('afterend',d);
+  }catch(e){}
+},300);
 /* ===================== PC·모바일 같이 하기: 화면 크기와 상관없는 공정한 전투장 ===================== */
 // 전투장(아레나): 화면 안에 16:9 상자를 가운데에 놓고, 위치를 이 상자 기준으로 주고받아요.
 // 그래서 PC(큰 화면)와 모바일(작은 화면)에서 서로 같은 자리에 보이고, 이동 속도·공격 범위도 상자 크기에 맞춰 똑같이 계산돼요.
