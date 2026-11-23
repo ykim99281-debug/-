@@ -38,10 +38,12 @@ function startLesson(L) {
   G.buses.push(b); a.path = r.path; a.stopsOn = true; a.s = (r.path.stops[0].s - a.doorZ - 75 + r.path.L) % r.path.L; a.si = a.nearestStop(); a.pose(0);
   startManual(b, L);
 }
-function startCar(c) {
+function startCar(c, at) {
   const spec = CAR_SPECS[c.model], model = makeCarModel(spec, c.color); scene.add(model.group);
-  const a = new Agent('car', model), cc = Math.floor(GN / 2), path = buildPath(rectLoop(cc - 1, cc - 1, cc + 1, cc + 1, false), {});
-  a.path = path; a.s = 70; a.cruise = 13; a.pose(0);
+  const a = new Agent('car', model); at = at || { x: 0, z: 0 };
+  let bn = 0, bd = 1e18; NP.forEach((n, i) => { const d = (n.x - at.x) ** 2 + (n.z - at.z) ** 2; if (d < bd) { bd = d; bn = i; } });
+  const i0 = clamp(NP[bn].i - 1, 0, GN - 3), j0 = clamp(NP[bn].j - 1, 0, GN - 3), path = buildPath(rectLoop(i0, j0, i0 + 2, j0 + 2, false), {});
+  a.path = path; a.s = projectPath(path, at.x, at.z).s; a.cruise = 13; a.pose(0);
   const b = { id: 'car', isCar: true, carRef: c, type: '__car', spec: carType(spec), model, agent: a, pax: [], income: 0, phase: 'run', doorGoal: 0, doorT: 0, manual: false, cond: 100, km: 0, age: 0 };
   startManual(b, null);
 }

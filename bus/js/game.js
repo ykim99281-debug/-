@@ -119,7 +119,7 @@ function checkGoals() {
 // ===== 월드 갱신 =====
 let lastLvl = 1;
 function updateWorld(dt) {
-  const prevH = G.hour; G.gt += dt; G.hour = (G.hour + dt * HPS) % 24;
+  const prevH = G.hour; G.gt += dt; if (!G.freezeHour) G.hour = (G.hour + dt * HPS) % 24;
   const night = clamp((Math.abs(G.hour - 3) < 3 ? 1 : 0) * 0.6 + 0.4, 0, 1);
   const fm = Math.pow(1500 / G.fare, 0.8) * (1 + 0.08 * G.up.info);
   const dm = 0.45 + 0.55 * (1 - (G.hour > 22 || G.hour < 5 ? 0.7 : 0));

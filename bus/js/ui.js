@@ -274,6 +274,33 @@ const UI = {
     mb.querySelectorAll('[data-csell]').forEach(b => b.onclick = () => { const c = SCHOOL.cars.find(q => q.id === +b.dataset.csell); if (confirm(CAR_SPECS[c.model].name + ' 을(를) ' + fmtMoney(carValue(c)) + '에 매각할까요?')) { sellCar(c); this.walletModal('garage'); } });
   },
 
+  // --- 자유주행
+  fd: { car: 0, hour: 12, freeze: true, traffic: 24, x: 0, z: 0 },
+  freeDriveModal() {
+    const f = this.fd; if (f.car !== 0 && !SCHOOL.cars.some(c => c.id === f.car)) f.car = 0;
+    const opt = (k, v, t) => `<button class="btn sm ${f[k] === v ? 'pri' : ''}" data-fd="${k}" data-v="${v}">${t}</button>`;
+    this.modal(`<h2>🚗 자유주행</h2><p class="muted" style="margin-top:0">규칙 없이 도시를 마음껏 달려요. 점수도, 감점도 없어요.</p>
+      <b>차량</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px"><button class="btn sm ${f.car === 0 ? 'pri' : ''}" data-fd="car" data-v="0">기본 차량 (아반떼)</button>${SCHOOL.cars.map(c => `<button class="btn sm ${f.car === c.id ? 'pri' : ''}" data-fd="car" data-v="${c.id}">${CAR_SPECS[c.model].brand} ${CAR_SPECS[c.model].name}</button>`).join('')}</div>
+      <b>시간</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('hour', 7, '🌅 아침')}${opt('hour', 12, '☀ 낮')}${opt('hour', 18, '🌇 저녁')}${opt('hour', 23, '🌙 밤')}<label class="muted" style="font-size:13px"><input type="checkbox" id="fdFreeze" ${f.freeze ? 'checked' : ''}> 시간 고정</label></div>
+      <b>교통량</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('traffic', 0, '없음')}${opt('traffic', 10, '적음')}${opt('traffic', 24, '보통')}${opt('traffic', 45, '많음')}</div>
+      <b>출발 위치</b> <small class="muted">(지도를 클릭하세요)</small><canvas id="fdMap" width="480" height="480" style="width:100%;max-width:340px;display:block;margin:6px auto 12px;border-radius:10px;cursor:crosshair"></canvas>
+      <div class="row"><button class="btn pri" id="fdGo" style="flex:1">🚗 출발!</button><button class="btn" id="fdX">닫기</button></div>`);
+    const c = $('fdMap'), ctx = c.getContext('2d'), draw = () => { const t = drawMap(ctx, 480, { mini: true }); const [x, y] = t.M(f.x, f.z); ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fillStyle = '#ffb020'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.stroke(); };
+    draw();
+    c.onclick = e => { const r = c.getBoundingClientRect(), sc = 480 / (2 * EXT + 60); f.x = (e.clientX - r.left) / r.width * 480 / sc - EXT - 30; f.z = (e.clientY - r.top) / r.height * 480 / sc - EXT - 30; draw(); };
+    $('modalBox').querySelectorAll('[data-fd]').forEach(b => b.onclick = () => { f[b.dataset.fd] = +b.dataset.v; this.freeDriveModal(); });
+    $('fdFreeze').onchange = e => { f.freeze = e.target.checked; };
+    $('fdX').onclick = () => this.closeModal();
+    $('fdGo').onclick = () => this.startFreeDrive();
+  },
+  startFreeDrive() {
+    const f = this.fd; this.closeModal(); initAudio(); startSchoolWorld();
+    for (const c of cars) c.dispose(); cars = []; spawnCars(f.traffic);
+    G.hour = f.hour; G.freezeHour = f.freeze; applyTime(G.hour);
+    const car = f.car === 0 ? { id: 0, model: 'avante', color: 0xf4f4f6, km: 0 } : SCHOOL.cars.find(c => c.id === f.car);
+    startCar(car, { x: f.x, z: f.z }); toast('🚗 자유주행 시작! T: 자율주행 · C: 카메라 · Esc: 메뉴', 'gold');
+  },
+
   // --- 운전교실
   schoolModal() {
     let h = `<h2>🎓 운전교실</h2><p class="muted" style="margin-top:0">교시를 차례로 통과하면 면허를 취득해요. 면허가 있으면 경영 모드에서 직접 운전 팁이 늘어납니다.</p>`;
@@ -304,7 +331,7 @@ const UI = {
     $('hudL').innerHTML = `<span class="chip" style="background:${hex(r ? r.color : 0xffb020)}">${r ? r.num : ''}</span><b>${r ? esc(r.name) : ''}</b> <small class="muted">${T.name}</small><br>🚏 다음: <b>${si ? esc(si.name) : '-'}</b> <span class="tnum">${si ? Math.max(0, Math.round(si.dist)) + 'm' : ''}</span><br>👥 탑승 <b>${b.pax.length}</b>/${T.cap} · 대기 ${si ? Math.floor(si.waiting) : 0}명${P.lesson ? `<br><small class="muted">${P.lesson.title}</small>` : ''}`;
     if (b.isCar) $('hudL').innerHTML = `🚗 <b>${esc(T.name)}</b><br><small class="muted">주행 ${(b.carRef.km / 1000).toFixed(1)}km · 내 차량</small>`;
     if (P.auto) $('hudL').innerHTML += '<br>🤖 <b style="color:#4ade80">자율주행 중</b>';
-    $('hudScore').style.display = b.isCar ? 'none' : ''; $('doorTag').style.display = b.isCar ? 'none' : '';
+    $('hudScore').style.display = b.isCar ? 'none' : ''; $('limit').style.display = b.isCar ? 'none' : ''; $('doorTag').style.display = b.isCar ? 'none' : '';
     $('hint').textContent = P.hint;
     $('spd').firstChild.nodeValue = kmh; const gear = P.v < -0.2 ? 'R' : (Math.abs(P.v) < 0.2 ? (keys.Space ? 'P' : 'N') : 'D');
     $('gear').querySelectorAll('b').forEach(x => x.classList.toggle('on', x.textContent === gear)); $('limit').classList.toggle('over', kmh > 52);
@@ -321,6 +348,7 @@ const UI = {
     $('bNew').onclick = () => { initAudio(); startCompany(($('coName').value || '버스 회사').trim()); this.showMgmt(); toast('환영합니다 사장님! 오른쪽에서 노선을 설계해 보세요', 'gold'); };
     $('bCont').onclick = () => { initAudio(); const s = loadSaved(); if (s) { startCompany(s.name, s); this.showMgmt(); } };
     $('bSchool').onclick = () => { initAudio(); this.schoolModal(); };
+    $('bFree').onclick = () => { initAudio(); this.freeDriveModal(); };
     $('bCar').onclick = () => { initAudio(); this.walletModal('wallet'); };
     $('bHelp').onclick = () => $('help').classList.toggle('hide');
     addEventListener('pointerdown', () => { UI.down = true; }, true); addEventListener('pointerup', () => { UI.down = false; }, true); addEventListener('pointercancel', () => { UI.down = false; }, true);
