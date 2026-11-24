@@ -279,10 +279,15 @@ function makeCarModel(spec, color) {
   const wp = new THREE.Group(); wp.position.set(0.38, clr + bh + 0.3, front0 - 0.95); wp.rotation.x = -1.15; inner.add(wp);
   const sw = new THREE.Group(); wp.add(sw); sw.add(new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.022, 8, 18), mk(0x101114)));
   for (const s of [-1, 1]) { const p = new THREE.Mesh(bgeo(0.1, ch + 0.05, 0.1), dark); p.position.set(s * (cw / 2 - 0.05), clr + bh + ch / 2, front0 - 0.05); inner.add(p); }
+  const signMat = new THREE.MeshBasicMaterial({ color: 0x4ade80 }), sign = new THREE.Group(); sign.visible = false; sign.position.set(0, clr + bh + ch + 0.14, cz);
+  sign.add(new THREE.Mesh(bgeo(0.52, 0.16, 0.2), signMat));
+  const stex = canvasTex(128, 40, x => { x.fillStyle = '#101010'; x.fillRect(0, 0, 128, 40); x.fillStyle = '#ffb020'; x.font = 'bold 30px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('TAXI', 64, 22); });
+  for (const s of [1, -1]) { const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.13), new THREE.MeshBasicMaterial({ map: stex })); pl.position.z = 0.101 * s; pl.rotation.y = s > 0 ? 0 : Math.PI; sign.add(pl); }
+  g.add(sign);
   const spot = new THREE.SpotLight(0xfff2cc, 0, 70, 0.5, 0.5, 1); spot.position.set(0, 0.8, L / 2); spot.target.position.set(0, 0, L / 2 + 20); g.add(spot, spot.target);
   return {
     group: g, shell, keep: [], inner, wheels, front, steerWheel: sw, spot, len: L, w: W, fa: 0.31 * L, ra: -0.31 * L, cockpit: { x: 0.38, y: clr + bh + ch * 0.62, z: front0 - 1.25 }, doorZ: 0,
-    setBrake(on) { tail.color.setHex(on ? 0xff2a2a : 0x771111); }, setDoor() { }, setLoad() { }, setCockpit(on) { for (const m of shell) m.visible = !on; }
+    setTaxi(st) { sign.visible = st > 0; signMat.color.setHex(st === 2 ? 0xff5a5a : 0x4ade80); }, setBrake(on) { tail.color.setHex(on ? 0xff2a2a : 0x771111); }, setDoor() { }, setLoad() { }, setCockpit(on) { for (const m of shell) m.visible = !on; }
   };
 }
 

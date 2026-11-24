@@ -25,7 +25,7 @@ function startManual(bus, lesson) {
   const a = bus.agent; P.bus = bus; bus.manual = true; a.manual = true;
   Object.assign(P, { active: true, paused: false, done: false, x: a.x, z: a.z, h: a.yaw, v: a.v, steer: 0, s: a.s, si: a.si, score: 100, comfort: 100, lesson: lesson || null, tick: 0, cd: {}, shake: 0, inNode: false, served: 0, graded: false, boarded: 0, t: 0, pens: {}, hornN: 0, camN: 0, revWait: false, lastV: a.v, grade: '', taskDone: {}, missed: 0, perfect: 0, ending: 0 });
   a.v = 0; a.hold = false; a.arrived = false; P.doorOpen = bus.doorGoal > 0.5; if (!P.doorOpen) bus.doorGoal = 0;
-  P.cruise = 0; P.mode = 1; P.lights = 0; P.fuel = 0; P.earn = 0; P.free = !!bus.isCar; P.auto = false; P.zoom = 1; P.stopInfo = null; P.finishing = false;
+  P.taxi = null; P.cruise = 0; P.mode = 1; P.lights = 0; P.fuel = 0; P.earn = 0; P.free = !!bus.isCar; P.auto = false; P.zoom = 1; P.stopInfo = null; P.finishing = false;
   P.camH = P.h; P.cam = 0; G.prevSpeed = G.speed; G.speed = 1; G.state = 'drive'; if (!chev) initGuides();
   chev.visible = beacon.visible = parkBox.visible = !P.free;
   UI.showDrive(); sfx('start');
@@ -82,7 +82,7 @@ function setAuto(on) {
 }
 function autoStep(dt) {
   const b = P.bus, a = b.agent;
-  if (b.isCar) { a.step(dt, G.gt); driveCost(a.v * dt, dt); }
+  if (b.isCar) { a.step(dt, G.gt); driveCost(a.v * dt, dt); updateTaxi(dt); }
   P.x = a.x; P.z = a.z; P.h = a.yaw; P.v = a.v; P.s = a.s; P.steer = a.steer * 2;
   if (!b.isCar) {
     P.si = a.si; P.doorOpen = b.doorGoal > 0.5; const st = a.path.stops[a.si], S = STOPS[st.id];
@@ -93,7 +93,7 @@ function autoStep(dt) {
   computeHint(); engineAudio(Math.abs(P.v), 0.3);
 }
 function stopManual(silent) {
-  if (!P.active) return; const b = P.bus, a = b.agent;
+  if (!P.active) return; taxiClear(); const b = P.bus, a = b.agent;
   b.manual = false; a.manual = false; P.active = false; b.model.setCockpit(false); b.model.spot.intensity = 0; chev.visible = beacon.visible = parkBox.visible = false;
   P.auto = false;
   if (b.isCar) a.dispose();
@@ -180,12 +180,12 @@ function updatePlayer(dt) {
   const pm = Math.hypot(out.x, out.z);
   if (pm > 0.001) {
     P.x += clamp(out.x, -1, 1); P.z += clamp(out.z, -1, 1);
-    if (Math.abs(P.v) > 1.5) { if (free) { if (!(P.cd.crash > 0)) { P.cd.crash = 1.2; toast('💥 충돌!', 'bad'); } } else pen(P.carHit ? 'hitcar' : 'crash', 5 + Math.round(Math.abs(P.v) * 0.6), P.carHit ? '차량과 충돌' : '구조물 충돌', 1.2); P.shake = Math.min(1, Math.abs(P.v) / 10); sfx('crash'); }
+    if (Math.abs(P.v) > 1.5) { if (free) { if (!(P.cd.crash > 0)) { P.cd.crash = 1.2; toast('💥 충돌!', 'bad'); if (P.taxi && P.taxi.ride) { P.taxi.ride.crashes++; toast('😨 손님이 놀랐어요 (별점 감점)', 'bad'); } } } else pen(P.carHit ? 'hitcar' : 'crash', 5 + Math.round(Math.abs(P.v) * 0.6), P.carHit ? '차량과 충돌' : '구조물 충돌', 1.2); P.shake = Math.min(1, Math.abs(P.v) / 10); sfx('crash'); }
     P.v *= 0.55; if (!G.school && !free) b.cond = Math.max(0, b.cond - 2);
   }
   P.carHit = false;
   const alat = P.v * yaw, along = (P.v - v0) / dt;
-  if (free) { driveCost(Math.abs(P.v) * dt, dt); P.stopInfo = null; }
+  if (free) { driveCost(Math.abs(P.v) * dt, dt); P.stopInfo = null; updateTaxi(dt); }
   if (!free) {
   // --- 경로 진행
   if (!G.school && !free) { addRun(b, Math.abs(P.v) * dt); if (b.cond < 25 && !(P.cd.cond > 0)) { P.cd.cond = 20; toast('🔧 정비 불량! 출력이 떨어졌어요', 'bad'); } }
@@ -272,8 +272,8 @@ function guides(a, path) {
 }
 function computeHint() {
   const si = P.stopInfo, b = P.bus; let h = '';
-  if (P.auto) { P.hint = '🤖 자율주행 중' + (si ? ' · 다음 정류장: ' + si.name + ' ' + Math.max(0, Math.round(si.dist)) + 'm' : '') + ' · 조작하면 수동 전환'; return; }
-  if (P.free) { P.hint = '🚗 자유 주행 · T 자율주행 · C 카메라 · H 경적 · Esc 메뉴'; return; }
+  if (P.auto && !(P.taxi && taxiHint())) { P.hint = '🤖 자율주행 중' + (si ? ' · 다음 정류장: ' + si.name + ' ' + Math.max(0, Math.round(si.dist)) + 'm' : '') + ' · 조작하면 수동 전환'; return; }
+  if (P.free) { P.hint = taxiHint() || '🚗 자유 주행 · T 자율주행 · C 카메라 · H 경적 · Esc 메뉴'; return; }
   const redAhead = (() => { const ni = clamp(Math.round(P.x / SP + HC), 0, GN - 1), nj = clamp(Math.round(P.z / SP + HC), 0, GN - 1); const n = NP[nid(ni, nj)]; const dx = n.x - P.x, dz = n.z - P.z, ah = dx * Math.sin(P.h) + dz * Math.cos(P.h); if (ah > 5 && ah < 45 && Math.abs(dx * Math.cos(P.h) - dz * Math.sin(P.h)) < 8) { const ax = Math.abs(Math.sin(P.h)) > Math.abs(Math.cos(P.h)) ? 0 : 1; return lightState(ax, G.gt); } return 0; })();
   if (P.lesson && P.lesson.id === 'L1') { const t = P.lesson.tasks.find(t => !P.taskDone[t[0]]); h = t ? '🎓 ' + t[1] : '✅ 모든 과제 완료!'; }
   else if (P.doorOpen && Math.abs(P.v) > 1.5) h = '⚠ 문이 열려 있어요! F로 닫으세요';
@@ -327,3 +327,65 @@ function dashUpdate() {
   const g = P.gaps && P.gaps.front, si = P.stopInfo;
   b.model.drawDash({ kmh: Math.round(Math.abs(P.v) * 3.6), gear: P.v < -0.2 ? 'R' : Math.abs(P.v) < 0.2 ? 'N' : 'D', door: P.doorOpen, next: si ? si.name : '', auto: P.auto, gap: g ? (g.t ? '앞차 ' + g.t.toFixed(1) + 's' : '앞차 ' + Math.round(g.d) + 'm') : '' });
 }
+
+// ===== 택시 영업 (자유주행) =====
+const TAXI_BASE = 4800, TAXI_PER_M = 8, TAXI_WAIT = 3;
+const taxiNight = () => G.hour >= 22 || G.hour < 4;
+function taxiFare(r) { let f = TAXI_BASE + r.rideDist * TAXI_PER_M + r.wait * TAXI_WAIT; if (taxiNight()) f *= 1.2; return Math.round(f / 100) * 100; }
+function personMesh() {
+  const g = new THREE.Group(), col = [0xff7a1a, 0xffd21a, 0x3ddc84, 0xff4d8d, 0x4ea1ff][Math.floor(Math.random() * 5)], m = mk(col), skin = mk(0xf2c9a0), dk = mk(0x2a2d35);
+  const add = (geo, mat, x, y, z) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+  add(new THREE.CylinderGeometry(0.24, 0.28, 0.95, 8), m, 0, 0.95, 0); add(new THREE.SphereGeometry(0.19, 10, 8), skin, 0, 1.62, 0); add(bgeo(0.3, 0.5, 0.2), dk, 0, 0.27, 0); add(bgeo(0.09, 0.5, 0.09), m, -0.31, 1.0, 0);
+  const arm = new THREE.Group(); arm.position.set(0.3, 1.3, 0); const a = new THREE.Mesh(bgeo(0.1, 0.55, 0.1), m); a.position.y = 0.28; arm.add(a); const hand = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 6), skin); hand.position.y = 0.6; arm.add(hand); g.add(arm); g.userData.arm = arm;
+  const lb = labelSprite('🙋 택시!', { w: 5, bg: 'rgba(255,176,32,.94)', fg: '#1a1200' }); lb.position.y = 3.0; g.add(lb); return g;
+}
+function makeHailer(near) {
+  for (let k = 0; k < 50; k++) {
+    const u = Math.floor(Math.random() * NP.length), nb = neighbors(u), v = nb[Math.floor(Math.random() * nb.length)], d = dirOf(u, v), r = rightOf(d), t = rand(-22, 22);
+    const x = (NP[u].x + NP[v].x) / 2 + d.x * t + r.x * (ROAD / 2 + 1.4), z = (NP[u].z + NP[v].z) / 2 + d.z * t + r.z * (ROAD / 2 + 1.4), dist = Math.hypot(x - P.x, z - P.z);
+    if (dist < (near ? 50 : 140) || dist > (near ? 320 : 560) || P.taxi.hail.some(h => Math.hypot(h.x - x, h.z - z) < 60)) continue;
+    const g = personMesh(); g.position.set(x, 0.3, z); g.rotation.y = Math.atan2(-r.x, -r.z); scene.add(g); return { g, x, z, age: 0, ph: Math.random() * 6 };
+  }
+  return null;
+}
+function setTaxi(on) {
+  const b = P.bus; if (!b || !b.isCar) return; SCHOOL.taxi = SCHOOL.taxi || { trips: 0, earn: 0 };
+  if (on) { P.taxi = { hail: [], ride: null, hold: 0, trips: 0, earn: 0, stars: [], spawnT: 0, t: 0, target: null, dist: 0, arrow: 0 }; b.model.setTaxi(1); toast('🚕 택시 영업 시작! 손 흔드는 손님을 찾아보세요', 'gold'); for (let i = 0; i < 4; i++) { const h = makeHailer(true); if (h) P.taxi.hail.push(h); } sfx('chime'); }
+  else { taxiClear(); b.model.setTaxi(0); toast('택시 영업을 종료했어요'); }
+}
+function taxiClear() { const tx = P.taxi; if (!tx) return; for (const h of tx.hail) scene.remove(h.g); P.taxi = null; if (beacon) beacon.visible = false; if (P.bus && P.bus.model.setTaxi) P.bus.model.setTaxi(0); }
+function updateTaxi(dt) {
+  const tx = P.taxi; if (!tx) return; tx.t += dt;
+  if (!tx.ride && (tx.spawnT -= dt) <= 0) { tx.spawnT = 2; while (tx.hail.length < 5) { const h = makeHailer(false); if (!h) break; tx.hail.push(h); } }
+  for (let i = tx.hail.length - 1; i >= 0; i--) { const h = tx.hail[i]; h.age += dt; h.g.userData.arm.rotation.z = 2.5 + Math.sin(tx.t * 9 + h.ph) * 0.5; if (h.age > 110 || Math.hypot(h.x - P.x, h.z - P.z) > 760) { scene.remove(h.g); tx.hail.splice(i, 1); } }
+  let tgt = null;
+  if (tx.ride) {
+    const r = tx.ride, s = r.dest; r.time += dt; r.rideDist += Math.abs(P.v) * dt; if (Math.abs(P.v) < 1) r.wait += dt; if (Math.abs(P.v) * 3.6 > 60) r.speedT += dt;
+    tgt = { x: s.curb.x, z: s.curb.z, kind: 'dest' }; const d = Math.hypot(P.x - s.curb.x, P.z - s.curb.z);
+    if (d < 16 && Math.abs(P.v) < 2) { tx.hold += dt; if (tx.hold > 0.8) endRide(); } else tx.hold = 0;
+  } else {
+    let best = null, bd = 1e9; for (const h of tx.hail) { const d = Math.hypot(h.x - P.x, h.z - P.z); if (d < bd) { bd = d; best = h; } }
+    if (best) { tgt = { x: best.x, z: best.z, kind: 'hail' }; if (bd < 9 && Math.abs(P.v) < 2) { tx.hold += dt; if (tx.hold > 0.8) boardPassenger(best); } else tx.hold = 0; }
+  }
+  tx.target = tgt;
+  if (tgt) { const dx = tgt.x - P.x, dz = tgt.z - P.z; tx.dist = Math.hypot(dx, dz); const ahead = dx * Math.sin(P.h) + dz * Math.cos(P.h), lat = dx * Math.cos(P.h) - dz * Math.sin(P.h); tx.arrow = -Math.atan2(lat, ahead) * 180 / Math.PI; beacon.visible = true; beacon.position.set(tgt.x, 20, tgt.z); beacon.material.color.setHex(tgt.kind === 'dest' ? 0x4ade80 : 0xffd21a); }
+  else beacon.visible = false;
+}
+function boardPassenger(h) {
+  const tx = P.taxi; scene.remove(h.g); tx.hail.splice(tx.hail.indexOf(h), 1); tx.hold = 0;
+  let c = STOPS.filter(s => { const d = Math.hypot(s.mid.x - P.x, s.mid.z - P.z); return d > 260 && d < 760; }); if (!c.length) c = STOPS.slice().sort((a, b) => Math.hypot(b.mid.x - P.x, b.mid.z - P.z) - Math.hypot(a.mid.x - P.x, a.mid.z - P.z)).slice(0, 5);
+  const dest = c[Math.floor(Math.random() * c.length)], dist0 = Math.hypot(dest.mid.x - P.x, dest.mid.z - P.z);
+  tx.ride = { dest, dist0, rideDist: 0, wait: 0, time: 0, crashes: 0, speedT: 0 }; P.bus.model.setTaxi(2); sfx('door');
+  toast('🙋 "' + dest.name.replace(' 건너편', '') + '까지 가주세요!" (약 ' + Math.round(dist0) + 'm)', 'gold');
+}
+function endRide() {
+  const tx = P.taxi, r = tx.ride; let stars = 5 - Math.min(2, r.crashes); if (r.speedT > 6) stars--; const exp = r.dist0 * 1.4 / 9 + 25; if (r.time > exp * 2.5) stars--; if (r.time > exp * 4) stars--; stars = Math.max(1, stars);
+  const fare = taxiFare(r), tip = stars >= 5 ? Math.round(fare * 0.15 / 100) * 100 : stars === 4 ? Math.round(fare * 0.05 / 100) * 100 : 0;
+  SCHOOL.wallet += fare + tip; SCHOOL.taxi.trips++; SCHOOL.taxi.earn += fare + tip; saveSchool(); tx.trips++; tx.earn += fare + tip; tx.stars.push(stars); tx.ride = null; tx.hold = 0; P.bus.model.setTaxi(1);
+  toast('🚕 도착! 요금 ' + fmtMoney(fare) + (tip ? ' + 팁 ' + fmtMoney(tip) : '') + ' · ' + '★'.repeat(stars) + '☆'.repeat(5 - stars), stars >= 4 ? 'gold' : 'good'); sfx('chime');
+}
+function taxiHint() {
+  const tx = P.taxi; if (!tx) return ''; if (tx.ride) return '🚕 ' + tx.ride.dest.name + '까지 · 남은 ' + Math.round(tx.dist) + 'm · 미터기 ' + fmtMoney(taxiFare(tx.ride));
+  return tx.target ? '🙋 가까운 손님 ' + Math.round(tx.dist) + 'm · 옆에 멈춰 세우면 탑승해요' : '🚕 손님을 찾는 중…';
+}
+function taxiMarkers() { const tx = P.taxi; if (!tx) return null; const m = tx.hail.map(h => ({ x: h.x, z: h.z, c: '#ffd21a' })); if (tx.ride) m.push({ x: tx.ride.dest.curb.x, z: tx.ride.dest.curb.z, c: '#4ade80', big: 1 }); return m; }

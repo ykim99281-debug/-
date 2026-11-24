@@ -58,6 +58,7 @@ function drawMap(ctx, size, o) {
   if (!o.mini) { ctx.font = `bold ${15 * k}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; for (const [n, x, z] of DISTRICTS) { const [px, py] = M(x, z); ctx.fillStyle = 'rgba(120,180,255,.55)'; ctx.fillText(n, px, py); } }
   if (o.target !== undefined) { const s = STOPS[o.target], [x, y] = M(s.curb.x, s.curb.z); ctx.beginPath(); ctx.arc(x, y, 10, 0, 7); ctx.strokeStyle = '#ffb020'; ctx.lineWidth = 3; ctx.stroke(); }
   if (o.buses) for (const b of o.buses) { const [x, y] = M(b.agent.x, b.agent.z); ctx.beginPath(); ctx.arc(x, y, 3.5 * (o.mini ? 1 : k * 1.2), 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); }
+  if (o.markers) for (const m of o.markers) { const [x, y] = M(m.x, m.z); ctx.beginPath(); ctx.arc(x, y, (m.big ? 7 : 4.5) * (o.mini ? 1 : k), 0, 7); ctx.fillStyle = m.c; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = '#000'; ctx.stroke(); if (m.big) { ctx.beginPath(); ctx.arc(x, y, 12, 0, 7); ctx.strokeStyle = m.c; ctx.stroke(); } }
   if (o.player) { const [x, y] = M(P.x, P.z), dx = Math.sin(P.h), dz = Math.cos(P.h), r = 9; ctx.fillStyle = '#ffb020'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + dx * r, y + dz * r); ctx.lineTo(x - dx * r * .6 + dz * r * .6, y - dz * r * .6 - dx * r * .6); ctx.lineTo(x - dx * r * .6 - dz * r * .6, y - dz * r * .6 + dx * r * .6); ctx.closePath(); ctx.fill(); ctx.stroke(); }
   ctx.restore(); return { M, sc };
 }
@@ -100,6 +101,15 @@ const UI = {
   liveTick() {
     if (this.tab !== 'company') return; const pr = $('payRate'); if (pr) pr.textContent = fmtMoney(this.payRate()) + '/분';
     document.querySelectorAll('[data-pay]').forEach(c => { const b = busById(+c.dataset.pay); if (b) c.textContent = this.payCell(b); }); const mp = $('myPay'); if (mp) mp.textContent = '+' + fmtMoney(G.myPay);
+  },
+  drawTaxi() {
+    const el = $('taxiBox'), tx = P.taxi; if (!tx) { el.classList.add('hide'); return; } el.classList.remove('hide');
+    const avg = tx.stars.length ? (tx.stars.reduce((a, b) => a + b, 0) / tx.stars.length).toFixed(1) : '-', arrow = `<span style="display:inline-block;font-size:26px;transform:rotate(${tx.arrow}deg);color:${tx.ride ? '#4ade80' : '#ffd21a'}">⬆</span>`;
+    let h = `<b>🚕 택시 영업</b> <small class="muted">${taxiNight() ? '🌙 심야 할증 20%' : ''}</small>`;
+    if (tx.ride) { const r = tx.ride, bad = Math.min(2, r.crashes) + (r.speedT > 6 ? 1 : 0); h += `<div style="margin:6px 0 2px"><small class="muted">목적지</small> <b>${esc(r.dest.name)}</b></div><div style="font-size:28px;font-weight:800;color:#ffb020" class="tnum">${fmtMoney(taxiFare(r))}</div><div class="row" style="justify-content:space-between"><span>${arrow}</span><span class="tnum">남은 ${Math.round(tx.dist)}m</span></div><small>예상 별점 ${'★'.repeat(Math.max(1, 5 - bad))}${'☆'.repeat(Math.min(4, bad))}</small>`; }
+    else h += `<div class="row" style="justify-content:space-between;margin:6px 0"><span>${tx.target ? arrow : '🔍'}</span><span>${tx.target ? '가까운 손님 ' + Math.round(tx.dist) + 'm' : '손님 찾는 중…'}</span></div>`;
+    h += `<div style="border-top:1px solid var(--line);margin-top:6px;padding-top:4px"><small class="muted">이번 영업 ${tx.trips}회 · ${fmtMoney(tx.earn)} · ★${avg}</small></div>`;
+    el.innerHTML = h;
   },
   drawGaps() {
     const gp = P.gaps, el = $('gapBox'); if (!gp) { el.innerHTML = ''; return; }
@@ -304,12 +314,13 @@ const UI = {
   },
 
   // --- 자유주행
-  fd: { car: 0, hour: 12, freeze: true, traffic: 24, x: 0, z: 0 },
+  fd: { taxi: 0, car: 0, hour: 12, freeze: true, traffic: 24, x: 0, z: 0 },
   freeDriveModal() {
     const f = this.fd; if (f.car !== 0 && !SCHOOL.cars.some(c => c.id === f.car)) f.car = 0;
     const opt = (k, v, t) => `<button class="btn sm ${f[k] === v ? 'pri' : ''}" data-fd="${k}" data-v="${v}">${t}</button>`;
     this.modal(`<h2>🚗 자유주행</h2><p class="muted" style="margin-top:0">규칙 없이 도시를 마음껏 달려요. 점수도, 감점도 없어요.</p>
       <b>차량</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px"><button class="btn sm ${f.car === 0 ? 'pri' : ''}" data-fd="car" data-v="0">기본 차량 (아반떼)</button>${SCHOOL.cars.map(c => `<button class="btn sm ${f.car === c.id ? 'pri' : ''}" data-fd="car" data-v="${c.id}">${carDerived(c).fullName}</button>`).join('')}</div>
+      <b>모드</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('taxi', 0, '🚗 자유주행')}${opt('taxi', 1, '🚕 택시 영업')}<small class="muted">손 흔드는 손님을 태워 원하는 곳까지!</small></div>
       <b>시간</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('hour', 7, '🌅 아침')}${opt('hour', 12, '☀ 낮')}${opt('hour', 18, '🌇 저녁')}${opt('hour', 23, '🌙 밤')}<label class="muted" style="font-size:13px"><input type="checkbox" id="fdFreeze" ${f.freeze ? 'checked' : ''}> 시간 고정</label></div>
       <b>교통량</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('traffic', 0, '없음')}${opt('traffic', 10, '적음')}${opt('traffic', 24, '보통')}${opt('traffic', 45, '많음')}</div>
       <b>출발 위치</b> <small class="muted">(지도를 클릭하세요)</small><canvas id="fdMap" width="480" height="480" style="width:100%;max-width:340px;display:block;margin:6px auto 12px;border-radius:10px;cursor:crosshair"></canvas>
@@ -327,7 +338,7 @@ const UI = {
     for (const c of cars) c.dispose(); cars = []; spawnCars(f.traffic);
     G.hour = f.hour; G.freezeHour = f.freeze; applyTime(G.hour);
     const car = f.car === 0 ? { id: 0, model: 'avante', color: 0xf4f4f6, km: 0 } : SCHOOL.cars.find(c => c.id === f.car);
-    startCar(car, { x: f.x, z: f.z }); toast('🚗 자유주행 시작! T: 자율주행 · C: 카메라 · Esc: 메뉴', 'gold');
+    startCar(car, { x: f.x, z: f.z }); if (f.taxi) setTaxi(true); else toast('🚗 자유주행 시작! T: 자율주행 · C: 카메라 · Esc: 메뉴', 'gold');
   },
 
   // --- 운전교실
@@ -386,6 +397,7 @@ const UI = {
       h += `<div style="margin:10px 0 4px"><b>교통량</b></div><div class="row" style="flex-wrap:wrap;gap:6px">${[[0, '없음'], [10, '적음'], [24, '보통'], [45, '많음']].map(([v, t]) => opt(`data-ft="${v}"`, cars.length === v, t)).join('')}</div>`;
     }
     h += `<div style="margin:10px 0 4px"><b>헤드라이트</b></div><div class="row" style="gap:6px">${['자동', '켜기', '끄기'].map((t, i) => opt(`data-fl="${i}"`, P.lights === i, t)).join('')}</div>`;
+    h += `<div style="margin:10px 0 4px"><b>택시 영업</b> <small class="muted">${SCHOOL.taxi ? '누적 ' + SCHOOL.taxi.trips + '회 · ' + fmtMoney(SCHOOL.taxi.earn) : ''}</small></div><div class="row" style="gap:6px">${opt('data-tx="1"', !!P.taxi, P.taxi ? '🚕 영업 중 (끄기)' : '🚕 영업 시작')}</div>`;
     h += `<div style="margin:10px 0 4px"><b>위치 이동</b> <small class="muted">(지도를 클릭)</small></div><canvas id="fpMap" width="420" height="420" style="width:100%;max-width:300px;display:block;margin:0 auto;border-radius:10px;cursor:crosshair"></canvas>`;
     h += `<div class="row" style="margin-top:14px"><button class="btn pri" id="pGo" style="flex:1">▶ 계속 달리기</button><button class="btn" id="pMute">${muted ? '🔇' : '🔊'}</button><button class="btn" id="pTouch">📱</button><button class="btn bad" id="pEnd">🚪 나가기</button></div>`;
     this.modal(h); const mb = $('modalBox');
@@ -394,6 +406,7 @@ const UI = {
     mb.querySelectorAll('[data-fh]').forEach(x => x.onclick = () => { G.hour = +x.dataset.fh; applyTime(G.hour); this.freePause(); });
     const fl = $('fpFlow'); if (fl) fl.onchange = () => { G.freezeHour = !fl.checked; };
     mb.querySelectorAll('[data-ft]').forEach(x => x.onclick = () => { for (const q of cars) q.dispose(); cars = []; spawnCars(+x.dataset.ft); this.freePause(); });
+    mb.querySelectorAll('[data-tx]').forEach(x => x.onclick = () => { if (P.taxi && P.taxi.ride) { toast('손님이 타고 있어요', 'bad'); return; } setTaxi(!P.taxi); this.freePause(); });
     mb.querySelectorAll('[data-fl]').forEach(x => x.onclick = () => { P.lights = +x.dataset.fl; this.freePause(); });
     $('pGo').onclick = () => { this.closeModal(); P.paused = false; }; $('pMute').onclick = () => { muted = !muted; this.freePause(); };
     $('pEnd').onclick = () => { this.closeModal(); stopManual(); };
@@ -411,7 +424,7 @@ const UI = {
     if (b.isCar) $('hudL').innerHTML = `🚗 <b>${esc(T.name)}</b><br><small class="muted">${T.engName} · 주행 ${(b.carRef.km / 1000).toFixed(1)}km</small><br><small>⛽ 이번 주행 ${fmtMoney(P.fuel)} · 👛 ${fmtMoney(SCHOOL.wallet)}</small><br><small>🏎 ${MODE_N[P.mode]}${P.cruise ? ' · 🚀 크루즈 ' + Math.round(P.cruise * 3.6) + 'km/h' : ''} · 💡 ${['자동', 'ON', 'OFF'][P.lights]}${T.feat.has('hud') ? ' · HUD' : ''}</small>`;
     if (P.auto) $('hudL').innerHTML += '<br>🤖 <b style="color:#4ade80">자율주행 중</b>';
     $('hudScore').style.display = b.isCar ? 'none' : ''; $('limit').style.display = b.isCar ? 'none' : ''; $('doorTag').style.display = b.isCar ? 'none' : '';
-    this.drawGaps();
+    this.drawGaps(); this.drawTaxi();
     $('hint').textContent = P.hint; if (this.touch && !P.wheelOn && typeof wheelSvg !== 'undefined') wheelSvg.style.transform = 'rotate(' + (-P.steer * WMAX * 180 / Math.PI) + 'deg)';
     $('spd').firstChild.nodeValue = kmh; const gear = P.v < -0.2 ? 'R' : (Math.abs(P.v) < 0.2 ? (keys.Space ? 'P' : 'N') : 'D');
     $('gear').querySelectorAll('b').forEach(x => x.classList.toggle('on', x.textContent === gear)); $('limit').classList.toggle('over', kmh > 52);
@@ -419,7 +432,7 @@ const UI = {
     $('hudScore').innerHTML = `<small class="muted">운전 점수</small> <b class="tnum" style="float:right">${sc}</b><div class="bar"><i style="width:${sc}%;background:${sc > 80 ? '#4ade80' : sc > 60 ? '#facc15' : '#f87171'}"></i></div><small class="muted">승차감</small> <b class="tnum" style="float:right">${cf}%</b><div class="bar"><i style="width:${cf}%;background:#4ea1ff"></i></div><small class="muted">${G.school ? '교습 중' : b.isCar ? '' : '수입 ' + fmtMoney(b.income)}</small>${!G.school && !b.isCar ? `<br><small>💵 내 급여 <b style="color:#4ade80">+${fmtMoney(P.earn)}</b> · ${fmtMoney(BUS_TYPES[b.type].wage * 60 * 0.967)}/분</small>` : ''}`;
     $('doorTag').textContent = P.doorOpen ? '문 열림' : '문 닫힘'; $('doorTag').classList.toggle('open', P.doorOpen);
     if (P.lesson && P.lesson.id === 'L1') $('tasks').innerHTML = '<b>🎓 과제</b>' + P.lesson.tasks.map(t => `<div class="${P.taskDone[t[0]] ? 'done' : ''}">${P.taskDone[t[0]] ? '✔' : '○'} ${t[1]}</div>`).join('');
-    drawMap($('mini').getContext('2d'), 380, { routes: r && !P.lesson ? [r] : [], thin: 1, mini: true, player: true, target: P.stopInfo ? b.agent.path.stops[P.si].id : undefined, buses: G.buses.filter(x => x !== b) });
+    drawMap($('mini').getContext('2d'), 380, { routes: r && !P.lesson ? [r] : [], thin: 1, mini: true, player: true, target: P.stopInfo ? b.agent.path.stops[P.si].id : undefined, markers: taxiMarkers(), buses: G.buses.filter(x => x !== b) });
     if (P.lesson && P.lesson.route) { const c = $('mini').getContext('2d'); }
     if (P.si !== this.lastSi) { this.lastSi = P.si; if (si) announce('이번 정류장은 ' + si.name.replace(' 건너편', '') + '입니다'); }
   },
