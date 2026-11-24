@@ -25,7 +25,7 @@ function startManual(bus, lesson) {
   const a = bus.agent; P.bus = bus; bus.manual = true; a.manual = true;
   Object.assign(P, { active: true, paused: false, done: false, x: a.x, z: a.z, h: a.yaw, v: a.v, steer: 0, s: a.s, si: a.si, score: 100, comfort: 100, lesson: lesson || null, tick: 0, cd: {}, shake: 0, inNode: false, served: 0, graded: false, boarded: 0, t: 0, pens: {}, hornN: 0, camN: 0, revWait: false, lastV: a.v, grade: '', taskDone: {}, missed: 0, perfect: 0, ending: 0 });
   a.v = 0; a.hold = false; a.arrived = false; P.doorOpen = bus.doorGoal > 0.5; if (!P.doorOpen) bus.doorGoal = 0;
-  P.earn = 0; P.free = !!bus.isCar; P.auto = false; P.zoom = 1; P.stopInfo = null; P.finishing = false;
+  P.cruise = 0; P.mode = 1; P.lights = 0; P.fuel = 0; P.earn = 0; P.free = !!bus.isCar; P.auto = false; P.zoom = 1; P.stopInfo = null; P.finishing = false;
   P.camH = P.h; P.cam = 0; G.speed = 1; G.state = 'drive'; if (!chev) initGuides();
   chev.visible = beacon.visible = parkBox.visible = !P.free;
   UI.showDrive(); sfx('start');
@@ -38,19 +38,33 @@ function startLesson(L) {
   G.buses.push(b); a.path = r.path; a.stopsOn = true; a.s = (r.path.stops[0].s - a.doorZ - 75 + r.path.L) % r.path.L; a.si = a.nearestStop(); a.pose(0);
   startManual(b, L);
 }
-function startCar(c, at) {
-  const spec = CAR_SPECS[c.model], model = makeCarModel(spec, c.color); scene.add(model.group);
-  const a = new Agent('car', model); at = at || { x: 0, z: 0 };
+function placeCar(a, at) {
   let bn = 0, bd = 1e18; NP.forEach((n, i) => { const d = (n.x - at.x) ** 2 + (n.z - at.z) ** 2; if (d < bd) { bd = d; bn = i; } });
   const i0 = clamp(NP[bn].i - 1, 0, GN - 3), j0 = clamp(NP[bn].j - 1, 0, GN - 3), path = buildPath(rectLoop(i0, j0, i0 + 2, j0 + 2, false), {});
-  a.path = path; a.s = projectPath(path, at.x, at.z).s; a.cruise = 13; a.pose(0);
+  a.path = path; a.stopsOn = false; a.s = projectPath(path, at.x, at.z).s; a.cruise = 13; a.pose(0);
+}
+function startCar(c, at) {
+  const spec = carDerived(c), model = makeCarModel(spec, c.color); scene.add(model.group);
+  const a = new Agent('car', model); placeCar(a, at || { x: 0, z: 0 });
   const b = { id: 'car', isCar: true, carRef: c, type: '__car', spec: carType(spec), model, agent: a, pax: [], income: 0, phase: 'run', doorGoal: 0, doorT: 0, manual: false, cond: 100, km: 0, age: 0 };
   startManual(b, null);
+}
+function teleportCar(x, z) {
+  const a = P.bus.agent; if (P.auto) setAuto(false); placeCar(a, { x, z }); P.x = a.x; P.z = a.z; P.h = a.yaw; P.v = 0; P.steer = 0; P.camH = P.h; P.cruise = 0; a.v = 0; toast('📍 위치 이동 완료', 'good');
+}
+const lightsOn = () => P.lights === 1 || (P.lights === 0 && nightK > 0.4);
+const lightPow = () => (lightsOn() ? ((P.bus.spec && P.bus.spec.feat && P.bus.spec.feat.has('led')) ? 2.4 : 1.6) : 0);
+const MODE_N = ['ECO', 'NORMAL', 'SPORT'];
+let saveWT = 0;
+function driveCost(dist, dt) {   // 연료/전기 요금: 내 지갑에서 차감
+  const b = P.bus; if (!b.isCar || dist <= 0) return; const T = b.spec, cost = T.perKm * dist / 1000 * [0.85, 1, 1.25][P.mode];
+  SCHOOL.wallet = Math.max(0, SCHOOL.wallet - cost); P.fuel += cost; if (b.carRef) b.carRef.km += dist; if ((saveWT += dt) > 10) { saveWT = 0; saveSchool(); }
 }
 function setAuto(on) {
   const b = P.bus, a = b.agent;
   if (on) {
     if (P.lesson) { toast('운전교실에서는 자율주행을 쓸 수 없어요', 'bad'); return; }
+    if (b.isCar && !b.spec.feat.has('adas')) { toast("🚫 이 차에는 '스마트센스 · 고속도로주행보조' 옵션이 없어요. 매장에서 옵션으로 추가할 수 있어요", 'bad'); return; }
     if (b.isCar) {
       let bn = 0, bd = 1e18; NP.forEach((n, i) => { const d = (n.x - P.x) ** 2 + (n.z - P.z) ** 2; if (d < bd) { bd = d; bn = i; } });
       const i0 = clamp(NP[bn].i - 1, 0, GN - 3), j0 = clamp(NP[bn].j - 1, 0, GN - 3);
@@ -68,14 +82,14 @@ function setAuto(on) {
 }
 function autoStep(dt) {
   const b = P.bus, a = b.agent;
-  if (b.isCar) { a.step(dt, G.gt); if (b.carRef) b.carRef.km += a.v * dt; }
+  if (b.isCar) { a.step(dt, G.gt); driveCost(a.v * dt, dt); }
   P.x = a.x; P.z = a.z; P.h = a.yaw; P.v = a.v; P.s = a.s; P.steer = a.steer * 2;
   if (!b.isCar) {
     P.si = a.si; P.doorOpen = b.doorGoal > 0.5; const st = a.path.stops[a.si], S = STOPS[st.id];
     P.stopInfo = { name: S.name, dist: wrapS(st.s - a.doorZ - a.s, a.path.L), waiting: S.waiting, inZone: false, zoneNow: false, gap: 9, lon: 9 }; guides(a, a.path);
   }
   computeGaps(dt); dashUpdate();
-  const m = b.model; if (m.steerWheel) m.steerWheel.rotation.z = P.steer * 2.2; m.spot.intensity = nightK > 0.4 ? 1.6 : 0;
+  const m = b.model; if (m.steerWheel) m.steerWheel.rotation.z = P.steer * 2.2; m.spot.intensity = lightPow();
   computeHint(); engineAudio(Math.abs(P.v), 0.3);
 }
 function stopManual(silent) {
@@ -107,9 +121,14 @@ function playerKey(code) {
     else { P.doorOpen = false; P.bus.doorGoal = 0; sfx('door'); }
   }
   if (code === 'KeyT') setAuto(!P.auto);
+  if (code === 'KeyL') { P.lights = (P.lights + 1) % 3; toast('💡 헤드라이트 ' + ['자동', '켜짐', '꺼짐'][P.lights]); }
+  if (P.bus.isCar && !P.auto) {
+    if (code === 'KeyK') { const T = P.bus.spec; if (!T.feat.has('cruise')) toast('🚫 크루즈 컨트롤 옵션이 없어요', 'bad'); else if (P.cruise) { P.cruise = 0; toast('크루즈 해제'); } else if (P.v > 8) { P.cruise = P.v; toast('🚀 크루즈 ' + Math.round(P.v * 3.6) + 'km/h 고정 · 브레이크로 해제', 'gold'); } else toast('시속 30km 이상에서 설정할 수 있어요', 'bad'); }
+    if (code === 'KeyV') { const T = P.bus.spec; P.mode = (P.mode + 1) % 3; if (P.mode === 2 && !T.feat.has('sport')) P.mode = 0; toast('🏎 주행 모드: ' + MODE_N[P.mode] + (P.mode === 2 ? ' (가속·코너링 강화, 연료 소모↑)' : P.mode === 0 ? ' (연비 우선)' : ''), 'gold'); }
+  }
   if (code === 'BracketRight' || code === 'BracketLeft') { P.autoHeadway = clamp(Math.round((P.autoHeadway + (code === 'BracketRight' ? 0.2 : -0.2)) * 10) / 10, 0.8, 3.0); P.bus.agent.headway = P.autoHeadway; toast('🤖 자율주행 차간 시간 ' + P.autoHeadway.toFixed(1) + '초', 'gold'); }
   if (code === 'KeyH') { P.hornN++; sfx('horn'); }
-  if (code === 'KeyC') { P.cam = (P.cam + 1) % 4; P.camN++; P.bus.model.setCockpit(P.cam === 2); camera.near = P.cam === 2 ? 0.3 : 0.5; camera.updateProjectionMatrix(); }
+  if (code === 'KeyC') { P.cam = (P.cam + 1) % ((P.bus.spec && P.bus.spec.feat && P.bus.spec.feat.has('surround')) ? 5 : 4); P.camN++; P.bus.model.setCockpit(P.cam === 2); camera.near = P.cam === 2 ? 0.3 : 0.5; camera.updateProjectionMatrix(); }
   if (code === 'KeyR' && !P.auto) { const pr = projectPath(P.bus.agent.path, P.x, P.z, P.s, 60); const t = pathAt(P.bus.agent.path, pr.s); P.x = t.x; P.z = t.z; P.h = Math.atan2(t.tx, t.tz); P.v = 0; if (P.free) toast('도로 위로 복귀'); else pen('reset', 5, '노선 복귀', 1); }
 }
 
@@ -133,17 +152,18 @@ function updatePlayer(dt) {
   P.t += dt;
   if (P.auto) { if (keys.KeyW || keys.ArrowUp || keys.KeyS || keys.ArrowDown || keys.KeyA || keys.ArrowLeft || keys.KeyD || keys.ArrowRight || keys.Space) setAuto(false); else { autoStep(dt); return; } }
   // --- 조작
-  const thr = keys.KeyW || keys.ArrowUp, brk = keys.KeyS || keys.ArrowDown, hb = keys.Space, ending = P.ending > 0;
+  const brk = keys.KeyS || keys.ArrowDown, hb = keys.Space; if (free && P.cruise && (brk || hb)) { P.cruise = 0; toast('크루즈 해제'); }
+  const thr = keys.KeyW || keys.ArrowUp || (free && P.cruise > 0 && P.v < P.cruise - 0.4), ending = P.ending > 0;
   const load = 1 - 0.12 * b.pax.length / T.cap; let acc = 0;
   if (!brk) P.revWait = false;
-  if (thr && !ending) acc = P.v < -0.2 ? 7 : (b.cond < 25 ? 0.75 : 1) * (T.accel || 3.0) * load * clamp(1 - P.v / T.vmax, 0, 1) + 0.15;
+  if (thr && !ending) acc = P.v < -0.2 ? 7 : (b.cond < 25 ? 0.75 : 1) * (T.accel || 3.0) * (free ? [0.8, 1, 1.25][P.mode] : 1) * load * clamp(1 - P.v / T.vmax, 0, 1) + 0.15;
   else if (brk) { if (P.v > 0.05 && !P.revWait) { acc = -(T.brake || 7.5); if (P.v + acc * dt <= 0) { P.v = 0; acc = 0; P.revWait = true; } } else if (P.revWait) acc = 0; else acc = P.v > -4.5 ? -2.4 : 0; }
   acc -= (free ? 0.012 : 0.05) * P.v + (free ? 0.00012 : 0.0009) * P.v * Math.abs(P.v) + Math.sign(P.v) * 0.22;
   if (hb) acc -= Math.sign(P.v) * 9;
   const v0 = P.v; P.v += acc * dt; if ((hb || (!thr && !brk)) && v0 * P.v < 0) P.v = 0; if (!thr && !brk && Math.abs(P.v) < 0.04) P.v = 0;
   const tgt = ((keys.KeyA || keys.ArrowLeft) ? 1 : 0) - ((keys.KeyD || keys.ArrowRight) ? 1 : 0);
   P.steer += (tgt - P.steer) * Math.min(1, dt * (tgt === 0 ? 5 : 3.2));
-  const dmax = lerp(0.62, free ? 0.09 : 0.2, clamp(Math.abs(P.v) / (T.steerSpeed || 16), 0, 1)), delta = P.steer * dmax, ym = (free ? 11 : 6) / Math.max(Math.abs(P.v), 1), yaw = clamp(P.v / wb * Math.tan(delta), -ym, ym);
+  const dmax = lerp(0.62, free ? 0.09 : 0.2, clamp(Math.abs(P.v) / (T.steerSpeed || 16), 0, 1)), delta = P.steer * dmax, ym = (free ? 11 * (P.mode === 2 ? 1.2 : 1) : 6) / Math.max(Math.abs(P.v), 1), yaw = clamp(P.v / wb * Math.tan(delta), -ym, ym);
   P.h += yaw * dt; const fx = Math.sin(P.h), fz = Math.cos(P.h);
   P.x += fx * P.v * dt; P.z += fz * P.v * dt;
   // --- 충돌
@@ -165,7 +185,7 @@ function updatePlayer(dt) {
   }
   P.carHit = false;
   const alat = P.v * yaw, along = (P.v - v0) / dt;
-  if (free) { b.carRef.km += Math.abs(P.v) * dt; P.stopInfo = null; }
+  if (free) { driveCost(Math.abs(P.v) * dt, dt); P.stopInfo = null; }
   if (!free) {
   // --- 경로 진행
   if (!G.school && !free) { addRun(b, Math.abs(P.v) * dt); if (b.cond < 25 && !(P.cd.cond > 0)) { P.cd.cond = 20; toast('🔧 정비 불량! 출력이 떨어졌어요', 'bad'); } }
@@ -218,7 +238,7 @@ function updatePlayer(dt) {
   a.x = P.x; a.z = P.z; a.yaw = P.h; a.fx = fx; a.fz = fz; a.v = P.v; a.steer = delta; a.braking = brk || hb; a.render(dt);
   computeGaps(dt); dashUpdate();
   const m = b.model; if (m.steerWheel) m.steerWheel.rotation.z = P.steer * 2.2; m.group.rotation.z = clamp(-alat * 0.006, -0.05, 0.05); m.group.rotation.x = clamp(-along * 0.004, -0.04, 0.04);
-  m.spot.intensity = nightK > 0.4 ? 1.6 : 0;
+  m.spot.intensity = lightPow();
   if (!free) guides(a, path);
   computeHint();
   engineAudio(Math.abs(P.v), thr ? 1 : 0);
@@ -268,7 +288,9 @@ function driveCamera(dt) {
   const b = P.bus, T = vt(b), L = T.len; P.camH += wrapPi(P.h - P.camH) * Math.min(1, dt * (P.cam === 1 ? 6 : 3.2));
   const sh = P.shake; P.shake = Math.max(0, P.shake - dt * 2.5); const jx = (Math.random() - .5) * sh * .6, jy = (Math.random() - .5) * sh * .4;
   const cs = Math.sin(P.camH), cc = Math.cos(P.camH);
-  if (P.cam === 2) {
+  camera.up.set(0, 1, 0);
+  if (P.cam === 4) { camera.position.set(P.x + jx, 26 * P.zoom, P.z + 0.001); camera.up.set(Math.sin(P.h), 0, Math.cos(P.h)); camera.lookAt(P.x, 0, P.z); }
+  else if (P.cam === 2) {
     const m = b.model.group; m.updateMatrixWorld(); const cp = b.model.cockpit; _t.v = _t.v || new THREE.Vector3(); _t.v.set(cp.x, cp.y, cp.z); m.localToWorld(_t.v);
     camera.position.set(_t.v.x + jx, _t.v.y + jy, _t.v.z); const look = P.h + P.steer * 0.12; camera.lookAt(_t.v.x + Math.sin(look) * 30, 1.9 - Math.abs(P.v) * 0.01, _t.v.z + Math.cos(look) * 30);
   } else {

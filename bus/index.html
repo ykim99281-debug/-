@@ -65,6 +65,7 @@
   #hudR{position:absolute;right:14px;bottom:16px;font-size:12px;color:var(--muted);line-height:1.8;text-align:right}
   #doorTag{display:inline-block;padding:2px 10px;border-radius:7px;font-size:12px;font-weight:700;background:rgba(255,255,255,.1)}
   #doorTag.open{background:var(--ok);color:#052}
+  #exitBtn{position:absolute;right:14px;top:212px;pointer-events:auto}
   #gapBox{position:absolute;left:14px;top:126px;min-width:236px;font-size:13px}.gr{display:flex;justify-content:space-between;gap:12px;line-height:1.7}.gbar{height:5px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden;margin:0 0 3px}.gbar i{display:block;height:100%}
   #tasks{position:absolute;left:14px;top:330px;max-width:290px;font-size:14px;line-height:1.7}
   #tasks div.done{color:var(--ok);text-decoration:line-through;opacity:.8}
@@ -154,6 +155,7 @@
 <div id="hud" class="hide">
   <div id="hudL" class="panel"></div>
   <div id="gapBox" class="panel"></div>
+  <button id="exitBtn" class="btn sm">🚪 나가기 · 메뉴</button>
   <div id="hint" class="panel"></div>
   <div id="rear" class="hide"><span>후방 카메라</span></div>
   <canvas id="mini" class="panel" width="380" height="380"></canvas>

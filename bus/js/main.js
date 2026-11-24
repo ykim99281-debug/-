@@ -46,6 +46,7 @@ cv.addEventListener('dblclick', () => { if (!P.active) { CAM.target.set(0, 0, 0)
 // ----- 카메라 (경영 · 타이틀)
 const _f = new THREE.Vector3();
 function orbit(dt) {
+  camera.up.set(0, 1, 0);
   const fl = UI.follow && G.buses.includes(UI.follow) ? UI.follow : null;
   if (G.state === 'title') { CAM.theta += dt * 0.07; CAM.dist = 560; CAM.elev = 0.5; CAM.target.set(0, 0, 0); }
   else {

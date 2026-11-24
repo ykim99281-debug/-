@@ -143,7 +143,7 @@ function updateWorld(dt) {
   }
   const rev0 = G.stats.revenue; G._r0 = G._r0 === undefined ? rev0 : G._r0;
   G.rate += ((G.stats.revenue - G._r0) / Math.max(dt, 1e-3) * 60 - G.rate) * Math.min(1, dt * 0.15); G._r0 = G.stats.revenue;
-  if (!G.school && G.hour < prevH) settle();
+  if (!G.school && G.hour < prevH) { settle(); carDay(); }
   updateSignals(G.gt);
   if ((G.timeT -= dt) < 0) { G.timeT = 0.5; applyTime(G.hour); }
   if ((G.pedT -= dt) < 0) { G.pedT = 0.7; updatePeds(); G.repT = (G.repT || 0) + 0.7; if (G.repT > 30) { G.repT = 0; for (const s of STOPS) if (s.waiting > 30 && G.routes.some(r => r.stopIds.includes(s.id))) G.rep = Math.max(0, G.rep - 0.4); } }
@@ -227,12 +227,33 @@ function withdraw(amt) {
   toast(`👛 ${fmtMoney(amt)} 인출 → 세후 ${fmtMoney(net)} 입금 (배당소득세 15.4%)`, 'gold'); sfx('chime'); return true;
 }
 function deposit(amt) { amt = Math.min(amt, SCHOOL.wallet); if (G.school || amt <= 0) { toast('입금할 수 없어요', 'bad'); return false; } SCHOOL.wallet -= amt; G.money += amt; saveSchool(); toast('🏢 회사에 ' + fmtMoney(amt) + ' 투자(입금)', 'good'); return true; }
-const carValue = c => Math.round(CAR_SPECS[c.model].price * Math.max(0.45, 0.85 - c.km / 1000 * 0.002));
-function buyCar(key, color) {
-  const s = CAR_SPECS[key]; if (SCHOOL.wallet < s.price) { toast('내 지갑 잔액이 부족해요', 'bad'); return false; }
-  SCHOOL.wallet -= s.price; SCHOOL.cars.push({ id: SCHOOL.nextCar++, model: key, color, km: 0 }); saveSchool(); toast('🚗 ' + s.brand + ' ' + s.name + ' 출고! 내 차고에서 운전해 보세요', 'gold'); sfx('chime'); return true;
+const carValue = c => Math.round((c.price || CAR_SPECS[c.model].price) * Math.max(0.4, 0.85 - c.km / 1000 * 0.002 - (c.age || 0) * 0.004));
+function buyCarCfg(key, cfg, pay) {
+  const q = carQuote(key, cfg, pay), s = CAR_SPECS[key];
+  if (SCHOOL.wallet < q.upfront) { toast('내 지갑 잔액이 부족해요 (필요 선납금 ' + fmtMoney(q.upfront) + ')', 'bad'); return false; }
+  SCHOOL.wallet -= q.upfront;
+  SCHOOL.cars.push({ id: SCHOOL.nextCar++, model: key, color: s.colors[cfg.color], cfg: { trim: cfg.trim, eng: cfg.eng, opts: cfg.opts.slice(), color: cfg.color }, km: 0, age: 0, price: q.price, loan: pay.method === 'loan' ? { pmt: q.pmt, left: pay.months, apr: q.apr, bal: q.financed, overdue: 0 } : null });
+  saveSchool(); toast('🚗 ' + s.brand + ' ' + s.name + ' ' + TRIM_SETS[s.brand][cfg.trim].n + ' 출고!', 'gold'); sfx('chime'); return true;
 }
-function sellCar(c) { SCHOOL.wallet += carValue(c); SCHOOL.cars.splice(SCHOOL.cars.indexOf(c), 1); saveSchool(); toast('중고차 매각 완료', 'good'); }
+function buyCar(key, color) { const s = CAR_SPECS[key], ci = Math.max(0, s.colors.indexOf(color)); return buyCarCfg(key, Object.assign(defaultCfg(key), { color: ci }), { method: 'cash' }); }
+function carDay() {   // 경영 모드 하루(자정)마다 할부금 자동 납부
+  for (const c of SCHOOL.cars.slice()) {
+    c.age = (c.age || 0) + 1; const l = c.loan; if (!l) continue;
+    if (SCHOOL.wallet >= l.pmt) {
+      SCHOOL.wallet -= l.pmt; const it = l.bal * l.apr / 12; l.bal = Math.max(0, l.bal - (l.pmt - it)); l.left--; l.overdue = 0;
+      if (l.left <= 0 || l.bal < 1000) { c.loan = null; toast('🎉 ' + CAR_SPECS[c.model].name + ' 할부 완납!', 'gold'); } else toast('💳 ' + CAR_SPECS[c.model].name + ' 할부금 ' + fmtMoney(l.pmt) + ' 납부 (잔여 ' + l.left + '회)', 'good');
+    } else {
+      l.overdue++; l.bal += Math.round(l.pmt * 0.03); toast('⚠ ' + CAR_SPECS[c.model].name + ' 할부금 미납! 연체료 가산 (' + l.overdue + '/3회)', 'bad');
+      if (l.overdue >= 3) { SCHOOL.cars.splice(SCHOOL.cars.indexOf(c), 1); toast('🚨 ' + CAR_SPECS[c.model].name + ' 압류되었어요', 'bad'); }
+    }
+  }
+  saveSchool();
+}
+function sellCar(c) {
+  const net = carValue(c) - (c.loan ? Math.round(c.loan.bal) : 0);
+  if (SCHOOL.wallet + net < 0) { toast('할부 잔액이 커서 매각할 수 없어요 (지갑 ' + fmtMoney(-net) + ' 필요)', 'bad'); return false; }
+  SCHOOL.wallet += net; SCHOOL.cars.splice(SCHOOL.cars.indexOf(c), 1); saveSchool(); toast('중고차 매각 완료 · 정산 ' + fmtMoney(net), 'good'); return true;
+}
 
 // ===== 기사 · 배차 간격 =====
 const DRIVERS = ['김민수', '이서준', '박지훈', '최영호', '정대현', '강민재', '조성민', '윤재원', '장현우', '임태양', '한지호', '오세훈', '서동혁', '신우진', '권도윤', '황준서', '안정우', '송민석', '류건우', '홍승현', '전상철', '고영진', '문병철', '양기범', '배철수', '백승호', '노현수', '남궁민', '심재훈', '하준혁'];

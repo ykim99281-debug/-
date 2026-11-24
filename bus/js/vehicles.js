@@ -256,7 +256,7 @@ const CAR_SPECS = {
   huracan: { brand: '람보르기니', name: '우라칸', type: 'super', price: 350000000, len: 4.52, w: 1.93, h: 1.16, vmax: 90, accel: 10.5, r: 0.36, colors: [0x84cc16, 0xf97316, 0xfacc15, 0x0b0b0d, 0xdc2626], info: '슈퍼카 · 최고 시속 325km' }
 };
 const CAR_TP = { sedan: { clr: .17, bh: .55, cab: [.86, .5, .46, -.06] }, hatch: { clr: .18, bh: .58, cab: [.88, .62, .52, -.08] }, suv: { clr: .26, bh: .72, cab: [.9, .62, .52, -.08] }, van: { clr: .24, bh: .85, cab: [.94, .84, .75, -.02] }, coupe: { clr: .13, bh: .46, cab: [.84, .42, .36, -.06] }, super: { clr: .1, bh: .4, cab: [.8, .4, .3, -.05] } };
-const carType = s => ({ name: s.brand + ' ' + s.name, len: s.len, w: s.w, h: s.h, vmax: s.vmax, cap: 5, accel: s.accel, brake: 9, steerSpeed: 28 });
+const carType = s => ({ name: s.fullName || (s.brand + ' ' + s.name), len: s.len, w: s.w, h: s.h, vmax: s.vmax, cap: 5, accel: s.accel, brake: 9, steerSpeed: 28, feat: s.feat || new Set(), perKm: s.perKm || 120, engName: s.engName || '', trimName: s.trimName || '' });
 
 function makeCarModel(spec, color) {
   const L = spec.len, W = spec.w, tp = CAR_TP[spec.type], sc = spec.h / (tp.clr + tp.bh + tp.cab[2]), clr = tp.clr * sc, bh = tp.bh * sc, ch = tp.cab[2] * sc, cw = tp.cab[0] * W, cl = tp.cab[1] * L, cz = tp.cab[3] * L;
@@ -266,6 +266,7 @@ function makeCarModel(spec, color) {
   add(bgeo(W, bh, L), paint, 0, clr + bh / 2, 0);
   add(bgeo(cw, ch, cl), glass, 0, clr + bh + ch / 2, cz);
   add(bgeo(cw - 0.06, 0.06, cl - 0.35), paint, 0, clr + bh + ch + 0.02, cz);
+  if (spec.feat && spec.feat.has('sunroof')) add(bgeo(cw - 0.5, 0.02, cl * 0.45), mk(0x10161f), 0, clr + bh + ch + 0.055, cz + cl * 0.05);
   add(bgeo(W + 0.04, bh * 0.45, 0.22), dark, 0, clr + bh * 0.3, L / 2 - 0.05); add(bgeo(W + 0.04, bh * 0.45, 0.22), dark, 0, clr + bh * 0.3, -L / 2 + 0.05);
   if (spec.type === 'super' || spec.type === 'coupe') { add(bgeo(W - 0.2, 0.05, 0.4), dark, 0, clr + bh + 0.18, -L / 2 + 0.3); for (const s of [-1, 1]) add(bgeo(0.05, 0.2, 0.3), dark, s * (W / 2 - 0.3), clr + bh + 0.08, -L / 2 + 0.3); }
   const head = new THREE.MeshBasicMaterial({ color: 0xfff4c8 }), tail = new THREE.MeshBasicMaterial({ color: 0x771111 });
@@ -283,4 +284,57 @@ function makeCarModel(spec, color) {
     group: g, shell, keep: [], inner, wheels, front, steerWheel: sw, spot, len: L, w: W, fa: 0.31 * L, ra: -0.31 * L, cockpit: { x: 0.38, y: clr + bh + ch * 0.62, z: front0 - 1.25 }, doorZ: 0,
     setBrake(on) { tail.color.setHex(on ? 0xff2a2a : 0x771111); }, setDoor() { }, setLoad() { }, setCockpit(on) { for (const m of shell) m.visible = !on; }
   };
+}
+
+// ===== 제조사별 트림 · 파워트레인 · 옵션 · 금융 (대략적인 현실 수치) =====
+const BRANDS = {
+  '현대': { apr: 0.049, fin: '현대캐피탈', note: '국내 1위 · 합리적 가격' }, '기아': { apr: 0.049, fin: '기아 파이낸셜', note: '디자인과 실용성' }, '제네시스': { apr: 0.045, fin: '제네시스 파이낸스', note: '프리미엄 · 기본 사양 충실' },
+  'BMW': { apr: 0.059, fin: 'BMW 파이낸셜', note: '운전의 즐거움' }, '메르세데스-벤츠': { apr: 0.055, fin: '벤츠 파이낸셜', note: '고급 세단의 표준' }, '테슬라': { apr: 0.052, fin: '테슬라 파이낸스', note: '전기차 · 자율주행 선도' },
+  '포르쉐': { apr: 0.049, fin: '포르쉐 파이낸셜', note: '스포츠카의 기준' }, '람보르기니': { apr: 0.065, fin: '람보르기니 파이낸스', note: '슈퍼카 · 한정 생산' }
+};
+const BRAND_BASE = { '제네시스': ['cruise', 'led', 'leather', 'adas'], 'BMW': ['cruise', 'led', 'leather'], '메르세데스-벤츠': ['cruise', 'led', 'leather'], '테슬라': ['cruise', 'adas', 'led'], '포르쉐': ['cruise', 'led', 'leather'], '람보르기니': ['cruise', 'led', 'leather', 'sport'] };
+const TRIM_SETS = {
+  '현대': [{ n: '스마트', d: 0, f: [] }, { n: '모던', d: .08, f: ['cruise', 'led'] }, { n: '프리미엄', d: .16, f: ['cruise', 'led', 'leather', 'surround'] }, { n: 'N라인', d: .19, acc: 1.1, f: ['cruise', 'led', 'leather', 'surround', 'sport'] }, { n: '인스퍼레이션', d: .25, f: ['cruise', 'led', 'leather', 'surround', 'adas', 'sunroof'] }],
+  '기아': [{ n: '트렌디', d: 0, f: [] }, { n: '프레스티지', d: .09, f: ['cruise', 'led'] }, { n: '시그니처', d: .18, f: ['cruise', 'led', 'leather', 'surround', 'adas'] }, { n: 'GT-Line', d: .2, acc: 1.1, f: ['cruise', 'led', 'leather', 'surround', 'sport'] }],
+  '제네시스': [{ n: '기본', d: 0, f: [] }, { n: '프리미엄', d: .08, f: ['surround', 'sunroof'] }, { n: '럭셔리', d: .15, f: ['surround', 'sunroof', 'hud', 'audio'] }, { n: '스포츠', d: .2, acc: 1.12, vm: 1.03, f: ['sport', 'surround', 'hud'] }],
+  'BMW': [{ n: '520i', d: 0, f: [] }, { n: '530i', d: .09, acc: 1.08, f: ['adas', 'surround'] }, { n: 'M 스포츠', d: .16, acc: 1.1, f: ['sport', 'adas', 'surround', 'hud', 'sunroof', 'audio'] }],
+  '메르세데스-벤츠': [{ n: 'E200', d: 0, f: [] }, { n: 'E300', d: .1, acc: 1.08, f: ['adas', 'surround'] }, { n: 'AMG 라인', d: .17, acc: 1.1, f: ['sport', 'adas', 'surround', 'hud', 'sunroof', 'audio'] }],
+  '테슬라': [{ n: 'RWD', d: 0, f: [] }, { n: '롱레인지', d: .12, acc: 1.15, vm: 1.04, f: ['surround'] }, { n: '퍼포먼스', d: .28, acc: 1.45, vm: 1.1, f: ['surround', 'sport'] }],
+  '포르쉐': [{ n: '카레라', d: 0, f: [] }, { n: '카레라 S', d: .16, acc: 1.12, vm: 1.05, f: ['surround'] }, { n: 'GTS', d: .27, acc: 1.2, vm: 1.08, f: ['sport', 'surround', 'sunroof'] }],
+  '람보르기니': [{ n: '에보', d: 0, f: [] }, { n: 'STO', d: .25, acc: 1.12, vm: 1.05, f: ['sport'] }]
+};
+const ENG = { gas: { n: '가솔린', d: 0, pl: 1700, kx: 1, acc: 1, vm: 1 }, diesel: { n: '디젤', d: .06, pl: 1550, kx: 1.25, acc: 1.02, vm: 1 }, hybrid: { n: '하이브리드', d: .12, pl: 1700, kx: 1.55, acc: .96, vm: .98 }, phev: { n: '플러그인 하이브리드', d: .2, pl: 1100, kx: 2.0, acc: 1.06, vm: 1 }, ev: { n: '전기', d: 0, pl: 250, kx: 1, acc: 1, vm: 1 } };
+const ENG_OK = { morning: ['gas'], avante: ['gas', 'hybrid'], sonata: ['gas', 'hybrid'], k5: ['gas', 'hybrid'], grandeur: ['gas', 'hybrid'], carnival: ['diesel', 'hybrid'], santafe: ['gas', 'hybrid', 'diesel'], g80: ['gas', 'diesel'], model3: ['ev'], bmw5: ['gas', 'diesel', 'phev'], eclass: ['gas', 'diesel'], p911: ['gas'], huracan: ['gas'] };
+const KMPL = { morning: 15, avante: 13, sonata: 11.5, k5: 11.5, grandeur: 10, carnival: 8.5, santafe: 10, g80: 9, model3: 6.4, bmw5: 11, eclass: 11, p911: 7.5, huracan: 4.5 };   // model3: km/kWh
+const OPTS = [
+  { k: 'adas', n: '스마트센스 · 고속도로주행보조', d: 1800000, e: '자율주행(T) 사용 가능' }, { k: 'cruise', n: '크루즈 컨트롤', d: 500000, e: '속도 고정(K)' }, { k: 'surround', n: '서라운드 뷰 모니터', d: 800000, e: '버드뷰 카메라(C)' },
+  { k: 'sport', n: '스포츠 모드 · 스포츠 서스펜션', d: 1500000, e: '스포츠 모드(V) · 코너링 향상' }, { k: 'led', n: '풀 LED 헤드램프', d: 700000, e: '야간 시야 향상' }, { k: 'sunroof', n: '파노라마 선루프', d: 1200000, e: '외관 · 중고가 상승' },
+  { k: 'leather', n: '나파 가죽시트 · 통풍', d: 1400000, e: '중고가 상승' }, { k: 'hud', n: '헤드업 디스플레이', d: 1000000, e: '앞유리 속도 표시' }, { k: 'audio', n: '프리미엄 사운드', d: 1300000, e: '중고가 상승' }
+];
+const FEAT_NAME = Object.fromEntries(OPTS.map(o => [o.k, o.n]));
+const r1e4 = n => Math.round(n / 1e4) * 1e4;
+const optFactor = p => p < 20e6 ? 0.6 : p < 35e6 ? 0.85 : p < 70e6 ? 1.1 : p < 150e6 ? 1.7 : 3;
+function defaultCfg(key) { return { trim: 0, eng: ENG_OK[key][0], opts: [], color: 0 }; }
+function includedFeats(brand, trimIdx) { const t = TRIM_SETS[brand][trimIdx]; return new Set([...(BRAND_BASE[brand] || []), ...(t.f || [])]); }
+function carQuote(key, cfg, pay) {
+  const s = CAR_SPECS[key], tr = TRIM_SETS[s.brand][cfg.trim], en = ENG[cfg.eng], inc = includedFeats(s.brand, cfg.trim), cf = optFactor(s.price);
+  const trimD = r1e4(s.price * tr.d), engD = (s.ev && cfg.eng === 'ev') ? 0 : r1e4(s.price * en.d);
+  const optD = cfg.opts.filter(k => !inc.has(k)).reduce((a, k) => a + r1e4(OPTS.find(o => o.k === k).d * cf), 0), colorD = cfg.color >= 2 ? r1e4(s.price * (s.price > 150e6 ? 0.02 : 0.008)) : 0;
+  const price = s.price + trimD + engD + optD + colorD;
+  let tax = (s.type === 'hatch' && s.price < 20e6) ? 0 : Math.round(price * 0.07); if (cfg.eng === 'ev' || cfg.eng === 'hybrid') tax = Math.max(0, tax - (cfg.eng === 'ev' ? 1400000 : 400000));
+  const reg = Math.round(price * 0.008), deliver = 300000, ins = Math.round(Math.max(700000, price * (price > 150e6 ? 0.015 : 0.009))), subsidy = (cfg.eng === 'ev' && price < 85e6) ? 6500000 : 0;
+  const fees = tax + reg + deliver + ins, vehicle = price - subsidy; pay = pay || { method: 'cash' };
+  let down = 0, financed = 0, pmt = 0, interest = 0;
+  if (pay.method === 'loan') { down = r1e4(vehicle * pay.down); financed = vehicle - down; const r = BRANDS[s.brand].apr / 12, n = pay.months; pmt = Math.round(financed * r / (1 - Math.pow(1 + r, -n))); interest = pmt * n - financed; }
+  const upfront = pay.method === 'loan' ? fees + down : fees + vehicle;
+  return { price, trimD, engD, optD, colorD, tax, reg, deliver, ins, subsidy, fees, vehicle, down, financed, pmt, interest, upfront, apr: BRANDS[s.brand].apr, total: fees + vehicle + interest };
+}
+function carDerived(c) {
+  const base = CAR_SPECS[c.model], cfg = c.cfg || { trim: Math.min(3, TRIM_SETS[base.brand].length - 1), eng: ENG_OK[c.model][0], opts: [], color: 0 };
+  const tr = TRIM_SETS[base.brand][Math.min(cfg.trim, TRIM_SETS[base.brand].length - 1)], en = ENG[cfg.eng] || ENG.gas, s = Object.assign({}, base);
+  s.vmax = base.vmax * (tr.vm || 1) * en.vm; s.accel = base.accel * (tr.acc || 1) * en.acc;
+  s.feat = new Set([...includedFeats(base.brand, Math.min(cfg.trim, TRIM_SETS[base.brand].length - 1)), ...(cfg.opts || [])]);
+  const eff = KMPL[c.model] * en.kx; s.perKm = cfg.eng === 'ev' ? en.pl / (KMPL[c.model] || 6) : en.pl / eff;   // ₩/km
+  s.trimName = tr.n; s.engName = cfg.eng === 'ev' ? '전기' : en.n; s.fullName = base.brand + ' ' + base.name + ' ' + tr.n;
+  return s;
 }
