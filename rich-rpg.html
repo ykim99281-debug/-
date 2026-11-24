@@ -84,7 +84,12 @@ const STOCKS=[
 {id:'sr',name:'새롬기술 (벤처 버블주)',emoji:'💥',beta:0.3,splits:[],a:[['1999-05',4000],['1999-12',75000],['2000-02',180000],['2000-03',150000],['2000-06',40000],['2000-12',8000],['2001-12',4000],['2002-12',1500],['2003-12',1200],['2005-12',1000],['2010-12',800],['2025-12',700]]},
 {id:'nv',name:'NAVER (NHN)',emoji:'🟢',beta:1.1,splits:[['2018-10',5]],a:[['2002-10',12000],['2003-12',40000],['2004-12',100000],['2005-12',150000],['2006-12',150000],['2007-12',240000],['2008-12',160000],['2009-12',190000],['2010-12',240000],['2011-12',390000],['2012-12',680000],['2013-12',730000],['2014-12',750000],['2015-12',700000],['2016-12',750000],['2017-12',800000],['2018-12',650000],['2019-12',880000],['2020-03',700000],['2020-12',1900000],['2021-07',2300000],['2021-12',1800000],['2022-12',950000],['2023-12',1000000],['2024-12',1000000],['2025-12',1250000]]},
 {id:'kk',name:'카카오',emoji:'💬',beta:1.2,splits:[['2021-04',5]],a:[['2014-10',110000],['2015-12',90000],['2016-12',100000],['2017-12',130000],['2018-12',120000],['2019-12',130000],['2020-03',120000],['2020-12',400000],['2021-03',500000],['2021-06',850000],['2021-12',500000],['2022-12',280000],['2023-12',265000],['2024-12',180000],['2025-12',275000]]},
-{id:'et',name:'코스피200 ETF',emoji:'📊',beta:1.0,splits:[],a:[['2002-10',8100],['2025-12',54600]],etf:true}
+{id:'et',name:'코스피200 ETF',emoji:'📊',beta:1.0,splits:[],a:[['2002-10',8100],['2025-12',54600]],etf:true},
+{id:'hx',name:'SK하이닉스 (현대전자)',emoji:'💾',beta:1.3,splits:[],a:[['1998-01',8000],['1998-06',4500],['1998-12',9000],['1999-12',25000],['2000-12',2000],['2001-12',1800],['2002-12',1500],['2003-12',4500],['2004-12',17000],['2005-12',27000],['2006-12',25000],['2007-12',38000],['2008-12',11000],['2009-12',31000],['2010-12',26000],['2011-12',24000],['2012-12',28000],['2013-12',40000],['2014-12',49000],['2015-12',36000],['2016-12',45000],['2017-12',78000],['2018-12',63000],['2019-12',90000],['2020-12',130000],['2021-01',140000],['2021-12',120000],['2022-12',80000],['2023-12',130000],['2024-07',220000],['2024-12',170000],['2025-06',260000],['2025-10',500000],['2025-12',600000]]},
+{id:'nc',name:'엔씨소프트',emoji:'🎮',beta:1.2,splits:[],a:[['2003-01',45000],['2003-12',60000],['2005-12',110000],['2007-12',130000],['2008-12',100000],['2012-12',280000],['2014-12',250000],['2015-12',230000],['2017-12',400000],['2018-12',380000],['2019-12',410000],['2020-12',900000],['2021-02',1000000],['2021-12',600000],['2022-12',350000],['2023-12',270000],['2024-12',180000],['2025-12',230000]]},
+{id:'ct',name:'셀트리온',emoji:'💊',beta:1.1,splits:[],a:[['2005-07',1500],['2008-12',6000],['2010-12',22000],['2012-12',50000],['2013-12',60000],['2016-12',120000],['2017-12',300000],['2018-12',190000],['2019-12',210000],['2020-12',360000],['2021-07',400000],['2021-12',200000],['2022-12',150000],['2023-12',170000],['2024-12',160000],['2025-12',190000]]},
+{id:'sh',name:'신한지주',emoji:'🏦',beta:.9,splits:[],a:[['2001-09',8000],['2003-12',23000],['2005-12',40000],['2007-12',60000],['2008-12',30000],['2010-12',55000],['2012-12',40000],['2015-12',45000],['2018-12',38000],['2020-12',28000],['2021-12',38000],['2023-12',45000],['2024-12',55000],['2025-12',80000]]},
+{id:'lg',name:'LG에너지솔루션',emoji:'🔋',beta:1.2,splits:[],a:[['2022-01',450000],['2022-12',440000],['2023-12',400000],['2024-12',300000],['2025-12',350000]]}
 ];
 function interp(ix,vals,t){
  if(t<=ix[0])return vals[0];if(t>=ix[ix.length-1])return vals[vals.length-1];
@@ -110,6 +115,27 @@ STOCKS.forEach(s=>{
  }
 });
 const ST={};STOCKS.forEach(s=>ST[s.id]=s);
+const PROPS=[
+{id:'pl',name:'지방 소형 아파트',emoji:'🏘',yld:.05,a:[['1998-01',60e6],['1998-12',52e6],['2001-12',62e6],['2003-12',80e6],['2006-12',105e6],['2008-12',125e6],['2010-12',150e6],['2012-12',165e6],['2015-12',190e6],['2018-12',205e6],['2020-12',235e6],['2022-06',280e6],['2025-12',260e6]]},
+{id:'ps',name:'서울 아파트 (평균)',emoji:'🏙',yld:.032,a:[['1998-01',120e6],['1998-12',100e6],['1999-12',125e6],['2001-12',170e6],['2003-12',250e6],['2006-12',420e6],['2008-12',490e6],['2010-12',490e6],['2013-06',480e6],['2015-12',540e6],['2017-12',670e6],['2019-12',830e6],['2021-11',1200e6],['2023-03',1040e6],['2024-12',1150e6],['2025-12',1250e6]]},
+{id:'pg',name:'강남 대치동 아파트',emoji:'🌆',yld:.02,a:[['1998-01',300e6],['1998-12',250e6],['2001-12',400e6],['2003-12',650e6],['2006-12',1150e6],['2008-12',1000e6],['2012-12',1000e6],['2015-12',1350e6],['2017-12',1800e6],['2019-12',2400e6],['2021-10',2800e6],['2023-03',2200e6],['2025-12',3300e6]]}
+];
+const PR={};
+PROPS.forEach(p=>{PR[p.id]=p;const ix=p.a.map(x=>ti(x[0])),v=p.a.map(x=>x[1]);const arr=[];for(let t=0;t<N;t++)arr.push(Math.round(interp(ix,v,t)/1e4)*1e4);P[p.id]=arr;RAW[p.id]=arr});
+const NPCS=[
+{id:'shop',name:'문방구 사장님',emoji:'🧓',minAge:11,kind:'stock',desc:'동네 소문으로 주식 정보를 흘려준다.'},
+{id:'broker',name:'증권사 지점장',emoji:'👔',minAge:11,minInt:10,kind:'stock',desc:'증권가 고급 정보. 정확도가 높다. (분석력 10 필요)'},
+{id:'friend',name:'동창 민수',emoji:'😎',minAge:14,kind:'life',desc:'평생 친구. 친밀도 60↑이면 사업 파트너로 회사 성장 보너스.'},
+{id:'agent',name:'부동산 사장님',emoji:'🏘',minAge:19,kind:'prop',desc:'집값 전망을 귀띔해준다. (만 19세~)'},
+{id:'senior',name:'대학 선배',emoji:'🎓',minAge:19,kind:'biz',desc:'창업 멘토. 친밀도 50↑이면 회사 성장 보너스.'},
+{id:'vc',name:'벤처캐피탈 대표',emoji:'💼',minAge:26,minInt:30,kind:'biz',desc:'회사 투자 유치 기회. (만 26세~, 분석력 30 필요)'}
+];
+const CO={
+ cafe:{n:'동네 카페',e:'☕',cap:1e7,g:.006,vol:.03,beta:.3,d:'안정적이지만 성장은 느림'},
+ trade:{n:'무역·제조업',e:'🏭',cap:2e7,g:.007,vol:.04,beta:.7,d:'경기를 어느 정도 탄다'},
+ it:{n:'IT 스타트업',e:'💻',cap:3e7,g:.012,vol:.07,beta:1.2,d:'대박 or 쪽박'},
+ game:{n:'게임 스튜디오',e:'🎮',cap:5e7,g:.013,vol:.08,beta:1.1,d:'히트작 한 방, 변동성 큼'}
+};
 const HIST={
 199801:'🇰🇷 IMF 외환위기의 한복판. 설날 세뱃돈 3만원으로 증권계좌를 열었다!',
 199802:'김대중 대통령 취임. "금 모으기 운동"으로 온 나라가 힘을 모은다.',
@@ -192,14 +218,62 @@ function rank(n){let r=0;TITLES.forEach((x,i)=>{if(n>=x[0])r=i});return r}
 const KEY='richrpg98_v1';
 let S=null,toastT=null;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function load(){try{const j=localStorage.getItem(KEY);if(j)return JSON.parse(j)}catch(e){}return null}
+function load(){try{const j=localStorage.getItem(KEY);if(j){const o=JSON.parse(j);return Object.assign({props:{},loan:0,useLoan:false,co:null,npc:{},tab:'stock'},o)}}catch(e){}return null}
 function newGame(name){
- S={name:name||'나',t:0,cash:30000,dep:0,h:{},int:5,mental:80,acted:false,tips:[],log:[],nw:[30000],q:{},locked:false,contrib:30000,over:false,msg:''};
+ S={name:name||'나',t:0,cash:30000,dep:0,h:{},int:5,mental:80,acted:false,tips:[],log:[],nw:[30000],q:{},locked:false,contrib:30000,over:false,msg:'',props:{},loan:0,useLoan:false,co:null,npc:{},tab:'stock'};
  save();
 }
 function price(id,t){return P[id][t==null?S.t:t]}
 function holdVal(){let v=0;for(const id in S.h)v+=S.h[id].q*(price(id)||0);return v}
-function nw(){return S.cash+S.dep+holdVal()}
+function propVal(){let v=0;PROPS.forEach(p=>{const h=S.props[p.id];if(h)v+=h.q*P[p.id][S.t]});return v}
+function coVal(){return S.co?S.co.V*S.co.own:0}
+function netStat(){let s=0;NPCS.forEach(n=>s+=(S.npc[n.id]||0));return Math.min(100,Math.round(s/3))}
+function nw(){return S.cash+S.dep+holdVal()+propVal()-S.loan+coVal()}
+function mkTip(id,acc,src){const r=RAW[id],t=S.t;if(t>=N-1||r[t]==null||r[t+1]==null)return;const real=r[t+1]>r[t];S.tips.push({id,up:Math.random()<acc?real:!real,acc,src})}
+const meetCost=()=>Math.round(({'초등학생':2000,'중학생':8000,'고등학생':8000,'대학생':30000,'직장인':80000})[stage(S.t)]*wage(S.t)/100)*100;
+function meet(id){
+ if(S.acted)return;const n=NPCS.find(x=>x.id===id);
+ if(ageOf(S.t)<n.minAge)return toast('아직 만날 수 없는 사람이야. (만 '+n.minAge+'세~)');
+ if(n.minInt&&S.int<n.minInt)return toast('분석력이 부족해. ('+n.minInt+' 필요)');
+ const c=meetCost();if(c>S.cash)return toast('식사비 '+won(c)+'가 부족해!');
+ S.cash-=c;S.acted=true;const d=Math.round(8+Math.random()*8);S.npc[id]=Math.min(100,(S.npc[id]||0)+d);
+ save();toast(n.emoji+' '+n.name+'과(와) 식사 (-'+won(c)+') 친밀도 +'+d);
+}
+function buyProp(id){
+ if(ageOf(S.t)<19)return toast('미성년자는 부동산을 살 수 없어. (만 19세부터)');
+ const p=price(id),q=Math.max(1,parseInt(S.q[id])||1),tot=p*q,fee=Math.ceil(tot*.015);
+ let loan=0;if(S.useLoan){loan=Math.floor(tot*.5);const lim=(propVal()+tot)*.5;if(S.loan+loan>lim)loan=Math.max(0,Math.floor(lim-S.loan))}
+ const need=tot+fee-loan;if(need>S.cash)return toast('돈이 부족해! 필요 현금 '+won(need));
+ S.cash-=need;S.loan+=loan;const h=S.props[id]||(S.props[id]={q:0,cost:0});h.q+=q;h.cost+=tot+fee;
+ save();toast(PR[id].name+' '+q+'채 매입 (취득세 포함, 대출 '+won(loan)+')');
+}
+function sellProp(id){
+ const h=S.props[id];if(!h||!h.q)return toast('보유한 집이 없어.');
+ const q=Math.min(h.q,Math.max(1,parseInt(S.q[id])||1)),p=price(id),tot=p*q,cst=h.cost*q/h.q,tax=Math.round(Math.max(0,tot-cst)*.22),net=Math.round(tot*.99)-tax;
+ const share=tot/propVal(),rep=Math.min(Math.round(S.loan*share),net);S.loan-=rep;S.cash+=net-rep;h.cost-=cst;h.q-=q;if(h.q<=0)delete S.props[id];
+ save();toast(PR[id].name+' 매도: 중개비·양도세 '+won(Math.round(tot*.01)+tax)+' 공제, 대출상환 '+won(rep)+', 입금 '+won(net-rep));
+}
+function found(type){
+ if(S.co)return;if(ageOf(S.t)<19)return toast('만 19세부터 창업할 수 있어.');
+ const T=CO[type],cost=Math.round(T.cap*wage(S.t));if(cost>S.cash)return toast('자본금 '+won(cost)+'이 필요해!');
+ S.cash-=cost;S.co={type,name:S.name+' '+T.n,V:cost,cap0:cost,own:1,emp:0,low:0,ipo:false,born:S.t};save();toast('🎉 '+T.e+' 회사 설립! 자본금 '+won(cost));
+}
+function hire(){
+ if(!S.co)return;const c=Math.round(5e6*wage(S.t));if(c>S.cash)return toast('채용 비용 '+won(c)+' 부족!');
+ S.cash-=c;S.co.emp++;save();toast('👥 직원 채용 (총 '+S.co.emp+'명)');
+}
+function coInvest(){
+ if(!S.co)return;const v=Math.floor(parseInt(S.cq)||0);if(v<=0||v>S.cash)return toast('금액을 확인해줘.');
+ S.cash-=v;S.co.V+=v/S.co.own;save();toast('증자 '+won(v));
+}
+function coSell(){
+ if(!S.co)return;if(!confirm('회사를 매각할까요? (가치의 85%)'))return;
+ const g=Math.round(coVal()*.85);S.cash+=g;S.co=null;save();toast('💰 회사 매각 +'+won(g));
+}
+function coIpo(){
+ const c=S.co;if(!c||c.ipo)return;if(c.V<3e9*wage(S.t))return toast('상장 요건: 회사 가치 '+won(3e9*wage(S.t))+' 이상');
+ const g=Math.round(c.V*.3*1.2);S.cash+=g;c.own=.7;c.ipo=true;S.mental=Math.min(100,S.mental+10);save();toast('🔔 IPO 성공! 지분 30% 공모 → +'+won(g));
+}
 function toast(m){S.msg=m;render();clearTimeout(toastT);toastT=setTimeout(()=>{S.msg='';render()},2400)}
 /* ============ 행동 ============ */
 const BUYFEE=0.003,SELLFEE=0.005;
@@ -246,6 +320,28 @@ function advance(){
  const h=HIST[y*100+m];if(h)ev.push({txt:h});
  if(m===2&&ageOf(t)<=25){const g=Math.round(wage(t)*(30000+Math.random()*70000)/1000)*1000;S.cash+=g;S.contrib+=g;ev.push({txt:'🧧 설날 세뱃돈 +'+won(g),r:1})}
  else if(Math.random()<.2){const r=RANDOM[Math.floor(Math.random()*RANDOM.length)].f(S);ev.push({txt:r[0],r:1})}
+ NPCS.forEach(n=>{const a=S.npc[n.id]||0;if(a<25||ageOf(t)<n.minAge)return;
+  if(n.kind==='stock'){const av=STOCKS.filter(s=>P[s.id][t]!=null);if(av.length)mkTip(av[Math.floor(Math.random()*av.length)].id,Math.min(.92,.5+a*.004+(n.id==='broker'?.08:0)),n.emoji+' '+n.name)}
+  if(n.kind==='prop')mkTip(PROPS[Math.floor(Math.random()*PROPS.length)].id,Math.min(.92,.55+a*.004),n.emoji+' '+n.name)});
+ let rent=0;PROPS.forEach(p=>{const hh=S.props[p.id];if(hh&&hh.q)rent+=hh.q*P[p.id][t]*p.yld/12});
+ if(rent>0){rent=Math.round(rent);S.cash+=rent;ev.push({txt:'🏠 월세 수입 +'+won(rent),r:1})}
+ if(S.loan>0){const i=Math.round(S.loan*((RATE[y]||2)+1.5)/1200);if(S.cash>=i)S.cash-=i;else S.loan+=i;ev.push({txt:'🏦 대출 이자 -'+won(i)+(S.cash<i?' (현금 부족, 대출에 합산)':''),r:1})}
+ if(S.co){const c=S.co,T=CO[c.type],kr=kospi[t]/kospi[t-1]-1,rn=(Math.random()+Math.random()+Math.random()-1.5)*2;
+  const cap=Math.floor(c.V/(wage(t)*5e7))+1,eff=Math.min(c.emp,cap);
+  const g=T.g+T.beta*kr+rn*T.vol+S.int*.00004+netStat()*.00006+.003*eff-.002*Math.max(0,c.emp-cap)+((S.npc.senior||0)>=50?.002:0)+((S.npc.friend||0)>=60?.001:0)+(c.ipo?.002:0);
+  const div=Math.round(c.V*c.own*.004);S.cash+=div;S.contrib+=0;c.V=Math.max(0,c.V*(1+g-.004));
+  c.low=c.V<c.cap0*.2?c.low+1:0;
+  if(c.low>=3){ev.push({txt:'💀 '+c.name+' 파산… 회사가 문을 닫았다. 멘탈 -25',r:1});S.co=null;S.mental=Math.max(1,S.mental-25)}
+  else{
+   if(div>0)ev.push({txt:'🏢 '+c.name+' 배당 +'+won(div)+' (회사가치 '+won(c.V*c.own)+')',r:1});
+   if(Math.random()<.08){const r=Math.random();
+    if(r<.3){c.V*=1.25;ev.push({txt:'🎉 대형 계약 성사! 회사 가치 +25%',r:1})}
+    else if(r<.5){c.V*=.88;ev.push({txt:'😵 핵심 인력이 이탈했다. 회사 가치 -12%',r:1})}
+    else if(r<.75){const d=netStat()>=50?.05:.15;c.V*=1-d;ev.push({txt:'⚖ 규제·소송 이슈! 회사 가치 -'+Math.round(d*100)+'%'+(d<.1?' (인맥 덕에 피해 축소)':''),r:1})}
+    else if(netStat()>=30||(S.npc.vc||0)>=40){c.V*=1.2;ev.push({txt:'🤝 인맥 덕분에 투자 유치 성공! 회사 가치 +20%',r:1})}
+   }
+  }
+ }
  const now=nw(),pct=prev>0?(now-inc-prev)/prev:0;
  S.mental=Math.min(100,S.mental+3);
  if(pct<=-.15){S.mental-=15;ev.push({txt:'😱 자산이 한 달 새 '+Math.round(-pct*100)+'% 증발! 멘탈 -15',r:1})}
@@ -284,6 +380,42 @@ function stockRow(s){
  +'<button class="buy" data-a="buy" data-id="'+s.id+'">매수</button><button class="sell" data-a="sell" data-id="'+s.id+'">매도</button>'
  +'<button data-a="maxbuy" data-id="'+s.id+'">최대매수('+maxBuy(s.id).toLocaleString()+')</button>'+(h?'<button data-a="maxsell" data-id="'+s.id+'">전량</button>':'')+'</div></div>'
 }
+function tipHtml(id){return S.tips.filter(x=>x.id===id).map(x=>'<span class="tag">'+x.src+': '+(x.up?'▲ 오를 것':'▼ 내릴 것')+' ('+Math.round(x.acc*100)+'%)</span>').join(' ')}
+function tabBar(){const T=[['stock','📈 증권'],['prop','🏠 부동산'],['biz','🏢 회사'],['npc','🤝 인맥'],['bank','🏦 은행']];
+ return'<div class="row" style="margin:12px 0 0">'+T.map(x=>'<button data-a="tab" data-id="'+x[0]+'" '+((S.tab||'stock')===x[0]?'class="pri"':'')+'>'+x[1]+'</button>').join('')+'</div>'}
+function tabBody(){return{stock:tabStock,prop:tabProp,biz:tabBiz,npc:tabNpc,bank:tabBank}[S.tab||'stock']()}
+function tabStock(){return'<div class="card"><b>📈 종목 시장</b> <span class="mut">(수수료 매수 0.3% / 매도 0.5%)</span>'+STOCKS.map(stockRow).join('')+'</div>'}
+function propRow(p){
+ const t=S.t,pr=price(p.id),prev=t>0?P[p.id][t-1]:pr,ch=prev?pr/prev-1:0,h=S.props[p.id],tp=tipHtml(p.id);
+ return'<div class="stock"><div class="row sp"><div><b>'+p.emoji+' '+p.name+'</b><div class="big" style="font-size:19px;color:var(--tx)">'+won(pr)+' <span class="'+(ch>=0?'up':'dn')+'" style="font-size:13px">'+(ch>=0?'▲':'▼')+Math.abs(ch*100).toFixed(1)+'%</span></div><div class="mut">월세 약 '+won(pr*p.yld/12)+' (연 '+(p.yld*100).toFixed(1)+'%)</div></div>'+spark(p.id)+'</div>'
+ +(tp?'<div style="margin:4px 0">'+tp+'</div>':'')
+ +(h?'<div class="mut">보유 '+h.q+'채 · 평가 '+won(h.q*pr)+' · <span class="'+(h.q*pr>=h.cost?'up':'dn')+'">'+((h.q*pr/h.cost-1)*100).toFixed(1)+'%</span></div>':'')
+ +'<div class="row" style="margin-top:6px"><input type="number" min="1" data-q="'+p.id+'" value="'+(S.q[p.id]||1)+'"><button class="buy" data-a="buyp" data-id="'+p.id+'">매입</button><button class="sell" data-a="sellp" data-id="'+p.id+'">매도</button></div></div>'}
+function tabProp(){
+ const y=ymOf(S.t).y,lr=(RATE[y]||2)+1.5;
+ return'<div class="card"><b>🏠 부동산</b> <span class="mut">(만 19세부터 · 취득세·중개 1.5% · 매도 중개 1% + 양도세 22%)</span>'
+ +'<div class="mut" style="margin:6px 0">대출 잔액 <b>'+won(S.loan)+'</b> · 금리 연 '+lr.toFixed(1)+'% · 한도 집값의 50%</div>'
+ +'<div class="row"><button data-a="loantoggle">'+(S.useLoan?'✅ 매입 시 대출 사용':'⬜ 대출 사용 안 함')+'</button><button data-a="repay">현금으로 대출 상환</button></div>'
+ +PROPS.map(propRow).join('')+'</div>'}
+function tabBiz(){
+ const w=wage(S.t),c=S.co;
+ if(!c){return'<div class="card"><b>🏢 회사 설립</b> <span class="mut">(만 19세부터 · 자본금은 물가에 따라 오름)</span>'
+  +Object.keys(CO).map(k=>{const T=CO[k],cost=Math.round(T.cap*w);return'<div class="stock"><div class="row sp"><div><b>'+T.e+' '+T.n+'</b><div class="mut">'+T.d+' · 기대성장 월 '+(T.g*100).toFixed(1)+'% · 변동성 '+(T.vol*100).toFixed(0)+'%</div></div><button class="pri" data-a="found" data-id="'+k+'">설립 ('+won(cost)+')</button></div></div>'}).join('')
+  +'<div class="mut" style="margin-top:8px">분석력·인맥·직원 수가 회사 성장에 도움이 됩니다. 회사 가치의 일부는 매달 배당으로 들어옵니다.</div></div>'}
+ const T=CO[c.type],cap=Math.floor(c.V/(w*5e7))+1,hc=Math.round(5e6*w);
+ return'<div class="card"><b>'+T.e+' '+c.name+'</b> <span class="mut">('+Math.floor((S.t-c.born)/12)+'년차'+(c.ipo?' · 상장사':'')+')</span>'
+ +'<div class="big">'+won(c.V)+'</div><div class="mut">내 지분 '+Math.round(c.own*100)+'% = '+won(c.V*c.own)+' · 직원 '+c.emp+'명 (적정 '+cap+'명) · 월 배당 약 '+won(c.V*c.own*.004)+'</div>'
+ +'<div class="mut">성장 요인: 업종 · 코스피 연동(β '+T.beta+') · 분석력 '+S.int+' · 인맥 '+netStat()+' · 직원</div>'
+ +'<div class="row" style="margin-top:10px"><button data-a="hire">👥 직원 채용 ('+won(hc)+')</button><button data-a="ipo" '+(c.ipo?'disabled':'')+'>🔔 IPO (가치 '+won(3e9*w)+' 이상)</button><button class="sell" data-a="cosell">회사 매각</button></div>'
+ +'<div class="row" style="margin-top:8px"><input type="number" min="1" id="cq" value="'+(S.cq||1000000)+'"><button data-a="coinv">증자 (현금 투입)</button></div></div>'}
+function tabNpc(){
+ const age=ageOf(S.t),c=meetCost();
+ return'<div class="card"><b>🤝 인맥</b> <span class="mut">(한 달에 한 명, 식사비 '+won(c)+' · 친밀도 25↑이면 매달 정보 제공)</span>'
+ +NPCS.map(n=>{const a=S.npc[n.id]||0,lock=age<n.minAge||(n.minInt&&S.int<n.minInt);
+  return'<div class="stock"><div class="row sp"><div><b>'+n.emoji+' '+n.name+'</b> <span class="tag">친밀도 '+a+'</span><div class="mut">'+n.desc+'</div></div><button data-a="meet" data-id="'+n.id+'" '+(lock||S.acted?'disabled':'')+'>'+(lock?'🔒':'☕ 만나기')+'</button></div><div class="bar" style="margin-top:6px"><i style="width:'+a+'%;background:var(--gold)"></i></div></div>'}).join('')+'</div>'}
+function tabBank(){
+ const y=ymOf(S.t).y;
+ return'<div class="card"><b>🏦 은행 예금</b> <span class="mut">(연 '+(RATE[y]||2)+'%, 안전자산)</span><div class="row" style="margin-top:8px"><input type="number" min="1" id="dq" value="'+(S.dq||10000)+'"><button data-a="dep">입금</button><button data-a="wd">출금</button><button data-a="depall">현금 전액 입금</button></div></div>'}
 function render(){
  const app=$('app');
  if(!S){
@@ -300,23 +432,23 @@ function render(){
  let html='<h1>💰 1998 꼬마 투자왕</h1>'
  +'<div class="card"><div class="row sp"><div><span class="tag">'+y+'년 '+m+'월</span> <span class="tag">'+S.name+' · '+age+'세 '+stage(S.t)+'</span></div><span class="tag">Lv.'+(r+1)+' '+TITLES[r][1]+'</span></div>'
  +'<div class="big" style="margin-top:8px">'+won(total)+'</div>'
- +'<div class="mut">현금 '+won(S.cash)+' · 예금 '+won(S.dep)+' · 주식 '+won(holdVal())+'</div>'
+ +'<div class="mut">현금 '+won(S.cash)+' · 예금 '+won(S.dep)+' · 주식 '+won(holdVal())+(propVal()?' · 부동산 '+won(propVal()):'')+(S.co?' · 회사지분 '+won(coVal()):'')+(S.loan?' · <span class="up">대출 -'+won(S.loan)+'</span>':'')+'</div>'
  +'<div class="mut" style="margin-top:4px">코스피 <b>'+kospi[S.t].toLocaleString()+'</b> <span class="'+(kc>=0?'up':'dn')+'">'+(kc>=0?'▲':'▼')+Math.abs(kc*100).toFixed(1)+'%</span> · 예금금리 연 '+(RATE[y]||2)+'%</div>'
- +'<div class="grid2" style="margin-top:10px"><div><div class="mut">🧠 분석력 '+S.int+'</div><div class="bar"><i style="width:'+S.int+'%;background:var(--dn)"></i></div></div><div><div class="mut">💚 멘탈 '+S.mental+'</div><div class="bar"><i style="width:'+Math.max(0,S.mental)+'%;background:var(--ok)"></i></div></div></div></div>';
+ +'<div class="grid2" style="margin-top:10px"><div><div class="mut">🧠 분석력 '+S.int+'</div><div class="bar"><i style="width:'+S.int+'%;background:var(--dn)"></i></div></div><div><div class="mut">💚 멘탈 '+S.mental+'</div><div class="bar"><i style="width:'+Math.max(0,S.mental)+'%;background:var(--ok)"></i></div></div><div><div class="mut">🤝 인맥 '+netStat()+'</div><div class="bar"><i style="width:'+netStat()+'%;background:var(--gold)"></i></div></div></div></div>';
  html+='<div class="card"><b>📅 이달의 소식</b>';
  const hv=HIST[y*100+m];
  if(S.log.length)S.log.forEach(e=>html+='<div class="ev '+(e.r?'r':'')+'">'+e.txt+'</div>');
  else html+='<div class="ev">'+(hv||'큰 사건은 없는 평범한 한 달.')+'</div>';
  html+='</div>';
  html+='<div class="card"><b>이번 달 행동 (한 번)</b><div class="row" style="margin-top:8px"><button data-a="read" '+(S.acted?'disabled':'')+'>📰 경제신문 읽기</button><button data-a="work" '+(S.acted?'disabled':'')+'>💪 '+WORKNAME(S.t)+' (+'+won(workPay(S.t))+')</button><button data-a="rest" '+(S.acted?'disabled':'')+'>😴 쉬기</button></div><div class="mut" style="margin-top:6px">신문을 읽으면 분석력이 오르고 종목 전망(실제 다음 달 방향에 정확도 확률 적용)을 볼 수 있어요. 매달 용돈/월급 '+won(income(S.t))+' 자동 입금.'+(S.locked?' <b class="up">⚠ 멘탈 붕괴로 거래 불가</b>':'')+'</div></div>';
- html+='<div class="card"><b>📈 종목 시장</b> <span class="mut">(수수료 매수 0.3% / 매도 0.5%)</span>'+STOCKS.map(stockRow).join('')+'</div>';
- html+='<div class="card"><b>🏦 은행 예금</b> <span class="mut">(연 '+(RATE[y]||2)+'%, 안전자산)</span><div class="row" style="margin-top:8px"><input type="number" min="1" id="dq" value="'+(S.dq||10000)+'"><button data-a="dep">입금</button><button data-a="wd">출금</button><button data-a="depall">현금 전액 입금</button></div></div>';
+ html+=tabBar()+tabBody();
+ 
  html+='<div class="card">'+chart()+'</div>';
  html+='<div class="card"><div class="row"><button class="pri" data-a="next">▶ 다음 달로</button><button data-a="skip3">3개월 건너뛰기</button><button data-a="skip12">1년 건너뛰기</button><button data-a="restart" style="margin-left:auto">처음부터</button></div></div>';
  if(S.msg)html+='<div class="toast">'+S.msg+'</div>';
  app.innerHTML=html;
 }
-document.addEventListener('input',e=>{const q=e.target.getAttribute&&e.target.getAttribute('data-q');if(q)S.q[q]=e.target.value;if(e.target.id==='dq')S.dq=e.target.value});
+document.addEventListener('input',e=>{const q=e.target.getAttribute&&e.target.getAttribute('data-q');if(q)S.q[q]=e.target.value;if(e.target.id==='dq')S.dq=e.target.value;if(e.target.id==='cq')S.cq=e.target.value});
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;const a=b.dataset.a,id=b.dataset.id;
  if(a==='start'){newGame($('nm').value.trim());return render()}
@@ -332,6 +464,17 @@ document.addEventListener('click',e=>{
   if(a==='wd'){v=Math.min(v,S.dep);S.dep-=v;S.cash+=v}else{if(v>S.cash)return toast('현금이 부족해!');S.cash-=v;S.dep+=v}
   save();return toast((a==='wd'?'출금 ':'입금 ')+won(v));
  }
+ if(a==='tab'){S.tab=id;save();return render()}
+ if(a==='buyp')return buyProp(id);
+ if(a==='sellp')return sellProp(id);
+ if(a==='loantoggle'){S.useLoan=!S.useLoan;save();return render()}
+ if(a==='repay'){const v=Math.min(S.cash,S.loan);S.cash-=v;S.loan-=v;save();return toast('대출 상환 '+won(v))}
+ if(a==='meet')return meet(id);
+ if(a==='found')return found(id);
+ if(a==='hire')return hire();
+ if(a==='coinv')return coInvest();
+ if(a==='cosell')return coSell();
+ if(a==='ipo')return coIpo();
  if(a==='next'){advance();return render()}
  if(a==='skip3')return skip(3);
  if(a==='skip12')return skip(12);
