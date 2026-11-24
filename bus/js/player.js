@@ -1,6 +1,6 @@
 'use strict';
 const keys = {};
-const P = { autoHeadway: 1.6, gaps: null, earn: 0, zoom: 1, auto: false, free: false, active: false, paused: false, bus: null, x: 0, z: 0, h: 0, v: 0, steer: 0, cam: 0, camH: 0, lesson: null, cd: {}, shake: 0, hint: '', done: false };
+const P = { wheelOn: false, wheelIn: 0, autoHeadway: 1.6, gaps: null, earn: 0, zoom: 1, auto: false, free: false, active: false, paused: false, bus: null, x: 0, z: 0, h: 0, v: 0, steer: 0, cam: 0, camH: 0, lesson: null, cd: {}, shake: 0, hint: '', done: false };
 const vt = b => b.isCar ? b.spec : BUS_TYPES[b.type];
 const pickStops = anchors => { const ids = []; for (const [ax, az] of anchors) { let b = null, bd = 1e9; for (const s of STOPS) { if (ids.includes(s.id)) continue; const d = Math.hypot(s.mid.x - ax, s.mid.z - az); if (d < bd) { bd = d; b = s; } } ids.push(b.id); } return ids; };
 const LESSONS = [
@@ -150,7 +150,7 @@ function updatePlayer(dt) {
   if (P.paused) return;
   const b = P.bus, a = b.agent, T = vt(b), free = !!b.isCar, L = T.len, wb = (free ? 0.6 : 0.55) * L, path = a.path;
   P.t += dt;
-  if (P.auto) { if (keys.KeyW || keys.ArrowUp || keys.KeyS || keys.ArrowDown || keys.KeyA || keys.ArrowLeft || keys.KeyD || keys.ArrowRight || keys.Space) setAuto(false); else { autoStep(dt); return; } }
+  if (P.auto) { if (keys.KeyW || keys.ArrowUp || keys.KeyS || keys.ArrowDown || keys.KeyA || keys.ArrowLeft || keys.KeyD || keys.ArrowRight || keys.Space || (P.wheelOn && Math.abs(P.wheelIn) > 0.12)) setAuto(false); else { autoStep(dt); return; } }
   // --- 조작
   const brk = keys.KeyS || keys.ArrowDown, hb = keys.Space; if (free && P.cruise && (brk || hb)) { P.cruise = 0; toast('크루즈 해제'); }
   const thr = keys.KeyW || keys.ArrowUp || (free && P.cruise > 0 && P.v < P.cruise - 0.4), ending = P.ending > 0;
@@ -161,8 +161,8 @@ function updatePlayer(dt) {
   acc -= (free ? 0.012 : 0.05) * P.v + (free ? 0.00012 : 0.0009) * P.v * Math.abs(P.v) + Math.sign(P.v) * 0.22;
   if (hb) acc -= Math.sign(P.v) * 9;
   const v0 = P.v; P.v += acc * dt; if ((hb || (!thr && !brk)) && v0 * P.v < 0) P.v = 0; if (!thr && !brk && Math.abs(P.v) < 0.04) P.v = 0;
-  const tgt = ((keys.KeyA || keys.ArrowLeft) ? 1 : 0) - ((keys.KeyD || keys.ArrowRight) ? 1 : 0);
-  P.steer += (tgt - P.steer) * Math.min(1, dt * (tgt === 0 ? 5 : 3.2));
+  let tgt = ((keys.KeyA || keys.ArrowLeft) ? 1 : 0) - ((keys.KeyD || keys.ArrowRight) ? 1 : 0); if (P.wheelOn) tgt = P.wheelIn;
+  P.steer += (tgt - P.steer) * Math.min(1, dt * (P.wheelOn ? 12 : tgt === 0 ? 5 : 3.2));
   const dmax = lerp(0.62, free ? 0.09 : 0.2, clamp(Math.abs(P.v) / (T.steerSpeed || 16), 0, 1)), delta = P.steer * dmax, ym = (free ? 11 * (P.mode === 2 ? 1.2 : 1) : 6) / Math.max(Math.abs(P.v), 1), yaw = clamp(P.v / wb * Math.tan(delta), -ym, ym);
   P.h += yaw * dt; const fx = Math.sin(P.h), fz = Math.cos(P.h);
   P.x += fx * P.v * dt; P.z += fz * P.v * dt;

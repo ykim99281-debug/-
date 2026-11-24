@@ -17,11 +17,25 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
-document.querySelectorAll('#touch button').forEach(b => {
+// ----- 터치 조작: 버튼 · 페달 · 둥근 운전대
+document.querySelectorAll('#touch [data-k]').forEach(b => {
   const k = b.dataset.k;
-  b.addEventListener('pointerdown', e => { e.preventDefault(); keys[k] = true; playerKey(k); });
-  for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => { keys[k] = false; });
+  b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture && b.setPointerCapture(e.pointerId); keys[k] = true; playerKey(k); });
+  for (const ev of ['pointerup', 'pointercancel']) b.addEventListener(ev, () => { keys[k] = false; });
 });
+$('tbPause').addEventListener('pointerdown', e => { e.preventDefault(); if (P.active && !P.paused) UI.pauseModal(); });
+const WMAX = 2.6, wheelEl = $('wheel'), wheelSvg = $('wheelSvg'); let wAng = 0, wDrag = null, wRaf = 0;
+function setWheel(a) { wAng = a; wheelSvg.style.transform = 'rotate(' + (a * 180 / Math.PI) + 'deg)'; P.wheelIn = -a / WMAX; }
+wheelEl.addEventListener('pointerdown', e => {
+  e.preventDefault(); wheelEl.setPointerCapture(e.pointerId); const r = wheelEl.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  wDrag = { cx, cy, last: Math.atan2(e.clientY - cy, e.clientX - cx) }; P.wheelOn = true; cancelAnimationFrame(wRaf);
+});
+wheelEl.addEventListener('pointermove', e => { if (!wDrag) return; const a = Math.atan2(e.clientY - wDrag.cy, e.clientX - wDrag.cx); const d = wrapPi(a - wDrag.last); wDrag.last = a; setWheel(clamp(wAng + d, -WMAX, WMAX)); });
+const wheelUp = () => { if (!wDrag) return; wDrag = null; const back = () => { setWheel(wAng * 0.86); if (Math.abs(wAng) > 0.02) wRaf = requestAnimationFrame(back); else { setWheel(0); P.wheelOn = false; } }; back(); };
+wheelEl.addEventListener('pointerup', wheelUp); wheelEl.addEventListener('pointercancel', wheelUp);
+addEventListener('pointerdown', () => { if (!actx) initAudio(); else if (actx.state === 'suspended') actx.resume(); });   // 모바일: 첫 터치에 소리 활성화
+$('sideToggle').addEventListener('click', () => { const s = $('side'), hid = s.style.display === 'none'; s.style.display = hid ? '' : 'none'; $('sideToggle').textContent = hid ? '📋 패널 접기' : '📋 패널 열기'; });
+{ let pref = null; try { pref = localStorage.getItem('busTouch'); } catch (e) { } const auto = (window.matchMedia && matchMedia('(pointer:coarse)').matches) || navigator.maxTouchPoints > 0; UI.setTouch(pref === null ? auto : pref === '1', true); }
 const cv = renderer.domElement, ptrs = new Map(); let lastPinch = 0;
 const modalOpen = () => !$('editor').classList.contains('hide') || !$('modal').classList.contains('hide');
 function panScreen(px, py) {

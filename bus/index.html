@@ -119,10 +119,27 @@
   .lesson{display:flex;gap:10px;align-items:center;justify-content:space-between;text-align:left}
   .stars{color:var(--accent);letter-spacing:2px}
 
-  #touch{position:fixed;left:0;right:0;bottom:0;display:none;justify-content:space-between;padding:0 12px 12px;pointer-events:none;z-index:7}
-  #touch .grp{display:flex;gap:10px;pointer-events:auto}
-  #touch button{width:64px;height:64px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:var(--panel);font-size:20px;touch-action:none}
-  @media (pointer:coarse){#touch.on{display:flex}#hudB{bottom:90px}#hudScore,#hudR{display:none}}
+  #gl canvas,#mapC{touch-action:none}
+  #touch{position:fixed;inset:0;display:none;pointer-events:none;z-index:7}
+  body.touch #touch.on{display:block}
+  #wheel{position:absolute;left:12px;bottom:12px;width:min(34vw,164px);height:min(34vw,164px);pointer-events:auto;touch-action:none;filter:drop-shadow(0 4px 10px rgba(0,0,0,.55));cursor:grab}
+  #wheel svg{width:100%;height:100%;display:block;transition:transform .06s linear}
+  #pedals{position:absolute;right:12px;bottom:12px;display:flex;gap:10px;align-items:flex-end;pointer-events:auto}
+  .pedal{width:72px;border-radius:16px;border:2px solid rgba(255,255,255,.35);font-weight:800;touch-action:none;color:var(--fg);font-size:14px}
+  #pGas{height:128px;background:rgba(74,222,128,.28)}#pBrake{height:90px;background:rgba(248,113,113,.3)}
+  .pedal:active{filter:brightness(1.7)}
+  #tbtns{position:absolute;right:176px;bottom:12px;display:grid;grid-template-columns:repeat(6,44px);gap:6px;pointer-events:auto}
+  #tbtns button{width:44px;height:44px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:var(--panel);font-size:17px;touch-action:none;padding:0}
+  #tbtns button:active{background:rgba(255,176,32,.6)}
+  .carOnly{display:none!important}#touch.car .carOnly{display:block!important}#touch.car .busOnly{display:none!important}
+  body.touch #hudScore,body.touch #hudR,body.touch #tasks{display:none}
+  body.touch #hudB{top:100px;bottom:auto;left:50%;gap:8px}body.touch #speedBox{min-width:120px;padding:6px 10px!important}body.touch #spd{font-size:30px}body.touch #limit{width:44px;height:44px;font-size:16px;border-width:4px}body.touch #gear{margin-top:2px;font-size:11px}
+  body.touch #hudL{top:8px;left:8px;min-width:150px;font-size:12px;padding:6px 10px!important}
+  body.touch #gapBox{top:82px;left:8px;font-size:10.5px;min-width:150px;padding:6px 10px!important}
+  body.touch #hint{top:6px;max-width:44vw;font-size:12px;padding:6px 12px!important}
+  body.touch #rear{width:150px;height:46px;top:46px}body.touch #mini{width:96px;height:96px;top:8px;right:8px}body.touch #exitBtn{top:110px;right:8px}
+  @media (max-width:600px){#tbtns{right:12px;bottom:150px;grid-template-columns:repeat(4,44px)}body.touch #hudB{top:auto;bottom:304px}body.touch #hint{top:auto;bottom:370px;max-width:80vw}body.touch #rear{left:auto;right:8px;transform:none;top:110px}body.touch #exitBtn{top:162px}}
+  #sideToggle{position:absolute;left:14px;bottom:44px;pointer-events:auto}
   @media (max-width:700px){#mini{width:120px;height:120px}#rear{width:200px;height:62px;top:70px}#tasks{display:none}}
 </style>
 </head>
@@ -175,6 +192,7 @@
     <div id="tabs"><button data-t="routes" class="on">🗺 노선</button><button data-t="fleet">🚌 버스</button><button data-t="stops">🚏 정류장</button><button data-t="company">🏢 회사</button><button data-t="goals">🏆 목표</button></div>
     <div id="tabBody"></div>
   </div>
+  <button id="sideToggle" class="btn sm">📋 패널 접기</button>
   <div id="leftHint">🖱 드래그: 회전 · 휠: 확대 · 버스 목록의 '관제'로 따라가기</div>
 </div>
 
@@ -194,8 +212,19 @@
 <div id="modal" class="hide"><div class="box panel" id="modalBox"></div></div>
 <div id="toasts"></div>
 <div id="center"></div>
-<div id="touch"><div class="grp"><button data-k="ArrowLeft">◀</button><button data-k="ArrowRight">▶</button></div>
-<div class="grp"><button data-k="KeyF" style="font-size:12px">문</button><button data-k="KeyT" style="font-size:12px">자율</button><button data-k="ArrowDown">■</button><button data-k="ArrowUp">▲</button></div></div>
+<div id="touch">
+  <div id="wheel"><svg id="wheelSvg" viewBox="-100 -100 200 200">
+    <circle r="86" fill="none" stroke="#14161b" stroke-width="24"/><circle r="86" fill="none" stroke="#4a5164" stroke-width="22" stroke-dasharray="2 9" opacity=".7"/><circle r="97" fill="none" stroke="#2d323f" stroke-width="2"/>
+    <rect x="-80" y="-9" width="160" height="18" rx="7" fill="#262a33"/><rect x="-9" y="0" width="18" height="80" rx="7" fill="#262a33"/>
+    <circle r="27" fill="#14161b" stroke="#596073" stroke-width="3"/><text y="9" text-anchor="middle" font-size="26">🚌</text>
+    <rect x="-5" y="-99" width="10" height="24" rx="3" fill="#ffb020"/></svg></div>
+  <div id="tbtns">
+    <button data-k="KeyH" title="경적">📯</button><button data-k="KeyF" class="busOnly" title="문">🚪</button><button data-k="KeyT" title="자율주행">🤖</button><button data-k="KeyC" title="카메라">🎥</button>
+    <button data-k="KeyR" title="복귀">↺</button><button data-k="Space" title="파킹 브레이크">🅿</button><button data-k="KeyL" title="헤드라이트">💡</button><button data-k="BracketLeft" title="차간 시간 -">−</button>
+    <button data-k="BracketRight" title="차간 시간 +">＋</button><button data-k="KeyK" class="carOnly" title="크루즈">🚀</button><button data-k="KeyV" class="carOnly" title="주행 모드">🏎</button><button id="tbPause" title="메뉴">☰</button>
+  </div>
+  <div id="pedals"><button class="pedal" id="pBrake" data-k="ArrowDown">브레이크<br>후진</button><button class="pedal" id="pGas" data-k="ArrowUp">가속</button></div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="js/core.js"></script>
