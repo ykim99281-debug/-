@@ -15,6 +15,14 @@ Object.assign(sun.shadow.camera, { left: -110, right: 110, top: 110, bottom: -11
 scene.add(sun, sun.target);
 
 const world = { blocks: [] };
+function disposeTree(root) {   // GPU 자원 해제 (공유 자원은 건드리지 않음)
+  root.traverse(o => {
+    if (o.geometry && !o.geometry.userData.shared) o.geometry.dispose();
+    if (o.isInstancedMesh && o.dispose) o.dispose();
+    const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+    for (const m of ms) { if (m.userData.shared) continue; if ((o.isSprite || m.userData.ownsMap) && m.map) m.map.dispose(); m.dispose(); }
+  });
+}
 const _dummy = new THREE.Object3D(), _col = new THREE.Color();
 const mk = (c, o) => new THREE.MeshLambertMaterial(Object.assign({ color: c }, o || {}));
 function canvasTex(w, h, fn, rep) { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d'), c); const t = new THREE.CanvasTexture(c); if (rep) { t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep, rep); t.anisotropy = 8; } return t; }
@@ -216,7 +224,7 @@ function buildCity() {
 }
 function setHQName(name) {
   if (!world.hqSign) return; const old = world.hqSign, p = old.position.clone();
-  scene.remove(old); world.hqSign = labelSprite('🚌 ' + name, { w: 30, bg: 'rgba(255,176,32,.95)', fg: '#1a1200' }); world.hqSign.position.copy(p); scene.add(world.hqSign);
+  scene.remove(old); disposeTree(old); world.hqSign = labelSprite('🚌 ' + name, { w: 30, bg: 'rgba(255,176,32,.95)', fg: '#1a1200' }); world.hqSign.position.copy(p); scene.add(world.hqSign);
 }
 
 // ===== 정류장 3D =====

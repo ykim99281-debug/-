@@ -4,6 +4,11 @@ const LEVELS = [0, 100, 400, 1000, 2500, 6000, 15000];
 const ROUTE_COLORS = [0x3b82f6, 0xef4444, 0x22c55e, 0xf59e0b, 0x8b5cf6, 0x14b8a6, 0xec4899, 0x64748b];
 let G = null, cars = [];
 const SCHOOL = (() => { try { return Object.assign({ done: {}, best: {}, license: 0, wallet: 0, cars: [], nextCar: 1 }, JSON.parse(localStorage.getItem(SCHOOL_KEY))); } catch (e) { return { done: {}, best: {}, license: 0, wallet: 0, cars: [], nextCar: 1 }; } })();
+(function sanitizeSchool() {
+  if (!isFinite(SCHOOL.wallet) || SCHOOL.wallet < 0) SCHOOL.wallet = 0; if (!Array.isArray(SCHOOL.cars)) SCHOOL.cars = [];
+  SCHOOL.cars = SCHOOL.cars.filter(c => c && typeof CAR_SPECS !== 'undefined' && CAR_SPECS[c.model] && isFinite(c.km)); SCHOOL.nextCar = Math.max(SCHOOL.nextCar || 1, 1 + Math.max(0, ...SCHOOL.cars.map(c => c.id || 0)));
+  if (!SCHOOL.done || typeof SCHOOL.done !== 'object') SCHOOL.done = {}; if (!SCHOOL.best || typeof SCHOOL.best !== 'object') SCHOOL.best = {};
+})();
 const saveSchool = () => { try { localStorage.setItem(SCHOOL_KEY, JSON.stringify(SCHOOL)); } catch (e) { } };
 
 function newState(name, school) {
@@ -42,7 +47,7 @@ function updateRoute(r, name, color, stopIds) {
   for (const b of G.buses) if (b.routeId === r.id) placeBusOnRoute(b);
 }
 function deleteRoute(r) {
-  for (const b of G.buses.filter(b => b.routeId === r.id)) if (b.manual) P.stopManual(true);
+  if (P.active && G.buses.some(b => b.routeId === r.id && b.manual)) stopManual(false);
   for (const b of G.buses.filter(b => b.routeId === r.id)) sellBus(b, true);
   G.routes.splice(G.routes.indexOf(r), 1);
 }
@@ -62,7 +67,7 @@ function addBus(type, routeId, free) {
   G.buses.push(b); placeBusOnRoute(b); return b;
 }
 function sellBus(b, noRefund) {
-  if (b.manual) P.stopManual(true);
+  if (b.manual && P.active) stopManual(false);
   if (!noRefund) G.money += busValue(b);
   b.agent.dispose(); G.buses.splice(G.buses.indexOf(b), 1);
 }
@@ -149,6 +154,7 @@ function updateWorld(dt) {
   if ((G.pedT -= dt) < 0) { G.pedT = 0.7; updatePeds(); G.repT = (G.repT || 0) + 0.7; if (G.repT > 30) { G.repT = 0; for (const s of STOPS) if (s.waiting > 30 && G.routes.some(r => r.stopIds.includes(s.id))) G.rep = Math.max(0, G.rep - 0.4); } }
   if (!G.school && (G.goalT -= dt) < 0) { G.goalT = 1; checkGoals(); const l = level(); if (l > lastLvl) { toast('⭐ 회사 레벨 ' + l + ' 달성!', 'gold'); for (const k in BUS_TYPES) if (BUS_TYPES[k].lvl === l) toast('🚌 ' + BUS_TYPES[k].name + ' 구매 가능!', 'good'); } lastLvl = l; }
   if (!G.school && (G.saveT -= dt) < 0) { G.saveT = 20; saveCompany(); }
+  if (!G.school && G.money < 0 && ((G.warnT = (G.warnT || 0) - dt) < 0)) { G.warnT = 60; toast('⚠ 회사 자금이 바닥났어요! 버스를 매각하거나 대출·인출 취소로 메우세요', 'bad'); }
   for (const c of world.clouds) { c.position.x += dt * 2; if (c.position.x > EXT + 400) c.position.x = -EXT - 400; }
   sun.position.copy(world.sunDir || sun.position);
 }
@@ -158,28 +164,42 @@ function saveCompany() {
   if (!G || G.school) return;
   try {
     localStorage.setItem(SAVE_KEY, JSON.stringify({
-      name: G.name, myPay: G.myPay, headwayTarget: G.headwayTarget, fare: G.fare, up: G.up, loan: G.loan, dayNo: G.dayNo, day: G.day, reports: G.reports, money: G.money, rep: G.rep, pax: G.pax, gt: G.gt, hour: G.hour, goals: G.goals, goodStops: G.goodStops, nextRoute: G.nextRoute, nextBus: G.nextBus, stats: G.stats,
+      ver: 4, gn: GN, name: G.name, myPay: G.myPay, headwayTarget: G.headwayTarget, fare: G.fare, up: G.up, loan: G.loan, dayNo: G.dayNo, day: G.day, reports: G.reports, money: G.money, rep: G.rep, pax: G.pax, gt: G.gt, hour: G.hour, goals: G.goals, goodStops: G.goodStops, nextRoute: G.nextRoute, nextBus: G.nextBus, stats: G.stats,
       routes: G.routes.map(r => ({ id: r.id, num: r.num, name: r.name, color: r.color, stopIds: r.stopIds, income: r.income, pax: r.pax })),
       buses: G.buses.map(b => ({ id: b.id, type: b.type, routeId: b.routeId, income: b.income, cond: b.cond, km: b.km, age: b.age, driver: b.driver })), waiting: STOPS.map(s => Math.round(s.waiting))
     }));
   } catch (e) { }
 }
 function loadSaved() { try { return JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return null; } }
-function startCompany(name, saved) {
-  resetWorld(); G = newState(name); lastLvl = 1;
-  if (saved) {
-    Object.assign(G, { name: saved.name, money: saved.money, rep: saved.rep, pax: saved.pax, gt: saved.gt || 0, hour: saved.hour || 9, goals: saved.goals || {}, goodStops: saved.goodStops || 0, nextRoute: saved.nextRoute, nextBus: saved.nextBus, stats: saved.stats || G.stats });
-    G.myPay = saved.myPay || 0; G.headwayTarget = saved.headwayTarget === undefined ? 40 : saved.headwayTarget; G.fare = saved.fare || 1500; G.up = Object.assign(G.up, saved.up || {}); G.loan = saved.loan || 0; G.dayNo = saved.dayNo || 1; G.day = saved.day || G.day; G.reports = saved.reports || [];
-    (saved.waiting || []).forEach((w, i) => { if (STOPS[i]) STOPS[i].waiting = w; });
-    for (const r of saved.routes) { const rr = makeRoute(r.name, r.color, r.stopIds, r.id, r.num); rr.income = r.income || 0; rr.pax = r.pax || 0; G.routes.push(rr); }
-    for (const b of saved.buses) { const nb = addBus(b.type, b.routeId, true); if (nb) { nb.id = b.id; nb.income = b.income || 0; nb.cond = b.cond === undefined ? 100 : b.cond; nb.km = b.km || 0; nb.age = b.age || 0; if (b.driver) nb.driver = b.driver; } }
-    lastLvl = level();
-  } else {
-    const anchors = [[-90, -90], [90, -90], [90, 90], [-90, 90], [0, 0]], ids = [];
-    for (const [ax, az] of anchors) { let best = null, bd = 1e9; for (const s of STOPS) { if (ids.includes(s.id)) continue; const d = Math.hypot(s.mid.x - ax, s.mid.z - az); if (d < bd) { bd = d; best = s; } } ids.push(best.id); }
-    const r = addRoute('시범 순환', ROUTE_COLORS[0], ids, true); addBus('city', r.id, true);
+function sanitizeSave(s0) {   // 저장 데이터 검증 · 지도 변경 시 이전
+  if (!s0 || typeof s0 !== 'object') return null;
+  const num = (v, d) => (typeof v === 'number' && isFinite(v)) ? v : d; let s = Object.assign({}, s0), migrated = null;
+  if (s.gn !== GN) {
+    const refund = (s.buses || []).reduce((a, b) => a + (BUS_TYPES[b && b.type] ? BUS_TYPES[b.type].price * 0.9 : 0), 0) + (s.routes || []).reduce((a, r) => a + (r && r.stopIds ? routeCost(r.stopIds.length) * 0.5 : 0), 0);
+    s = Object.assign(s, { routes: [], buses: [], waiting: [], money: num(s.money, 0) + refund }); migrated = { refund: Math.round(refund) };
   }
-  if (!saved) G.speed = 10;
+  s.routes = (s.routes || []).filter(r => r && Array.isArray(r.stopIds) && r.stopIds.length >= 2 && r.stopIds.every(i => STOPS[i]));
+  const rid = new Set(s.routes.map(r => r.id)); s.buses = (s.buses || []).filter(b => b && BUS_TYPES[b.type] && rid.has(b.routeId));
+  s.money = num(s.money, 1500000); s.rep = clamp(num(s.rep, 50), 0, 100); s.pax = num(s.pax, 0); s.gt = num(s.gt, 0); s.hour = clamp(num(s.hour, 9), 0, 23.999); s.loan = num(s.loan, 0); s.fare = clamp(num(s.fare, 1500), 1000, 2500);
+  s.nextRoute = Math.max(num(s.nextRoute, 1), 1 + Math.max(0, ...s.routes.map(r => r.id))); s.nextBus = Math.max(num(s.nextBus, 1), 1 + Math.max(0, ...s.buses.map(b => b.id || 0)));
+  return { save: s, migrated };
+}
+function starterRoute() {
+  const anchors = [[-90, -90], [90, -90], [90, 90], [-90, 90], [0, 0]], ids = [];
+  for (const [ax, az] of anchors) { let best = null, bd = 1e9; for (const s of STOPS) { if (ids.includes(s.id)) continue; const d = Math.hypot(s.mid.x - ax, s.mid.z - az); if (d < bd) { bd = d; best = s; } } ids.push(best.id); }
+  const r = addRoute('시범 순환', ROUTE_COLORS[0], ids, true); addBus('city', r.id, true); return r;
+}
+function startCompany(name, saved0) {
+  resetWorld(); G = newState(name); lastLvl = 1; const sv = saved0 ? sanitizeSave(saved0) : null, saved = sv && sv.save;
+  if (saved) {
+    Object.assign(G, { name: saved.name || name, money: saved.money, rep: saved.rep, pax: saved.pax, gt: saved.gt, hour: saved.hour, goals: saved.goals || {}, goodStops: saved.goodStops || 0, nextRoute: saved.nextRoute, nextBus: saved.nextBus, stats: Object.assign(G.stats, saved.stats || {}) });
+    G.myPay = saved.myPay || 0; G.headwayTarget = saved.headwayTarget === undefined ? 40 : saved.headwayTarget; G.fare = saved.fare; G.up = Object.assign(G.up, saved.up || {}); G.loan = saved.loan; G.dayNo = saved.dayNo || 1; G.day = saved.day || G.day; G.reports = saved.reports || [];
+    (saved.waiting || []).forEach((w, i) => { if (STOPS[i] && isFinite(w)) STOPS[i].waiting = w; });
+    for (const r of saved.routes) { const rr = makeRoute(r.name || '노선', r.color, r.stopIds, r.id, r.num); rr.income = r.income || 0; rr.pax = r.pax || 0; G.routes.push(rr); }
+    for (const b of saved.buses) { const nb = addBus(b.type, b.routeId, true); if (nb) { nb.id = b.id || nb.id; nb.income = b.income || 0; nb.cond = isFinite(b.cond) ? b.cond : 100; nb.km = b.km || 0; nb.age = b.age || 0; if (b.driver && b.driver.name) nb.driver = b.driver; } }
+    lastLvl = level(); G.migrated = sv.migrated;
+    if (!G.routes.length) { starterRoute(); }
+  } else { starterRoute(); G.speed = 10; }
   spawnCars(46); setHQName(G.name); applyTime(G.hour);
 }
 function startSchoolWorld() { resetWorld(); G = newState('운전교실', true); G.hour = 10; spawnCars(34); applyTime(G.hour); setHQName('운전교실'); }

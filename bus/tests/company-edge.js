@@ -1,0 +1,37 @@
+const { chromium } = require('playwright');
+(async () => {
+  const b = await chromium.launch({ args: ['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'] });
+  const p = await b.newPage({ viewport: { width: 1000, height: 700 } });
+  const errs = [];
+  p.on('pageerror', e => errs.push('PAGEERR ' + e.message + ' @' + (e.stack||'').split('\n').slice(0,2).join('|')));
+  p.on('dialog', d => d.accept());
+  await p.route('**/three.min.js', r => r.fulfill({ path: process.env.THREE_JS || require('path').join(__dirname, 'three.min.js'), contentType: 'text/javascript' }));
+  await p.goto('file://' + require('path').join(__dirname, '..', 'index.html') + ''); await p.waitForTimeout(1500);
+  const R = await p.evaluate(async ()=>{
+    const out=[]; const T=(name,fn)=>{ try{ const r=fn(); out.push('ok   '+name+(r?' '+r:'')); }catch(e){ out.push('FAIL '+name+': '+e.message+' @'+(e.stack||'').split('\n')[1]); } };
+    const frames=(n,dt=0.05)=>{ for(let i=0;i<n;i++){ updateWorld(dt); if(P.active){ updatePlayer(dt); driveCamera(dt);} } };
+    localStorage.clear(); startCompany('edge'); G.money=9e7; G.state='company'; UI.showMgmt();
+    const r0=G.routes[0];
+    T('add 2nd route & buses',()=>{ const rt=addRoute('R2',ROUTE_COLORS[1],[4,9,14,20],true); addBus('city',rt.id,true); addBus('city',rt.id,true); frames(100); return G.buses.length+' buses'; });
+    T('drive bus then delete its route',()=>{ const bus=G.buses[1]; G.state='drive'; startManual(bus); frames(80); deleteRoute(routeById(bus.routeId)); frames(80); return 'P.active='+P.active; });
+    T('state after delete (no crash on frames)',()=>{ if(P.active) stopManual(true); G.state='company'; frames(100); return G.routes.length+' routes '+G.buses.length+' buses'; });
+    T('drive bus then sell it',()=>{ const bus=G.buses[0]; G.state='drive'; startManual(bus); frames(60); sellBus(bus); frames(60); if(P.active) stopManual(true); G.state='company'; return 'P.active='+P.active+' buses '+G.buses.length; });
+    T('re-add route/bus',()=>{ const rt=addRoute('R3',ROUTE_COLORS[2],[3,9,15],true); addBus('mini',rt.id,true); frames(50); return ''; });
+    T('edit route while driving',()=>{ const bus=G.buses[G.buses.length-1], rt=routeById(bus.routeId); G.state='drive'; startManual(bus); frames(60); updateRoute(rt,'edited',rt.color,[5,11,17,23]); frames(120); const ok=isFinite(P.x)&&isFinite(P.s); if(P.active) stopManual(true); G.state='company'; return 'finite='+ok; });
+    T('autopilot then edit route',()=>{ const bus=G.buses[G.buses.length-1], rt=routeById(bus.routeId); G.state='drive'; startManual(bus); frames(40); setAuto(true); frames(60); updateRoute(rt,'edited2',rt.color,[6,12,18,24]); frames(120); if(P.active) stopManual(true); G.state='company'; return ''; });
+    T('reassign bus to other route',()=>{ const b2=G.buses[0], rt=G.routes[G.routes.length-1]; reassignBus(b2,rt.id); frames(100); return ''; });
+    T('garage full buy',()=>{ G.up.garage=0; let n=0; for(let i=0;i<10;i++){ const b3=addBus('city',G.routes[0].id); if(b3) n++; } return 'bought '+n+' cap '+garageCap()+' total '+G.buses.length; });
+    T('negative money (wages)',()=>{ G.money=-5e6; frames(400); const b4=addBus('mini',G.routes[0].id); return 'bought='+!!b4+' money='+Math.round(G.money); });
+    T('loan/repay edge',()=>{ G.money=0; G.loan=0; borrow(9e9); repay(1e12); withdraw(1e12); deposit(1e12); return 'loan '+G.loan+' money '+Math.round(G.money); });
+    T('upgrade max',()=>{ G.money=9e9; for(let i=0;i<20;i++) buyUpgrade('garage'); return 'garage '+G.up.garage; });
+    T('settle many days',()=>{ for(let i=0;i<30;i++){ G.hour=23.995; frames(5); } return 'day '+G.dayNo+' reports '+G.reports.length; });
+    T('service/sell all buses',()=>{ for(const bb of G.buses.slice()) { serviceBus(bb); } for(const bb of G.buses.slice()) sellBus(bb); frames(60); return 'buses '+G.buses.length; });
+    T('no-bus ui render',()=>{ UI.refreshTop(); for(const t of ['routes','fleet','stops','company','goals']){ UI.tab=t; UI.renderTab(true);} return ''; });
+    T('delete all routes then ui',()=>{ for(const rr of G.routes.slice()) deleteRoute(rr); frames(30); for(const t of ['routes','fleet','stops','company','goals']){ UI.tab=t; UI.renderTab(true);} UI.buyModal(); return 'routes '+G.routes.length; });
+    T('editor on empty',()=>{ UI.openEditor(null); UI.edState.stops=[1]; UI.edUpdate(); UI.edState.stops=[1,2]; UI.edUpdate(); document.getElementById('editor').classList.add('hide'); return ''; });
+    T('save/load empty company',()=>{ saveCompany(); const s=loadSaved(); startCompany(s.name,s); frames(20); return 'routes '+G.routes.length+' buses '+G.buses.length; });
+    return out;
+  });
+  console.log(R.join('\n')); console.log(errs);
+  await b.close();
+})();

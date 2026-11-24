@@ -6,7 +6,7 @@ const BUS_TYPES = {
   dd: { name: '2층 버스', len: 11, w: 2.55, h: 4.5, cap: 72, price: 1500000, wage: 140, vmax: 19, lvl: 3, deck: 2, fuel: 5.5 }
 };
 const _gc = {};
-const bgeo = (w, h, d) => _gc['b' + w + h + d] || (_gc['b' + w + h + d] = new THREE.BoxGeometry(w, h, d));
+const bgeo = (w, h, d) => _gc['b' + w + h + d] || (_gc['b' + w + h + d] = Object.assign(new THREE.BoxGeometry(w, h, d), { userData: { shared: true } }));
 const _tc = {};
 function destTex(text, color) {
   const k = text + color; if (_tc[k]) return _tc[k];
@@ -22,11 +22,12 @@ function busMats() {
   BM.glass = new THREE.MeshPhongMaterial({ color: 0x6fa5cb, transparent: true, opacity: .4, shininess: 110, specular: 0xffffff, side: THREE.DoubleSide }); BM.glass.userData.noShadow = true;
   BM.head = new THREE.MeshBasicMaterial({ color: 0xe8e4d0 }); BM.head.userData.noShadow = true; BM.ceil = new THREE.MeshBasicMaterial({ color: 0xcfd6e0 }); BM.ceil.userData.noShadow = true;
   BM.yellow = mk(0xf2c230); BM.seat = mk(0x2c4a7a); BM.seatB = mk(0x37609a); BM.floor = mk(0x3a3d46); BM.wall = mk(0x2a2d35); BM.cab = mk(0x1c1f26); BM.paints = {};
+  for (const k in BM) if (BM[k] && BM[k].isMaterial) BM[k].userData.shared = true;
   return BM;
 }
-const paintMat = c => { const B = busMats(); return B.paints[c] || (B.paints[c] = new THREE.MeshPhongMaterial({ color: c, shininess: 70, specular: 0x555555 })); };
+const paintMat = c => { const B = busMats(); if (!B.paints[c]) { B.paints[c] = new THREE.MeshPhongMaterial({ color: c, shininess: 70, specular: 0x555555 }); B.paints[c].userData.shared = true; } return B.paints[c]; };
 function updateBusLights(k) { const B = busMats(); B.head.color.setHex(k > 0.35 ? 0xfff6d0 : 0xe8e4d0); B.ceil.color.setHex(k > 0.35 ? 0xfff2c8 : 0xcfd6e0); }
-const UB = new THREE.BoxGeometry(1, 1, 1), _q4 = new THREE.Quaternion(), _e4 = new THREE.Euler(), _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3();
+const UB = Object.assign(new THREE.BoxGeometry(1, 1, 1), { userData: { shared: true } }), _q4 = new THREE.Quaternion(), _e4 = new THREE.Euler(), _v1 = new THREE.Vector3(), _v2 = new THREE.Vector3();
 function part(list, geo, mat, x, y, z, rx, ry, rz, sx, sy, sz) {
   _v1.set(x, y, z); _q4.setFromEuler(_e4.set(rx || 0, ry || 0, rz || 0)); _v2.set(sx === undefined ? 1 : sx, sy === undefined ? 1 : sy, sz === undefined ? 1 : sz);
   list.push({ geo, mat, m: new THREE.Matrix4().compose(_v1, _q4, _v2) });
@@ -149,7 +150,8 @@ function makeBus(type, color, label) {
   const wheelPiv = new THREE.Group(); wheelPiv.position.set(0.55, 1.62, L / 2 - 1.0); wheelPiv.rotation.x = -1.1; inner.add(wheelPiv);
   const sw = new THREE.Group(); wheelPiv.add(sw); sw.add(new THREE.Mesh(new THREE.TorusGeometry(0.21, 0.028, 8, 22), B.rubber)); for (const a of [0, 2.09, 4.19]) { const sp = new THREE.Mesh(bgeo(0.4, 0.035, 0.03), B.rubber); sp.rotation.z = a; sw.add(sp); }
   const dc = document.createElement('canvas'); dc.width = 256; dc.height = 96; const dx = dc.getContext('2d'), dtex = new THREE.CanvasTexture(dc);
-  const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.195), new THREE.MeshBasicMaterial({ map: dtex })); dash.position.set(0.55, 1.58, L / 2 - 0.62); dash.rotation.set(0.7, Math.PI, 0); inner.add(dash);
+  const dmat = new THREE.MeshBasicMaterial({ map: dtex }); dmat.userData.ownsMap = true;
+  const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.195), dmat); dash.position.set(0.55, 1.58, L / 2 - 0.62); dash.rotation.set(0.7, Math.PI, 0); inner.add(dash);
   let dashKey = '';
   const drawDash = i => {
     const k = [i.kmh, i.gear, i.door, i.next, i.auto, i.gap].join('|'); if (k === dashKey) return; dashKey = k;
@@ -236,7 +238,7 @@ class Agent {
     const w = this.v * dt / 0.45; for (const wh of this.m.wheels) wh.rotation.x += w; for (const f of this.m.front) f.rotation.y = this.steer;
     this.m.setBrake(this.braking);
   }
-  dispose() { const i = agents.indexOf(this); if (i >= 0) agents.splice(i, 1); scene.remove(this.m.group); }
+  dispose() { const i = agents.indexOf(this); if (i >= 0) agents.splice(i, 1); scene.remove(this.m.group); disposeTree(this.m.group); }
 }
 
 // ===== 실제 자동차 (신차 기준 대략가 · 대략적인 제원) =====
@@ -281,7 +283,7 @@ function makeCarModel(spec, color) {
   for (const s of [-1, 1]) { const p = new THREE.Mesh(bgeo(0.1, ch + 0.05, 0.1), dark); p.position.set(s * (cw / 2 - 0.05), clr + bh + ch / 2, front0 - 0.05); inner.add(p); }
   const signMat = new THREE.MeshBasicMaterial({ color: 0x4ade80 }), sign = new THREE.Group(); sign.visible = false; sign.position.set(0, clr + bh + ch + 0.14, cz);
   sign.add(new THREE.Mesh(bgeo(0.52, 0.16, 0.2), signMat));
-  const stex = canvasTex(128, 40, x => { x.fillStyle = '#101010'; x.fillRect(0, 0, 128, 40); x.fillStyle = '#ffb020'; x.font = 'bold 30px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('TAXI', 64, 22); });
+  const stex = _tc.taxi || (_tc.taxi = canvasTex(128, 40, x => { x.fillStyle = '#101010'; x.fillRect(0, 0, 128, 40); x.fillStyle = '#ffb020'; x.font = 'bold 30px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('TAXI', 64, 22); }));
   for (const s of [1, -1]) { const pl = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.13), new THREE.MeshBasicMaterial({ map: stex })); pl.position.z = 0.101 * s; pl.rotation.y = s > 0 ? 0 : Math.PI; sign.add(pl); }
   g.add(sign);
   const spot = new THREE.SpotLight(0xfff2cc, 0, 70, 0.5, 0.5, 1); spot.position.set(0, 0.8, L / 2); spot.target.position.set(0, 0, L / 2 + 20); g.add(spot, spot.target);

@@ -68,6 +68,7 @@ const UI = {
   tab: 'routes', follow: null, edState: null,
   hideAll() { for (const id of ['title', 'hud', 'mgmt', 'editor', 'modal']) $(id).classList.add('hide'); $('rear').classList.add('hide'); $('touch').classList.remove('on'); },
   showTitle() {
+    if (G && !G.school && G.state !== 'title') { saveCompany(); startSchoolWorld(); }   // 타이틀에서는 회사 시간이 멈추도록 데모 월드로 교체
     this.hideAll(); $('title').classList.remove('hide'); G.state = 'title'; this.follow = null;
     const s = loadSaved(); $('bCont').disabled = !s; $('contInfo').textContent = s ? `${s.name} · ${fmtMoney(s.money)}` : '저장된 회사 없음';
     $('carInfo').textContent = `👛 ${fmtMoney(SCHOOL.wallet)} · 보유 ${SCHOOL.cars.length}대`; const n = Object.keys(SCHOOL.done).length; $('schoolInfo').textContent = SCHOOL.license ? '🪪 면허 취득 완료!' : `수료 ${n}/4`;
@@ -438,8 +439,12 @@ const UI = {
   },
   init() {
     this.initTop();
-    $('bNew').onclick = () => { initAudio(); startCompany(($('coName').value || '버스 회사').trim()); this.showMgmt(); toast('환영합니다 사장님! 오른쪽에서 노선을 설계해 보세요', 'gold'); };
-    $('bCont').onclick = () => { initAudio(); const s = loadSaved(); if (s) { startCompany(s.name, s); this.showMgmt(); } };
+    $('bNew').onclick = () => { if (loadSaved() && !confirm('저장된 회사가 있어요.\n새로 시작하면 기존 저장이 덮어써집니다. 계속할까요?')) return; initAudio(); startCompany(($('coName').value || '버스 회사').trim()); this.showMgmt(); toast('환영합니다 사장님! 오른쪽에서 노선을 설계해 보세요', 'gold'); };
+    $('bCont').onclick = () => {
+      initAudio(); const s = loadSaved(); if (!s) return;
+      try { startCompany(s.name, s); this.showMgmt(); if (G.migrated) this.modal(`<h2>🗺 지도가 확장됐어요</h2><p class="muted">광주 지도가 새로 커져서 이전 노선과 버스는 정리했어요. 보유 버스·노선 비용은 환불(<b>${fmtMoney(G.migrated.refund)}</b>)해 드렸고, 자금·레벨·업그레이드·목표는 그대로예요. 시범 노선과 버스 1대를 드렸으니 새 노선을 설계해 보세요!</p><button class="btn pri" id="mgX">확인</button>`), $('mgX').onclick = () => this.closeModal(); }
+      catch (e) { console.error(e); toast('저장 데이터를 읽을 수 없어 새 회사로 시작해요', 'bad'); startCompany('광주 시티버스'); this.showMgmt(); }
+    };
     $('bSchool').onclick = () => { initAudio(); this.schoolModal(); };
     $('exitBtn').onclick = () => { if (P.active && !P.paused) this.pauseModal(); };
     $('bFree').onclick = () => { initAudio(); this.freeDriveModal(); };

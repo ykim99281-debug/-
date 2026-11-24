@@ -2,6 +2,10 @@
 const CAM = { theta: 0.8, elev: 0.75, dist: 900, target: new THREE.Vector3(0, 0, 0), dragging: false, idle: 0 };
 function resize() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize);
+document.addEventListener('visibilitychange', () => {   // 탭을 숨기면 주행 일시정지 · 소리 끄기
+  if (document.hidden) { if (P.active && !P.paused && $('modal').classList.contains('hide')) UI.pauseModal(); if (actx && actx.state === 'running') actx.suspend(); }
+  else if (actx && actx.state === 'suspended') actx.resume();
+});
 
 // ----- 입력
 const typing = e => /^(INPUT|SELECT|TEXTAREA)$/.test((e.target && e.target.tagName) || '');
@@ -81,7 +85,7 @@ function orbit(dt) {
 
 // ----- 루프
 let prev = performance.now(), fpsT = 0;
-function frame(now) {
+function frameBody(now) {
   const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
   const active = P.active;
   if (!(active && P.paused)) { const sdt = active ? dt : dt * (G.state === 'company' ? G.speed : 1), n = Math.max(1, Math.ceil(sdt / 0.1)); for (let i = 0; i < n; i++) updateWorld(sdt / n); }
@@ -95,6 +99,15 @@ function frame(now) {
     const co = P.cam === 2; if (co) P.bus.model.setCockpit(false);
     renderer.setScissorTest(true); renderer.setViewport(r.left, innerHeight - r.bottom, r.width, r.height); renderer.setScissor(r.left, innerHeight - r.bottom, r.width, r.height);
     renderer.render(scene, cam); renderer.setScissorTest(false); renderer.setViewport(0, 0, innerWidth, innerHeight); if (co) P.bus.model.setCockpit(true);
+  }
+}
+let errN = 0, errT = 0;
+function frame(now) {   // 한 프레임에서 오류가 나도 루프가 멈추지 않게 보호
+  try { frameBody(now); errN = Math.max(0, errN - 0.02); }
+  catch (e) {
+    console.error(e); try { renderer.setScissorTest(false); renderer.setViewport(0, 0, innerWidth, innerHeight); } catch (_) { }
+    errN++; if (now - errT > 6000) { errT = now; toast('⚠ 오류가 발생했어요 — 계속 진행합니다', 'bad'); }
+    if (errN > 40) { errN = 0; try { if (P.active) stopManual(false); } catch (_) { } }
   }
   requestAnimationFrame(frame);
 }
