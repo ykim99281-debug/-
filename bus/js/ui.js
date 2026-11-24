@@ -267,6 +267,69 @@ const UI = {
     $('mZoomIn').onclick = () => this.edZoom(1.4); $('mZoomOut').onclick = () => this.edZoom(1 / 1.4); $('mReset').onclick = () => this.edReset();
   },
 
+  // --- 지갑 · 자동차 매장 · 내 차고
+  dc: {},
+  walletModal(tab) {
+    tab = tab || this.wtab || 'wallet'; this.wtab = tab;
+    const T = [['wallet', '👛 지갑'], ['dealer', '🏬 자동차 매장'], ['garage', '🚗 내 차고 (' + SCHOOL.cars.length + ')']];
+    let h = `<div class="row" style="margin-bottom:12px;flex-wrap:wrap">${T.map(([k, n]) => `<button class="btn sm ${k === tab ? 'pri' : ''}" data-wt="${k}">${n}</button>`).join('')}<span style="flex:1"></span><button class="btn sm" id="wClose">닫기</button></div>`;
+    if (tab === 'wallet') {
+      h += `<h2>👛 내 지갑</h2><div style="font-size:34px;font-weight:800" class="tnum">${fmtMoney(SCHOOL.wallet)}</div><p class="muted">회사 돈과는 별개의 개인 자금이에요. 회사 탭의 '대표 인출'로 회사 자금을 가져오거나(세금 15.4%), 운전교실 합격 보상으로 모을 수 있어요.</p>`;
+      if (!G.school) h += `<div class="card"><div class="row" style="justify-content:space-between"><span>🏢 ${esc(G.name)} 자금</span><b class="tnum">${fmtMoney(G.money)}</b></div><div class="acts"><button class="btn sm" data-wd="1000000">100만 인출</button><button class="btn sm" data-wd="5000000">500만</button><button class="btn sm" data-wd="20000000">2천만</button><button class="btn sm" data-wd="-1">가능한 만큼</button><button class="btn sm" data-dep="1000000">100만 투자</button></div></div>`;
+      else h += `<div class="card"><small class="muted">경영 모드에서 회사 자금을 인출할 수 있어요. 지금은 운전교실/타이틀이에요.</small></div>`;
+    } else if (tab === 'dealer') {
+      const brands = Object.keys(BRANDS), cur = this.dealBrand || brands[0], B = BRANDS[cur];
+      h += `<h2>🏬 자동차 매장</h2><p class="muted" style="margin:0 0 8px">제조사 전시장 · 신차 기준 대략가 · 내 지갑 ${fmtMoney(SCHOOL.wallet)}</p><div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">${brands.map(k => `<button class="btn sm ${k === cur ? 'pri' : ''}" data-brand="${k}">${k}</button>`).join('')}</div>`;
+      h += `<div class="card" style="padding:8px 12px"><b>${cur} 전시장</b> <small class="muted">${B.note}</small><br><small>🏦 ${B.fin} 할부 연 ${(B.apr * 100).toFixed(1)}% · 선수금 10~50% · 36/48/60개월 · 취득세·보험 등 부대비용 별도</small></div>`;
+      for (const k in CAR_SPECS) {
+        const s = CAR_SPECS[k]; if (s.brand !== cur) continue; const q = carQuote(k, defaultCfg(k), { method: 'cash' }), d = carDerived({ model: k }), ev = ENG_OK[k].includes('ev');
+        h += `<div class="card"><div class="row" style="justify-content:space-between"><div><b>${s.name}</b> ${ev ? '⚡' : ''}<br><small>${s.info}<br>트림 ${TRIM_SETS[cur].map(t => t.n).join(' · ')}<br>${ENG_OK[k].map(e => ENG[e].n).join(' / ')} · 최고 ${Math.round(s.vmax * 3.6)}km/h · ${s.len}m</small></div><div style="text-align:right"><small class="muted">기본 트림</small><br><b>${fmtMoney(s.price)}~</b><br><button class="btn sm pri" data-cfg="${k}" style="margin-top:6px">견적 · 구매</button></div></div></div>`;
+      }
+    } else {
+      h += `<h2>🚗 내 차고</h2>`;
+      if (!SCHOOL.cars.length) h += `<p class="muted">보유한 자동차가 없어요. 매장에서 구매해 보세요!</p>`;
+      for (const c of SCHOOL.cars) {
+        const s = CAR_SPECS[c.model], d = carDerived(c), l = c.loan;
+        h += `<div class="card"><div class="row" style="justify-content:space-between"><div><b>${d.fullName}</b> <small>${d.engName}</small><br><small>주행 ${(c.km / 1000).toFixed(1)}km · 연식 ${c.age || 0}일 · 중고 시세 ${fmtMoney(carValue(c))}</small><br><small class="muted">옵션: ${[...d.feat].map(f => FEAT_NAME[f] || f).join(', ') || '없음'}</small>${l ? `<br><small style="color:#facc15">💳 할부 잔액 ${fmtMoney(l.bal)} · 월 ${fmtMoney(l.pmt)} · ${l.left}회 남음${l.overdue ? ' · ⚠ 연체 ' + l.overdue + '회' : ''}</small>` : ''}</div><span style="width:22px;height:22px;border-radius:50%;background:${hex(c.color)};border:2px solid #fff4;flex:none"></span></div><div class="acts"><button class="btn sm pri" data-cdrive="${c.id}">🎮 운전하기</button><button class="btn sm bad" data-csell="${c.id}">매각</button></div></div>`;
+      }
+    }
+    this.modal(h); const mb = $('modalBox');
+    mb.querySelectorAll('[data-wt]').forEach(b => b.onclick = () => this.walletModal(b.dataset.wt)); $('wClose').onclick = () => { this.closeModal(); if (G.state === 'title') this.showTitle(); else if (G.state === 'company') this.refreshTop(); };
+    mb.querySelectorAll('[data-wd]').forEach(x => x.onclick = () => { const n = +x.dataset.wd; withdraw(n < 0 ? Math.max(0, G.money - 300000) : n); this.walletModal(); this.refreshTop(); });
+    mb.querySelectorAll('[data-dep]').forEach(x => x.onclick = () => { deposit(+x.dataset.dep); this.walletModal(); this.refreshTop(); });
+    mb.querySelectorAll('[data-brand]').forEach(b => b.onclick = () => { this.dealBrand = b.dataset.brand; this.walletModal('dealer'); });
+    mb.querySelectorAll('[data-cfg]').forEach(b => b.onclick = () => { this.cc = null; this.carConfigModal(b.dataset.cfg); });
+    mb.querySelectorAll('[data-cdrive]').forEach(b => b.onclick = () => { const c = SCHOOL.cars.find(q => q.id === +b.dataset.cdrive); if (P.active) return; this.closeModal(); this.follow = null; initAudio(); startCar(c); });
+    mb.querySelectorAll('[data-csell]').forEach(b => b.onclick = () => { const c = SCHOOL.cars.find(q => q.id === +b.dataset.csell); const net = carValue(c) - (c.loan ? Math.round(c.loan.bal) : 0); if (confirm(CAR_SPECS[c.model].name + ' 매각\n중고 시세 ' + fmtMoney(carValue(c)) + (c.loan ? '\n할부 잔액 -' + fmtMoney(c.loan.bal) : '') + '\n정산 ' + fmtMoney(net))) { sellCar(c); this.walletModal('garage'); } });
+  },
+
+  // --- 자유주행
+  fd: { car: 0, hour: 12, freeze: true, traffic: 24, x: 0, z: 0 },
+  freeDriveModal() {
+    const f = this.fd; if (f.car !== 0 && !SCHOOL.cars.some(c => c.id === f.car)) f.car = 0;
+    const opt = (k, v, t) => `<button class="btn sm ${f[k] === v ? 'pri' : ''}" data-fd="${k}" data-v="${v}">${t}</button>`;
+    this.modal(`<h2>🚗 자유주행</h2><p class="muted" style="margin-top:0">규칙 없이 도시를 마음껏 달려요. 점수도, 감점도 없어요.</p>
+      <b>차량</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px"><button class="btn sm ${f.car === 0 ? 'pri' : ''}" data-fd="car" data-v="0">기본 차량 (아반떼)</button>${SCHOOL.cars.map(c => `<button class="btn sm ${f.car === c.id ? 'pri' : ''}" data-fd="car" data-v="${c.id}">${carDerived(c).fullName}</button>`).join('')}</div>
+      <b>시간</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('hour', 7, '🌅 아침')}${opt('hour', 12, '☀ 낮')}${opt('hour', 18, '🌇 저녁')}${opt('hour', 23, '🌙 밤')}<label class="muted" style="font-size:13px"><input type="checkbox" id="fdFreeze" ${f.freeze ? 'checked' : ''}> 시간 고정</label></div>
+      <b>교통량</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('traffic', 0, '없음')}${opt('traffic', 10, '적음')}${opt('traffic', 24, '보통')}${opt('traffic', 45, '많음')}</div>
+      <b>출발 위치</b> <small class="muted">(지도를 클릭하세요)</small><canvas id="fdMap" width="480" height="480" style="width:100%;max-width:340px;display:block;margin:6px auto 12px;border-radius:10px;cursor:crosshair"></canvas>
+      <div class="row"><button class="btn pri" id="fdGo" style="flex:1">🚗 출발!</button><button class="btn" id="fdX">닫기</button></div>`);
+    const c = $('fdMap'), ctx = c.getContext('2d'), draw = () => { const t = drawMap(ctx, 480, { mini: true }); const [x, y] = t.M(f.x, f.z); ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fillStyle = '#ffb020'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.stroke(); };
+    draw();
+    c.onclick = e => { const r = c.getBoundingClientRect(), sc = 480 / (2 * EXT + 60); f.x = (e.clientX - r.left) / r.width * 480 / sc - EXT - 30; f.z = (e.clientY - r.top) / r.height * 480 / sc - EXT - 30; draw(); };
+    $('modalBox').querySelectorAll('[data-fd]').forEach(b => b.onclick = () => { f[b.dataset.fd] = +b.dataset.v; this.freeDriveModal(); });
+    $('fdFreeze').onchange = e => { f.freeze = e.target.checked; };
+    $('fdX').onclick = () => this.closeModal();
+    $('fdGo').onclick = () => this.startFreeDrive();
+  },
+  startFreeDrive() {
+    const f = this.fd; this.closeModal(); initAudio(); startSchoolWorld();
+    for (const c of cars) c.dispose(); cars = []; spawnCars(f.traffic);
+    G.hour = f.hour; G.freezeHour = f.freeze; applyTime(G.hour);
+    const car = f.car === 0 ? { id: 0, model: 'avante', color: 0xf4f4f6, km: 0 } : SCHOOL.cars.find(c => c.id === f.car);
+    startCar(car, { x: f.x, z: f.z }); toast('🚗 자유주행 시작! T: 자율주행 · C: 카메라 · Esc: 메뉴', 'gold');
+  },
+
   // --- 운전교실
   schoolModal() {
     let h = `<h2>🎓 운전교실</h2><p class="muted" style="margin-top:0">교시를 차례로 통과하면 면허를 취득해요. 면허가 있으면 경영 모드에서 직접 운전 팁이 늘어납니다.</p>`;
