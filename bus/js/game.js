@@ -179,6 +179,7 @@ function startCompany(name, saved) {
     for (const [ax, az] of anchors) { let best = null, bd = 1e9; for (const s of STOPS) { if (ids.includes(s.id)) continue; const d = Math.hypot(s.mid.x - ax, s.mid.z - az); if (d < bd) { bd = d; best = s; } } ids.push(best.id); }
     const r = addRoute('시범 순환', ROUTE_COLORS[0], ids, true); addBus('city', r.id, true);
   }
+  if (!saved) G.speed = 10;
   spawnCars(30); setHQName(G.name); applyTime(G.hour);
 }
 function startSchoolWorld() { resetWorld(); G = newState('운전교실', true); G.hour = 10; spawnCars(24); applyTime(G.hour); setHQName('운전교실'); }

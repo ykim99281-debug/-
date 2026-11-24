@@ -26,7 +26,7 @@ function startManual(bus, lesson) {
   Object.assign(P, { active: true, paused: false, done: false, x: a.x, z: a.z, h: a.yaw, v: a.v, steer: 0, s: a.s, si: a.si, score: 100, comfort: 100, lesson: lesson || null, tick: 0, cd: {}, shake: 0, inNode: false, served: 0, graded: false, boarded: 0, t: 0, pens: {}, hornN: 0, camN: 0, revWait: false, lastV: a.v, grade: '', taskDone: {}, missed: 0, perfect: 0, ending: 0 });
   a.v = 0; a.hold = false; a.arrived = false; P.doorOpen = bus.doorGoal > 0.5; if (!P.doorOpen) bus.doorGoal = 0;
   P.cruise = 0; P.mode = 1; P.lights = 0; P.fuel = 0; P.earn = 0; P.free = !!bus.isCar; P.auto = false; P.zoom = 1; P.stopInfo = null; P.finishing = false;
-  P.camH = P.h; P.cam = 0; G.speed = 1; G.state = 'drive'; if (!chev) initGuides();
+  P.camH = P.h; P.cam = 0; G.prevSpeed = G.speed; G.speed = 1; G.state = 'drive'; if (!chev) initGuides();
   chev.visible = beacon.visible = parkBox.visible = !P.free;
   UI.showDrive(); sfx('start');
 }
@@ -101,7 +101,7 @@ function stopManual(silent) {
   else {
     const r = routeById(b.routeId); if (r) { const pr = projectPath(a.path, P.x, P.z); a.s = pr.s; a.v = 0; a.si = a.nearestStop(); a.hold = false; a.arrived = false; b.phase = 'run'; b.doorGoal = 0; a.pose(0); }
   }
-  camera.near = 0.5; camera.updateProjectionMatrix();
+  camera.near = 0.5; camera.updateProjectionMatrix(); if (!G.school) G.speed = G.prevSpeed || 1;
   G.state = G.school ? 'school' : 'company';
   if (!silent) { if (G.school) UI.showTitle(); else UI.showMgmt(); }
 }

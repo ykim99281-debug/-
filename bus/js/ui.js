@@ -82,7 +82,7 @@ const UI = {
   // --- 상단바
   initTop() {
     $('topbar').innerHTML = `<span class="co" id="tCo"></span><span class="stat" id="tMoney"></span><span class="stat" id="tLv"></span><span class="stat" id="tRep"></span><span class="stat" id="tRate"></span><span class="stat" id="tPay"></span><span class="stat" id="tTime"></span><span class="sp"></span>
-      <span class="spd">${[1, 2, 4].map(x => `<button data-sp="${x}">${x}×</button>`).join(' ')}</span><button class="btn sm" id="tbWallet">👛 <span id="tWal"></span></button><button class="btn sm" id="tbSave">💾 저장</button><button class="btn sm" id="tbMenu">메뉴</button>`;
+      <span class="spd">${[1, 2, 4, 10].map(x => `<button data-sp="${x}">${x}×</button>`).join(' ')}</span><button class="btn sm" id="tbWallet">👛 <span id="tWal"></span></button><button class="btn sm" id="tbSave">💾 저장</button><button class="btn sm" id="tbMenu">메뉴</button>`;
     $('topbar').querySelectorAll('[data-sp]').forEach(b => b.onclick = () => { G.speed = +b.dataset.sp; this.refreshTop(); });
     $('tbWallet').onclick = () => this.walletModal('wallet');
     $('tbSave').onclick = () => { saveCompany(); toast('저장했어요', 'good'); }; $('tbMenu').onclick = () => { saveCompany(); this.showTitle(); };

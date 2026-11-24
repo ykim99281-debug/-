@@ -70,7 +70,7 @@ let prev = performance.now(), fpsT = 0;
 function frame(now) {
   const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
   const active = P.active;
-  if (!(active && P.paused)) updateWorld(active ? dt : dt * (G.state === 'company' ? G.speed : 1));
+  if (!(active && P.paused)) { const sdt = active ? dt : dt * (G.state === 'company' ? G.speed : 1), n = Math.max(1, Math.ceil(sdt / 0.1)); for (let i = 0; i < n; i++) updateWorld(sdt / n); }
   if (active) { updatePlayer(dt); driveCamera(dt); if ((fpsT -= dt) < 0) { fpsT = 0.1; UI.updateHUD(); } } else orbit(dt);
   const fx = active ? P.x : CAM.target.x, fz = active ? P.z : CAM.target.z;
   if (world.sunDir) { sun.position.set(fx + world.sunDir.x, world.sunDir.y, fz + world.sunDir.z); sun.target.position.set(fx, 0, fz); sun.target.updateMatrixWorld(); }
