@@ -212,7 +212,7 @@ const rawDev=()=>pts('dev')/10*(1+(hasT('agile')?.15:0)+(hasT('auto')?.15:0))*te
 const maintLoad=()=>liveN()*3.5*(G.execs.coo?.8:1);
 const devRate=()=>{const r=rawDev();return Math.max(r*.15,r-maintLoad());};
 const stretch=()=>{const n=liveN();return n?Math.min(1,(pts('dev')+pts('design')*.5)/(n*45)):1;};
-const salFor=(role,skill)=>Math.round(ROLES[role].base*(.4+skill/70)/12/1e4)*1e4;
+const salFor=(role,skill)=>Math.round(ROLES[role].base*Math.pow(1.03,G.d/360)*(.4+skill/70)/12/1e4)*1e4;
 const perkCost=()=>Object.keys(PERKS).reduce((s,k)=>s+PERKS[k].c[G.perks[k]],0);
 const perkMorale=()=>Object.keys(PERKS).reduce((s,k)=>s+PERKS[k].m[G.perks[k]],0)+(G.execs.chro?5:0)+OPTIONS[G.options].m;
 const assets=()=>OFFICES[G.office].own?G.hqValue:0;
@@ -295,7 +295,7 @@ function tickDay(){
   const share=T.max*Math.pow(p.q/100,1.6)*Math.pow(clamp(p.aw,0,100)/100,.8)*pf*Math.pow(p.sat/100,1.2)/(1+compPress(p))*(1+G.acqBonus);
   const tgt=Math.min(mk*share,T.sc?salesP*T.sc/live.length:Infinity);p.users+=(tgt-p.users)*(tgt>p.users?.03:.015);if(p.users<.5&&tgt<.5)p.users=0;
   const rev=p.users*p.price/30,cogs=p.users*T.unit*(T.sw&&hasT('cloud')?.8:1)/30;
-  G.cash+=rev-cogs;G.mon.rev+=rev;G.mon.cogs+=cogs;p.rev+=rev;
+  G.cash+=rev-cogs;p.mrev=(p.mrev||0)+rev;G.mon.rev+=rev;G.mon.cogs+=cogs;p.rev+=rev;
   const gain=(G.execs.cmo?1.25:1)*(.012*Math.pow(salesP/live.length,.7)+campAw+8*(p.users/mk)*(p.sat/100)+G.brand*.004);
   p.aw=clamp(p.aw+gain-p.aw*(T.decay||.01),0,Math.max(5,Math.min(100,(4*Math.pow(salesP,.6)+G.brand*.5)/Math.pow(live.length,.3))));
   p.bugs=clamp(p.bugs+.05,0,100);});
@@ -333,6 +333,7 @@ function monthEnd(){
  const profit=m.rev-m.cogs-m.opex-m.mkt-m.rd-m.int-m.oth;
  G.last={rev:m.rev,profit,cogs:m.cogs};
  G.yearProfit+=profit;
+ G.products.forEach(p=>{if(p.state==='live'){p.mh=p.mh||[];p.mh.push(p.mrev||0);if(p.mh.length>12)p.mh.shift();p.mrev=0;}});
  G.val=value();
  G.hist.push({d:G.d,rev:m.rev,cogs:m.cogs,profit,cash:G.cash,val:G.val,emps:G.emps.length,opex:m.opex,mkt:m.mkt,rd:m.rd,int:m.int,oth:m.oth});
  if(G.hist.length>600)G.hist.shift();
@@ -370,8 +371,11 @@ function corpTax(p){let t=0,prev=0;for(const [lim,r] of [[2e8,.09],[200e8,.19],[
 function netWorth(){return G.own*capValue()+G.wealth;}
 function checkAch(){ACH.forEach(a=>{if(!G.ach[a.k]&&a.c()){G.ach[a.k]=G.d;sfx.good();log('🏅 업적 달성: '+a.n,'g');toast('🏅 '+a.n);}});}
 function checkOffers(){}
+function scoreCard(){const yrs=G.d/360,nw=netWorth();const sc=Math.round(Math.log10(Math.max(1e6,nw))*100+Object.keys(G.ach).length*15+G.emps.length*.5+G.stats.bestRev/1e8);
+ const grade=nw>=1e13?'S+':nw>=1e12?'S':nw>=1e11?'A':nw>=1e10?'B':nw>=1e9?'C':'D';
+ return '<table><tr><td>경영 기간</td><td class="n">'+Math.floor(yrs)+'년 '+Math.floor(G.d%360/30)+'개월</td></tr><tr><td>최종 기업가치</td><td class="n">'+won(G.val)+'</td></tr><tr><td>창업자 지분 / 배당</td><td class="n">'+(G.own*100).toFixed(1)+'% / '+won(G.wealth)+'</td></tr><tr><td><b>개인 자산</b></td><td class="n"><b>'+won(nw)+'</b></td></tr><tr><td>최고 월매출</td><td class="n">'+won(G.stats.bestRev)+'</td></tr><tr><td>누적 채용 / 퇴사</td><td class="n">'+G.stats.hired+' / '+G.stats.quit+'</td></tr><tr><td>업적</td><td class="n">'+Object.keys(G.ach).length+'/'+ACH.length+'</td></tr><tr><td>출시 제품</td><td class="n">'+G.products.length+'개</td></tr><tr><td>점수 / 등급</td><td class="n"><b class="yl">'+sc+'점 · '+grade+'</b></td></tr></table>';}
 function gameOver(t,msg){G.over=1;paused=true;localStorage.removeItem(SAVE_KEY);
- modal('💀 게임 종료 - '+t,msg+'<br><br>경영 기간: '+Math.floor(G.d/360)+'년 '+Math.floor(G.d%360/30)+'개월<br>최종 기업가치: '+won(G.val)+'<br>개인 자산: '+won(netWorth()),
+ modal('💀 게임 종료 - '+t,msg+'<br><br>'+scoreCard(),
   [{l:'새 게임',f:()=>showStart()}]);}
 
 /* ================= 이벤트 ================= */
@@ -406,6 +410,15 @@ const EVENTS=[
  {w:2,ok:()=>G.brand>25&&G.cash>5e8&&G.glob<.4,f:()=>({t:'🌏 해외 진출 제안',x:'해외 파트너가 현지 진출을 제안했습니다. 3억 원을 투자하면 시장이 영구적으로 커집니다.',ch:[{l:'투자 (3억)',f:()=>{spend(3e8,'oth');G.glob+=.1;G.brand=clamp(G.brand+2,0,100)}},{l:'거절',cls:'g'}]})},
  {w:1,ok:()=>G.val>5e10&&!G.public&&G.d>720,f:()=>{const price=G.val*1.35;return {t:'🏢 대기업 인수 제안',x:'대기업이 회사를 <b>'+won(price)+'</b>에 인수하겠다고 제안했습니다. 수락하면 게임이 끝나며 지분 '+Math.round(G.own*100)+'% 에 해당하는 금액을 받습니다.',ch:[
    {l:'매각 (엑싯)',cls:'y',f:()=>{G.wealth+=price*G.own;gameOver('엑싯 성공','회사를 '+won(price)+'에 매각했습니다! 창업자 지분 수익: '+won(price*G.own));}},{l:'거절하고 계속',cls:'g'}]}}}
+
+ ,{w:2,ok:()=>G.emps.some(e=>!e.founder&&e.morale<45&&G.crunch||e.morale<30),f:()=>{const e=pick(G.emps.filter(e=>!e.founder&&e.morale<50));if(!e)return;const c=e.sal*2;
+  return {t:'🥵 번아웃',x:e.name+'('+ROLES[e.role].n+')이(가) 번아웃을 호소합니다.',ch:[{l:'유급 휴가 ('+won(c)+')',f:()=>{spend(c,'opex');e.morale=75}},{l:'버티라고 한다',cls:'r',f:()=>{e.morale-=15;if(Math.random()<.4){G.emps.splice(G.emps.indexOf(e),1);G.stats.quit++;log(e.name+' 퇴사 (번아웃)','b')}}}]}}}
+ ,{w:2,ok:()=>G.emps.filter(e=>!e.founder&&e.skill>65).length>0,f:()=>{const e=pick(G.emps.filter(e=>!e.founder&&e.skill>65));return {t:'🙋 승진·인상 요구',x:e.name+'('+ROLES[e.role].n+', 능력 '+Math.round(e.skill)+')이(가) 성과에 맞는 보상을 요구합니다.',ch:[{l:'15% 인상',f:()=>{e.sal=Math.round(e.sal*1.15/1e4)*1e4;e.morale=Math.min(100,e.morale+12)}},{l:'거절',cls:'g',f:()=>{e.morale-=12}}]}}}
+ ,{w:2,ok:()=>G.emps.length>8,f:()=>{const a=pick(G.emps.filter(e=>!e.founder)),b=pick(G.emps.filter(e=>!e.founder&&e!==a));if(!a||!b)return;
+  return {t:'💢 팀 내 갈등',x:a.name+'와(과) '+b.name+' 사이에 마찰이 생겼습니다.',ch:[{l:'면담·조정 (효과: 사기 유지)',f:()=>{}},{l:'방치',cls:'r',f:()=>{a.morale-=10;b.morale-=10}}]}}}
+ ,{w:2,ok:()=>G.emps.length>3,f:()=>{const e=pick(G.emps.filter(e=>!e.founder));if(!e)return;return {t:'🎉 직원 경사',x:e.name+'의 경사 소식! 회사가 축하합니다.',ch:[{l:'축하금 100만원',f:()=>{spend(1e6,'opex');e.morale=Math.min(100,e.morale+15);G.moraleMod+=2}},{l:'말로만 축하',cls:'g',f:()=>{e.morale=Math.min(100,e.morale+3)}}]}}}
+ ,{w:1,ok:()=>G.emps.some(e=>e.skill>70&&!e.founder)&&G.brand<60,f:()=>({t:'🎤 업계 컨퍼런스 연사 초청',x:'우리 핵심 인재가 컨퍼런스 연사로 초청받았습니다.',ch:[{l:'참석',f:()=>{G.brand=clamp(G.brand+3,0,100)}}]})}
+ ,{w:2,ok:()=>livePs().length>0&&G.comps.length>0,f:()=>{const k=pick(G.comps);const p=pick(livePs());return {t:'💥 가격 전쟁',x:k.name+'이(가) '+PT[k.type].n+' 가격을 대폭 인하했습니다.',ch:[{l:'프로모션으로 대응 ('+won(curRev()*.3+5e6)+')',f:()=>{spend(curRev()*.3+5e6,'mkt');livePs().forEach(q=>q.aw=clamp(q.aw+8,0,100))}},{l:'무대응',cls:'g',f:()=>{livePs().forEach(q=>{if(q.type===k.type)q.aw=Math.max(0,q.aw-15)})}}]}}}
 ];
 function rollEvent(){if(Math.random()>.45)return;
  const pool=EVENTS.filter(e=>e.ok());const tot=pool.reduce((s,e)=>s+e.w,0);let r=Math.random()*tot,ev=pool[0];
@@ -442,15 +455,15 @@ const ACT={
  license:d=>{const t=TECH[d.k];const c=t.c*3e5;if(G.cash<c)return toast('자금 부족',1);spend(c,'rd');G.techs[d.k]=1;if(G.research&&G.research.key===d.k)G.research=null;log('📄 기술 라이선스 구매: '+t.n,'g');},
  camp:d=>{const c=CAMPS[d.k];const mkE=1+Math.min(.5,pts('sales')/600);if(G.cash<c.c)return toast('자금 부족',1);spend(c.c,'mkt');
   G.camps.push({k:d.k,left:c.days,b:c.brand/c.days*mkE*(hasT('data')?1.2:1),a:c.aw*mkE/c.days*3});log('📣 '+c.n+' 시작');},
- loan:d=>{const a=Math.min(+d.v,loanLimit());if(a<=0)return toast('한도 초과',1);const r=loanRate();G.cash+=a;G.loans.push({id:G.nid++,amt:a,rate:r});log('🏦 대출 '+won(a)+' (연 '+(r*100).toFixed(1)+'%)');},
- repay:d=>{let a=d.v==='all'?Infinity:+d.v;a=Math.min(a,G.cash);if(a<=0)return toast('상환 불가',1);
+ loan:d=>{const a=Math.min(+d.v,loanLimit());if(!(a>0))return toast('한도 초과',1);const r=loanRate();G.cash+=a;G.loans.push({id:G.nid++,amt:a,rate:r});log('🏦 대출 '+won(a)+' (연 '+(r*100).toFixed(1)+'%)');},
+ repay:d=>{let a=d.v==='all'?Infinity:+d.v;a=Math.min(a,G.cash);if(!(a>0))return toast('상환 불가',1);
   G.loans.sort((x,y)=>y.rate-x.rate);for(const l of G.loans){const p=Math.min(a,l.amt);l.amt-=p;a-=p;G.cash-=p;if(a<=0)break;}G.loans=G.loans.filter(l=>l.amt>1);log('💸 대출 상환');},
  round:d=>{const R=ROUNDS[d.k];const o=roundOffer(d.k);if(!o.ok)return toast(o.why,1);
   const run=()=>{G.cash+=o.raise;G.own*=(1-R.pct);G.rounds[d.k]=G.d;if(d.k==='ipo'){G.public=true;G.sf=1;G.totalShares*=1/(1-R.pct);}else G.totalShares*=1/(1-R.pct);
    G.brand=clamp(G.brand+(d.k==='ipo'?8:2),0,100);log('💎 '+R.n+' 성공! '+won(o.raise)+' 조달 (기업가치 '+won(o.val)+', 지분 '+Math.round(R.pct*100)+'% 희석)','g');};
   modal(R.n,'기업가치 <b>'+won(o.val)+'</b>로 지분 '+Math.round(R.pct*100)+'%를 매각하여 <b>'+won(o.raise)+'</b>를 조달합니다.<br><span class="mu">창업자 지분: '+(G.own*100).toFixed(1)+'% → '+(G.own*(1-R.pct)*100).toFixed(1)+'%</span>',[{l:'진행',f:run},{l:'취소',cls:'g'}]);},
- divid:d=>{const a=Math.min(+d.v,G.cash);if(a<=0||G.cash<a)return toast('자금 부족',1);G.cash-=a;G.wealth+=a*G.own;log('💵 배당 '+won(a)+' (창업자 몫 '+won(a*G.own)+')');},
- buyback:d=>{if(!G.public)return;const a=Math.min(+d.v,G.cash);if(G.cash<a||a<=0)return toast('자금 부족',1);const x=a/capValue();G.cash-=a;G.own=Math.min(1,G.own/(1-x));log('🔁 자사주 매입 '+won(a),'');},
+ divid:d=>{const a=Math.min(+d.v,G.cash);if(!(a>0)||G.cash<a)return toast('자금 부족',1);G.cash-=a;G.wealth+=a*G.own;log('💵 배당 '+won(a)+' (창업자 몫 '+won(a*G.own)+')');},
+ buyback:d=>{if(!G.public)return;const a=Math.min(+d.v,G.cash);if(G.cash<a||!(a>0))return toast('자금 부족',1);const x=a/capValue();G.cash-=a;G.own=Math.min(1,G.own/(1-x));log('🔁 자사주 매입 '+won(a),'');},
  issue:()=>{if(!G.public)return;const a=capValue()*.05*.97;G.cash+=a;G.own*=.95;G.totalShares*=1/.95;log('📄 유상증자 5% ('+won(a)+')');},
  office:d=>{const i=+d.i,o=OFFICES[i];if(i<=G.office)return;if(G.cash<o.fee)return toast('자금 부족',1);
   if(OFFICES[G.office].own){G.cash+=G.hqValue*.95;G.hqValue=0;}
@@ -516,10 +529,12 @@ function vOverview(e){
  '<div class="card"><div class="row sb"><h3>📈 추이</h3><span class="row">'+[['cash','현금'],['rev','월매출'],['profit','월순이익'],['val','기업가치'],['emps','직원수']].map(x=>'<button class="b s '+(chartKey===x[0]?'':'g')+'" data-a="chartk" data-k="'+x[0]+'">'+x[1]+'</button>').join('')+'</span></div><canvas id="cv" width="1000" height="260"></canvas></div>'+
  '<div class="grid"><div class="card"><h3>🏅 업적 ('+Object.keys(G.ach).length+'/'+ACH.length+')</h3>'+ACH.map(a=>'<span class="tag" style="margin:2px;'+(G.ach[a.k]?'color:#fbbf24;border-color:#7a6320':'')+'">'+a.n+'</span>').join('')+'</div>'+
  '<div class="card"><h3>🗓 최근 6개월 손익</h3><div class="tblw"><table><tr><th>월</th><th class="n">매출</th><th class="n">순이익</th><th class="n">현금</th></tr>'+h.slice(-6).reverse().map(x=>'<tr><td>'+fmtDate(x.d).slice(0,7)+'</td><td class="n">'+won(x.rev)+'</td><td class="n">'+sgn(x.profit)+'</td><td class="n">'+won(x.cash)+'</td></tr>').join('')+'</table></div>'+
- '<div class="row" style="margin-top:8px">'+btn('💾 저장','save',{},'g s')+btn('🔄 새로 시작','reset',{},'g s')+'</div></div></div>';
+ '<div class="row" style="margin-top:8px">'+btn('💾 저장','save',{},'g s')+btn('📋 성적표','card',{},'g s')+btn('🏁 은퇴','retire2',{},'g s')+btn('🔄 새로 시작','reset',{},'g s')+'</div></div></div>';
 }
 ACT.setting=d=>{SET[d.k]=!SET[d.k];try{localStorage.setItem('ct_set',JSON.stringify(SET))}catch(e){}};
 function vHelp(){return '<div class="card help"><h3>❓ 플레이 가이드</h3><ol><li><b>첫 제품</b>: 제품 탭에서 모바일 앱 개발을 시작하고, 개발자·디자이너를 채용하세요.</li><li><b>출시 후</b>: 영업(인지도)·고객지원(만족도)이 매출을 좌우합니다. 업데이트로 버그를 줄이고 품질을 올리세요.</li><li><b>현금 관리</b>: 월급·임대료는 매월 말 빠져나갑니다. 월 순이익이 마이너스면 투자·대출을 고려하세요. 현금이 3개월 연속 마이너스면 파산입니다.</li><li><b>성장</b>: 사무실이 가득 차면 이전하고, 15명이 넘으면 매니저, 제품이 늘면 개발자를 더 뽑으세요(유지보수 부담).</li><li><b>기술</b>: 연구원을 채용해 클라우드·하드웨어·AI를 해금하면 고수익 제품을 만들 수 있습니다.</li><li><b>투자</b>: 엔젤 → 시리즈 A/B/C → IPO. 지분이 희석되지만 큰 자금을 얻습니다.</li><li><b>목표</b>: 기업가치 1조 원. 중간에 대기업 인수 제안(엑싯)이 올 수도 있습니다.</li></ol></div><div class="card"><h3>⚙️ 설정</h3><div class="row">'+btn('월간 보고서 '+(SET.report?'ON':'OFF'),'setting',{k:'report'},'g s')+btn('효과음 '+(SET.sound?'ON':'OFF'),'setting',{k:'sound'},'g s')+'</div><p class="mu">단축키: Space 일시정지 · 1~4 속도 · 보고서는 속도 1~2배일 때만 팝업됩니다.</p></div>';}
+ACT.retire2=()=>{modal('🏁 은퇴(경영 종료)','정말 경영을 마무리하고 성적표를 확인할까요?',[{l:'은퇴하기',cls:'y',f:()=>gameOver('은퇴','창업자로서의 여정을 마칩니다.')},{l:'계속 경영',cls:'g'}]);};
+ACT.card=()=>{modal('📋 현재 성적표',scoreCard(),[{l:'닫기'}]);};
 ACT.chartk=d=>{chartKey=d.k};
 function drawChart(){const cv=$('#cv');if(!cv)return;const c=cv.getContext('2d');const W=cv.width,H=cv.height;c.clearRect(0,0,W,H);
  const arr=G.hist.map(x=>({d:x.d,v:x[chartKey]}));arr.push({d:G.d,v:chartKey==='cash'?G.cash:chartKey==='val'?G.val:chartKey==='emps'?G.emps.length:chartKey==='rev'?estimate().rev:estimate().profit});
@@ -531,6 +546,7 @@ function drawChart(){const cv=$('#cv');if(!cv)return;const c=cv.getContext('2d')
  c.strokeStyle='#4f8cff';c.lineWidth=3;c.beginPath();arr.forEach((a,i)=>i?c.lineTo(X(i),Y(a.v)):c.moveTo(X(i),Y(a.v)));c.stroke();
  c.fillStyle='#8995b4';c.fillText(fmtDate(arr[0].d).slice(0,7),L,H-4);c.fillText(fmtDate(arr[arr.length-1].d).slice(0,7),W-pad-70,H-4);}
 
+function spark(a){if(!a||!a.length)return '<span class="mu">-</span>';const mx=Math.max(...a,1),c='▁▂▃▄▅▆▇█';return a.map(v=>c[Math.min(7,Math.floor(v/mx*7.99))]).join('');}
 function vProducts(){
  let h='<div class="card"><h3>🆕 신제품 개발</h3><div class="row">'+Object.keys(PT).map(k=>{const T=PT[k],lock=T.tech&&!hasT(T.tech);
   return '<button class="b '+(UI.ntype===k?'':'g')+'" data-a="ntype" data-t="'+k+'">'+T.ic+' '+T.n+(lock?' 🔒':'')+'</button>'}).join('')+'</div>';
@@ -545,7 +561,7 @@ function vProducts(){
   h+='<div class="card"><div class="row sb"><h3>'+T.ic+' '+p.name+' <span class="tag">v'+p.ver+'</span></h3><span class="mu">누적 '+won(p.rev)+'</span></div>'+
   '<table><tr><td class="mu">'+(p.type==='hw'?'월 판매량':'이용자')+'</td><td class="n"><b>'+num(p.users)+'</b></td></tr>'+
   (PT[p.type].sc?'<tr><td class="mu">영업 한계</td><td class="n">'+num(pts('sales')*PT[p.type].sc/Math.max(1,liveN()))+'</td></tr>':'')+'<tr><td class="mu">월 매출 / 이익</td><td class="n">'+won(p.users*p.price)+' / '+sgn(mp)+'</td></tr>'+
-  '<tr><td class="mu">품질</td><td>'+bar(p.q,100)+'</td></tr><tr><td class="mu">인지도</td><td>'+bar(p.aw,100,'p')+'</td></tr>'+
+  '<tr><td class="mu">월매출 추이</td><td style="letter-spacing:1px;color:#4f8cff">'+spark(p.mh)+'</td></tr><tr><td class="mu">품질</td><td>'+bar(p.q,100)+'</td></tr><tr><td class="mu">인지도</td><td>'+bar(p.aw,100,'p')+'</td></tr>'+
   '<tr><td class="mu">만족도</td><td>'+bar(p.sat,100,'g')+'</td></tr><tr><td class="mu">버그</td><td>'+bar(p.bugs,100,p.bugs>50?'r':'y')+'</td></tr>'+
   '<tr><td class="mu">가격(기준 '+won(T.price)+')</td><td class="n">'+btn('−','price',{id:p.id,dir:-1},'g s')+' <b>'+won(p.price)+'</b> '+btn('+','price',{id:p.id,dir:1},'g s')+'</td></tr></table>'+
   (p.upd?'<div class="mu">🔧 업데이트 개발 중</div>'+bar(p.upd.prog,p.upd.need,'y'):'')+
