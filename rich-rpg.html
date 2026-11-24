@@ -245,10 +245,31 @@ function rank(n){let r=0;TITLES.forEach((x,i)=>{if(n>=x[0])r=i});return r}
 /* ============ 상태 ============ */
 const KEY='richrpg98_v1';
 let S=null,toastT=null;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function load(){try{const j=localStorage.getItem(KEY);if(j){const o=JSON.parse(j);return Object.assign({alt:{},props:{},loan:0,useLoan:false,co:null,npc:{},tab:'stock'},o)}}catch(e){}return null}
+const ACH=[
+['stk','첫 투자','주식을 처음 보유했다',()=>Object.keys(S.h).length>0],
+['m1','저금통 부자','총자산 100만원',()=>nw()>=1e6],
+['m2','억대 자산가','총자산 1억원',()=>nw()>=1e8],
+['m3','10억 클럽','총자산 10억원',()=>nw()>=1e9],
+['m4','백억 자산가','총자산 100억원',()=>nw()>=1e10],
+['m5','재계 거물','총자산 1000억원',()=>nw()>=1e11],
+['imf','IMF를 버텼다','1998년 말까지 주식을 들고 있었다',()=>S.t>=11&&S.t<=14&&Object.keys(S.h).length>0],
+['gold','금수저(?)','금을 보유했다',()=>!!S.alt.gd],
+['usd','환테크','달러를 보유했다',()=>!!S.alt.us],
+['btc','코인 입문','비트코인을 보유했다',()=>!!S.alt.bt],
+['house','내 집 마련','부동산을 보유했다',()=>Object.keys(S.props).length>0],
+['land','건물주','부동산 3채 이상 보유',()=>Object.values(S.props).reduce((a,h)=>a+h.q,0)>=3],
+['co','창업가','회사를 세웠다',()=>!!S.co],
+['ipo','상장사 대표','회사를 IPO시켰다',()=>!!(S.co&&S.co.ipo)],
+['net','인맥왕','인맥 60 이상',()=>netStat()>=60],
+['army','대한민국 건아','군 복무를 마쳤다',()=>S.armyDone&&S.army===0],
+['wed','가정을 이루다','결혼했다',()=>!!S.married],
+['real','실질 부자','물가 반영 자산 1억원(1998년 원)',()=>nw()*100/cpi[S.t]>=1e8]
+];
+function checkAch(){ACH.forEach(a=>{if(S.ach[a[0]]===undefined&&a[3]()){S.ach[a[0]]=S.t;if(S.log)S.log.push({txt:'🏆 업적 달성: '+a[1]+' — '+a[2],r:1})}})}
+function save(){try{checkAch()}catch(e){}try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function load(){try{const j=localStorage.getItem(KEY);if(j){const o=JSON.parse(j);return Object.assign({ach:{},army:0,armyDone:false,armyBusy:false,married:false,kids:0,alt:{},props:{},loan:0,useLoan:false,co:null,npc:{},tab:'stock'},o)}}catch(e){}return null}
 function newGame(name){
- S={name:name||'나',t:0,cash:30000,dep:0,h:{},int:5,mental:80,acted:false,tips:[],log:[],nw:[30000],q:{},locked:false,contrib:30000,over:false,msg:'',alt:{},props:{},loan:0,useLoan:false,co:null,npc:{},tab:'stock'};
+ S={name:name||'나',t:0,cash:30000,dep:0,h:{},int:5,mental:80,acted:false,tips:[],log:[],nw:[30000],q:{},locked:false,contrib:30000,over:false,msg:'',ach:{},army:0,armyDone:false,armyBusy:false,married:false,kids:0,alt:{},props:{},loan:0,useLoan:false,co:null,npc:{},tab:'stock'};
  save();
 }
 function price(id,t){return P[id][t==null?S.t:t]}
@@ -263,6 +284,7 @@ function altBuy(id){
  if(p==null)return toast('아직 거래할 수 없어. (2013년 7월부터)');
  if(a.minInt&&S.int<a.minInt)return toast('분석력 '+a.minInt+'이 필요해.');
  const amt=Math.min(S.cash,Math.floor(parseInt(S.q[id])||10000));if(amt<=0)return toast('돈이 없어.');
+ if(id==='bt'){const cur=S.alt.bt?S.alt.bt.q*p:0;if(cur+amt>nw()*.3)return toast('코인은 총자산의 30%까지만 투자할 수 있어. (분산투자!)')}
  const q=amt*(1-a.fee(S.t))/p;S.cash-=amt;const h=S.alt[id]||(S.alt[id]={q:0,cost:0});h.q+=q;h.cost+=amt;
  save();toast(a.name+' '+won(amt)+' 매수 ('+q.toFixed(4)+a.unit+')');
 }
@@ -360,7 +382,16 @@ function advance(){
  S.t++;const t=S.t,{y,m}=ymOf(t),ev=[];
  STOCKS.forEach(s=>(s.splits||[]).forEach(([d,n])=>{if(ti(d)===t&&S.h[s.id]){S.h[s.id].q*=n;ev.push({txt:'✂ '+s.name+' '+n+':1 액면분할! 보유 주식이 '+n+'배로 늘었다.',r:1})}}));
  S.dep=Math.round(S.dep*(1+(RATE[y]||2)/1200));
- const inc=income(t);S.cash+=inc;S.contrib+=inc;
+ let inc=income(t);S.armyBusy=false;
+ if(t===120&&!S.armyDone){S.army=21;S.armyDone=true;ev.push({txt:'🪖 입대! 21개월 군 복무 시작. 휴가(3개월마다) 때만 거래할 수 있다.',r:1})}
+ if(S.army>0){inc=Math.round(80000*wage(t)/100)*100;S.army--;
+  if(S.army===0)ev.push({txt:'🎖 전역! 사회로 복귀한다.',r:1});
+  else if(S.army%3!==0){S.locked=true;S.armyBusy=true;ev.push({txt:'🪖 군 복무 중 (남은 '+S.army+'개월). 거래·행동 불가',r:1})}
+  else ev.push({txt:'🏖 휴가 나왔다! 이번 달은 거래할 수 있다. (남은 '+S.army+'개월)',r:1})}
+ S.cash+=inc;S.contrib+=inc;
+ if(t===252&&!S.married){const c=Math.round(3e7*wage(t));if(confirm('💍 결혼할까요? 결혼 비용 '+won(c)+' (부족분은 대출). 이후 멘탈 회복이 빨라지고 생활비가 듭니다.')){const pay=Math.min(Math.max(0,S.cash),c);S.cash-=pay;S.loan+=c-pay;S.married=true;S.mental=Math.min(100,S.mental+20);ev.push({txt:'💍 결혼했다! 신혼집 대출 포함 '+won(c)+' 지출.',r:1})}}
+ if(t===276&&S.married&&S.kids<1&&confirm('👶 아이를 가질까요? 매달 양육비가 들지만 가족이 생깁니다.')){S.kids++;ev.push({txt:'👶 아이가 태어났다!',r:1})}
+ if(S.married){S.mental=Math.min(100,S.mental+1);const lc=Math.round((200000+S.kids*300000)*wage(t)/100)*100,pay=Math.min(Math.max(0,S.cash),lc);S.cash-=pay}
  const h=HIST[y*100+m];if(h)ev.push({txt:h});
  if(m===2&&ageOf(t)<=25){const g=Math.round(wage(t)*(30000+Math.random()*70000)/1000)*1000;S.cash+=g;S.contrib+=g;ev.push({txt:'🧧 설날 세뱃돈 +'+won(g),r:1})}
  else if(Math.random()<.2){const r=RANDOM[Math.floor(Math.random()*RANDOM.length)].f(S);ev.push({txt:r[0],r:1})}
@@ -392,7 +423,7 @@ function advance(){
  if(pct<=-.15){S.mental-=15;ev.push({txt:'😱 자산이 한 달 새 '+Math.round(-pct*100)+'% 증발! 멘탈 -15',r:1})}
  else if(pct>=.15){S.mental=Math.min(100,S.mental+8);ev.push({txt:'🤩 자산이 한 달 새 '+Math.round(pct*100)+'% 상승! 멘탈 +8',r:1})}
  if(S.mental<=0){S.locked=true;S.mental=25;ev.push({txt:'🌀 멘탈 붕괴… 이번 달은 거래할 수 없다.',r:1})}
- S.log=ev;S.acted=false;S.nw.push(nw());
+ S.log=ev;S.acted=!!S.armyBusy;S.nw.push(nw());
  save();
 }
 function skip(n){for(let i=0;i<n&&!S.over;i++){advance();if(S.t>=N-1)break}render()}
@@ -426,9 +457,9 @@ function stockRow(s){
  +'<button data-a="maxbuy" data-id="'+s.id+'">최대매수('+maxBuy(s.id).toLocaleString()+')</button>'+(h?'<button data-a="maxsell" data-id="'+s.id+'">전량</button>':'')+'</div></div>'
 }
 function tipHtml(id){return S.tips.filter(x=>x.id===id).map(x=>'<span class="tag">'+x.src+': '+(x.up?'▲ 오를 것':'▼ 내릴 것')+' ('+Math.round(x.acc*100)+'%)</span>').join(' ')}
-function tabBar(){const T=[['stock','📈 증권'],['prop','🏠 부동산'],['biz','🏢 회사'],['npc','🤝 인맥'],['alt','💰 금·달러·코인'],['bank','🏦 은행']];
+function tabBar(){const T=[['stock','📈 증권'],['prop','🏠 부동산'],['biz','🏢 회사'],['npc','🤝 인맥'],['alt','💰 금·달러·코인'],['ach','🏆 업적'],['bank','🏦 은행']];
  return'<div class="row" style="margin:12px 0 0">'+T.map(x=>'<button data-a="tab" data-id="'+x[0]+'" '+((S.tab||'stock')===x[0]?'class="pri"':'')+'>'+x[1]+'</button>').join('')+'</div>'}
-function tabBody(){return{stock:tabStock,prop:tabProp,biz:tabBiz,npc:tabNpc,alt:tabAlt,bank:tabBank}[S.tab||'stock']()}
+function tabBody(){return{stock:tabStock,prop:tabProp,biz:tabBiz,npc:tabNpc,alt:tabAlt,ach:tabAch,bank:tabBank}[S.tab||'stock']()}
 function tabStock(){return'<div class="card"><b>📈 종목 시장</b> <span class="mut">(수수료 매수 0.3% / 매도 0.5%)</span>'+STOCKS.map(stockRow).join('')+'</div>'}
 function propRow(p){
  const t=S.t,pr=price(p.id),prev=t>0?P[p.id][t-1]:pr,ch=prev?pr/prev-1:0,h=S.props[p.id],tp=tipHtml(p.id);
@@ -467,6 +498,8 @@ function altRow(a){
  +(h?'<div class="mut">보유 '+h.q.toFixed(4)+a.unit+' · 평가 '+won(hv)+' · <span class="'+(hv>=h.cost?'up':'dn')+'">'+((hv/h.cost-1)*100).toFixed(1)+'%</span></div>':'')
  +'<div class="row" style="margin-top:6px"><input type="number" min="1" data-q="'+a.id+'" value="'+(S.q[a.id]||10000)+'"><button class="buy" data-a="buya" data-id="'+a.id+'">매수(원)</button><button class="sell" data-a="sella" data-id="'+a.id+'">매도(원)</button><button data-a="maxbuya" data-id="'+a.id+'">현금 전액</button>'+(h?'<button data-a="maxsella" data-id="'+a.id+'">전량</button>':'')+'</div></div>'}
 function tabAlt(){return'<div class="card"><b>💰 금·달러·코인</b> <span class="mut">(입력한 금액(원)만큼 사고 팝니다 · 소수점 단위 가능)</span>'+ALT.map(altRow).join('')+'</div>'}
+function tabAch(){const n=Object.keys(S.ach).length;
+ return'<div class="card"><b>🏆 업적</b> <span class="mut">('+n+' / '+ACH.length+')</span>'+ACH.map(a=>{const d=S.ach[a[0]];return'<div class="stock"><b>'+(d!==undefined?'✅ ':'⬜ ')+a[1]+'</b> <span class="mut">'+a[2]+(d!==undefined?' · '+ymOf(d).y+'년 '+ymOf(d).m+'월':'')+'</span></div>'}).join('')+'</div>'}
 function tabBank(){
  const y=ymOf(S.t).y,rr=(RATE[y]||2)-INF[y];
  return'<div class="card"><b>🏦 은행 예금</b> <span class="mut">(연 '+(RATE[y]||2)+'%, 안전자산)</span><div class="mut">올해 물가상승률 '+INF[y]+'% → 실질금리 <b class="'+(rr>=0?'up':'dn')+'">'+(rr>=0?'+':'')+rr.toFixed(1)+'%</b> '+(rr<0?'(예금해도 돈의 가치가 줄어요!)':'')+'</div><div class="row" style="margin-top:8px"><input type="number" min="1" id="dq" value="'+(S.dq||10000)+'"><button data-a="dep">입금</button><button data-a="wd">출금</button><button data-a="depall">현금 전액 입금</button></div></div>'}
@@ -479,12 +512,12 @@ function render(){
  const {y,m}=ymOf(S.t),total=nw(),r=rank(total),age=ageOf(S.t);
  if(S.over){
   const kp=30000*kospi[N-1]/kospi[0];
-  app.innerHTML='<h1>🏁 엔딩 — '+S.name+'의 28년</h1><div class="card"><div class="mut">2025년 12월 최종 자산</div><div class="big">'+won(total)+'</div><p>칭호: <b>'+TITLES[r][1]+'</b></p><p>쓴 돈 빼고 모은 원금(용돈·알바·월급 저축 합계): '+won(S.contrib)+'<br>순수 투자 증식: <b>'+won(total-S.contrib)+'</b></p><p>30,000원을 코스피 지수에 가만히 넣어뒀다면 → '+won(kp)+' (코스피 '+kospi[0]+' → '+kospi[N-1]+')</p><p>💴 물가 반영: 최종 자산은 1998년 원화로 약 <b>'+won(total*100/cpi[N-1])+'</b>. 처음의 3만원은 2025년 가치로 약 '+won(30000*cpi[N-1]/100)+'이었고, 짜장면 한 그릇은 2,500원 → '+won(JJ(N-1))+'가 되었다.</p>'+chart()+'<div class="row" style="margin-top:12px"><button class="pri" data-a="restart">다시 도전</button></div></div>';
+  app.innerHTML='<h1>🏁 엔딩 — '+S.name+'의 28년</h1><div class="card"><div class="mut">2025년 12월 최종 자산</div><div class="big">'+won(total)+'</div><p>칭호: <b>'+TITLES[r][1]+'</b> · 업적 '+Object.keys(S.ach).length+'/'+ACH.length+'개</p><p>쓴 돈 빼고 모은 원금(용돈·알바·월급 저축 합계): '+won(S.contrib)+'<br>저축 대비 증감(결혼·양육비·대출이자 포함): <b>'+won(total-S.contrib)+'</b></p><p>30,000원을 코스피 지수에 가만히 넣어뒀다면 → '+won(kp)+' (코스피 '+kospi[0]+' → '+kospi[N-1]+')</p><p>💴 물가 반영: 최종 자산은 1998년 원화로 약 <b>'+won(total*100/cpi[N-1])+'</b>. 처음의 3만원은 2025년 가치로 약 '+won(30000*cpi[N-1]/100)+'이었고, 짜장면 한 그릇은 2,500원 → '+won(JJ(N-1))+'가 되었다.</p>'+chart()+'<div class="row" style="margin-top:12px"><button class="pri" data-a="restart">다시 도전</button></div></div>';
   return;
  }
  const kc=S.t>0?kospi[S.t]/kospi[S.t-1]-1:0;
  let html='<h1>💰 1998 꼬마 투자왕</h1>'
- +'<div class="card"><div class="row sp"><div><span class="tag">'+y+'년 '+m+'월</span> <span class="tag">'+S.name+' · '+age+'세 '+stage(S.t)+'</span></div><span class="tag">Lv.'+(r+1)+' '+TITLES[r][1]+'</span></div>'
+ +'<div class="card"><div class="row sp"><div><span class="tag">'+y+'년 '+m+'월</span> <span class="tag">'+S.name+' · '+age+'세 '+(S.army>0?'군인 🪖':stage(S.t))+(S.married?' 💍':'')+'👶'.repeat(S.kids||0)+'</span></div><span class="tag">Lv.'+(r+1)+' '+TITLES[r][1]+'</span></div>'
  +'<div class="big" style="margin-top:8px">'+won(total)+'</div>'
  +'<div class="mut">현금 '+won(S.cash)+' · 예금 '+won(S.dep)+' · 주식 '+won(holdVal())+(altVal()?' · 금·달러·코인 '+won(altVal()):'')+(propVal()?' · 부동산 '+won(propVal()):'')+(S.co?' · 회사지분 '+won(coVal()):'')+(S.loan?' · <span class="up">대출 -'+won(S.loan)+'</span>':'')+'</div>'
  +'<div class="mut" style="margin-top:4px">코스피 <b>'+kospi[S.t].toLocaleString()+'</b> <span class="'+(kc>=0?'up':'dn')+'">'+(kc>=0?'▲':'▼')+Math.abs(kc*100).toFixed(1)+'%</span> · 예금금리 연 '+(RATE[y]||2)+'%</div>'
