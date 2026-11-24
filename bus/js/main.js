@@ -1,5 +1,5 @@
 'use strict';
-const CAM = { theta: 0.8, elev: 0.75, dist: 560, target: new THREE.Vector3(0, 0, 0), dragging: false, idle: 0 };
+const CAM = { theta: 0.8, elev: 0.75, dist: 900, target: new THREE.Vector3(0, 0, 0), dragging: false, idle: 0 };
 function resize() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize);
 
@@ -49,20 +49,20 @@ addEventListener('pointerup', endPtr); addEventListener('pointercancel', endPtr)
 addEventListener('pointermove', e => {
   const p = ptrs.get(e.pointerId); if (!p || P.active) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY; CAM.idle = 0;
   if (ptrs.size === 2) {   // 두 손가락: 확대/축소 + 이동
-    const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if (lastPinch) CAM.dist = clamp(CAM.dist * lastPinch / d, 8, 1800); lastPinch = d; panScreen(dx * 0.5, dy * 0.5); return;
+    const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y); if (lastPinch) CAM.dist = clamp(CAM.dist * lastPinch / d, 8, 3200); lastPinch = d; panScreen(dx * 0.5, dy * 0.5); return;
   }
   if (p.b === 2 || p.b === 1 || p.sh) panScreen(dx, dy);
   else { CAM.theta -= dx * 0.006; CAM.elev = clamp(CAM.elev + dy * 0.005, 0.08, 1.5); }
 });
-cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(e.deltaY * 0.0012); if (P.active) P.zoom = clamp(P.zoom * f, 0.45, 3.5); else CAM.dist = clamp(CAM.dist * f, 8, 1800); }, { passive: false });
-cv.addEventListener('dblclick', () => { if (!P.active) { CAM.target.set(0, 0, 0); CAM.dist = 560; CAM.elev = 0.75; UI.follow = null; } });
+cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(e.deltaY * 0.0012); if (P.active) P.zoom = clamp(P.zoom * f, 0.45, 3.5); else CAM.dist = clamp(CAM.dist * f, 8, 3200); }, { passive: false });
+cv.addEventListener('dblclick', () => { if (!P.active) { CAM.target.set(0, 0, 0); CAM.dist = 900; CAM.elev = 0.75; UI.follow = null; } });
 
 // ----- 카메라 (경영 · 타이틀)
 const _f = new THREE.Vector3();
 function orbit(dt) {
   camera.up.set(0, 1, 0);
   const fl = UI.follow && G.buses.includes(UI.follow) ? UI.follow : null;
-  if (G.state === 'title') { CAM.theta += dt * 0.07; CAM.dist = 560; CAM.elev = 0.5; CAM.target.set(0, 0, 0); }
+  if (G.state === 'title') { CAM.theta += dt * 0.07; CAM.dist = 900; CAM.elev = 0.5; CAM.target.set(0, 0, 0); }
   else {
     if (fl) CAM.target.lerp(_f.set(fl.agent.x, 1, fl.agent.z), Math.min(1, dt * 5));
     if (!modalOpen() && !typing({ target: document.activeElement })) {
@@ -70,7 +70,7 @@ function orbit(dt) {
       if (keys.KeyW || keys.ArrowUp) { mx -= st; mz -= ct; } if (keys.KeyS || keys.ArrowDown) { mx += st; mz += ct; } if (keys.KeyA || keys.ArrowLeft) { mx -= ct; mz += st; } if (keys.KeyD || keys.ArrowRight) { mx += ct; mz -= st; }
       if (mx || mz) { CAM.target.x = clamp(CAM.target.x + mx * sp, -EXT - 200, EXT + 200); CAM.target.z = clamp(CAM.target.z + mz * sp, -EXT - 200, EXT + 200); UI.follow = null; CAM.idle = 0; }
       if (keys.KeyQ) CAM.theta += dt * 1.2; if (keys.KeyE) CAM.theta -= dt * 1.2;
-      if (keys.Equal || keys.NumpadAdd) CAM.dist = clamp(CAM.dist * Math.exp(-dt * 1.2), 8, 1800); if (keys.Minus || keys.NumpadSubtract) CAM.dist = clamp(CAM.dist * Math.exp(dt * 1.2), 8, 1800);
+      if (keys.Equal || keys.NumpadAdd) CAM.dist = clamp(CAM.dist * Math.exp(-dt * 1.2), 8, 3200); if (keys.Minus || keys.NumpadSubtract) CAM.dist = clamp(CAM.dist * Math.exp(dt * 1.2), 8, 3200);
     }
     if (G.state === 'company' && !fl && !ptrs.size) { CAM.idle += dt; if (CAM.idle > 12) CAM.theta += dt * 0.03; }
   }
@@ -86,6 +86,7 @@ function frame(now) {
   const active = P.active;
   if (!(active && P.paused)) { const sdt = active ? dt : dt * (G.state === 'company' ? G.speed : 1), n = Math.max(1, Math.ceil(sdt / 0.1)); for (let i = 0; i < n; i++) updateWorld(sdt / n); }
   if (active) { updatePlayer(dt); driveCamera(dt); if ((fpsT -= dt) < 0) { fpsT = 0.1; UI.updateHUD(); } } else orbit(dt);
+  scene.fog.near = active ? 320 : Math.max(320, CAM.dist * 0.6); scene.fog.far = active ? 1800 : Math.max(1800, CAM.dist * 2.8);
   const fx = active ? P.x : CAM.target.x, fz = active ? P.z : CAM.target.z;
   if (world.sunDir) { sun.position.set(fx + world.sunDir.x, world.sunDir.y, fz + world.sunDir.z); sun.target.position.set(fx, 0, fz); sun.target.updateMatrixWorld(); }
   renderer.shadowMap.needsUpdate = true; renderer.render(scene, camera);

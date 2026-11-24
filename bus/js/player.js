@@ -373,7 +373,7 @@ function updateTaxi(dt) {
 }
 function boardPassenger(h) {
   const tx = P.taxi; scene.remove(h.g); tx.hail.splice(tx.hail.indexOf(h), 1); tx.hold = 0;
-  let c = STOPS.filter(s => { const d = Math.hypot(s.mid.x - P.x, s.mid.z - P.z); return d > 260 && d < 760; }); if (!c.length) c = STOPS.slice().sort((a, b) => Math.hypot(b.mid.x - P.x, b.mid.z - P.z) - Math.hypot(a.mid.x - P.x, a.mid.z - P.z)).slice(0, 5);
+  let c = STOPS.filter(s => { const d = Math.hypot(s.mid.x - P.x, s.mid.z - P.z); return d > 300 && d < 1100; }); if (!c.length) c = STOPS.slice().sort((a, b) => Math.hypot(b.mid.x - P.x, b.mid.z - P.z) - Math.hypot(a.mid.x - P.x, a.mid.z - P.z)).slice(0, 5);
   const dest = c[Math.floor(Math.random() * c.length)], dist0 = Math.hypot(dest.mid.x - P.x, dest.mid.z - P.z);
   tx.ride = { dest, dist0, rideDist: 0, wait: 0, time: 0, crashes: 0, speedT: 0 }; P.bus.model.setTaxi(2); sfx('door');
   toast('🙋 "' + dest.name.replace(' 건너편', '') + '까지 가주세요!" (약 ' + Math.round(dist0) + 'm)', 'gold');

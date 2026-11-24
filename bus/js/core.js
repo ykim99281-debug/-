@@ -1,6 +1,6 @@
 'use strict';
 // ===== 상수 · 유틸 =====
-const GN = 11, SP = 80, ROAD = 16, OFF = 3.9, RC = 14, HC = (GN - 1) / 2, EXT = HC * SP + ROAD / 2;
+const GN = 17, SP = 80, ROAD = 16, OFF = 3.9, RC = 14, HC = (GN - 1) / 2, EXT = HC * SP + ROAD / 2, FS = (GN - 1) / 10;
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -32,9 +32,9 @@ const STOPS = [];
     STOPS.push({
       id: STOPS.length, key, name: nameOf[key] + (rev ? ' 건너편' : ''), u, v, dir: d, right: r, mid: { x: mx, z: mz },
       lane: { x: mx + r.x * OFF, z: mz + r.z * OFF }, curb: { x: mx + r.x * (ROAD / 2 + 1.6), z: mz + r.z * (ROAD / 2 + 1.6) },
-      pop: 0.06 + 0.16 * Math.exp(-dc / 260) + srnd() * 0.04, waiting: Math.floor(srnd() * 6)
+      pop: 0.06 + 0.16 * Math.exp(-dc / (260 * FS)) + srnd() * 0.04, waiting: Math.floor(srnd() * 6)
     });
-    return Math.hypot(mx, mz) < 230;
+    return Math.hypot(mx, mz) < 230 * FS;
   };
   const edges = [];
   for (let j = 0; j < GN; j++) for (let i = 0; i < GN - 1; i++) if ((i + 2 * j) % 4 === 1) edges.push([nid(i, j), nid(i + 1, j), (i + j) % 2]);
@@ -53,10 +53,24 @@ const PLACES = [['금남로4가역', 0, -10], ['충장로', 30, 0], ['5·18민�
   ['백운광장', 20, 200], ['양림동', -10, 150], ['봉선동', 60, 260], ['국립광주과학관', 160, -200], ['월산동', -40, 200], ['진월동', -20, 310], ['송정5일시장', -340, -90], ['광주공항', -300, 0],
   ['화정동', -170, 200], ['치평동', -200, 200], ['농성동', -110, 140], ['금호지구', -130, 220], ['임동', 40, -110], ['중흥동', 100, -100], ['두암동', 160, -60], ['일곡지구', 50, -310], ['문흥동', 130, -160]];
 const DISTRICTS = [['금남로·충장로', 0, 0], ['상무지구', -230, 190], ['첨단지구', -300, -300], ['전남대학교', 140, -300], ['조선대학교', 210, -40], ['광주월드컵경기장', -360, 280], ['광주송정역', -360, -120], ['기아챔피언스필드', 160, -120], ['광주천', 40, 125]];
+PLACES.forEach(p => { p[1] *= FS; p[2] *= FS; }); DISTRICTS.forEach(p => { p[1] *= FS; p[2] *= FS; });
 (function nameStops() {
   const keys = [...new Set(STOPS.map(s => s.key))], mid = {}; STOPS.forEach(s => mid[s.key] = s.mid);
   const used = new Set(), nm = {};
   for (const [name, x, z] of PLACES) { let best = null, bd = 1e18; for (const k of keys) { if (used.has(k)) continue; const m = mid[k], d = (m.x - x) ** 2 + (m.z - z) ** 2; if (d < bd) { bd = d; best = k; } } if (best) { used.add(best); nm[best] = name; } }
+  const taken = new Set(PLACES.map(p => p[0])), uniq = a => [...new Set(a)].filter(n => !taken.has(n));
+  const pools = {
+    동구: { c: [90, -20], n: uniq(['계림동', '산수동', '지산동', '서석동', '학운동', '충장동', '운림동', '소태동', '용산동', '지원동', '월남동', '내남동', '불로동', '대의동', '수기동', '금남로1가', '금남로2가', '금남로3가']) },
+    서구: { c: [-190, 150], n: uniq(['양동', '유덕동', '마륵동', '동천동', '내방동', '서창동', '세하동', '벽진동', '용두동', '덕흥동', '매월동', '쌍촌동', '금호동', '상무동']) },
+    남구: { c: [20, 250], n: uniq(['주월동', '방림동', '효덕동', '사동', '송하동', '행암동', '승촌동', '대촌동', '노대동', '덕남동', '구동', '칠석동', '압촌동', '이장동', '삼도동']) },
+    북구: { c: [50, -230], n: uniq(['우산동', '건국동', '양산동', '각화동', '삼각동', '신안동', '동림동', '본촌동', '청옥동', '생룡동', '연제동', '매곡동', '북구 1번가']) },
+    광산구: { c: [-300, -150], n: uniq(['송정동', '수완동', '첨단동', '하남동', '월곡동', '신창동', '운남동', '비아동', '평동', '도산동', '임곡동', '신가동', '쌍암동', '소촌동', '장덕동', '오선동', '선암동', '본량동', '동곡동']) }
+  };
+  for (const k of keys) {
+    if (nm[k]) continue; const m = mid[k]; let bg = null, bd = 1e18;
+    for (const g in pools) { if (!pools[g].n.length) continue; const c = pools[g].c, d = (m.x - c[0] * FS) ** 2 + (m.z - c[1] * FS) ** 2; if (d < bd) { bd = d; bg = g; } }
+    if (bg) nm[k] = pools[bg].n.shift();
+  }
   keys.forEach((k, i) => { if (!nm[k]) nm[k] = '광주 ' + (i + 1) + '번 정류장'; });
   const seen = {}; STOPS.forEach(s => { s.name = nm[s.key] + (seen[s.key] ? ' 건너편' : ''); seen[s.key] = 1; });
 })();
@@ -64,7 +78,7 @@ const DISTRICTS = [['금남로·충장로', 0, 0], ['상무지구', -230, 190], 
 // ===== 경로 탐색 (U턴 금지 BFS) : b에서 c까지 노드 목록 =====
 function connect(a, b, c, d) {
   if (b === c && a !== d) return [b];
-  const key = (n, p) => n * 256 + p, q = [[b, a]], par = new Map([[key(b, a), null]]);
+  const key = (n, p) => n * NP.length + p, q = [[b, a]], par = new Map([[key(b, a), null]]);
   for (let qi = 0; qi < q.length; qi++) {
     const [n, p] = q[qi];
     for (const w of neighbors(n)) {

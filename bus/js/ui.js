@@ -40,7 +40,7 @@ function drawMap(ctx, size, o) {
   o = o || {}; const sc = size / (2 * EXT + 60), M = (x, z) => [(x + EXT + 30) * sc, (z + EXT + 30) * sc], vz = o.view ? o.view.z : 1, k = size / 760 / vz;
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, size, size); ctx.fillStyle = '#1b2230'; ctx.fillRect(0, 0, size, size);
   ctx.save(); if (o.view) { ctx.translate(o.view.ox, o.view.oy); ctx.scale(vz, vz); }
-  world.blocks.slice(0, (GN - 1) * (GN - 1)).forEach((b, i) => { ctx.fillStyle = Math.floor(i / (GN - 1)) === 6 ? '#21507c' : '#262e40'; const [x, y] = M(b.minx, b.minz); ctx.fillRect(x, y, (b.maxx - b.minx) * sc, (b.maxz - b.minz) * sc); });
+  world.blocks.slice(0, (GN - 1) * (GN - 1)).forEach((b, i) => { ctx.fillStyle = Math.floor(i / (GN - 1)) === world.riverRow ? '#21507c' : '#262e40'; const [x, y] = M(b.minx, b.minz); ctx.fillRect(x, y, (b.maxx - b.minx) * sc, (b.maxz - b.minz) * sc); });
   ctx.strokeStyle = '#4a5468'; ctx.lineWidth = ROAD * sc * 0.55; ctx.lineCap = 'butt';
   for (let j = 0; j < GN; j++) for (let i = 0; i < GN; i++) { const n = NP[nid(i, j)]; for (const m of [i < GN - 1 && NP[nid(i + 1, j)], j < GN - 1 && NP[nid(i, j + 1)]]) if (m) { const [a, b] = M(n.x, n.z), [c, d] = M(m.x, m.z); ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke(); } }
   const poly = (path, col, w, al) => { ctx.strokeStyle = hex(col); ctx.globalAlpha = al; ctx.lineWidth = w * k; ctx.lineJoin = 'round'; ctx.beginPath(); path.pts.forEach((p, i) => { const [x, y] = M(p.x, p.z); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); ctx.globalAlpha = 1; };
@@ -314,7 +314,7 @@ const UI = {
   },
 
   // --- 자유주행
-  fd: { taxi: 0, car: 0, hour: 12, freeze: true, traffic: 24, x: 0, z: 0 },
+  fd: { taxi: 0, car: 0, hour: 12, freeze: true, traffic: 34, x: 0, z: 0 },
   freeDriveModal() {
     const f = this.fd; if (f.car !== 0 && !SCHOOL.cars.some(c => c.id === f.car)) f.car = 0;
     const opt = (k, v, t) => `<button class="btn sm ${f[k] === v ? 'pri' : ''}" data-fd="${k}" data-v="${v}">${t}</button>`;
@@ -322,7 +322,7 @@ const UI = {
       <b>차량</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px"><button class="btn sm ${f.car === 0 ? 'pri' : ''}" data-fd="car" data-v="0">기본 차량 (아반떼)</button>${SCHOOL.cars.map(c => `<button class="btn sm ${f.car === c.id ? 'pri' : ''}" data-fd="car" data-v="${c.id}">${carDerived(c).fullName}</button>`).join('')}</div>
       <b>모드</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('taxi', 0, '🚗 자유주행')}${opt('taxi', 1, '🚕 택시 영업')}<small class="muted">손 흔드는 손님을 태워 원하는 곳까지!</small></div>
       <b>시간</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('hour', 7, '🌅 아침')}${opt('hour', 12, '☀ 낮')}${opt('hour', 18, '🌇 저녁')}${opt('hour', 23, '🌙 밤')}<label class="muted" style="font-size:13px"><input type="checkbox" id="fdFreeze" ${f.freeze ? 'checked' : ''}> 시간 고정</label></div>
-      <b>교통량</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('traffic', 0, '없음')}${opt('traffic', 10, '적음')}${opt('traffic', 24, '보통')}${opt('traffic', 45, '많음')}</div>
+      <b>교통량</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('traffic', 0, '없음')}${opt('traffic', 14, '적음')}${opt('traffic', 34, '보통')}${opt('traffic', 70, '많음')}</div>
       <b>출발 위치</b> <small class="muted">(지도를 클릭하세요)</small><canvas id="fdMap" width="480" height="480" style="width:100%;max-width:340px;display:block;margin:6px auto 12px;border-radius:10px;cursor:crosshair"></canvas>
       <div class="row"><button class="btn pri" id="fdGo" style="flex:1">🚗 출발!</button><button class="btn" id="fdX">닫기</button></div>`);
     const c = $('fdMap'), ctx = c.getContext('2d'), draw = () => { const t = drawMap(ctx, 480, { mini: true }); const [x, y] = t.M(f.x, f.z); ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fillStyle = '#ffb020'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.stroke(); };
@@ -394,7 +394,7 @@ const UI = {
     h += `<small class="muted">K 크루즈 · V 주행 모드(ECO/NORMAL/SPORT) · T 자율주행(스마트센스) · L 헤드라이트 · C 카메라${T.feat.has('surround') ? '(서라운드뷰 포함)' : ''}</small>`;
     if (school) {
       h += `<div style="margin:10px 0 4px"><b>시간</b></div><div class="row" style="flex-wrap:wrap;gap:6px">${[[7, '🌅 아침'], [12, '☀ 낮'], [18, '🌇 저녁'], [23, '🌙 밤']].map(([v, t]) => opt(`data-fh="${v}"`, Math.abs(G.hour - v) < 3 && G.freezeHour, t)).join('')}<label class="muted" style="font-size:13px"><input type="checkbox" id="fpFlow" ${G.freezeHour ? '' : 'checked'}> 시간 흐름</label></div>`;
-      h += `<div style="margin:10px 0 4px"><b>교통량</b></div><div class="row" style="flex-wrap:wrap;gap:6px">${[[0, '없음'], [10, '적음'], [24, '보통'], [45, '많음']].map(([v, t]) => opt(`data-ft="${v}"`, cars.length === v, t)).join('')}</div>`;
+      h += `<div style="margin:10px 0 4px"><b>교통량</b></div><div class="row" style="flex-wrap:wrap;gap:6px">${[[0, '없음'], [14, '적음'], [34, '보통'], [70, '많음']].map(([v, t]) => opt(`data-ft="${v}"`, cars.length === v, t)).join('')}</div>`;
     }
     h += `<div style="margin:10px 0 4px"><b>헤드라이트</b></div><div class="row" style="gap:6px">${['자동', '켜기', '끄기'].map((t, i) => opt(`data-fl="${i}"`, P.lights === i, t)).join('')}</div>`;
     h += `<div style="margin:10px 0 4px"><b>택시 영업</b> <small class="muted">${SCHOOL.taxi ? '누적 ' + SCHOOL.taxi.trips + '회 · ' + fmtMoney(SCHOOL.taxi.earn) : ''}</small></div><div class="row" style="gap:6px">${opt('data-tx="1"', !!P.taxi, P.taxi ? '🚕 영업 중 (끄기)' : '🚕 영업 시작')}</div>`;

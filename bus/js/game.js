@@ -180,9 +180,9 @@ function startCompany(name, saved) {
     const r = addRoute('시범 순환', ROUTE_COLORS[0], ids, true); addBus('city', r.id, true);
   }
   if (!saved) G.speed = 10;
-  spawnCars(30); setHQName(G.name); applyTime(G.hour);
+  spawnCars(46); setHQName(G.name); applyTime(G.hour);
 }
-function startSchoolWorld() { resetWorld(); G = newState('운전교실', true); G.hour = 10; spawnCars(24); applyTime(G.hour); setHQName('운전교실'); }
+function startSchoolWorld() { resetWorld(); G = newState('운전교실', true); G.hour = 10; spawnCars(34); applyTime(G.hour); setHQName('운전교실'); }
 
 // ===== 현실적 경영: 업그레이드 · 정비 · 대출 · 결산 =====
 const UPGRADES = {
