@@ -127,7 +127,7 @@ button:hover:not(:disabled){filter:brightness(1.25)}button:active:not(:disabled)
     <div class="bar thin"><i class="xp" id="xpb" style="width:0%"></i></div>
     <div class="gauge"><span>뇌절</span><div class="pips" id="pips"></div></div>
   </div>
-  <div id="tr"><div style="display:flex;gap:6px"><div class="glass" id="admb" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:none;place-items:center;font-size:12px;white-space:nowrap;border-color:#ffd84d">🛠 관리자</div><div class="glass" id="viewb" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">👁 보기</div><div class="glass" id="qbtn" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">화질</div><div class="glass" id="who" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px;white-space:nowrap;max-width:110px;overflow:hidden">🚪</div><div class="glass" id="mute" style="pointer-events:auto">🔊</div></div><canvas id="mm" class="glass" width="112" height="112"></canvas><div class="glass pill" id="pkb" style="pointer-events:auto;cursor:pointer;font-size:12px;text-align:center">🕊️ PK OFF</div><div class="glass pill" id="clock" style="font-size:12px"></div></div>
+  <div id="tr"><div style="display:flex;gap:6px"><div class="glass" id="bagb" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px;white-space:nowrap">🎒 가방</div><div class="glass" id="admb" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:none;place-items:center;font-size:12px;white-space:nowrap;border-color:#ffd84d">🛠 관리자</div><div class="glass" id="viewb" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">👁 보기</div><div class="glass" id="qbtn" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px">화질</div><div class="glass" id="who" style="pointer-events:auto;cursor:pointer;padding:0 10px;height:34px;display:grid;place-items:center;font-size:12px;white-space:nowrap;max-width:110px;overflow:hidden">🚪</div><div class="glass" id="mute" style="pointer-events:auto">🔊</div></div><canvas id="mm" class="glass" width="112" height="112"></canvas><div class="glass pill" id="pkb" style="pointer-events:auto;cursor:pointer;font-size:12px;text-align:center">🕊️ PK OFF</div><div class="glass pill" id="clock" style="font-size:12px"></div></div>
   <div class="glass" id="evb" style="position:absolute;left:50%;top:calc(max(10px,env(safe-area-inset-top)) + 64px);transform:translateX(-50%);padding:5px 14px;font-size:13px;display:none;border-color:#ffd84d;color:#ffe9a0;white-space:nowrap;z-index:3"></div>
   <div class="glass" id="boss"><div class="nm"><b id="bn">-</b><i id="bt" style="font-style:normal;color:var(--yel);font-size:12px"></i></div><div class="bar"><i class="he" id="bh" style="width:100%"></i></div></div>
   <div class="glass" id="viewm"></div>
@@ -806,7 +806,7 @@ const JOBS=[{k:'warrior',i:'🗡️',n:'전사',d:'HP +40, 방어 +2<br>넓은 �
  {k:'monk',i:'🥊',n:'격투가',d:'HP +20, 방어 +1<br>양손 2연타, 흡혈',b:{max:20,def:1}},
  {k:'berserker',i:'🪓',n:'광전사',d:'공격력 +5, HP +20<br>느리지만 강타, 체력 낮을수록 강함',b:{atk:5,max:20}}];
 const curWeapon=()=>{const k=JOBKIND[G.job]||'club';const t=Math.min(Math.max(G.wt[k]|0,0),WP[k].length-1);return WP[k][t]};
-const ATK=()=>(G.atk+curWeapon().a)*(PA.rage>0?1.5:1)*(evMul('atk2')?2:1);
+const ATK=()=>(G.atk+curWeapon().a+(G.eq?eqSum().atk:0))*(PA.rage>0?1.5:1)*(evMul('atk2')?2:1);
 const GODJOB={k:'god',b:{max:500,atk:50,def:20,thr:-2,joke:.5}};
 function applyJob(k){const o=G.jb;G.max-=o.max;G.atk-=o.atk;G.def-=o.def;G.thr-=o.thr;G.joke-=o.joke;const j=JOBS.find(x=>x.k===k)||GODJOB,b=Object.assign({max:0,atk:0,def:0,thr:0,joke:0},j.b);
  if(G.thr+b.thr<3)b.thr=3-G.thr;G.max+=b.max;G.atk+=b.atk;G.def+=b.def;G.thr+=b.thr;G.joke+=b.joke;G.jb=b;G.job=k;G.hp=Math.min(G.max,G.hp+b.max);G.wt[JOBKIND[k]]=Math.max(G.wt[JOBKIND[k]]|0,0);setWeapon(JOBKIND[k],G.wt[JOBKIND[k]]);setOutfit(k)}
@@ -1300,7 +1300,7 @@ function killEnemy(m){
  burst(enemyHead(m),{color:0xffffff,n:80,speed:7,life:1});burst(enemyHead(m),{color:0xff77ee,n:60,speed:5,life:1.2});addShake(.6);hitstop(200,.05);
  const sc=m.t.s,g=m.g;tween(.8,t=>{g.scale.setScalar(sc*(1-t));g.rotation.y+=t*.4;g.position.y+=.02},easeIn).then(()=>{g.visible=false});
  const S=m.S,n=m.t.boss?25:rand(3,6)|0;for(let i=0;i<n;i++)dropItem('gold',m.g.position,Math.max(1,Math.round(rand(S.gold[0],S.gold[1])/n)));
- if(m.t.i===0&&Math.random()<.75)dropItem('jelly',m.g.position,1);if(Math.random()<.14)dropItem('pot',m.g.position,1);
+ if(m.t.i===0&&Math.random()<.75)dropItem('jelly',m.g.position,1);if(Math.random()<.14)dropItem('pot',m.g.position,1);ensureInv();G.kills=(G.kills|0)+1;gearDrop(m);
  gainXP(S.xp);onKill(m.t.i);if(m.S.bounty){const n=ZONES.filter(z=>G.bd[z.b]||z.b===m.t.i).length;setTimeout(()=>{toast(`🌑 분신 지역 보스 처치! (${n}/${ZONES.length})${n>=ZONES.length?' — 모든 지역을 정복했다!':''}`);bigText(n>=ZONES.length?'전 지역 정복!':'지역 정복!',1,false);updateQuestUI()},900);if(n>=ZONES.length){G.pots+=5;G.gold+=3000}}
  if(m.S.boss){G.bd[m.t.i]=1;if(!m.S.final&&!m.S.final2&&bossOpen())setTimeout(()=>{toast(SEASON===2?'🌑 네 수문장의 분신 조각을 모았다! 북쪽 성문에 복제 마왕이 나타난다!':'🏰 네 지형의 수문장을 모두 쓰러뜨렸다! 북쪽 타락성의 문이 열린다!');bigText('타락성 개방!',1,false);SFX.boom();addShake(.6)},4600)}
  if(m.S.final)setTimeout(victory,1800);else if(m.S.final2)setTimeout(victory2,1800);else if(m.S.boss&&SEASON===1){const af=ENEMIES[m.t.i].after;if(af)setTimeout(()=>{if(mode==='world')dialogue(ENEMIES[m.t.i].n,af)},1700)}}
@@ -1308,9 +1308,11 @@ function applySeason(){QUESTS=SEASON===2?QUESTS2:QUESTS1;s2G.visible=SEASON===2;
 function respawnWM(m){const[x,z]=wmonPos(m.t);m.g.position.set(x,hgt(x,z),z);m.tx=x;m.tz=z;m.g.visible=true;m.g.scale.setScalar(m.t.s);m.alive=true;m.rage=false;m.hp=m.max;m.state='idle';m.frozen=0;m.fightT=0;m.combatT=0;if(m.ice)m.ice.visible=false;m.mats.forEach(x=>{x.emissive.copy(x.userData.e0);x.emissiveIntensity=x.userData.i0})}
 
 /* ================= LOOT / XP ================= */
+const RAR_H=[0xcfd3dc,0x6dffb2,0x6aa8ff,0xc58bff,0xffb84d];
 const drops=[];const coinGeo=new THREE.CylinderGeometry(.2,.2,.06,14),coinMat=P(0xffd04d,{metalness:1,roughness:.2,emissive:0xff9a1a,emissiveIntensity:.6}),jellyGeo=new THREE.SphereGeometry(.22,12,10),jellyMat=P(0x38f09a,{transparent:true,opacity:.85,emissive:0x0a8a4a,emissiveIntensity:.5}),potGeo=new THREE.CapsuleGeometry(.14,.2,4,8),potMat=P(0xff4d6d,{emissive:0xff2244,emissiveIntensity:.6});
+const gearGeo=new THREE.OctahedronGeometry(.34),gearMats=RAR_H.map(c=>new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:2.2,roughness:.25,metalness:.6}));
 function dropItem(kind,pos,val){while(drops.length>=120){const o=drops.shift();scene.remove(o.mesh)}
- const mesh=new THREE.Mesh(kind==='gold'?coinGeo:kind==='jelly'?jellyGeo:potGeo,kind==='gold'?coinMat:kind==='jelly'?jellyMat:potMat);mesh.position.set(pos.x,pos.y+1,pos.z);if(kind==='gold')mesh.rotation.x=Math.PI/2;mesh.castShadow=true;scene.add(mesh);
+ const mesh=new THREE.Mesh(kind==='gear'?gearGeo:kind==='gold'?coinGeo:kind==='jelly'?jellyGeo:potGeo,kind==='gear'?gearMats[val.rar]:kind==='gold'?coinMat:kind==='jelly'?jellyMat:potMat);if(kind==='gear'&&val.rar>=2){const gl=sprite(glowTex,2.2+val.rar*.4,{blending:THREE.AdditiveBlending,color:RAR_H[val.rar],opacity:.8});mesh.add(gl)}mesh.position.set(pos.x,pos.y+1,pos.z);if(kind==='gold')mesh.rotation.x=Math.PI/2;mesh.castShadow=true;scene.add(mesh);
  drops.push({mesh,kind,val,vx:rand(-3,3),vy:rand(4,7),vz:rand(-3,3),age:0})}
 function updateDrops(dt){for(let i=drops.length-1;i>=0;i--){const o=drops[i],m=o.mesh;o.age+=dt;if(o.age>90){scene.remove(m);drops.splice(i,1);continue}const gy=hgt(m.position.x,m.position.z)+.3;
   if(o.age<.7||m.position.y>gy+.01){o.vy-=16*dt;m.position.x+=o.vx*dt;m.position.z+=o.vz*dt;m.position.y+=o.vy*dt;if(m.position.y<gy){m.position.y=gy;o.vy*=-.4;o.vx*=.6;o.vz*=.6}}
@@ -1320,6 +1322,7 @@ function updateDrops(dt){for(let i=drops.length-1;i>=0;i--){const o=drops[i],m=o
   if(o.age>.8&&d<1.3){pickup(o);scene.remove(m);drops.splice(i,1)}}}
 function pickup(o){SFX.ui();const p=heroHead();
  if(o.kind==='gold'){const gv=o.val*(evMul('gold3')?3:1);G.gold+=gv;fxFloat('+'+gv+'G',p,'#ffd84d');tone(900+Math.random()*300,.08,'triangle',.05)}
+ else if(o.kind==='gear'){addGear(o.val)}
  else if(o.kind==='jelly'){G.jelly++;fxFloat('눈물 젤리',p,'#7cffb0');updateQuestUI()}
  else{G.pots++;fxFloat('🧪 물약 +1',p,'#ff8aa0')}hud()}
 function gainXP(n){n=Math.max(1,Math.round(n*.6*(evMul('xp3')?3:1)));G.xp+=n;fxFloat('+'+n+' XP',heroHead().add(new THREE.Vector3(0,.6,0)),'#b78cff');while(G.xp>=need(G.lv)){G.xp-=need(G.lv);levelUp()}hud()}
@@ -1521,9 +1524,45 @@ function pkSetup(){const f=FB,D=f.D,u=f.auth.currentUser.uid;return D.onChildAdd
 function pkKilledBy(){const l=PK.lastHit;if(l&&Date.now()-l.t<8000&&FB&&FB.auth.currentUser){const key=Date.now()+'_k';FB.D.set(FB.D.ref(FB.db,'brainRpgPk/'+l.uid+'/'+key),{f:FB.auth.currentUser.uid,n:String(who).slice(0,12),k:1,lv:G.lv|0,d:0,t:Date.now()}).catch(()=>{});toast(`💀 ${l.n}에게 패배했다...`)}PK.lastHit=null}
 function togglePK(){if(!cloudOn){toast('PK는 클라우드 로그인 상태에서만 할 수 있어요');return}PK.on=!PK.on;$('#pkb').textContent=PK.on?'⚔️ PK ON':'🕊️ PK OFF';$('#pkb').style.borderColor=PK.on?'#ff4d6d':'';$('#pkb').style.color=PK.on?'#ffb0bf':'';toast(PK.on?'⚔️ PK 켜짐! 마을 밖에서 PK 켠 다른 유저와 싸울 수 있어요 (마을은 안전지대)':'🕊️ PK 꺼짐');presencePush()}
 
+
+/* ================= GEAR / INVENTORY / DAILY ================= */
+const RAR=[{n:'일반',c:'#cfd3dc',h:0xcfd3dc,m:1},{n:'고급',c:'#6dffb2',h:0x6dffb2,m:1.4},{n:'희귀',c:'#6aa8ff',h:0x6aa8ff,m:2},{n:'영웅',c:'#c58bff',h:0xc58bff,m:3},{n:'전설',c:'#ffb84d',h:0xffb84d,m:4.5}];
+const SLOTS={armor:{n:'방어구',i:'🛡️',base:['가죽 갑옷','사슬 갑옷','판금 갑옷','용비늘 갑옷','신화의 갑옷']},acc:{n:'장신구',i:'💍',base:['낡은 반지','은 목걸이','마력 부적','영웅의 반지','뇌절의 왕관']}};
+const ADJ=['낡은','튼튼한','빛나는','고대의','뇌절의'];
+function ensureInv(){if(!Array.isArray(G.inv))G.inv=[];if(!G.eq)G.eq={armor:null,acc:null};if(!G.kills)G.kills=0}
+function eqSum(){let a=0,h=0,d=0;if(G.eq)for(const k in G.eq){const it=G.eq[k];if(it){a+=it.atk|0;h+=it.hp|0;d+=it.def|0}}return{atk:a,hp:h,def:d}}
+function eqDelta(it,sg){if(!it)return;G.max+=sg*(it.hp|0);G.def+=sg*(it.def|0);G.hp=Math.min(G.hp,G.max)}
+function itemValue(it){return Math.max(3,Math.round((it.lv||1)*4*RAR[it.rar].m))}
+function itemStats(it){return [it.atk?`⚔️+${it.atk}`:'',it.hp?`❤️+${it.hp}`:'',it.def?`🛡️+${it.def}`:''].filter(Boolean).join(' ')}
+function makeGear(lv,minR=0,boss=false){ensureInv();let r=Math.random();let rar=r<.004+(boss?.12:0)?4:r<.03+(boss?.3:0)?3:r<.12+(boss?.3:0)?2:r<.38?1:0;rar=Math.max(rar,minR);
+ const slot=Math.random()<.5?'armor':'acc',m=RAR[rar].m,L=Math.max(1,lv|0),idx=Math.min(4,Math.floor(L/6));
+ const it={id:Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36),slot,rar,lv:L,name:ADJ[rar]+' '+SLOTS[slot].base[Math.min(4,Math.max(idx,rar>=3?3:idx))],atk:0,hp:0,def:0};
+ if(slot==='armor'){it.hp=Math.round(L*3*m)+8;it.def=Math.max(0,Math.round(L*.22*m))}else{it.atk=Math.round(L*.55*m)+1;it.hp=Math.round(L*1.1*m)}return it}
+function gearDrop(m){const S=m.S,boss=!!S.boss;const ch=boss?1:Math.min(.16,.06+(SEASON===2?.04:0)+(S.lv>12?.03:0));if(Math.random()>ch)return;const it=makeGear(S.lv,boss?2:0,boss);dropItem('gear',m.g.position,it)}
+function addGear(it){ensureInv();if(G.inv.length>=40){const v=itemValue(it);G.gold+=v;fxFloat(`가방 가득! 자동판매 +${v}G`,heroHead(),'#ffd84d');return}G.inv.push(it);fxFloat(`${it.name}`,heroHead(),RAR[it.rar].c);toast(`🎁 ${RAR[it.rar].n} ${it.name} 획득! (가방 🎒 / I 키)`);if(it.rar>=3){bigText(it.rar===4?'전설 장비!':'영웅 장비!',1,false);SFX.win()}}
+let bagOpen=false,bagSell=false;
+function openBag(){if(mode!=='world')return;ensureInv();mode='dialog';bagOpen=true;const sc=$('#scr');
+ const card=(it,where)=>`<div class="glass" data-w="${where}" data-id="${it.id}" style="padding:6px 8px;text-align:left;cursor:pointer;border-color:${RAR[it.rar].c};font-size:12px;line-height:1.35;pointer-events:auto"><b style="color:${RAR[it.rar].c}">${SLOTS[it.slot].i} ${RAR[it.rar].n} ${it.name}</b><br><span style="opacity:.85">Lv.${it.lv} · ${itemStats(it)}</span><br><span style="opacity:.6">${where==='inv'?(bagSell?'탭: 판매 💰'+itemValue(it):'탭: 장착'):'탭: 해제'}</span></div>`;
+ const render=()=>{const es=eqSum();const slotHtml=Object.keys(SLOTS).map(k=>G.eq[k]?card(G.eq[k],'eq'):`<div class="glass" style="padding:6px 8px;font-size:12px;opacity:.55;text-align:left">${SLOTS[k].i} ${SLOTS[k].n}: 비어 있음</div>`).join('');
+  const inv=[...G.inv].sort((a,b)=>b.rar-a.rar||b.lv-a.lv);
+  sc.innerHTML=`<h2 style="margin:0;font-family:'Black Han Sans',Jua,sans-serif;font-size:clamp(24px,6vw,34px);font-weight:400;color:#ffe9a0">🎒 가방</h2>
+  <div class="desc" style="font-size:13px">⚔️ 무기 ${curWeapon().n} (+${curWeapon().a}) · 장비 합계 ⚔️+${es.atk} ❤️+${es.hp} 🛡️+${es.def} · 처치 ${G.kills|0}마리</div>
+  <div class="glass" style="padding:10px;width:min(560px,94vw);max-height:62vh;overflow:auto"><div style="font-size:12px;color:var(--yel);margin-bottom:4px">장착 중</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px">${slotHtml}</div>
+  <div style="font-size:12px;color:var(--yel);margin:10px 0 4px">가방 (${inv.length}/40)</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px">${inv.map(it=>card(it,'inv')).join('')||'<div class="desc">비어 있어요. 몬스터를 잡으면 장비가 나와요!</div>'}</div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button id="bsell" style="${bagSell?'border-color:#ff7a93':''}">${bagSell?'💰 판매 모드 ON':'💰 판매 모드'}</button><button id="bjunk">일반·고급 전부 판매</button><button id="bx">닫기</button></div>`;
+  sc.className='on';
+  sc.querySelectorAll('[data-w]').forEach(e=>e.onclick=()=>{const id=e.dataset.id;if(e.dataset.w==='eq'){const k=Object.keys(G.eq).find(k=>G.eq[k]&&G.eq[k].id===id);const it=G.eq[k];eqDelta(it,-1);G.eq[k]=null;G.inv.push(it);SFX.ui()}
+   else{const it=G.inv.find(x=>x.id===id);if(!it)return;if(bagSell){G.gold+=itemValue(it);G.inv=G.inv.filter(x=>x.id!==id);SFX.heal()}else{const old=G.eq[it.slot];eqDelta(old,-1);G.eq[it.slot]=it;eqDelta(it,1);G.inv=G.inv.filter(x=>x.id!==id);if(old)G.inv.push(old);SFX.win();burst(heroHead(),{color:RAR[it.rar].h,n:30,speed:4,life:.7,up:2})}}hud();render()});
+  $('#bsell').onclick=()=>{bagSell=!bagSell;render()};
+  $('#bjunk').onclick=()=>{const junk=G.inv.filter(x=>x.rar<=1);if(!junk.length){toast('팔 장비가 없어요');return}if(!confirm(`일반·고급 장비 ${junk.length}개를 모두 팔까요?`))return;let v=0;junk.forEach(x=>v+=itemValue(x));G.gold+=v;G.inv=G.inv.filter(x=>x.rar>1);toast(`💰 ${v}G 획득`);SFX.heal();hud();render()};
+  $('#bx').onclick=closeBag};render()}
+function closeBag(){bagOpen=false;bagSell=false;$('#scr').className='';mode='world';hud()}
+function dailyReward(){const t=new Date().toISOString().slice(0,10);if(G.daily===t)return;const streak=(G.daily&&Math.round((new Date(t)-new Date(G.daily))/86400000)===1)?(G.streakD|0)+1:1;G.dailyPrev=1;G.streakD=streak;G.daily=t;const gold=100+Math.min(streak,7)*60,pots=1+(streak>=3?1:0);G.gold+=gold;G.pots+=pots;
+ setTimeout(()=>{toast(`📅 출석 ${streak}일차! 💰${gold} + 🧪${pots}`);bigText('출석 보상!',1,false);SFX.win()},3500);if(streak>=7&&!G.s7){G.s7=1;const it=makeGear(Math.max(5,G.lv),3);setTimeout(()=>addGear(it),6000)}}
+
 /* ================= ADMIN / EVENTS / BAN ================= */
 const SUPERMAIL="geab980ebaa85eca480@brainrpg.local";
-const BUILD=2026111901,TAG='r9 (안정화)';
+const BUILD=2026111901,TAG='r10 (장비·가방·출석)';
 let kicked=false,CFG={};
 let banned=false,ADM={role:null},EVT={type:null,until:0,by:''},srvOff=0,unsubAll=[];
 const EVTS={xp3:{n:'경험치 3배',i:'📈'},gold3:{n:'골드 3배',i:'💰'},atk2:{n:'공격력 2배',i:'⚔️'},god:{n:'받는 피해 절반',i:'🛡️'}};
@@ -1552,7 +1591,7 @@ function applyAdminPerks(){if(permsBusy)return;permsBusy=true;
   if(G.gold<1e9)G.gold=1e9}
  else if(G.pre){const q=G.pre;delete G.pre;G.lv=q.lv;G.max=q.max;G.atk=q.atk;G.xp=q.xp;G.gold=q.gold;G.job=q.job;G.jb=q.jb;G.thr=q.thr;G.joke=q.joke;G.def=q.def;const k=JOBKIND[G.job]||'club';setWeapon(k,G.wt[k]|0);setOutfit(G.job);G.hp=Math.min(G.hp,G.max);toast('어드민 권한이 없어 원래 능력치로 돌아갔어요')}
  permsBusy=false;hud()}
-function setAdminLevel(n){n=clamp(Math.round(+n)||1,1,99999);G.lv=n;G.max=90+(n-1)*5+((G.jb&&G.jb.max)||0)+(G.al||0)*25;G.atk=6+(n-1)+((G.jb&&G.jb.atk)||0)+(G.wl||0)*4;G.xp=0;G.hp=G.max;hud();toast('레벨 '+n+'로 설정했어요')}
+function setAdminLevel(n){n=clamp(Math.round(+n)||1,1,99999);G.lv=n;G.max=90+(n-1)*5+((G.jb&&G.jb.max)||0)+(G.al||0)*25+(G.eq?eqSum().hp:0);G.atk=6+(n-1)+((G.jb&&G.jb.atk)||0)+(G.wl||0)*4;G.xp=0;G.hp=G.max;hud();toast('레벨 '+n+'로 설정했어요')}
 function saveGameLocalOnly(){const o=cloudOn;cloudOn=false;try{saveGame()}catch(e){}cloudOn=o}
 function forceOut(kind){if(kicked)return;kicked=true;try{saveGameLocalOnly()}catch(e){}mode='dead';try{FB&&FB.D.remove(FB.D.ref(FB.db,'brainRpgLive/'+FB.auth.currentUser.uid))}catch(e){}
  const m=CFG.maint||{},sc=$('#scr');sc.innerHTML=kind==='update'?`<h2 class="ttl" style="font-size:clamp(34px,9vw,56px)">업데이트 필요</h2><div class="desc">이 버전은 더 이상 사용할 수 없어요.<br>최신 파일(링크)로 다시 접속해 주세요.<br><small>진행 상황은 저장되어 있어요.</small></div><button class="go" id="kx">새로고침</button>`:`<h2 class="ttl" style="font-size:clamp(34px,9vw,56px)">🛠 서버 점검 중</h2><div class="desc">${String(m.msg||'잠시 후 다시 접속해 주세요.').replace(/[<>&]/g,'')}<br><small>진행 상황은 저장되어 있어요.</small></div><button class="go" id="kx">다시 시도</button>`;sc.className='on';$('#kx').onclick=()=>location.reload()}
@@ -1638,8 +1677,8 @@ function applySave(d){for(const k in d.G)G[k]=d.G[k];if(!G.season)G.season=1;SEA
  const k=JOBKIND[G.job];setWeapon(k,G.wt[k]);setOutfit(G.job);G.hp=Math.max(1,Math.min(G.hp,G.max));camSmooth.set(x,hero.position.y+4,z+8);camLook.set(x,hero.position.y+1.6,z)}
 setInterval(saveGame,8000);addEventListener('pagehide',()=>{forceCloud=true;saveGame()});document.addEventListener('visibilitychange',()=>{if(document.hidden){forceCloud=true;saveGame()}});
 $('#who').onclick=()=>{if(mode!=='world')return;if(confirm('저장하고 처음 화면(로그인)으로 돌아갈까요?')){forceCloud=true;saveGame();setTimeout(()=>location.reload(),700)}};
-function begin(isNew){const s=$('#scr');ac();startMusic();SFX.ui();s.className='';mode='world';camDistT=11;camPitch=.55;camYaw=0;showUI('world');$('#who').textContent=(cloudOn?'☁️ ':'💾 ')+who;updateQuestUI();hud();
- if(isNew){TUT.done=false;startTutorial();toast(`환영합니다, ${who}님!`)}else{if(!TUT.done&&false)startTutorial();toast(`${who}님, 다시 오셨군요! 이어서 모험을 계속합니다`)}saveGame();setTimeout(()=>toast((cloudOn?'☁️ 클라우드 로그인':'💾 오프라인 모드')+' · '+(ADM.role==='super'?'어드민':ADM.role?'관리자':'일반 계정')),2600)}
+function begin(isNew){ensureInv();const s=$('#scr');ac();startMusic();SFX.ui();s.className='';mode='world';camDistT=11;camPitch=.55;camYaw=0;showUI('world');$('#who').textContent=(cloudOn?'☁️ ':'💾 ')+who;updateQuestUI();hud();
+ if(isNew){TUT.done=false;startTutorial();toast(`환영합니다, ${who}님!`)}else{if(!TUT.done&&false)startTutorial();toast(`${who}님, 다시 오셨군요! 이어서 모험을 계속합니다`)}dailyReward();saveGame();setTimeout(()=>toast((cloudOn?'☁️ 클라우드 로그인':'💾 오프라인 모드')+' · '+(ADM.role==='super'?'어드민':ADM.role?'관리자':'일반 계정')),2600)}
 function title(){
  mode='title';showUI('title');
  const s=$('#scr'),profs=listProfiles().filter(n=>n!=='__last'),ip='font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.45);color:#fff;text-align:center;outline:none',bs='font-size:17px;padding:10px 14px;flex:1';
@@ -1677,6 +1716,7 @@ function applyView(){$('#hud').style.display=V.hud==='full'?'':'none';$('#hudmin
 function renderViewMenu(){const m=$('#viewm');m.innerHTML='<div class="t">화면에 보일 것</div>'+VROWS.map(r=>`<button data-k="${r[0]}">${r[1]}: <b>${r[3][V[r[0]]]}</b></button>`).join('')+'<button data-k="__all">🙈 전부 숨기기 / 🙉 전부 보기</button>';
  m.querySelectorAll('button').forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==='__all'){const anyOn=V.hud!=='off'||V.quest||V.mm||V.clock||V.hint||V.btns;Object.assign(V,anyOn?{hud:'off',quest:0,mm:0,clock:0,hint:0,btns:0}:{hud:'full',quest:1,mm:1,clock:1,hint:1,btns:1})}else{const r=VROWS.find(x=>x[0]===k),o=r[2];V[k]=o[(o.indexOf(V[k])+1)%o.length]}applyView()})}
 $('#pkb').onclick=()=>{if(mode==='world'){SFX.ui();togglePK()}};
+$('#bagb').onclick=()=>{if(mode==='world'){SFX.ui();openBag()}else if(bagOpen)closeBag()};
 $('#admb').onclick=()=>{if(mode==='world'){SFX.ui();openAdmin()}};
 $('#s2btn').onclick=()=>{if(mode==='world'){SFX.ui();openSeason2()}};
 $('#viewb').onclick=()=>{const m=$('#viewm');m.style.display=m.style.display==='flex'?'none':'flex'};
@@ -1701,8 +1741,10 @@ canvas.addEventListener('pointerup',cend);canvas.addEventListener('pointercancel
 canvas.addEventListener('wheel',e=>{camDistT=clamp(camDistT+e.deltaY*.01,6,20);e.preventDefault()},{passive:false});
 const kn=e=>{const c=e.code||'';if(c.startsWith('Key'))return c.slice(3).toLowerCase();if(c==='Space')return ' ';if(c.startsWith('Shift'))return 'shift';if(c==='Enter'||c==='NumpadEnter')return 'Enter';if(c.startsWith('Arrow'))return c;return e.key.length===1?e.key.toLowerCase():e.key};
 addEventListener('keydown',e=>{if(e.target&&e.target.tagName==='INPUT')return;const k=kn(e);if(e.repeat&&k!=='j')return keys[k]=true;keys[k]=true;
+ if(mode==='dialog'&&bagOpen&&(k==='i'||k==='Escape')){closeBag();e.preventDefault();return}
  if(mode==='dialog'&&dlgNext&&(k==='e'||k===' '||k==='Enter')){dlgNext();e.preventDefault();return}
  if(mode==='world'){if(k==='e'||k==='Enter'){interact();e.preventDefault();return}
+  if(k==='i'){openBag();e.preventDefault();return}
   const m={f:'s1',g:'s2',h:'s3',v:'s4',j:'atk',l:'joke',k:'guard',' ':'roll',r:'again',q:'pot'};if(m[k]){doAction(m[k]);e.preventDefault()}}
  if(k.startsWith('Arrow'))e.preventDefault()});
 addEventListener('keyup',e=>{keys[kn(e)]=false});addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
@@ -1753,7 +1795,7 @@ worldG.visible=true;camSmooth.set(-4+Math.sin(camYaw)*6,3,2+Math.cos(camYaw)*6);
 applySeason();updateQuestUI();updateEnv(.01);
 frame();title();
 const ld=$('#load');ld.style.opacity=0;setTimeout(()=>ld.remove(),700);
-window.__game={stats:()=>({fx:fxList.length,tw:tweens.length,pr:projs.length,hp:hprojs.length,dr:drops.length,rem:REM.size,sc:scene.children.length,tex:renderer.info.memory.textures,geo:renderer.info.memory.geometries,calls:renderer.info.render.calls,wm:wmons.length}),startSeason2,applyJob,setOutfit,setWeapon,hero,camera,G,PA,doAction,tp(x,z){hero.position.set(x,hgt(x,z),z)},talk,chief,get mode(){return mode},get qi(){return qi},get qprog(){return qprog},get qstate(){return qstate},get wmons(){return wmons},get tod(){return tod},setTod(v){tod=v},interact,get nearTarget(){return nearTarget}};
+window.__game={makeGear,addGear,openBag,eqSum,dropItem,stats:()=>({fx:fxList.length,tw:tweens.length,pr:projs.length,hp:hprojs.length,dr:drops.length,rem:REM.size,sc:scene.children.length,tex:renderer.info.memory.textures,geo:renderer.info.memory.geometries,calls:renderer.info.render.calls,wm:wmons.length}),startSeason2,applyJob,setOutfit,setWeapon,hero,camera,G,PA,doAction,tp(x,z){hero.position.set(x,hgt(x,z),z)},talk,chief,get mode(){return mode},get qi(){return qi},get qprog(){return qprog},get qstate(){return qstate},get wmons(){return wmons},get tod(){return tod},setTod(v){tod=v},interact,get nearTarget(){return nearTarget}};
 </script>
 </body>
 </html>
