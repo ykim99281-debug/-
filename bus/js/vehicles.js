@@ -61,6 +61,7 @@ function plateTex() { return _tc.plate || (_tc.plate = canvasTex(128, 32, x => {
 
 function makeBus(type, color, label) {
   const B = busMats(), T = BUS_TYPES[type], L = T.len, W = T.w, H = T.h, dd = T.deck === 2, g = new THREE.Group(), shell = [], keep = [], inner = new THREE.Group(); g.add(inner);
+  const sigL = new THREE.MeshBasicMaterial({ color: 0x3a2a12 }), sigR = new THREE.MeshBasicMaterial({ color: 0x3a2a12 }); sigL.userData.noShadow = sigR.userData.noShadow = true;
   const paint = paintMat(color), S = [], I = [], K = [], tail = new THREE.MeshBasicMaterial({ color: 0x661111 }); tail.userData.noShadow = true;
   const num = String(label).split(' ')[0], rname = String(label).split(' ').slice(1).join(' ') || '교습', co = (typeof G !== 'undefined' && G && G.name) ? G.name : '광주버스';
   const sillY = 1.58, roofY = H - 0.62, wy0 = 1.66, wy1 = roofY - 0.04;
@@ -87,6 +88,7 @@ function makeBus(type, color, label) {
   // 후면
   pbox(S, B.dark, 0, (wy0 + wy1) / 2, -L / 2 - 0.004, W - 0.5, wy1 - wy0 - 0.2, 0.03); pbox(S, B.glass, 0, (wy0 + wy1) / 2, -L / 2 - 0.03, W - 0.6, wy1 - wy0 - 0.3, 0.03);
   pbox(S, B.dark, 0, 0.66, -L / 2 - 0.12, W + 0.06, 0.32, 0.4);
+  for (const [s, m] of [[1, sigL], [-1, sigR]]) { pbox(S, m, s * (W / 2 - 0.2), 0.6, L / 2 + 0.18, 0.2, 0.1, 0.06); pbox(S, m, s * (W / 2 - 0.2), 0.6, -L / 2 - 0.18, 0.2, 0.1, 0.06); pbox(S, m, s * (W / 2 + 0.03), 1.25, L / 2 - 0.9, 0.04, 0.1, 0.22); }
   for (const s of [-1, 1]) { pbox(S, tail, s * (W / 2 - 0.2), 1.0, -L / 2 - 0.04, 0.22, 0.62, 0.06); pbox(S, B.dark, s * (W / 2 - 0.2), 1.0, -L / 2 - 0.02, 0.26, 0.66, 0.03); }
   // 지붕 장비
   pbox(S, B.white, 0, H + 0.1, -L * 0.12, W - 1.0, 0.26, 2.7); pbox(S, B.dark, 0, H + 0.24, -L * 0.12, W - 1.4, 0.04, 2.3);
@@ -150,6 +152,7 @@ function makeBus(type, color, label) {
   const wheelPiv = new THREE.Group(); wheelPiv.position.set(0.55, 1.62, L / 2 - 1.0); wheelPiv.rotation.x = -1.1; inner.add(wheelPiv);
   const sw = new THREE.Group(); wheelPiv.add(sw); sw.add(new THREE.Mesh(new THREE.TorusGeometry(0.21, 0.028, 8, 22), B.rubber)); for (const a of [0, 2.09, 4.19]) { const sp = new THREE.Mesh(bgeo(0.4, 0.035, 0.03), B.rubber); sp.rotation.z = a; sw.add(sp); }
   const dc = document.createElement('canvas'); dc.width = 256; dc.height = 96; const dx = dc.getContext('2d'), dtex = new THREE.CanvasTexture(dc);
+  const wip = new THREE.Group(); wip.position.set(-0.45, wy0 + 0.04, L / 2 + 0.07); { const wb = new THREE.Mesh(bgeo(0.95, 0.035, 0.03), B.dark); wb.position.x = 0.48; wip.add(wb); } g.add(wip);
   const dmat = new THREE.MeshBasicMaterial({ map: dtex }); dmat.userData.ownsMap = true;
   const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.195), dmat); dash.position.set(0.55, 1.58, L / 2 - 0.62); dash.rotation.set(0.7, Math.PI, 0); inner.add(dash);
   let dashKey = '';
@@ -163,6 +166,7 @@ function makeBus(type, color, label) {
   return {
     group: g, shell, keep, inner, wheels, front, steerWheel: sw, type, spot, tail, len: L, w: W, doorZ: dzs[0], fa: 0.30 * L, ra: -0.25 * L, drawDash,
     cockpit: { x: 0.55, y: 2.05, z: L / 2 - 1.55 },
+    setSignal(l, r) { sigL.color.setHex(l ? 0xffa31a : 0x3a2a12); sigR.color.setHex(r ? 0xffa31a : 0x3a2a12); }, setWiper(a) { wip.rotation.z = a; },
     setDoor(t) { for (const [p, s] of leaves) p.rotation.y = s * t * 1.5; },
     setLoad(n) { body.count = heads.count = Math.min(n, T.cap + 4); },
     setBrake(on) { tail.color.setHex(on ? 0xff2a2a : 0x661111); },
@@ -177,11 +181,12 @@ function makeCar() {
   const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; g.add(m); return m; };
   add(bgeo(W, 0.6, L), c, 0, 0.65, 0); add(bgeo(W - 0.15, 0.5, L * (kind === 2 ? 0.7 : 0.5)), mk(0x2a3442), 0, 1.15, kind === 2 ? -0.3 : -0.2);
   add(bgeo(W - 0.2, 0.08, L * (kind === 2 ? .7 : .45)), c, 0, 1.43, kind === 2 ? -0.3 : -0.2);
-  const tail = new THREE.MeshBasicMaterial({ color: 0x771111 });
+  const tail = new THREE.MeshBasicMaterial({ color: 0x771111 }), sigL = new THREE.MeshBasicMaterial({ color: 0x3a2a12 }), sigR = new THREE.MeshBasicMaterial({ color: 0x3a2a12 });
+  for (const [s, m] of [[1, sigL], [-1, sigR]]) { add(bgeo(0.22, 0.09, 0.05), m, s * (W / 2 - 0.2), 0.62, L / 2 + 0.03); add(bgeo(0.22, 0.09, 0.05), m, s * (W / 2 - 0.2), 0.62, -L / 2 - 0.03); }
   for (const s of [-1, 1]) { add(bgeo(0.4, 0.15, 0.06), new THREE.MeshBasicMaterial({ color: 0xfff4c8 }), s * 0.6, 0.7, L / 2 + 0.02); add(bgeo(0.4, 0.15, 0.06), tail, s * 0.6, 0.72, -L / 2 - 0.02); }
   const wheels = [], front = [], wg = new THREE.CylinderGeometry(0.34, 0.34, 0.24, 12); wg.rotateZ(Math.PI / 2);
   for (const [z, f] of [[L * 0.32, 1], [-L * 0.3, 0]]) for (const s of [-1, 1]) { const p = new THREE.Group(); p.position.set(s * (W / 2 - 0.08), 0.34, z); const w = new THREE.Mesh(wg, mk(0x15161a)); p.add(w); g.add(p); wheels.push(w); if (f) front.push(p); }
-  return { group: g, wheels, front, len: L, fa: 0.32 * L, ra: -0.3 * L, tail, setBrake(on) { tail.color.setHex(on ? 0xff2a2a : 0x771111); }, setDoor() { }, setLoad() { } };
+  return { group: g, wheels, front, len: L, fa: 0.32 * L, ra: -0.3 * L, tail, setSignal(l, r) { sigL.color.setHex(l ? 0xffa31a : 0x3a2a12); sigR.color.setHex(r ? 0xffa31a : 0x3a2a12); }, setWiper() { }, setBrake(on) { tail.color.setHex(on ? 0xff2a2a : 0x771111); }, setDoor() { }, setLoad() { } };
 }
 
 // ===== 차량 에이전트 (버스/승용차 공통) =====
@@ -191,7 +196,7 @@ class Agent {
   constructor(kind, model) {
     this.kind = kind; this.m = model; this.len = model.len; this.path = null; this.s = 0; this.v = 0; this.cruise = kind === 'car' ? rand(11, 14) : 13;
     this.x = 0; this.z = 0; this.fx = 0; this.fz = 1; this.yaw = 0; this.manual = false; this.stopsOn = false; this.si = 0; this.arrived = false; this.hold = false; this.braking = false; this.steer = 0;
-    this.doorZ = model.doorZ || 0; agents.push(this);
+    this.doorZ = model.doorZ || 0; this.sigL = this.sigR = false; this.sigKey = -1; agents.push(this);
   }
   setPath(p, s) { this.path = p; this.s = s; this.pose(0); }
   nearestStop() {   // 앞으로 만날 첫 정류장
@@ -199,17 +204,19 @@ class Agent {
     p.stops.forEach((st, i) => { const d = ((st.s - this.doorZ - this.s) % p.L + p.L) % p.L; if (d < bd) { bd = d; b = i; } }); return b;
   }
   step(dt, gt) {
-    const p = this.path, L = p.L; let vt = this.cruise;
+    const p = this.path, L = p.L; let vt = this.cruise * WX.spd, sl = false, sr = false;
     for (const c of p.corners) {
       const d = ((c.s0 - this.len / 2 - this.s) % L + L) % L;
       if (c.turn) {
-        const ins = ((this.s - c.s0) % L + L) % L; if (ins < c.s1 - c.s0 + this.len * 0.5) vt = Math.min(vt, 6); else if (d < 70) vt = Math.min(vt, Math.sqrt(36 + 5 * d));
+        const ins = ((this.s - c.s0) % L + L) % L, inside = ins < c.s1 - c.s0 + this.len * 0.5; if (inside) vt = Math.min(vt, 6); else if (d < 70) vt = Math.min(vt, Math.sqrt(36 + 5 * d));
+        if (inside || d < 40) { if (c.right < 0) sl = true; else sr = true; }
       }
       if (d < this.v * this.v / 6 + 30) {   // 신호
         const st = lightState(c.axis, gt);
         if (st === 2 || (st === 1 && d > this.v * this.v / 8 + 1.5)) vt = Math.min(vt, Math.sqrt(6 * Math.max(0, d - 1.2)));
       }
     }
+    this.sigL = sl; this.sigR = sr;
     if (this.stopsOn && p.stops.length) {
       const st = p.stops[this.si], d = wrapS(st.s - this.doorZ - this.s, L);
       if (d > -3) { vt = Math.min(vt, Math.sqrt(6 * Math.max(0, d - 0.3))); if (d < 0.8 && this.v < 0.4 && !this.arrived) { this.arrived = true; this.hold = true; } }
@@ -237,6 +244,7 @@ class Agent {
     const g = this.m.group; g.position.set(this.x, 0, this.z); g.rotation.y = this.yaw;
     const w = this.v * dt / 0.45; for (const wh of this.m.wheels) wh.rotation.x += w; for (const f of this.m.front) f.rotation.y = this.steer;
     this.m.setBrake(this.braking);
+    const on = Math.floor((G ? G.gt : 0) * 2.8) % 2 === 0, k = (this.sigL && on ? 1 : 0) + (this.sigR && on ? 2 : 0); if (k !== this.sigKey) { this.sigKey = k; this.m.setSignal(!!(k & 1), !!(k & 2)); }
   }
   dispose() { const i = agents.indexOf(this); if (i >= 0) agents.splice(i, 1); scene.remove(this.m.group); disposeTree(this.m.group); }
 }
@@ -281,6 +289,9 @@ function makeCarModel(spec, color) {
   const wp = new THREE.Group(); wp.position.set(0.38, clr + bh + 0.3, front0 - 0.95); wp.rotation.x = -1.15; inner.add(wp);
   const sw = new THREE.Group(); wp.add(sw); sw.add(new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.022, 8, 18), mk(0x101114)));
   for (const s of [-1, 1]) { const p = new THREE.Mesh(bgeo(0.1, ch + 0.05, 0.1), dark); p.position.set(s * (cw / 2 - 0.05), clr + bh + ch / 2, front0 - 0.05); inner.add(p); }
+  const sigL = new THREE.MeshBasicMaterial({ color: 0x3a2a12 }), sigR = new THREE.MeshBasicMaterial({ color: 0x3a2a12 });
+  for (const [s, m] of [[1, sigL], [-1, sigR]]) { add(bgeo(0.22, 0.09, 0.05), m, s * (W / 2 - 0.22), clr + bh * 0.45, L / 2 + 0.01); add(bgeo(0.22, 0.09, 0.05), m, s * (W / 2 - 0.22), clr + bh * 0.5, -L / 2 - 0.01); }
+  const wip = new THREE.Group(); wip.position.set(-cw * 0.3, clr + bh + 0.07, front0 + 0.02); { const wb = new THREE.Mesh(bgeo(cw * 0.5, 0.03, 0.025), mk(0x101114)); wb.position.x = cw * 0.25; wip.add(wb); } g.add(wip);
   const signMat = new THREE.MeshBasicMaterial({ color: 0x4ade80 }), sign = new THREE.Group(); sign.visible = false; sign.position.set(0, clr + bh + ch + 0.14, cz);
   sign.add(new THREE.Mesh(bgeo(0.52, 0.16, 0.2), signMat));
   const stex = _tc.taxi || (_tc.taxi = canvasTex(128, 40, x => { x.fillStyle = '#101010'; x.fillRect(0, 0, 128, 40); x.fillStyle = '#ffb020'; x.font = 'bold 30px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('TAXI', 64, 22); }));
@@ -289,6 +300,7 @@ function makeCarModel(spec, color) {
   const spot = new THREE.SpotLight(0xfff2cc, 0, 70, 0.5, 0.5, 1); spot.position.set(0, 0.8, L / 2); spot.target.position.set(0, 0, L / 2 + 20); g.add(spot, spot.target);
   return {
     group: g, shell, keep: [], inner, wheels, front, steerWheel: sw, spot, len: L, w: W, fa: 0.31 * L, ra: -0.31 * L, cockpit: { x: 0.38, y: clr + bh + ch * 0.62, z: front0 - 1.25 }, doorZ: 0,
+    setSignal(l, r) { sigL.color.setHex(l ? 0xffa31a : 0x3a2a12); sigR.color.setHex(r ? 0xffa31a : 0x3a2a12); }, setWiper(a) { wip.rotation.z = a; },
     setTaxi(st) { sign.visible = st > 0; signMat.color.setHex(st === 2 ? 0xff5a5a : 0x4ade80); }, setBrake(on) { tail.color.setHex(on ? 0xff2a2a : 0x771111); }, setDoor() { }, setLoad() { }, setCockpit(on) { for (const m of shell) m.visible = !on; }
   };
 }

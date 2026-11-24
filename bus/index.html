@@ -56,6 +56,7 @@
   #gear{display:flex;gap:6px;justify-content:center;margin-top:4px;font-weight:700}
   #gear b{padding:1px 8px;border-radius:6px;background:rgba(255,255,255,.1);color:var(--muted)}
   #gear b.on{background:var(--accent);color:#1a1200}
+  #sigRow{display:flex;justify-content:space-between;margin-top:4px;font-size:16px}#sigRow b{color:#3a3320}#sigRow b.on{color:#ffa31a;text-shadow:0 0 8px #ffa31a}
   #limit{width:64px;height:64px;border-radius:50%;border:6px solid #e11d2e;background:#fff;color:#111;font-weight:900;font-size:24px;display:flex;align-items:center;justify-content:center;align-self:center}
   #limit.over{animation:blink .4s infinite}
   @keyframes blink{50%{background:#fecaca}}
@@ -164,7 +165,7 @@
   <div id="help" class="hide">
     <b style="color:var(--fg)">운전</b><br>
     <kbd>W</kbd><kbd>↑</kbd> 가속 · <kbd>S</kbd><kbd>↓</kbd> 브레이크/후진 · <kbd>A</kbd><kbd>D</kbd><kbd>←</kbd><kbd>→</kbd> 조향 · <kbd>Space</kbd> 파킹 브레이크<br>
-    <kbd>F</kbd> 문 열기/닫기 · <kbd>T</kbd> 자율주행 · <kbd>H</kbd> 경적 · <kbd>C</kbd> 카메라(추적/낮은/운전석/원거리) · <kbd>R</kbd> 노선 복귀(감점) · <kbd>Esc</kbd> 일시정지<br>
+    <kbd>F</kbd> 문 열기/닫기 · <kbd>Q</kbd><kbd>E</kbd> 방향지시등 · <kbd>Z</kbd> 비상등 · <kbd>T</kbd> 자율주행 · <kbd>H</kbd> 경적 · <kbd>C</kbd> 카메라(추적/낮은/운전석/원거리) · <kbd>R</kbd> 노선 복귀(감점) · <kbd>Esc</kbd> 일시정지<br>
     <b style="color:var(--fg)">경영</b><br>
     마우스 드래그 회전 · <kbd>우클릭</kbd>드래그/<kbd>WASD</kbd> 이동 · 휠 확대/축소 · <kbd>Q</kbd><kbd>E</kbd> 회전 · 더블클릭 시점 초기화<br>노선 지도: 휠 확대 · 드래그 이동 · 정류장 클릭
   </div>
@@ -181,7 +182,7 @@
   <canvas id="mini" class="panel" width="380" height="380"></canvas>
   <div id="tasks" class="panel hide"></div>
   <div id="hudB">
-    <div id="speedBox" class="panel"><div id="spd" class="tnum">0<small>km/h</small></div><div id="gear"><b>P</b><b>R</b><b>N</b><b>D</b></div></div>
+    <div id="speedBox" class="panel"><div id="spd" class="tnum">0<small>km/h</small></div><div id="gear"><b>P</b><b>R</b><b>N</b><b>D</b></div><div id="sigRow"><b id="sgL">◀</b><b id="sgR">▶</b></div></div>
     <div id="limit">50</div>
   </div>
   <div id="hudScore" class="panel"></div>
@@ -222,7 +223,7 @@
     <circle r="27" fill="#14161b" stroke="#596073" stroke-width="3"/><text y="9" text-anchor="middle" font-size="26">🚌</text>
     <rect x="-5" y="-99" width="10" height="24" rx="3" fill="#ffb020"/></svg></div>
   <div id="tbtns">
-    <button data-k="KeyH" title="경적">📯</button><button data-k="KeyF" class="busOnly" title="문">🚪</button><button data-k="KeyT" title="자율주행">🤖</button><button data-k="KeyC" title="카메라">🎥</button>
+    <button data-k="KeyH" title="경적">📯</button><button data-k="KeyF" class="busOnly" title="문">🚪</button><button data-k="KeyQ" title="좌측 방향지시등">⬅</button><button data-k="KeyE" title="우측 방향지시등">➡</button><button data-k="KeyZ" title="비상등">⚠</button><button data-k="KeyT" title="자율주행">🤖</button><button data-k="KeyC" title="카메라">🎥</button>
     <button data-k="KeyR" title="복귀">↺</button><button data-k="Space" title="파킹 브레이크">🅿</button><button data-k="KeyL" title="헤드라이트">💡</button><button data-k="BracketLeft" title="차간 시간 -">−</button>
     <button data-k="BracketRight" title="차간 시간 +">＋</button><button data-k="KeyK" class="carOnly" title="크루즈">🚀</button><button data-k="KeyV" class="carOnly" title="주행 모드">🏎</button><button id="tbPause" title="메뉴">☰</button>
   </div>

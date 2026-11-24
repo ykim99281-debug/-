@@ -12,16 +12,17 @@ const SCHOOL = (() => { try { return Object.assign({ done: {}, best: {}, license
 const saveSchool = () => { try { localStorage.setItem(SCHOOL_KEY, JSON.stringify(SCHOOL)); } catch (e) { } };
 
 function newState(name, school) {
-  return { name, school: !!school, money: 1500000, rep: 50, pax: 0, gt: 0, hour: 9, speed: 1, routes: [], buses: [], nextRoute: 1, nextBus: 1, stats: { revenue: 0, expense: 0, alighted: 0 }, rate: 0, fare: 1500, up: { garage: 0, workshop: 0, fuel: 0, info: 0, welfare: 0 }, loan: 0, dayNo: 1, day: { rev: 0, fuel: 0, wage: 0, maint: 0 }, reports: [], goals: {}, goodStops: 0, headwayTarget: 40, myPay: 0, saveT: 0, pedT: 0, timeT: 0, goalT: 0 };
+  return { name, school: !!school, money: 1500000, rep: 50, pax: 0, gt: 0, hour: 9, speed: 1, routes: [], buses: [], nextRoute: 1, nextBus: 1, stats: { revenue: 0, expense: 0, alighted: 0 }, rate: 0, fare: 1500, up: { garage: 0, workshop: 0, fuel: 0, info: 0, welfare: 0 }, loan: 0, dayNo: 1, day: { rev: 0, fuel: 0, wage: 0, maint: 0 }, reports: [], goals: {}, goodStops: 0, events: [], evNext: 120, anT: 0, headwayTarget: 40, myPay: 0, saveT: 0, pedT: 0, timeT: 0, goalT: 0 };
 }
 const level = () => { let l = 1; LEVELS.forEach((t, i) => { if (G.pax >= t) l = i + 1; }); return l; };
 const routeById = id => G.routes.find(r => r.id === id);
 const busById = id => G.buses.find(b => b.id === id);
 
 function resetWorld() {
+  if (G && G.events) for (const e of G.events) { scene.remove(e.sprite); disposeTree(e.sprite); }
   while (agents.length) agents[0].dispose();
   cars = [];
-  const rr = mulberry(99); STOPS.forEach(s => s.waiting = Math.floor(rr() * 8));
+  const rr = mulberry(99); STOPS.forEach(s => { s.waiting = Math.floor(rr() * 8); s.evMul = 1; });
 }
 function spawnCars(n) {
   for (let i = 0; i < n; i++) {
@@ -34,7 +35,7 @@ function spawnCars(n) {
 // ===== 노선 / 버스 =====
 function makeRoute(name, color, stopIds, id, num) {
   const { E, stopAt } = routeEdges(stopIds), path = buildPath(E, stopAt);
-  return { id, num, name, color, stopIds: stopIds.slice(), path, income: 0, pax: 0 };
+  return { id, num, name, color, stopIds: stopIds.slice(), path, income: 0, pax: 0, born: G ? G.gt : 0 };
 }
 function routeCost(n) { return 50000 + 10000 * n; }
 function addRoute(name, color, stopIds, free) {
@@ -75,7 +76,7 @@ function reassignBus(b, routeId) { if (b.manual) return; b.routeId = routeId; co
 
 // ===== 승객 =====
 function pay(b, amount) {
-  G.day.rev += amount; G.money += amount; G.stats.revenue += amount; b.income += amount; G.pax++; G.rep = Math.min(100, G.rep + 0.01);
+  G.day.rev += amount; G.money += amount; { const rr0 = routeById(b.routeId); if (rr0) rr0.inc60 = (rr0.inc60 || 0) + amount; } G.stats.revenue += amount; b.income += amount; G.pax++; G.rep = Math.min(100, G.rep + 0.01);
   const r = routeById(b.routeId); if (r) { r.income += amount; r.pax++; }
 }
 function serveTick(b, dt, stop, si) {
@@ -135,7 +136,7 @@ function updateWorld(dt) {
   const night = clamp((Math.abs(G.hour - 3) < 3 ? 1 : 0) * 0.6 + 0.4, 0, 1);
   const fm = Math.pow(1500 / G.fare, 0.8) * (1 + 0.08 * G.up.info);
   const dm = 0.45 + 0.55 * (1 - (G.hour > 22 || G.hour < 5 ? 0.7 : 0));
-  for (const s of STOPS) s.waiting = Math.min(40, s.waiting + s.pop * (0.5 + G.rep / 100) * dm * fm * dt);
+  for (const s of STOPS) s.waiting = Math.min(40, s.waiting + s.pop * (0.5 + G.rep / 100) * dm * fm * WX.dem * (s.evMul || 1) * dt);
   for (const b of G.buses) updateBus(b, dt);
   for (const c of cars) c.step(dt, G.gt);
   if (!G.school) {
@@ -154,7 +155,13 @@ function updateWorld(dt) {
   if ((G.pedT -= dt) < 0) { G.pedT = 0.7; updatePeds(); G.repT = (G.repT || 0) + 0.7; if (G.repT > 30) { G.repT = 0; for (const s of STOPS) if (s.waiting > 30 && G.routes.some(r => r.stopIds.includes(s.id))) G.rep = Math.max(0, G.rep - 0.4); } }
   if (!G.school && (G.goalT -= dt) < 0) { G.goalT = 1; checkGoals(); const l = level(); if (l > lastLvl) { toast('⭐ 회사 레벨 ' + l + ' 달성!', 'gold'); for (const k in BUS_TYPES) if (BUS_TYPES[k].lvl === l) toast('🚌 ' + BUS_TYPES[k].name + ' 구매 가능!', 'good'); } lastLvl = l; }
   if (!G.school && (G.saveT -= dt) < 0) { G.saveT = 20; saveCompany(); }
+  if (!WX.lock && ((G.wxT = (G.wxT || 240) - dt) < 0)) { G.wxT = rand(240, 480); const r = Math.random(), t = r < .5 ? 'clear' : r < .72 ? 'cloudy' : r < .9 ? 'rain' : r < .96 ? 'fog' : 'storm'; if (t !== WX.type) { setWeather(t); toast(WX_T[t].i + ' 날씨가 바뀌었어요: ' + WX_T[t].n + (WX_T[t].dem > 1.2 ? ' · 승객이 늘어요' : ''), 'gold'); } }
   if (!G.school && G.money < 0 && ((G.warnT = (G.warnT || 0) - dt) < 0)) { G.warnT = 60; toast('⚠ 회사 자금이 바닥났어요! 버스를 매각하거나 대출·인출 취소로 메우세요', 'bad'); }
+  if (!G.school) {
+    if ((G.anT -= dt) < 0) { G.anT = 2; for (const r of G.routes) { r.rate = (r.rate || 0) + ((r.inc60 || 0) * 30 - (r.rate || 0)) * 0.2; r.inc60 = 0; } }
+    if (G.gt > G.evNext) { if (G.events.length < 2) spawnEvent(); G.evNext = G.gt + rand(280, 480); }
+    for (let i = G.events.length - 1; i >= 0; i--) if (G.gt > G.events[i].until) endEvent(G.events[i]);
+  }
   for (const c of world.clouds) { c.position.x += dt * 2; if (c.position.x > EXT + 400) c.position.x = -EXT - 400; }
   sun.position.copy(world.sunDir || sun.position);
 }
@@ -200,9 +207,9 @@ function startCompany(name, saved0) {
     lastLvl = level(); G.migrated = sv.migrated;
     if (!G.routes.length) { starterRoute(); }
   } else { starterRoute(); G.speed = 10; }
-  spawnCars(46); setHQName(G.name); applyTime(G.hour);
+  WX.lock = false; setWeather('clear'); G.wxT = 240; spawnCars(46); setHQName(G.name); applyTime(G.hour);
 }
-function startSchoolWorld() { resetWorld(); G = newState('운전교실', true); G.hour = 10; spawnCars(34); applyTime(G.hour); setHQName('운전교실'); }
+function startSchoolWorld() { resetWorld(); G = newState('운전교실', true); WX.lock = true; setWeather('clear'); G.hour = 10; spawnCars(34); applyTime(G.hour); setHQName('운전교실'); }
 
 // ===== 현실적 경영: 업그레이드 · 정비 · 대출 · 결산 =====
 const UPGRADES = {
@@ -288,3 +295,18 @@ function routeGaps(b) {   // 같은 노선의 앞차 · 뒷차 (거리 m, 시간
   if (ah) ah.t = ah.d / Math.max(4, b.vAvg || 7); if (bh) bh.t = bh.d / Math.max(4, bh.bus.vAvg || 7);
   return { ahead: ah, behind: bh };
 }
+
+// ===== 도시 이벤트 (수요 폭증) =====
+const EV_DEFS = [
+  { i: '🎆', n: '불꽃축제', pl: ['5·18민주광장', '금남로4가역', '광주천변'], m: 3 }, { i: '⚾', n: '프로야구 홈경기', pl: ['기아챔피언스필드'], m: 3.5 }, { i: '⚽', n: '축구 경기', pl: ['광주월드컵경기장'], m: 3.5 },
+  { i: '🎓', n: '개강 첫날', pl: ['전남대학교', '조선대학교'], m: 2.6 }, { i: '🎨', n: '광주비엔날레 개막', pl: ['광주비엔날레', '국립아시아문화전당'], m: 3 }, { i: '🛍', n: '전통시장 특가', pl: ['양동시장', '송정5일시장'], m: 2.5 }, { i: '⛰', n: '등산객 급증', pl: ['무등산국립공원', '증심사'], m: 3 }
+];
+function spawnEvent() {
+  const def = EV_DEFS[Math.floor(Math.random() * EV_DEFS.length)], name = def.pl[Math.floor(Math.random() * def.pl.length)], pl = PLACES.find(p => p[0] === name) || PLACES[0];
+  const ev = { def, name, x: pl[1], z: pl[2], until: G.gt + rand(150, 240), stops: [] };
+  for (const s of STOPS) if (Math.hypot(s.mid.x - ev.x, s.mid.z - ev.z) < 220) { s.evMul = def.m; ev.stops.push(s.id); }
+  ev.sprite = labelSprite(def.i + ' ' + def.n, { w: 22, bg: 'rgba(251,146,60,.92)', fg: '#1a0e00' }); ev.sprite.position.set(ev.x, 55, ev.z); scene.add(ev.sprite);
+  G.events.push(ev); toast(def.i + ' ' + name + ' ' + def.n + '! 일대 승객이 ×' + def.m + ' (' + Math.round((ev.until - G.gt) / 60 * 10) / 10 + '분)', 'gold');
+}
+function endEvent(ev) { for (const id of ev.stops) STOPS[id].evMul = 1; if (ev.sprite) { scene.remove(ev.sprite); disposeTree(ev.sprite); } G.events.splice(G.events.indexOf(ev), 1); toast(ev.def.i + ' ' + ev.def.n + ' 종료', 'good'); }
+const eventMarkers = () => (G && G.events ? G.events.map(e => ({ x: e.x, z: e.z, c: '#fb923c', big: 1 })) : []);

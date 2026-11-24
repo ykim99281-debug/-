@@ -25,9 +25,9 @@ function startManual(bus, lesson) {
   const a = bus.agent; P.bus = bus; bus.manual = true; a.manual = true;
   Object.assign(P, { active: true, paused: false, done: false, x: a.x, z: a.z, h: a.yaw, v: a.v, steer: 0, s: a.s, si: a.si, score: 100, comfort: 100, lesson: lesson || null, tick: 0, cd: {}, shake: 0, inNode: false, served: 0, graded: false, boarded: 0, t: 0, pens: {}, hornN: 0, camN: 0, revWait: false, lastV: a.v, grade: '', taskDone: {}, missed: 0, perfect: 0, ending: 0 });
   a.v = 0; a.hold = false; a.arrived = false; P.doorOpen = bus.doorGoal > 0.5; if (!P.doorOpen) bus.doorGoal = 0;
-  P.taxi = null; P.cruise = 0; P.mode = 1; P.lights = 0; P.fuel = 0; P.earn = 0; P.free = !!bus.isCar; P.auto = false; P.zoom = 1; P.stopInfo = null; P.finishing = false;
+  P.sig = 0; P.sigK = -1; P.sigT = false; P.wip = 0; P.taxi = null; P.cruise = 0; P.mode = 1; P.lights = 0; P.fuel = 0; P.earn = 0; P.free = !!bus.isCar; P.auto = false; P.zoom = 1; P.stopInfo = null; P.finishing = false;
   P.camH = P.h; P.cam = 0; G.prevSpeed = G.speed; G.speed = 1; G.state = 'drive'; if (!chev) initGuides();
-  chev.visible = beacon.visible = parkBox.visible = !P.free;
+  chev.count = 18; chev.visible = beacon.visible = parkBox.visible = !P.free;
   UI.showDrive(); sfx('start');
 }
 function startLesson(L) {
@@ -88,7 +88,7 @@ function autoStep(dt) {
     P.si = a.si; P.doorOpen = b.doorGoal > 0.5; const st = a.path.stops[a.si], S = STOPS[st.id];
     P.stopInfo = { name: S.name, dist: wrapS(st.s - a.doorZ - a.s, a.path.L), waiting: S.waiting, inZone: false, zoneNow: false, gap: 9, lon: 9 }; guides(a, a.path);
   }
-  computeGaps(dt); dashUpdate();
+  computeGaps(dt); dashUpdate(); wiperUpdate(dt);
   const m = b.model; if (m.steerWheel) m.steerWheel.rotation.z = P.steer * 2.2; m.spot.intensity = lightPow();
   computeHint(); engineAudio(Math.abs(P.v), 0.3);
 }
@@ -120,6 +120,7 @@ function playerKey(code) {
     if (!P.doorOpen) { if (Math.abs(P.v) > 1) { toast('정차 후 문을 여세요', 'bad'); return; } P.doorOpen = true; P.bus.doorGoal = 1; sfx('door'); }
     else { P.doorOpen = false; P.bus.doorGoal = 0; sfx('door'); }
   }
+  if (code === 'KeyQ') { P.sig = P.sig === 1 ? 0 : 1; } if (code === 'KeyE') { P.sig = P.sig === 2 ? 0 : 2; } if (code === 'KeyZ') { P.sig = P.sig === 3 ? 0 : 3; toast(P.sig === 3 ? '⚠ 비상등 켜짐' : '비상등 꺼짐'); }
   if (code === 'KeyT') setAuto(!P.auto);
   if (code === 'KeyL') { P.lights = (P.lights + 1) % 3; toast('💡 헤드라이트 ' + ['자동', '켜짐', '꺼짐'][P.lights]); }
   if (P.bus.isCar && !P.auto) {
@@ -157,13 +158,13 @@ function updatePlayer(dt) {
   const load = 1 - 0.12 * b.pax.length / T.cap; let acc = 0;
   if (!brk) P.revWait = false;
   if (thr && !ending) acc = P.v < -0.2 ? 7 : (b.cond < 25 ? 0.75 : 1) * (T.accel || 3.0) * (free ? [0.8, 1, 1.25][P.mode] : 1) * load * clamp(1 - P.v / T.vmax, 0, 1) + 0.15;
-  else if (brk) { if (P.v > 0.05 && !P.revWait) { acc = -(T.brake || 7.5); if (P.v + acc * dt <= 0) { P.v = 0; acc = 0; P.revWait = true; } } else if (P.revWait) acc = 0; else acc = P.v > -4.5 ? -2.4 : 0; }
+  else if (brk) { if (P.v > 0.05 && !P.revWait) { acc = -(T.brake || 7.5) * WX.grip; if (P.v + acc * dt <= 0) { P.v = 0; acc = 0; P.revWait = true; } } else if (P.revWait) acc = 0; else acc = P.v > -4.5 ? -2.4 : 0; }
   acc -= (free ? 0.012 : 0.05) * P.v + (free ? 0.00012 : 0.0009) * P.v * Math.abs(P.v) + Math.sign(P.v) * 0.22;
-  if (hb) acc -= Math.sign(P.v) * 9;
+  if (hb) acc -= Math.sign(P.v) * 9 * WX.grip;
   const v0 = P.v; P.v += acc * dt; if ((hb || (!thr && !brk)) && v0 * P.v < 0) P.v = 0; if (!thr && !brk && Math.abs(P.v) < 0.04) P.v = 0;
   let tgt = ((keys.KeyA || keys.ArrowLeft) ? 1 : 0) - ((keys.KeyD || keys.ArrowRight) ? 1 : 0); if (P.wheelOn) tgt = P.wheelIn;
   P.steer += (tgt - P.steer) * Math.min(1, dt * (P.wheelOn ? 12 : tgt === 0 ? 5 : 3.2));
-  const dmax = lerp(0.62, free ? 0.09 : 0.2, clamp(Math.abs(P.v) / (T.steerSpeed || 16), 0, 1)), delta = P.steer * dmax, ym = (free ? 11 * (P.mode === 2 ? 1.2 : 1) : 6) / Math.max(Math.abs(P.v), 1), yaw = clamp(P.v / wb * Math.tan(delta), -ym, ym);
+  const dmax = lerp(0.62, free ? 0.09 : 0.2, clamp(Math.abs(P.v) / (T.steerSpeed || 16), 0, 1)), delta = P.steer * dmax, ym = (free ? 11 * (P.mode === 2 ? 1.2 : 1) : 6) * (0.4 + 0.6 * WX.grip) / Math.max(Math.abs(P.v), 1), yaw = clamp(P.v / wb * Math.tan(delta), -ym, ym);
   const ns = clamp(Math.ceil(Math.abs(P.v) * dt / 1.0), 1, 14), sdt = dt / ns; let hitDone = false;
   for (let sstep = 0; sstep < ns; sstep++) {
     P.h += yaw * sdt; const fx = Math.sin(P.h), fz = Math.cos(P.h);
@@ -240,7 +241,7 @@ function updatePlayer(dt) {
   }
   // --- 비주얼 반영
   a.x = P.x; a.z = P.z; a.yaw = P.h; a.fx = fx; a.fz = fz; a.v = P.v; a.steer = delta; a.braking = brk || hb; a.render(dt);
-  computeGaps(dt); dashUpdate();
+  computeGaps(dt); dashUpdate(); signalUpdate(dt); wiperUpdate(dt);
   const m = b.model; if (m.steerWheel) m.steerWheel.rotation.z = P.steer * 2.2; m.group.rotation.z = clamp(-alat * 0.006, -0.05, 0.05); m.group.rotation.x = clamp(-along * 0.004, -0.04, 0.04);
   m.spot.intensity = lightPow();
   if (!free) guides(a, path);
@@ -303,7 +304,7 @@ function driveCamera(dt) {
   }
   const fov = 62 + clamp(Math.abs(P.v) / 20, 0, 1) * 10; if (Math.abs(camera.fov - fov) > .05) { camera.fov += (fov - camera.fov) * Math.min(1, dt * 3); camera.updateProjectionMatrix(); }
 }
-const rearCam = new THREE.PerspectiveCamera(70, 300 / 92, 0.8, 450);
+const rearCam = new THREE.PerspectiveCamera(70, 300 / 92, 1.0, 450);
 function rearView() {
   const b = P.bus, L = b.model.len, fx = Math.sin(P.h), fz = Math.cos(P.h);
   rearCam.position.set(P.x - fx * (L / 2 + 0.2), vt(b).h + 0.3, P.z - fz * (L / 2 + 0.2)); rearCam.lookAt(P.x - fx * 40, 1.5, P.z - fz * 40); return rearCam;
@@ -365,13 +366,13 @@ function updateTaxi(dt) {
   let tgt = null;
   if (tx.ride) {
     const r = tx.ride, s = r.dest; r.time += dt; r.rideDist += Math.abs(P.v) * dt; if (Math.abs(P.v) < 1) r.wait += dt; if (Math.abs(P.v) * 3.6 > 60) r.speedT += dt;
-    tgt = { x: s.curb.x, z: s.curb.z, kind: 'dest' }; const d = Math.hypot(P.x - s.curb.x, P.z - s.curb.z);
+    tgt = { x: s.curb.x, z: s.curb.z, kind: 'dest' }; const d = Math.hypot(P.x - s.curb.x, P.z - s.curb.z); taxiNav(dt);
     if (d < 16 && Math.abs(P.v) < 2) { tx.hold += dt; if (tx.hold > 0.8) endRide(); } else tx.hold = 0;
   } else {
     let best = null, bd = 1e9; for (const h of tx.hail) { const d = Math.hypot(h.x - P.x, h.z - P.z); if (d < bd) { bd = d; best = h; } }
     if (best) { tgt = { x: best.x, z: best.z, kind: 'hail' }; if (bd < 9 && Math.abs(P.v) < 2) { tx.hold += dt; if (tx.hold > 0.8) boardPassenger(best); } else tx.hold = 0; }
   }
-  tx.target = tgt;
+  tx.target = tgt; if (!tx.ride && chev) { chev.visible = false; tx.nav = null; }
   if (tgt) { const dx = tgt.x - P.x, dz = tgt.z - P.z; tx.dist = Math.hypot(dx, dz); const ahead = dx * Math.sin(P.h) + dz * Math.cos(P.h), lat = dx * Math.cos(P.h) - dz * Math.sin(P.h); tx.arrow = -Math.atan2(lat, ahead) * 180 / Math.PI; beacon.visible = true; beacon.position.set(tgt.x, 20, tgt.z); beacon.material.color.setHex(tgt.kind === 'dest' ? 0x4ade80 : 0xffd21a); }
   else beacon.visible = false;
 }
@@ -389,7 +390,46 @@ function endRide() {
   toast('🚕 도착! 요금 ' + fmtMoney(fare) + (tip ? ' + 팁 ' + fmtMoney(tip) : '') + ' · ' + '★'.repeat(stars) + '☆'.repeat(5 - stars), stars >= 4 ? 'gold' : 'good'); sfx('chime');
 }
 function taxiHint() {
-  const tx = P.taxi; if (!tx) return ''; if (tx.ride) return '🚕 ' + tx.ride.dest.name + '까지 · 남은 ' + Math.round(tx.dist) + 'm · 미터기 ' + fmtMoney(taxiFare(tx.ride));
+  const tx = P.taxi; if (!tx) return ''; if (tx.ride) return '🚕 ' + tx.ride.dest.name + '까지 · 남은 ' + Math.round(tx.nav ? tx.nav.rem : tx.dist) + 'm · 미터기 ' + fmtMoney(taxiFare(tx.ride));
   return tx.target ? '🙋 가까운 손님 ' + Math.round(tx.dist) + 'm · 옆에 멈춰 세우면 탑승해요' : '🚕 손님을 찾는 중…';
 }
 function taxiMarkers() { const tx = P.taxi; if (!tx) return null; const m = tx.hail.map(h => ({ x: h.x, z: h.z, c: '#ffd21a' })); if (tx.ride) m.push({ x: tx.ride.dest.curb.x, z: tx.ride.dest.curb.z, c: '#4ade80', big: 1 }); return m; }
+
+// ===== 방향지시등 · 와이퍼 =====
+function signalUpdate(dt) {
+  const m = P.bus.model; if (!m.setSignal) return;
+  const on = Math.floor(performance.now() / 357) % 2 === 0; let l = false, r = false; if (P.sig === 1 || P.sig === 3) l = on; if (P.sig === 2 || P.sig === 3) r = on;
+  const k = (l ? 1 : 0) + (r ? 2 : 0); if (k !== P.sigK) { if (P.sigK !== -1 && P.sig) sfx('tick'); P.sigK = k; m.setSignal(l, r); }
+  if (P.sig === 1 || P.sig === 2) { const turned = Math.abs(P.steer) > 0.45 && (P.sig === 1 ? P.steer > 0 : P.steer < 0); if (turned) P.sigT = true; if (P.sigT && Math.abs(P.steer) < 0.12) { P.sig = 0; P.sigT = false; } } else P.sigT = false;
+}
+function wiperUpdate(dt) { const m = P.bus.model; if (!m.setWiper) return; if (WX.rainK > 0.05) { P.wip += dt * (2.4 + WX.rainK * 2.4); m.setWiper(Math.abs(Math.sin(P.wip)) * 1.25); } else if (P.wip) { P.wip = 0; m.setWiper(0); } }
+
+// ===== 택시 내비게이션 (목적지까지 길 안내) =====
+function tripEdges(u, v, c, d) {
+  const E = [[u, v]]; let nodes = connect(u, v, c, d); for (let k = 0; k < nodes.length - 1; k++) E.push([nodes[k], nodes[k + 1]]);
+  const di = E.length; E.push([c, d]); nodes = connect(c, d, u, v); for (let k = 0; k < nodes.length - 1; k++) E.push([nodes[k], nodes[k + 1]]); return { E, di };
+}
+function taxiNavBuild() {
+  const tx = P.taxi, dest = tx.ride.dest, fx = Math.sin(P.h), fz = Math.cos(P.h); let best = null, bd = 1e18;
+  for (const n of NP) for (const vid of neighbors(nid(n.i, n.j))) {
+    const v = NP[vid], len = SP, ux = (v.x - n.x) / len, uz = (v.z - n.z) / len; if (ux * fx + uz * fz < 0.5) continue;
+    const ax = n.x - uz * OFF, az = n.z + ux * OFF, t = clamp(((P.x - ax) * ux + (P.z - az) * uz) / len, 0, 1), cx = ax + ux * len * t, cz = az + uz * len * t, d = Math.hypot(P.x - cx, P.z - cz) + (t >= 1 ? 30 : 0);
+    if (d < bd) { bd = d; best = [nid(n.i, n.j), vid]; }
+  }
+  if (!best) return null;
+  const { E, di } = tripEdges(best[0], best[1], dest.u, dest.v), path = buildPath(E, { [di]: 1 });
+  return { path, sDest: path.stops[0].s, s: projectPath(path, P.x, P.z).s, rem: 0, t: 0 };
+}
+const dest0 = () => P.taxi.ride.dest;
+function taxiNav(dt) {
+  const tx = P.taxi; if (!tx.ride) return; let nv = tx.nav; if (nv) nv.t -= dt;
+  if (!nv) { nv = tx.nav = taxiNavBuild(); if (!nv) return; nv.t = 2; }
+  const pr = projectPath(nv.path, P.x, P.z, nv.s, 70); nv.s = pr.s;
+  if (pr.d > 28 && nv.t < 0) { tx.nav = taxiNavBuild(); nv = tx.nav; if (!nv) return; nv.t = 2; }
+  const L = nv.path.L, ds = ((nv.sDest - nv.s) % L + L) % L, dd = Math.hypot(P.x - dest0().curb.x, P.z - dest0().curb.z);
+  if (nv.passed) { nv.rem = 0; if (dd > 60 && nv.t < 0) { tx.nav = taxiNavBuild(); return; } }
+  else { if (nv.prev !== undefined && nv.prev < 90 && ds > L - 110) { nv.passed = true; nv.rem = 0; } else nv.rem = ds; nv.prev = ds; }
+  const n = nv.rem > 12 ? Math.min(18, Math.floor((nv.rem - 6) / 7)) : 0;
+  for (let i = 0; i < n; i++) { pathAt(nv.path, nv.s + 6 + i * 7, _t); _dummy.position.set(_t.x, 0.13, _t.z); _dummy.rotation.set(0, Math.atan2(_t.tx, _t.tz), 0); _dummy.scale.set(0.9, 1, 0.9); _dummy.updateMatrix(); chev.setMatrixAt(i, _dummy.matrix); }
+  chev.count = n; chev.visible = n > 0; chev.instanceMatrix.needsUpdate = true;
+}

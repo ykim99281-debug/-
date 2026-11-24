@@ -1,0 +1,30 @@
+const { chromium } = require('playwright');
+(async () => {
+  const b = await chromium.launch({ args: ['--use-gl=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist'] });
+  const p = await b.newPage({ viewport: { width: 1100, height: 700 } });
+  const errs = [];
+  p.on('pageerror', e => errs.push('PAGEERR ' + e.message + ' @' + (e.stack||'').split('\n')[1]));
+  await p.route('**/three.min.js', r => r.fulfill({ path: process.env.THREE_JS || require('path').join(__dirname, 'three.min.js'), contentType: 'text/javascript' }));
+  await p.goto('file://' + require('path').join(__dirname, '..', 'index.html') + ''); await p.waitForTimeout(1500);
+  await p.evaluate(()=>localStorage.clear());
+  const out = await p.evaluate(()=>{
+    const R=[]; const T=(n,f)=>{ try{ R.push('ok   '+n+' '+(f()||'')); }catch(e){ R.push('FAIL '+n+': '+e.message+' @'+(e.stack||'').split('\n')[1]); } };
+    const frames=(n,dt=0.05)=>{ for(let i=0;i<n;i++){ updateWorld(dt); updateWeather(dt); if(P.active){ updatePlayer(dt); driveCamera(dt);} } };
+    startCompany('ev'); G.money=9e7; G.pax=9999; UI.showMgmt();
+    T('events spawn/end',()=>{ G.evNext=0; frames(5); const n=G.events.length; const mul=STOPS.filter(s=>s.evMul>1).length; G.events[0].until=0; frames(5); const mul2=STOPS.filter(s=>s.evMul>1).length; return 'spawned='+n+' boosted='+mul+' after='+mul2+' left='+G.events.length; });
+    T('event marker/UI',()=>{ G.evNext=0; frames(5); UI.refreshTop(); UI.edState=null; return 'markers='+eventMarkers().length+' tEv='+document.getElementById('tEv').textContent; });
+    T('route analytics',()=>{ addBus('city',G.routes[0].id,true); G.speed=1; frames(1200); const html=UI.routeAnalytics(G.routes[0]); return html.replace(/<[^>]+>/g,'').slice(0,90); });
+    T('weather cycle all types',()=>{ for(const t of Object.keys(WX_T)){ setWeather(t); frames(120,0.1); } setWeather('clear'); frames(200,0.1); return 'rain='+WX.rainK.toFixed(2); });
+    T('weather affects demand/speed',()=>{ setWeather('storm'); frames(300,0.1); const a=WX.dem, s=WX.spd, g=WX.grip; setWeather('clear'); frames(300,0.1); return 'storm dem='+a.toFixed(2)+' spd='+s.toFixed(2)+' grip='+g.toFixed(2); });
+    T('AI signals blink at corners',()=>{ let seen=0; for(let i=0;i<4000;i++){ updateWorld(0.1); for(const a of agents) if(a.sigL||a.sigR) seen++; } return 'signal-frames='+seen; });
+    T('player signals',()=>{ startSchoolWorld(); startCar({id:1,model:'sonata',color:1,km:0},{x:0,z:0}); playerKey('KeyQ'); frames(30); const l=P.sigK; playerKey('KeyE'); frames(30); playerKey('KeyZ'); frames(30); const h=P.sigK; P.sig=1; P.v=6; keys.KeyA=true; frames(30); const during=P.sig; keys.KeyA=false; frames(60); return 'sig during='+during+' after='+P.sig+' hazardSeen='+(h!==undefined); });
+    T('taxi nav',()=>{ setTaxi(true); const h=P.taxi.hail[0]; P.x=h.x+3; P.z=h.z+3; P.v=0; frames(40); if(!P.taxi.ride) throw new Error('no ride'); frames(20); const nv=P.taxi.nav; if(!nv) throw new Error('no nav'); const ok=chev.visible; return 'rem='+Math.round(nv.rem)+' chevrons='+chev.count+' visible='+ok+' L='+Math.round(nv.path.L); });
+    T('taxi nav moves toward dest',()=>{ const r0=P.taxi.nav.rem; const dn=P.taxi.ride.dest; const path=P.taxi.nav.path; const s=P.taxi.nav.s; pathAt(path,s+80,_t); P.x=_t.x; P.z=_t.z; frames(30); return 'rem '+Math.round(r0)+' -> '+Math.round(P.taxi.nav.rem)+' (should drop ~80)'; });
+    T('taxi nav reroute (off-route)',()=>{ P.x+=90; P.z+=90; frames(120); return 'rem='+Math.round(P.taxi.nav.rem)+' chev='+chev.count; });
+    T('taxi nav finish',()=>{ const s=P.taxi.ride.dest; P.x=s.curb.x; P.z=s.curb.z; P.v=0; frames(40); return 'ride='+!!P.taxi.ride+' trips='+P.taxi.trips+' chevVisible='+chev.visible; });
+    T('bus guide chevrons after taxi',()=>{ stopManual(true); startCompany('b'); G.money=9e7; startManual(G.buses[0]); frames(10); return 'count='+chev.count; });
+    return R;
+  });
+  console.log(out.join('\n')); console.log(errs);
+  await b.close();
+})();

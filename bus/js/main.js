@@ -90,7 +90,8 @@ function frameBody(now) {
   const active = P.active;
   if (!(active && P.paused)) { const sdt = active ? dt : dt * (G.state === 'company' ? G.speed : 1), n = Math.max(1, Math.ceil(sdt / 0.1)); for (let i = 0; i < n; i++) updateWorld(sdt / n); }
   if (active) { updatePlayer(dt); driveCamera(dt); if ((fpsT -= dt) < 0) { fpsT = 0.1; UI.updateHUD(); } } else orbit(dt);
-  scene.fog.near = active ? 320 : Math.max(320, CAM.dist * 0.6); scene.fog.far = active ? 1800 : Math.max(1800, CAM.dist * 2.8);
+  updateWeather(dt); const fm = clamp(1 - 0.88 * WX.fogK - 0.3 * WX.rainK, 0.08, 1);
+  scene.fog.near = (active ? 320 : Math.max(320, CAM.dist * 0.6)) * fm * fm; scene.fog.far = (active ? 1800 : Math.max(1800, CAM.dist * 2.8)) * fm;
   const fx = active ? P.x : CAM.target.x, fz = active ? P.z : CAM.target.z;
   if (world.sunDir) { sun.position.set(fx + world.sunDir.x, world.sunDir.y, fz + world.sunDir.z); sun.target.position.set(fx, 0, fz); sun.target.updateMatrixWorld(); }
   renderer.shadowMap.needsUpdate = true; renderer.render(scene, camera);
@@ -113,7 +114,7 @@ function frame(now) {   // 한 프레임에서 오류가 나도 루프가 멈추
 }
 
 // ----- 시작
-resize(); buildCity(); buildStops(); initGuides(); UI.init();
+resize(); buildCity(); buildStops(); initGuides(); initWeather(); UI.init();
 startSchoolWorld(); UI.showTitle();
 requestAnimationFrame(frame);
 window.addEventListener('beforeunload', () => { if (G && !G.school) saveCompany(); });

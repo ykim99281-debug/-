@@ -94,10 +94,10 @@ function buildCity() {
   // 지면
   const gt = canvasTex(256, 256, x => { x.fillStyle = '#4a8f46'; x.fillRect(0, 0, 256, 256); for (let i = 0; i < 3500; i++) { x.fillStyle = `hsl(${95 + Math.random() * 30},${35 + Math.random() * 20}%,${28 + Math.random() * 14}%)`; x.fillRect(Math.random() * 256, Math.random() * 256, 1 + Math.random() * 3, 1 + Math.random() * 3); } }, 460);
   const grass = new THREE.Mesh(new THREE.PlaneGeometry(7000, 7000), new THREE.MeshLambertMaterial({ map: gt }));
-  grass.rotation.x = -Math.PI / 2; grass.position.y = -0.35; grass.receiveShadow = true; scene.add(grass);
+  grass.rotation.x = -Math.PI / 2; grass.position.y = -0.6; grass.receiveShadow = true; scene.add(grass);
   const at = canvasTex(128, 128, x => { x.fillStyle = '#34373f'; x.fillRect(0, 0, 128, 128); for (let i = 0; i < 1400; i++) { const v = 40 + Math.random() * 30; x.fillStyle = `rgb(${v},${v + 2},${v + 8})`; x.fillRect(Math.random() * 128, Math.random() * 128, 2, 2); } }, 70);
   const road = new THREE.Mesh(new THREE.PlaneGeometry(EXT * 2, EXT * 2), new THREE.MeshLambertMaterial({ map: at }));
-  road.rotation.x = -Math.PI / 2; road.position.y = 0.0; road.receiveShadow = true; scene.add(road);
+  world.roadMat = road.material; road.rotation.x = -Math.PI / 2; road.position.y = 0.0; road.receiveShadow = true; scene.add(road);
 
   // 블록(보도 슬랩) + 건물
   const wt = winTex();
@@ -282,4 +282,41 @@ function applyTime(h) {
   sun.color.setHex(day > 0.6 ? 0xfff0d6 : 0xffa060);
   lampMat.color.setHex(nightK > 0.35 ? 0xffe9a8 : 0x777777);
   windowMat.emissiveIntensity = nightK > 0.3 ? nightK : 0; updateBusLights(nightK);
+  world.base = { bg: _c1.clone(), hemi: hemi.intensity, sun: sun.intensity }; applyWeatherLook();
+}
+
+// ===== 날씨 =====
+const WX_T = {
+  clear: { n: '맑음', i: '☀', rain: 0, fog: 0, dark: 0, spd: 1, grip: 1, dem: 1 }, cloudy: { n: '흐림', i: '☁', rain: 0, fog: .06, dark: .18, spd: 1, grip: 1, dem: 1.05 },
+  rain: { n: '비', i: '🌧', rain: .55, fog: .22, dark: .32, spd: .9, grip: .8, dem: 1.3 }, storm: { n: '폭우', i: '⛈', rain: 1, fog: .38, dark: .55, spd: .78, grip: .62, dem: 1.5 }, fog: { n: '안개', i: '🌫', rain: 0, fog: .85, dark: .22, spd: .8, grip: .95, dem: 1 }
+};
+const WX = { type: 'clear', rainK: 0, fogK: 0, dark: 0, spd: 1, grip: 1, dem: 1, flash: 0, thunderT: 8, lock: false };
+let rainMesh = null; const RAIN_N = 1600;
+function initWeather() {
+  const pos = new Float32Array(RAIN_N * 6); for (let i = 0; i < RAIN_N; i++) { const x = rand(-45, 45), y = rand(0, 40), z = rand(-45, 45); pos.set([x, y, z, x + 0.18, y - 1.4, z + 0.06], i * 6); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  rainMesh = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0xcfe3ff, transparent: true, opacity: 0, fog: false, depthWrite: false })); rainMesh.frustumCulled = false; rainMesh.visible = false; scene.add(rainMesh);
+}
+function setWeather(t) { if (WX_T[t]) WX.type = t; }
+function applyWeatherLook() {
+  const b = world.base; if (!b) return; const gray = _c2.setHex(0x8b929c).multiplyScalar(0.3 + 0.7 * (1 - nightK));
+  scene.background.copy(b.bg).lerp(gray, clamp(WX.dark * 1.2 + WX.fogK * 0.5, 0, 0.85)); scene.fog.color.copy(scene.background);
+  hemi.intensity = b.hemi * (1 - 0.28 * WX.dark) + WX.flash * 1.4; sun.intensity = b.sun * (1 - 0.85 * WX.dark);
+}
+function updateWeather(dt) {
+  const T = WX_T[WX.type], e = Math.min(1, dt * 0.35);
+  WX.rainK += (T.rain - WX.rainK) * e; WX.fogK += (T.fog - WX.fogK) * e; WX.dark += (T.dark - WX.dark) * e; WX.spd += (T.spd - WX.spd) * e; WX.grip += (T.grip - WX.grip) * e; WX.dem += (T.dem - WX.dem) * e;
+  if (WX.type === 'storm') { WX.thunderT -= dt; if (WX.thunderT < 0) { WX.thunderT = rand(7, 16); WX.flash = 1; setTimeout(() => sfx('thunder'), rand(400, 1600)); } }
+  WX.flash = Math.max(0, WX.flash - dt * 3); if (world.roadMat) world.roadMat.color.setScalar(1 - 0.4 * WX.rainK);
+  if (rainMesh) {
+    const vis = WX.rainK > 0.03 && camera.position.y < 80; rainMesh.visible = vis;
+    if (vis) {
+      rainMesh.material.opacity = 0.16 + 0.34 * WX.rainK; rainMesh.position.set(camera.position.x, 0, camera.position.z);
+      const a = rainMesh.geometry.attributes.position.array, fall = (30 + 22 * WX.rainK) * dt, n = Math.floor(RAIN_N * (0.35 + 0.65 * WX.rainK));
+      for (let i = 0; i < RAIN_N; i++) { const o = i * 6; if (i >= n) { a[o + 1] = a[o + 4] = -50; continue; } a[o + 1] -= fall; a[o + 4] -= fall; a[o] -= 0.12 * fall * 0.3; a[o + 3] -= 0.12 * fall * 0.3; if (a[o + 1] < 0) { const x = rand(-45, 45), z = rand(-45, 45), y = 40 + rand(0, 4); a[o] = x; a[o + 1] = y; a[o + 2] = z; a[o + 3] = x + 0.18; a[o + 4] = y - 1.4; a[o + 5] = z + 0.06; } }
+      rainMesh.geometry.attributes.position.needsUpdate = true;
+    }
+  }
+  if (typeof rainAudio === 'function') rainAudio(WX.rainK);
+  applyWeatherLook();
 }

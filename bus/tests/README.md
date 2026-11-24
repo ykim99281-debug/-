@@ -13,4 +13,5 @@ node save-compat.js    # 옛 저장·손상된 저장 이전/복구
 node leak.js           # 버스 매매·자유주행·교습 반복 시 GPU 메모리 누수
 node company-edge.js   # 운전 중 노선 삭제/매각, 마이너스 자금, 대출 한도 등
 node sim-longrun.js    # 100분 시뮬레이션: NaN, 교착, 정체
+node features.js       # 날씨·지시등·이벤트·수익분석·택시 내비게이션
 ```
