@@ -65,7 +65,8 @@
   #hudR{position:absolute;right:14px;bottom:16px;font-size:12px;color:var(--muted);line-height:1.8;text-align:right}
   #doorTag{display:inline-block;padding:2px 10px;border-radius:7px;font-size:12px;font-weight:700;background:rgba(255,255,255,.1)}
   #doorTag.open{background:var(--ok);color:#052}
-  #tasks{position:absolute;left:14px;top:150px;max-width:290px;font-size:14px;line-height:1.7}
+  #gapBox{position:absolute;left:14px;top:126px;min-width:236px;font-size:13px}.gr{display:flex;justify-content:space-between;gap:12px;line-height:1.7}.gbar{height:5px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden;margin:0 0 3px}.gbar i{display:block;height:100%}
+  #tasks{position:absolute;left:14px;top:330px;max-width:290px;font-size:14px;line-height:1.7}
   #tasks div.done{color:var(--ok);text-decoration:line-through;opacity:.8}
   #toasts{position:fixed;left:50%;top:190px;transform:translateX(-50%);z-index:9;display:flex;flex-direction:column;gap:6px;align-items:center;pointer-events:none}
   .toast{padding:7px 16px;border-radius:10px;font-weight:700;background:rgba(10,14,26,.88);border:1px solid var(--line);animation:tin .25s,tout .5s 2.2s forwards}
@@ -131,7 +132,7 @@
 <div id="title"><div class="box panel">
   <h1><small>3D BUS SIMULATOR</small>🚌 버스 운전교실 타이쿤</h1>
   <p>노선을 직접 설계해 버스 회사를 키우고,<br>원할 땐 운전석에 앉아 승객을 태우고 직접 운행하세요.</p>
-  <div class="row" style="justify-content:center"><span class="muted">회사 이름</span><input id="coName" value="한강 버스" maxlength="12" style="width:180px"></div>
+  <div class="row" style="justify-content:center"><span class="muted">회사 이름</span><input id="coName" value="광주 시티버스" maxlength="12" style="width:180px"></div>
   <div class="menu">
     <button class="btn pri" id="bNew">🏢 새 버스 회사 시작 <span>노선 설계 · 버스 구매 · 직접 운전</span></button>
     <button class="btn pri" id="bFree">🚗 자유주행 <span style="color:#3a2a00">내 차 타고 도시를 마음껏</span></button>
@@ -152,6 +153,7 @@
 <!-- HUD -->
 <div id="hud" class="hide">
   <div id="hudL" class="panel"></div>
+  <div id="gapBox" class="panel"></div>
   <div id="hint" class="panel"></div>
   <div id="rear" class="hide"><span>후방 카메라</span></div>
   <canvas id="mini" class="panel" width="380" height="380"></canvas>

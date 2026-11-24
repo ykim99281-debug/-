@@ -1,6 +1,6 @@
 'use strict';
 const keys = {};
-const P = { zoom: 1, auto: false, free: false, active: false, paused: false, bus: null, x: 0, z: 0, h: 0, v: 0, steer: 0, cam: 0, camH: 0, lesson: null, cd: {}, shake: 0, hint: '', done: false };
+const P = { autoHeadway: 1.6, gaps: null, earn: 0, zoom: 1, auto: false, free: false, active: false, paused: false, bus: null, x: 0, z: 0, h: 0, v: 0, steer: 0, cam: 0, camH: 0, lesson: null, cd: {}, shake: 0, hint: '', done: false };
 const vt = b => b.isCar ? b.spec : BUS_TYPES[b.type];
 const pickStops = anchors => { const ids = []; for (const [ax, az] of anchors) { let b = null, bd = 1e9; for (const s of STOPS) { if (ids.includes(s.id)) continue; const d = Math.hypot(s.mid.x - ax, s.mid.z - az); if (d < bd) { bd = d; b = s; } } ids.push(b.id); } return ids; };
 const LESSONS = [
@@ -25,7 +25,7 @@ function startManual(bus, lesson) {
   const a = bus.agent; P.bus = bus; bus.manual = true; a.manual = true;
   Object.assign(P, { active: true, paused: false, done: false, x: a.x, z: a.z, h: a.yaw, v: a.v, steer: 0, s: a.s, si: a.si, score: 100, comfort: 100, lesson: lesson || null, tick: 0, cd: {}, shake: 0, inNode: false, served: 0, graded: false, boarded: 0, t: 0, pens: {}, hornN: 0, camN: 0, revWait: false, lastV: a.v, grade: '', taskDone: {}, missed: 0, perfect: 0, ending: 0 });
   a.v = 0; a.hold = false; a.arrived = false; P.doorOpen = bus.doorGoal > 0.5; if (!P.doorOpen) bus.doorGoal = 0;
-  P.free = !!bus.isCar; P.auto = false; P.zoom = 1; P.stopInfo = null; P.finishing = false;
+  P.earn = 0; P.free = !!bus.isCar; P.auto = false; P.zoom = 1; P.stopInfo = null; P.finishing = false;
   P.camH = P.h; P.cam = 0; G.speed = 1; G.state = 'drive'; if (!chev) initGuides();
   chev.visible = beacon.visible = parkBox.visible = !P.free;
   UI.showDrive(); sfx('start');
@@ -59,9 +59,9 @@ function setAuto(on) {
     } else {
       const pr = projectPath(a.path, P.x, P.z, P.s, 80); a.s = pr.s; a.v = Math.max(0, P.v); a.hold = false; a.arrived = false; b.phase = 'run'; b.manual = false; a.manual = false; b.doorGoal = 0; P.doorOpen = false; P.graded = false; a.si = a.nearestStop(); a.pose(0);
     }
-    P.auto = true; toast('🤖 자율주행 시작 · 아무 조작이나 하면 수동으로 전환돼요', 'gold'); sfx('good');
+    a.headway = P.autoHeadway; P.auto = true; toast('🤖 자율주행 시작 · 아무 조작이나 하면 수동 전환 · [ ] 로 차간 시간 조절', 'gold'); sfx('good');
   } else {
-    P.auto = false; P.x = a.x; P.z = a.z; P.h = a.yaw; P.v = a.v; P.steer = 0; a.manual = true;
+    a.headway = 1.2; P.auto = false; P.x = a.x; P.z = a.z; P.h = a.yaw; P.v = a.v; P.steer = 0; a.manual = true;
     if (!b.isCar) { P.s = a.s; P.si = a.si; b.manual = true; P.doorOpen = b.doorGoal > 0.5; b.phase = 'run'; a.hold = false; a.arrived = false; P.graded = false; }
     toast('수동 운전으로 전환', 'good');
   }
@@ -74,6 +74,7 @@ function autoStep(dt) {
     P.si = a.si; P.doorOpen = b.doorGoal > 0.5; const st = a.path.stops[a.si], S = STOPS[st.id];
     P.stopInfo = { name: S.name, dist: wrapS(st.s - a.doorZ - a.s, a.path.L), waiting: S.waiting, inZone: false, zoneNow: false, gap: 9, lon: 9 }; guides(a, a.path);
   }
+  computeGaps(dt); dashUpdate();
   const m = b.model; if (m.steerWheel) m.steerWheel.rotation.z = P.steer * 2.2; m.spot.intensity = nightK > 0.4 ? 1.6 : 0;
   computeHint(); engineAudio(Math.abs(P.v), 0.3);
 }
@@ -106,6 +107,7 @@ function playerKey(code) {
     else { P.doorOpen = false; P.bus.doorGoal = 0; sfx('door'); }
   }
   if (code === 'KeyT') setAuto(!P.auto);
+  if (code === 'BracketRight' || code === 'BracketLeft') { P.autoHeadway = clamp(Math.round((P.autoHeadway + (code === 'BracketRight' ? 0.2 : -0.2)) * 10) / 10, 0.8, 3.0); P.bus.agent.headway = P.autoHeadway; toast('🤖 자율주행 차간 시간 ' + P.autoHeadway.toFixed(1) + '초', 'gold'); }
   if (code === 'KeyH') { P.hornN++; sfx('horn'); }
   if (code === 'KeyC') { P.cam = (P.cam + 1) % 4; P.camN++; P.bus.model.setCockpit(P.cam === 2); camera.near = P.cam === 2 ? 0.3 : 0.5; camera.updateProjectionMatrix(); }
   if (code === 'KeyR' && !P.auto) { const pr = projectPath(P.bus.agent.path, P.x, P.z, P.s, 60); const t = pathAt(P.bus.agent.path, pr.s); P.x = t.x; P.z = t.z; P.h = Math.atan2(t.tx, t.tz); P.v = 0; if (P.free) toast('도로 위로 복귀'); else pen('reset', 5, '노선 복귀', 1); }
@@ -167,7 +169,7 @@ function updatePlayer(dt) {
   if (!free) {
   // --- 경로 진행
   if (!G.school && !free) { addRun(b, Math.abs(P.v) * dt); if (b.cond < 25 && !(P.cd.cond > 0)) { P.cd.cond = 20; toast('🔧 정비 불량! 출력이 떨어졌어요', 'bad'); } }
-  const pr = projectPath(path, P.x, P.z, P.s, 40); P.s = pr.s; P.offRoute = pr.d > 14;
+  const pr = projectPath(path, P.x, P.z, P.s, 40); P.s = pr.s; a.s = pr.s; P.offRoute = pr.d > 14;
   // --- 승차감
   if (b.pax.length) { if (Math.abs(alat) > 2.8) P.comfort = Math.max(0, P.comfort - (Math.abs(alat) - 2.8) * 9 * dt); if (along < -5.5) P.comfort = Math.max(0, P.comfort - 22 * dt); }
   if (along < -6.9 && P.v > 3 && b.pax.length) pen('harsh', 1, '급제동', 3);
@@ -214,6 +216,7 @@ function updatePlayer(dt) {
   }
   // --- 비주얼 반영
   a.x = P.x; a.z = P.z; a.yaw = P.h; a.fx = fx; a.fz = fz; a.v = P.v; a.steer = delta; a.braking = brk || hb; a.render(dt);
+  computeGaps(dt); dashUpdate();
   const m = b.model; if (m.steerWheel) m.steerWheel.rotation.z = P.steer * 2.2; m.group.rotation.z = clamp(-alat * 0.006, -0.05, 0.05); m.group.rotation.x = clamp(-along * 0.004, -0.04, 0.04);
   m.spot.intensity = nightK > 0.4 ? 1.6 : 0;
   if (!free) guides(a, path);
@@ -278,4 +281,27 @@ const rearCam = new THREE.PerspectiveCamera(70, 300 / 92, 0.8, 450);
 function rearView() {
   const b = P.bus, L = b.model.len, fx = Math.sin(P.h), fz = Math.cos(P.h);
   rearCam.position.set(P.x - fx * (L / 2 + 0.2), vt(b).h + 0.3, P.z - fz * (L / 2 + 0.2)); rearCam.lookAt(P.x - fx * 40, 1.5, P.z - fz * 40); return rearCam;
+}
+
+// ===== 앞차 · 뒷차 간격 (거리 · 시간) =====
+let gapT = 0;
+function computeGaps(dt) {
+  if ((gapT -= dt) > 0) return; gapT = 0.12;
+  const b = P.bus, a = b.agent, T = vt(b), fx = Math.sin(P.h), fz = Math.cos(P.h); let fr = null, rr = null;
+  for (const o of agents) {
+    if (o === a) continue; const dx = o.x - P.x, dz = o.z - P.z, ah = dx * fx + dz * fz; if (Math.abs(ah) > 160) continue;
+    const lat = dx * fz - dz * fx; if (Math.abs(lat) > 2.9 || o.fx * fx + o.fz * fz < 0.5) continue;
+    const gap = Math.abs(ah) - (T.len + o.len) / 2;
+    if (ah > 0 && (!fr || gap < fr.d)) fr = { d: Math.max(0, gap), v: o.v, kind: o.kind };
+    if (ah < 0 && (!rr || gap < rr.d)) rr = { d: Math.max(0, gap), v: o.v, kind: o.kind };
+  }
+  if (fr) fr.t = P.v > 0.8 ? fr.d / P.v : null; if (rr) rr.t = rr.v > 0.8 ? rr.d / rr.v : null;
+  P.gaps = { front: fr, rear: rr, route: !b.isCar && !P.lesson ? routeGaps(b) : null };
+}
+const fmtMS = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+let dashT = 0;
+function dashUpdate() {
+  const b = P.bus; if (P.cam !== 2 || !b.model.drawDash || (dashT++ % 4)) return;
+  const g = P.gaps && P.gaps.front, si = P.stopInfo;
+  b.model.drawDash({ kmh: Math.round(Math.abs(P.v) * 3.6), gear: P.v < -0.2 ? 'R' : Math.abs(P.v) < 0.2 ? 'N' : 'D', door: P.doorOpen, next: si ? si.name : '', auto: P.auto, gap: g ? (g.t ? '앞차 ' + g.t.toFixed(1) + 's' : '앞차 ' + Math.round(g.d) + 'm') : '' });
 }

@@ -95,13 +95,29 @@ function buildCity() {
   const wt = winTex();
   windowMat = new THREE.MeshLambertMaterial({ map: wt.map, emissiveMap: wt.em, emissive: 0xffffff, emissiveIntensity: 0, vertexColors: true, side: THREE.DoubleSide });
   const city = new Merge(), slabs = [], R = srnd, BW = SP - ROAD;
-  const parks = { '2,7': 1, '7,2': 1, '0,0': 1, '5,0': 1, '0,5': 1, '8,5': 1, '5,8': 1, '1,3': 1 };
+  const parks = { '7,2': 1, '0,0': 1, '5,0': 1, '0,5': 1, '8,5': 1, '5,8': 1, '1,3': 1 };
   for (let bj = 0; bj < GN - 1; bj++) for (let bi = 0; bi < GN - 1; bi++) {
     const CB = (GN - 2) / 2, cx = (bi - CB) * SP, cz = (bj - CB) * SP, dc = Math.max(Math.abs(bi - CB), Math.abs(bj - CB)), key = bi + ',' + bj;
     const park = parks[key], depot = key === (GN - 2) + ',' + (GN - 2);
     slabs.push({ x: cx, y: 0.15, z: cz, sx: BW, sz: BW, col: park ? 0x5aa45a : depot ? 0x6b6f78 : 0x9fa2a9 });
     world.blocks.push({ minx: cx - BW / 2, maxx: cx + BW / 2, minz: cz - BW / 2, maxz: cz + BW / 2 });
-    if (park) {
+    const sp = key === '0,8' ? 'wc' : key === '6,3' ? 'bb' : (key === '7,1' || key === '7,4') ? 'campus' : key === '0,3' ? 'station' : (key === '1,7' || key === '2,7' || key === '2,8') ? 'sangmu' : '';
+    if (bj === 6) {   // 광주천
+      slabs[slabs.length - 1].col = 0x2f7fc2; slabs[slabs.length - 1].y = 0.05;
+      if (bi % 2 === 0) for (let t = 0; t < 3; t++) treeList.push({ x: cx + (R() - .5) * 50, z: cz + (R() > .5 ? 1 : -1) * 26, s: .7 + R() * .4 });
+    } else if (sp === 'wc' || sp === 'bb') {
+      const rr = sp === 'wc' ? 26 : 19, st = new THREE.Mesh(new THREE.CylinderGeometry(rr, rr - 3, sp === 'wc' ? 13 : 10, 32, 1, true), mk(sp === 'wc' ? 0xd7dae0 : 0xc2c8d2, { side: THREE.DoubleSide })); st.position.set(cx, 6.5, cz); st.castShadow = true; scene.add(st);
+      const roof = new THREE.Mesh(new THREE.TorusGeometry(rr - 1, 1.4, 6, 32), mk(0x8d93a0)); roof.rotation.x = Math.PI / 2; roof.position.set(cx, sp === 'wc' ? 13 : 10, cz); scene.add(roof);
+      const pitch = new THREE.Mesh(new THREE.CylinderGeometry(rr - 6, rr - 6, 0.2, 28), mk(0x3f9a45)); pitch.position.set(cx, 0.4, cz); scene.add(pitch);
+    } else if (sp === 'campus') {
+      slabs[slabs.length - 1].col = 0x6fb36f;
+      for (const [ox, oz, w, d, h] of [[-16, -16, 18, 12, 14], [14, -18, 14, 14, 18], [-18, 14, 12, 16, 12], [16, 16, 18, 12, 16]]) city.box(cx + ox, cz + oz, w, d, h, 0xd8c9b0, 0x7a4a3a);
+      for (let t = 0; t < 14; t++) treeList.push({ x: cx + (R() - .5) * 52, z: cz + (R() - .5) * 52, s: 1 + R() * .6 });
+    } else if (sp === 'station') {
+      city.box(cx, cz, 50, 14, 9, 0xcfd5dd, 0x5b6676); city.box(cx, cz + 22, 54, 5, 2.5, 0x9aa1ad, 0x6b7280); slabs[slabs.length - 1].col = 0x8d9097;
+    } else if (sp === 'sangmu') {
+      for (const [ox, oz] of [[-14, -14], [14, -14], [-14, 14], [14, 14]]) city.box(cx + ox, cz + oz, 16 + R() * 5, 16 + R() * 5, 40 + R() * 45, BUILD_COL[Math.floor(R() * BUILD_COL.length)], ROOF_COL[Math.floor(R() * 4)]);
+    } else if (park) {
       for (let t = 0; t < 22; t++) treeList.push({ x: cx + (R() - .5) * 52, z: cz + (R() - .5) * 52, s: 1 + R() * .9 });
       const pond = new THREE.Mesh(new THREE.CylinderGeometry(9, 9, 0.1, 28), new THREE.MeshLambertMaterial({ color: 0x3f8fd0 })); pond.position.set(cx + 6, 0.33, cz - 4); scene.add(pond);
     } else if (depot) {
@@ -188,6 +204,10 @@ function buildCity() {
   for (let i = 0; i < 20; i++) { const a = i / 20 * 6.283, r = EXT + 430 + (i % 3) * 50, h = 90 + (i * 37 % 90); const m = new THREE.Mesh(new THREE.ConeGeometry(110 + (i % 4) * 25, h, 6), mk(0x6d7b92, { flatShading: true })); m.position.set(Math.cos(a) * r, h / 2 - 5, Math.sin(a) * r); scene.add(m); }
   world.clouds = [];
   for (let i = 0; i < 14; i++) { const g = new THREE.Group(); for (let k = 0; k < 4; k++) { const s = new THREE.Mesh(new THREE.SphereGeometry(10 + Math.random() * 8, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .85, fog: false })); s.position.set(k * 14, Math.random() * 4, Math.random() * 8); s.scale.y = .55; g.add(s); } g.position.set(rand(-EXT - 300, EXT + 300), rand(110, 170), rand(-EXT - 300, EXT + 300)); scene.add(g); world.clouds.push(g); }
+  // 광주 구역 이름표 · 무등산
+  for (const [n, x, z] of DISTRICTS) { const s = labelSprite(n, { w: 34, bg: 'rgba(20,70,140,.82)' }); s.position.set(x, 70, z); scene.add(s); }
+  for (const [x, z, h, r] of [[EXT + 260, 40, 270, 190], [EXT + 340, -90, 220, 150], [EXT + 320, 170, 200, 140]]) { const m = new THREE.Mesh(new THREE.ConeGeometry(r, h, 7), mk(0x58765f, { flatShading: true })); m.position.set(x, h / 2 - 5, z); scene.add(m); }
+  { const s = labelSprite('⛰ 무등산', { w: 44, bg: 'rgba(30,90,60,.85)' }); s.position.set(EXT + 260, 300, 40); scene.add(s); }
   // 본사 간판
   if (world.hq) { world.hqSign = labelSprite('', { w: 30, bg: 'rgba(255,176,32,.95)', fg: '#1a1200' }); world.hqSign.position.set(world.hq.x, world.hq.h + 7, world.hq.z); scene.add(world.hqSign); }
 }
@@ -247,5 +267,5 @@ function applyTime(h) {
   world.sunDir = new THREE.Vector3(Math.cos((h - 6) / 12 * Math.PI) * 90, 30 + el * 120, 50);
   sun.color.setHex(day > 0.6 ? 0xfff0d6 : 0xffa060);
   lampMat.color.setHex(nightK > 0.35 ? 0xffe9a8 : 0x777777);
-  windowMat.emissiveIntensity = nightK > 0.3 ? nightK : 0;
+  windowMat.emissiveIntensity = nightK > 0.3 ? nightK : 0; updateBusLights(nightK);
 }

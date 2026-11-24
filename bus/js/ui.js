@@ -40,7 +40,7 @@ function drawMap(ctx, size, o) {
   o = o || {}; const sc = size / (2 * EXT + 60), M = (x, z) => [(x + EXT + 30) * sc, (z + EXT + 30) * sc], vz = o.view ? o.view.z : 1, k = size / 760 / vz;
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, size, size); ctx.fillStyle = '#1b2230'; ctx.fillRect(0, 0, size, size);
   ctx.save(); if (o.view) { ctx.translate(o.view.ox, o.view.oy); ctx.scale(vz, vz); }
-  ctx.fillStyle = '#262e40'; for (const b of world.blocks.slice(0, (GN - 1) * (GN - 1))) { const [x, y] = M(b.minx, b.minz); ctx.fillRect(x, y, (b.maxx - b.minx) * sc, (b.maxz - b.minz) * sc); }
+  world.blocks.slice(0, (GN - 1) * (GN - 1)).forEach((b, i) => { ctx.fillStyle = Math.floor(i / (GN - 1)) === 6 ? '#21507c' : '#262e40'; const [x, y] = M(b.minx, b.minz); ctx.fillRect(x, y, (b.maxx - b.minx) * sc, (b.maxz - b.minz) * sc); });
   ctx.strokeStyle = '#4a5468'; ctx.lineWidth = ROAD * sc * 0.55; ctx.lineCap = 'butt';
   for (let j = 0; j < GN; j++) for (let i = 0; i < GN; i++) { const n = NP[nid(i, j)]; for (const m of [i < GN - 1 && NP[nid(i + 1, j)], j < GN - 1 && NP[nid(i, j + 1)]]) if (m) { const [a, b] = M(n.x, n.z), [c, d] = M(m.x, m.z); ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke(); } }
   const poly = (path, col, w, al) => { ctx.strokeStyle = hex(col); ctx.globalAlpha = al; ctx.lineWidth = w * k; ctx.lineJoin = 'round'; ctx.beginPath(); path.pts.forEach((p, i) => { const [x, y] = M(p.x, p.z); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); ctx.globalAlpha = 1; };
@@ -55,6 +55,7 @@ function drawMap(ctx, size, o) {
     if (!o.mini && (hover || isSel)) { ctx.font = `600 ${12 * k}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.lineWidth = 3 * k; ctx.strokeStyle = '#0b1020'; ctx.strokeText(s.name, x, y - 11 * k); ctx.fillStyle = '#fff'; ctx.fillText(s.name, x, y - 11 * k); }
     if (o.crowd && s.waiting > 8) { ctx.beginPath(); ctx.arc(x, y, (6 + s.waiting / 6) * k, 0, 7); ctx.strokeStyle = 'rgba(255,176,32,.5)'; ctx.lineWidth = 2 * k; ctx.stroke(); }
   });
+  if (!o.mini) { ctx.font = `bold ${15 * k}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; for (const [n, x, z] of DISTRICTS) { const [px, py] = M(x, z); ctx.fillStyle = 'rgba(120,180,255,.55)'; ctx.fillText(n, px, py); } }
   if (o.target !== undefined) { const s = STOPS[o.target], [x, y] = M(s.curb.x, s.curb.z); ctx.beginPath(); ctx.arc(x, y, 10, 0, 7); ctx.strokeStyle = '#ffb020'; ctx.lineWidth = 3; ctx.stroke(); }
   if (o.buses) for (const b of o.buses) { const [x, y] = M(b.agent.x, b.agent.z); ctx.beginPath(); ctx.arc(x, y, 3.5 * (o.mini ? 1 : k * 1.2), 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); }
   if (o.player) { const [x, y] = M(P.x, P.z), dx = Math.sin(P.h), dz = Math.cos(P.h), r = 9; ctx.fillStyle = '#ffb020'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + dx * r, y + dz * r); ctx.lineTo(x - dx * r * .6 + dz * r * .6, y - dz * r * .6 - dx * r * .6); ctx.lineTo(x - dx * r * .6 - dz * r * .6, y - dz * r * .6 + dx * r * .6); ctx.closePath(); ctx.fill(); ctx.stroke(); }
@@ -80,7 +81,7 @@ const UI = {
 
   // --- 상단바
   initTop() {
-    $('topbar').innerHTML = `<span class="co" id="tCo"></span><span class="stat" id="tMoney"></span><span class="stat" id="tLv"></span><span class="stat" id="tRep"></span><span class="stat" id="tRate"></span><span class="stat" id="tTime"></span><span class="sp"></span>
+    $('topbar').innerHTML = `<span class="co" id="tCo"></span><span class="stat" id="tMoney"></span><span class="stat" id="tLv"></span><span class="stat" id="tRep"></span><span class="stat" id="tRate"></span><span class="stat" id="tPay"></span><span class="stat" id="tTime"></span><span class="sp"></span>
       <span class="spd">${[1, 2, 4].map(x => `<button data-sp="${x}">${x}×</button>`).join(' ')}</span><button class="btn sm" id="tbWallet">👛 <span id="tWal"></span></button><button class="btn sm" id="tbSave">💾 저장</button><button class="btn sm" id="tbMenu">메뉴</button>`;
     $('topbar').querySelectorAll('[data-sp]').forEach(b => b.onclick = () => { G.speed = +b.dataset.sp; this.refreshTop(); });
     $('tbWallet').onclick = () => this.walletModal('wallet');
@@ -89,9 +90,23 @@ const UI = {
   refreshTop() {
     const l = level(), nl = LEVELS[l] !== undefined ? LEVELS[l] : null, h = Math.floor(G.hour), m = Math.floor((G.hour % 1) * 60);
     $('tCo').textContent = '🚌 ' + G.name; $('tMoney').textContent = '💰 ' + fmtMoney(G.money); $('tLv').textContent = '⭐ Lv.' + l + (nl ? ` (${G.pax}/${nl})` : '');
-    $('tRep').textContent = '👍 평판 ' + Math.round(G.rep); $('tRate').textContent = '📈 ' + fmtMoney(G.rate) + '/분'; $('tTime').textContent = '🕒 ' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+    $('tRep').textContent = '👍 평판 ' + Math.round(G.rep); $('tPay').textContent = '💵 급여 -' + fmtMoney(this.payRate()) + '/분'; $('tRate').textContent = '📈 ' + fmtMoney(G.rate) + '/분'; $('tTime').textContent = '🕒 ' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
     $('tWal').textContent = fmtMoney(SCHOOL.wallet);
     $('topbar').querySelectorAll('[data-sp]').forEach(b => b.classList.toggle('on', +b.dataset.sp === G.speed));
+  },
+  payRate() { return G.buses.reduce((a, b) => a + ((b.manual || (P.active && P.auto && P.bus === b)) ? 0 : BUS_TYPES[b.type].wage * 60), 0); },
+  payCell(b) { return (b.manual || (P.active && P.auto && P.bus === b)) ? (b.manual ? '🎮 직접 운전' : '🤖 자율주행') : fmtMoney(b.driver.today); },
+  liveTick() {
+    if (this.tab !== 'company') return; const pr = $('payRate'); if (pr) pr.textContent = fmtMoney(this.payRate()) + '/분';
+    document.querySelectorAll('[data-pay]').forEach(c => { const b = busById(+c.dataset.pay); if (b) c.textContent = this.payCell(b); }); const mp = $('myPay'); if (mp) mp.textContent = '+' + fmtMoney(G.myPay);
+  },
+  drawGaps() {
+    const gp = P.gaps, el = $('gapBox'); if (!gp) { el.innerHTML = ''; return; }
+    const row = (ic, lab, o) => { if (!o) return `<div class="gr"><span>${ic} ${lab}</span><b class="muted">없음</b></div>`; const t = o.t, col = t == null ? 'var(--muted)' : t < 1 ? '#f87171' : t < 1.8 ? '#facc15' : '#4ade80'; return `<div class="gr"><span>${ic} ${lab}</span><b style="color:${col}">${o.d.toFixed(1)}m${t != null ? ' · ' + t.toFixed(1) + '초' : ''}</b></div>${t != null ? `<div class="gbar"><i style="width:${Math.min(100, t / 4 * 100)}%;background:${col}"></i></div>` : ''}`; };
+    let h = '<b style="font-size:12px;color:var(--muted)">차간 거리 · 시간</b>' + row('🚗', '앞차', gp.front) + row('🚙', '뒷차', gp.rear);
+    if (gp.route) { const a = gp.route.ahead, b = gp.route.behind, w = G.headwayTarget; h += `<div style="margin-top:4px;border-top:1px solid var(--line);padding-top:4px"><b style="font-size:12px;color:var(--muted)">같은 노선 배차 간격</b></div><div class="gr"><span>🚌 앞 버스</span><b style="color:${a && a.t < w ? '#facc15' : '#4ade80'}">${a ? fmtMS(a.t) + ' (' + Math.round(a.d) + 'm)' : '없음'}</b></div><div class="gr"><span>🚌 뒤 버스</span><b>${b ? fmtMS(b.t) + ' (' + Math.round(b.d) + 'm)' : '없음'}</b></div>`; }
+    if (P.auto) h += `<div class="gr" style="margin-top:4px"><span>🤖 자율주행 차간 시간</span><b>${P.autoHeadway.toFixed(1)}초 <small class="muted">[ ]</small></b></div>`;
+    el.innerHTML = h;
   },
   // --- 탭
   renderTab(force) {
@@ -124,12 +139,12 @@ const UI = {
     if (!G.buses.length) h += `<p class="muted">보유한 버스가 없어요.</p>`;
     h += `<p class="muted" style="margin:0 0 8px;font-size:12px">🅿 차고지 ${G.buses.length}/${garageCap()}대 · 달리면 연료비가 들고 정비 상태가 떨어져요. 25% 아래면 고장 위험!</p>`;
     for (const b of G.buses) {
-      const T = BUS_TYPES[b.type], st = b.manual ? '🎮 직접 운전 중' : b.phase === 'broken' ? '🔧 고장 · 수리 중' : b.phase === 'run' ? '운행 중' : '정차 · 승하차', cc = b.cond > 60 ? '#4ade80' : b.cond > 25 ? '#facc15' : '#f87171';
+      const T = BUS_TYPES[b.type], rg = routeGaps(b), st = b.manual ? '🎮 직접 운전 중' : b.phase === 'broken' ? '🔧 고장 · 수리 중' : b.hold2 ? '⏱ 배차 조정 대기' : b.phase === 'run' ? '운행 중' : '정차 · 승하차', cc = b.cond > 60 ? '#4ade80' : b.cond > 25 ? '#facc15' : '#f87171';
       h += `<div class="card"><h4>${T.name} #${b.id} <small>${st}</small></h4>
         <div class="row"><select data-route="${b.id}" ${b.manual ? 'disabled' : ''}>${G.routes.map(q => `<option value="${q.id}" ${q.id === b.routeId ? 'selected' : ''}>${q.num} ${esc(q.name)}</option>`).join('')}</select><small>승객 ${b.pax.length}/${T.cap}</small></div>
         <div class="meter"><i style="width:${b.pax.length / T.cap * 100}%"></i></div>
         <small>정비 상태 <b style="color:${cc}">${Math.round(b.cond)}%</b> · 주행 ${(b.km / 1000).toFixed(1)}km · 연식 ${b.age}일</small><div class="meter"><i style="width:${b.cond}%;background:${cc}"></i></div>
-        <small>누적 수입 ${fmtMoney(b.income)} · 인건비 ${fmtMoney(T.wage)}/초</small>
+        <small>👨‍✈️ ${esc(b.driver.name)} · 오늘 급여 ${fmtMoney(b.driver.today)}</small><br><small>⏱ 앞차 ${rg && rg.ahead ? fmtMS(rg.ahead.t) : '-'} · 뒷차 ${rg && rg.behind ? fmtMS(rg.behind.t) : '-'} <span class="muted">(배차 간격)</span></small><br><small>누적 수입 ${fmtMoney(b.income)} · 인건비 ${fmtMoney(T.wage)}/초</small>
         <div class="acts"><button class="btn sm" data-bdrive="${b.id}">🎮 운전하기</button><button class="btn sm" data-bfollow="${b.id}">👁 관제</button><button class="btn sm" data-bsvc="${b.id}" ${b.cond >= 95 ? 'disabled' : ''}>🔧 정비 ${fmtMoney(serviceCost(b))}</button><button class="btn sm bad" data-bsell="${b.id}">매각 ${fmtMoney(busValue(b))}</button></div></div>`;
     }
     return h;
@@ -151,7 +166,9 @@ const UI = {
   html_company() {
     const last = G.reports[0], fm = Math.pow(1500 / G.fare, 0.8) * (1 + 0.08 * G.up.info);
     let h = `<div class="card"><h4>💼 재무 현황</h4><table class="tbl"><tr><td>보유 자금</td><td>${fmtMoney(G.money)}</td></tr><tr><td>대출 잔액 (일 이자 2%)</td><td>${fmtMoney(G.loan)}</td></tr><tr><td>차고지</td><td>${G.buses.length} / ${garageCap()}대</td></tr><tr><td>오늘 수입 / 지출</td><td>${fmtMoney(G.day.rev)} / ${fmtMoney(G.day.fuel + G.day.wage + G.day.maint)}</td></tr></table></div>`;
-    h += `<div class="card"><h4>👛 대표 인출 (배당)</h4><small>회사 자금을 내 지갑으로 옮겨요. 배당소득세 15.4%가 빠지고, 지갑 돈으로 자동차를 살 수 있어요. 운영 자금이 부족해지지 않게 주의!</small><div class="row" style="margin-top:6px"><small>내 지갑</small><b class="tnum">${fmtMoney(SCHOOL.wallet)}</b></div><div class="acts"><button class="btn sm" data-wd="1000000">100만</button><button class="btn sm" data-wd="5000000">500만</button><button class="btn sm" data-wd="20000000">2천만</button><button class="btn sm" data-wd="-1">가능한 만큼</button><button class="btn sm" data-dep="1000000">↩ 100만 투자</button><button class="btn sm" id="wMore">🚗 자동차 매장</button></div></div>`;
+    h += `<div class="card"><h4>💵 실시간 급여 <small>(초 단위로 지급 중)</small></h4><div class="row" style="justify-content:space-between"><span>기사 급여 지출</span><b class="tnum" id="payRate">${fmtMoney(this.payRate())}/분</b></div><table class="tbl">${G.buses.map(b => `<tr><td>${esc(b.driver.name)} <small class="muted">${BUS_TYPES[b.type].name} #${b.id}</small></td><td data-pay="${b.id}">${this.payCell(b)}</td></tr>`).join('') || '<tr><td class="muted">고용한 기사가 없어요</td><td></td></tr>'}<tr><td><b>대표(나)</b> <small class="muted">직접 운전 시 실시간 지급 · 세 3.3%</small></td><td id="myPay">+${fmtMoney(G.myPay)}</td></tr></table></div>
+    <div class="card"><h4>⏱ 배차 간격 관리</h4><div class="row"><input type="range" id="hwR" min="0" max="120" step="5" value="${G.headwayTarget}" style="flex:1"><b id="hwV" class="tnum">${G.headwayTarget}초</b></div><small>앞 버스와의 간격이 이 시간보다 짧으면 정류장에서 최대 30초 대기해 벙칭(버스 뭉침)을 막아요. 0이면 끄기.</small></div>
+    <div class="card"><h4>👛 대표 인출 (배당)</h4><small>회사 자금을 내 지갑으로 옮겨요. 배당소득세 15.4%가 빠지고, 지갑 돈으로 자동차를 살 수 있어요. 운영 자금이 부족해지지 않게 주의!</small><div class="row" style="margin-top:6px"><small>내 지갑</small><b class="tnum">${fmtMoney(SCHOOL.wallet)}</b></div><div class="acts"><button class="btn sm" data-wd="1000000">100만</button><button class="btn sm" data-wd="5000000">500만</button><button class="btn sm" data-wd="20000000">2천만</button><button class="btn sm" data-wd="-1">가능한 만큼</button><button class="btn sm" data-dep="1000000">↩ 100만 투자</button><button class="btn sm" id="wMore">🚗 자동차 매장</button></div></div>`;
     h += `<div class="card"><h4>🎫 요금 정책 <small>(${G.dayNo}일차)</small></h4><div class="row"><input type="range" id="fareR" min="1000" max="2500" step="50" value="${G.fare}" style="flex:1"><b id="fareV" class="tnum">${fmtMoney(G.fare)}</b></div><small id="fareS">승객 수요 ×${fm.toFixed(2)} · 요금을 올리면 건당 수입은 늘지만 승객이 줄어요</small></div>`;
     h += `<h4 style="margin:14px 0 8px">🏗 회사 업그레이드</h4>`;
     for (const k in UPGRADES) {
@@ -168,6 +185,7 @@ const UI = {
     return h + '</div>';
   },
   bind_company(b) {
+    const hw = b.querySelector('#hwR'); if (hw) hw.oninput = () => { G.headwayTarget = +hw.value; $('hwV').textContent = G.headwayTarget + '초'; };
     const r = b.querySelector('#fareR'); if (r) r.oninput = () => { G.fare = +r.value; $('fareV').textContent = fmtMoney(G.fare); $('fareS').textContent = '승객 수요 ×' + (Math.pow(1500 / G.fare, 0.8) * (1 + 0.08 * G.up.info)).toFixed(2) + ' · 요금을 올리면 건당 수입은 늘지만 승객이 줄어요'; };
     b.querySelectorAll('[data-wd]').forEach(x => x.onclick = () => { const n = +x.dataset.wd; withdraw(n < 0 ? Math.max(0, G.money - 300000) : n); this.renderTab(true); this.refreshTop(); });
     b.querySelectorAll('[data-dep]').forEach(x => x.onclick = () => { deposit(+x.dataset.dep); this.renderTab(true); this.refreshTop(); });
@@ -332,11 +350,12 @@ const UI = {
     if (b.isCar) $('hudL').innerHTML = `🚗 <b>${esc(T.name)}</b><br><small class="muted">주행 ${(b.carRef.km / 1000).toFixed(1)}km · 내 차량</small>`;
     if (P.auto) $('hudL').innerHTML += '<br>🤖 <b style="color:#4ade80">자율주행 중</b>';
     $('hudScore').style.display = b.isCar ? 'none' : ''; $('limit').style.display = b.isCar ? 'none' : ''; $('doorTag').style.display = b.isCar ? 'none' : '';
+    this.drawGaps();
     $('hint').textContent = P.hint;
     $('spd').firstChild.nodeValue = kmh; const gear = P.v < -0.2 ? 'R' : (Math.abs(P.v) < 0.2 ? (keys.Space ? 'P' : 'N') : 'D');
     $('gear').querySelectorAll('b').forEach(x => x.classList.toggle('on', x.textContent === gear)); $('limit').classList.toggle('over', kmh > 52);
     const sc = Math.round(P.score), cf = Math.round(P.comfort);
-    $('hudScore').innerHTML = `<small class="muted">운전 점수</small> <b class="tnum" style="float:right">${sc}</b><div class="bar"><i style="width:${sc}%;background:${sc > 80 ? '#4ade80' : sc > 60 ? '#facc15' : '#f87171'}"></i></div><small class="muted">승차감</small> <b class="tnum" style="float:right">${cf}%</b><div class="bar"><i style="width:${cf}%;background:#4ea1ff"></i></div><small class="muted">${G.school ? '교습 중' : '수입 ' + fmtMoney(b.income)}</small>`;
+    $('hudScore').innerHTML = `<small class="muted">운전 점수</small> <b class="tnum" style="float:right">${sc}</b><div class="bar"><i style="width:${sc}%;background:${sc > 80 ? '#4ade80' : sc > 60 ? '#facc15' : '#f87171'}"></i></div><small class="muted">승차감</small> <b class="tnum" style="float:right">${cf}%</b><div class="bar"><i style="width:${cf}%;background:#4ea1ff"></i></div><small class="muted">${G.school ? '교습 중' : b.isCar ? '' : '수입 ' + fmtMoney(b.income)}</small>${!G.school && !b.isCar ? `<br><small>💵 내 급여 <b style="color:#4ade80">+${fmtMoney(P.earn)}</b> · ${fmtMoney(BUS_TYPES[b.type].wage * 60 * 0.967)}/분</small>` : ''}`;
     $('doorTag').textContent = P.doorOpen ? '문 열림' : '문 닫힘'; $('doorTag').classList.toggle('open', P.doorOpen);
     if (P.lesson && P.lesson.id === 'L1') $('tasks').innerHTML = '<b>🎓 과제</b>' + P.lesson.tasks.map(t => `<div class="${P.taskDone[t[0]] ? 'done' : ''}">${P.taskDone[t[0]] ? '✔' : '○'} ${t[1]}</div>`).join('');
     drawMap($('mini').getContext('2d'), 380, { routes: r && !P.lesson ? [r] : [], thin: 1, mini: true, player: true, target: P.stopInfo ? b.agent.path.stops[P.si].id : undefined, buses: G.buses.filter(x => x !== b) });
@@ -354,6 +373,6 @@ const UI = {
     addEventListener('pointerdown', () => { UI.down = true; }, true); addEventListener('pointerup', () => { UI.down = false; }, true); addEventListener('pointercancel', () => { UI.down = false; }, true);
     document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { this.tab = b.dataset.t; this.renderTab(true); });
     this.bindMap();
-    setInterval(() => { if (G && G.state === 'company') { this.refreshTop(); this.renderTab(false); } }, 1200);
+    let tk = 0; setInterval(() => { if (G && G.state === 'company') { this.refreshTop(); this.liveTick(); if (++tk % 4 === 0) this.renderTab(false); } }, 300);
   }
 };
