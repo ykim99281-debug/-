@@ -379,7 +379,7 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
 
 <div id="clsModal"><div id="cbox"><h2>직업을 골라요!</h2><p id="clsSub">직업마다 능력과 필살기가 달라요</p><div id="cards"></div><button class="btn off" id="clsCancel" style="width:100%;margin-top:10px;padding:12px;display:none">닫기</button></div></div>
 
-<div id="modal"><div id="mbox"><h2 id="mt"></h2><p id="mp"></p><button class="btn" id="mok" style="width:100%;padding:14px">확인</button></div></div>
+<div id="modal"><div id="mbox"><h2 id="mt"></h2><p id="mp"></p><button class="btn" id="mok" style="width:100%;padding:14px">확인</button><button class="btn off" id="mno" style="width:100%;padding:12px;margin-top:8px;display:none">취소</button></div></div>
 
 <script>
 /* ================= 로그인 부트스트랩 (Firebase 연결은 맨 아래 module 스크립트에서) ================= */
@@ -776,6 +776,11 @@ function load(){
       if(o.eq.w<0)o.eq.w=best;
       delete o.weapons;
     }
+    if(o.cls&&!CLS[o.cls])o.cls=null;                                  // 없는 직업이면 다시 고르게
+    const d2=def();["gold","gems","stage","kill","soul","rb","best","totalKills","gps","earned"].forEach(k=>{if(typeof o[k]!=="number"||!isFinite(o[k])||o[k]<0)o[k]=d2[k]||0});
+    o.stage=Math.max(1,Math.floor(o.stage));o.best=Math.max(o.stage,Math.floor(o.best)||1);
+    ["atk","hp","spd","crit"].forEach(k=>{const v=+o.lv[k];o.lv[k]=isFinite(v)&&v>=1?Math.min(9999,Math.floor(v)):1});
+    if(!o.pets||typeof o.pets!=="object")o.pets={};
     return o;
   }}catch(e){}
   return def();
@@ -2722,9 +2727,13 @@ function buyPet(i){
   if(S.gems<p.cost){toast("💎 보석이 부족해요!");return}
   S.gems-=p.cost;S.pets[i]=1;dirty=true;toast(`${p.e} ${p.n} 영입!`);refreshUI();
 }
-function modal(t,p,cb){
+function modal(t,p,cb,confirmOnly){
   $("mt").textContent=t;$("mp").innerHTML=p;$("modal").classList.add("show");
-  $("mok").onclick=()=>{$("modal").classList.remove("show");cb&&cb()};
+  const close=()=>$("modal").classList.remove("show");
+  $("mok").onclick=()=>{close();cb&&cb()};
+  $("mno").style.display=confirmOnly?"block":"none";
+  $("mno").onclick=close;
+  $("modal").onclick=e=>{if(confirmOnly&&e.target===$("modal"))close()};   // 환생처럼 되돌릴 수 없는 일은 취소할 수 있어요
 }
 function chooseClass(cb,cancelable){
   paused=true;
@@ -2746,19 +2755,20 @@ function chooseClass(cb,cancelable){
 }
 function rebirth(){
   const g=soulGain();if(g<=0)return;
-  modal("🔥 환생할까요?",`스테이지·골드·강화가 처음으로 돌아가요.<br>👻 영혼 <b>+${g}</b> 을 받아요!<br><small>(취소하려면 화면 밖을 누르세요)</small>`,()=>{
+  modal("🔥 환생할까요?",`스테이지·골드·강화가 처음으로 돌아가요.<br>👻 영혼 <b>+${g}</b> 을 받아요!<br><small>(취소할 수 있어요)</small>`,()=>{
+    if(soulGain()<=0)return;
     const d=def();
     S.soul+=g;S.rb=(S.rb||0)+1;
     {const nx=Object.keys(CLS).filter(k=>CLS_NEED[k]===S.rb).map(k=>CLS[k].n).join(", ");if(nx)setTimeout(()=>toast("🔓 새 직업 해금: "+nx),400)}
     Object.assign(S,{gold:0,stage:1,kill:0,lv:d.lv,gps:0});
     dirty=true;hp=gc().maxHp;spawn();refreshUI();save();toast("👻 환생 완료!");
     chooseClass();
-  });
+  },true);
 }
 function reset(){
   if(!confirm("정말 모든 데이터를 지울까요?"))return;
   try{localStorage.removeItem(SAVE_KEY)}catch(e){}
-  S=def();dirty=true;hp=gc().maxHp;spawn();setHeroArt();refreshUI();chooseClass();
+  S=def();dirty=true;if(window.__adm)HeroGame.perks(true);hp=gc().maxHp;spawn();setHeroArt();refreshUI();chooseClass();
 }
 
 /* ================= 이벤트 ================= */
@@ -2845,8 +2855,9 @@ window.HeroGame={
   CLSN:Object.fromEntries(Object.entries(CLS).map(([k,v])=>[k,v.n])),
   toast:t=>toast(t),
   setEvent(e,off){EVT.t=e&&e.type||null;EVT.u=e&&+e.until||0;EVT.off=off||0;dirty=true},
-  setStage(n){n=Math.max(1,Math.min(9999,Math.round(+n)||1));S.stage=n;if(n>S.best)S.best=n;S.kill=0;spawn();refreshUI();toast("스테이지 "+n+"(으)로 이동!")},
-  perks(on){                                  // 관리자 권한: 코인 무한 · 모든 직업/스킬 해금 (권한이 없어지면 원래대로)
+  setStage(n){n=Math.max(1,Math.min(3000,Math.round(+n)||1));S.stage=n;if(n>S.best)S.best=n;S.kill=0;spawn();refreshUI();toast("스테이지 "+n+"(으)로 이동!")},
+  perks(on){
+    window.__adm=!!on;                                  // 관리자 권한: 코인 무한 · 모든 직업/스킬 해금 (권한이 없어지면 원래대로)
     if(on){
       if(!S._adm){S._adm={gold:S.gold,gems:S.gems,rb:S.rb|0,soul:S.soul|0,cu:Object.assign({},S.cu),own:Object.assign({},S.own)}}
       Object.keys(CLS).forEach(k=>{S.cu[k]=true});Object.keys(DEF).forEach(id=>{S.own[id]=true});
