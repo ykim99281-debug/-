@@ -134,6 +134,7 @@ const PERKS={
 const EDU_DISC=[0,.1,.25,.4];
 const REGIONS={jp:{n:'🇯🇵 일본 지사',c:5e8,m:3e7,glob:.12,brand:15,emps:20},sea:{n:'🌏 동남아 지사',c:3e8,m:2e7,glob:.10,brand:12,emps:15},eu:{n:'🇪🇺 유럽 지사',c:2e9,m:1.2e8,glob:.18,brand:25,emps:50},us:{n:'🇺🇸 미국 지사',c:3e9,m:2e8,glob:.25,brand:30,emps:60}};
 const EXECS={cto:{n:'CTO',d:'개발 속도 +20% · 신제품 품질 +4',fee:3e8,m:3e7},cmo:{n:'CMO',d:'인지도 획득 +25%',fee:3e8,m:3e7},cfo:{n:'CFO',d:'법인세 -5% · 대출금리 -0.5%p',fee:3e8,m:3e7},coo:{n:'COO',d:'팀 효율 +15%p · 유지보수 부담 -20%',fee:3e8,m:3e7},chro:{n:'CHRO',d:'전 직원 사기 +5 · 채용풀 향상',fee:3e8,m:3e7}};
+const FIN={dep:'정기예금',re:'부동산',stk:'주식 포트폴리오'};
 const OPTIONS=[{n:'없음',m:0,dil:0},{n:'핵심 인재 스톡옵션',m:4,dil:.005},{n:'전 직원 스톡옵션',m:8,dil:.01}];
 const regionMkt=()=>Object.keys(G.regions).reduce((s,k)=>s+REGIONS[k].glob,0);
 const execCost=()=>Object.keys(G.execs).reduce((s,k)=>s+EXECS[k].m,0);
@@ -172,22 +173,25 @@ const ACH=[
  {k:'y10',n:'🎂 창립 10주년',c:()=>G.d>=3600}
 ];
 
+const ACH_R={first:{t:'cash',v:3e7},profit:{t:'share',v:.01},e10:{t:'mor',v:1},e100:{t:'mor',v:1},e1000:{t:'mor',v:2},r1:{t:'share',v:.01},r10:{t:'share',v:.015},r100:{t:'share',v:.02},v100:{t:'cash',v:2e8},v1000:{t:'brand',v:3},uni:{t:'share',v:.03},ipo:{t:'brand',v:3},t5:{t:'mor',v:1},hq:{t:'brand',v:2},acq:{t:'share',v:.01},b50:{t:'mor',v:1},y10:{t:'cash',v:1e9}};
+const rwText=r=>r.t==='cash'?'보너스 '+won(r.v):r.t==='share'?'영구 점유율 +'+(r.v*100).toFixed(1)+'%':r.t==='mor'?'영구 사기 +'+r.v:'브랜드 +'+r.v;
 /* ================= 상태 ================= */
 let G=null,speed=1,paused=true,pressed=false,dirty=true,tab='overview';
 let modalQ=[],modalOpen=false,empFilter='all',chartKey='cash';
 const UI={ntype:'app',nscope:1,hhrole:'dev'};
 const SAVE_KEY='company_tycoon_v1';
+let SLOT=+(localStorage.getItem('ct_slot')||1);const sk=()=>SAVE_KEY+(SLOT>1?'_'+SLOT:'');
 let SET={report:true,sound:true};try{Object.assign(SET,JSON.parse(localStorage.getItem('ct_set')||'{}'))}catch(e){}
 let actx=null;
 function beep(f,d,t){if(!SET.sound)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.type=t||'sine';o.frequency.value=f;g.gain.value=.05;o.connect(g);g.connect(actx.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.stop(actx.currentTime+d);}catch(e){}}
 const sfx={good(){beep(660,.15);setTimeout(()=>beep(880,.2),120)},bad(){beep(200,.3,'sawtooth')},ev(){beep(440,.12)},cash(){beep(1000,.08)}};
 
 function newGame(name,spec,diff){
- const cash=[2.5e8,1.5e8,8e7][diff];
+ const cash=[2.5e8,1.5e8,8e7,6e7][diff];
  const g={v:1,name,diff,d:0,cash,own:1,totalShares:1e7,public:false,sf:1,rounds:{},loans:[],emps:[],cand:[],products:[],techs:{},research:null,
   office:0,hqValue:0,perks:{food:0,welfare:0,edu:0,flex:0},crunch:false,brand:3,camps:[],comps:[],econ:.1,econShock:0,ep:rnd(0,6.28),
   hist:[],log:[],mon:{rev:0,cogs:0,opex:0,mkt:0,rd:0,int:0,oth:0,tax:0},last:{rev:0,profit:0},nid:1,acqBonus:0,acqCount:0,glob:0,
-  regions:{},execs:{},options:0,taxLoss:0,yearProfit:0,negM:0,ach:{},wealth:0,moraleMod:0,idea:0,val:0,goal:0,over:0,promoCd:{},
+  regions:{},execs:{},options:0,fin:{dep:0,re:0,stk:0},permMor:0,taxLoss:0,yearProfit:0,negM:0,ach:{},wealth:0,moraleMod:0,idea:0,val:0,goal:0,over:0,promoCd:{},
   stats:{bestRev:0,hired:0,quit:0}};
  G=g;
  G.emps.push({id:G.nid++,name:'창업자 (CEO)',role:'ceo',spec,skill:60,sal:3e6,morale:80,founder:1,trainCd:0,hired:0});
@@ -214,7 +218,7 @@ const devRate=()=>{const r=rawDev();return Math.max(r*.15,r-maintLoad());};
 const stretch=()=>{const n=liveN();return n?Math.min(1,(pts('dev')+pts('design')*.5)/(n*45)):1;};
 const salFor=(role,skill)=>Math.round(ROLES[role].base*Math.pow(1.03,G.d/360)*(.4+skill/70)/12/1e4)*1e4;
 const perkCost=()=>Object.keys(PERKS).reduce((s,k)=>s+PERKS[k].c[G.perks[k]],0);
-const perkMorale=()=>Object.keys(PERKS).reduce((s,k)=>s+PERKS[k].m[G.perks[k]],0)+(G.execs.chro?5:0)+OPTIONS[G.options].m;
+const perkMorale=()=>Object.keys(PERKS).reduce((s,k)=>s+PERKS[k].m[G.perks[k]],0)+(G.execs.chro?5:0)+OPTIONS[G.options].m+(G.permMor||0);
 const assets=()=>OFFICES[G.office].own?G.hqValue:0;
 const debt=()=>G.loans.reduce((s,l)=>s+l.amt,0);
 const lastRev=()=>G.last.rev;
@@ -231,7 +235,7 @@ function value(){
  if(h.length>=6){const r3=h.slice(-3).reduce((s,x)=>s+x.rev,0),p3=h.slice(-6,-3).reduce((s,x)=>s+x.rev,0);g=p3>0?r3/p3-1:(r3>0?1:0);}
  const mult=3+7*clamp(g/2,0,1)+G.brand/40;
  const live=G.products.filter(p=>p.state==='live'),dev=G.products.filter(p=>p.state==='dev');
- let v=G.cash*.9+assets()+ar*mult+Math.max(0,ap)*6+Object.keys(G.techs).length*6e7+G.brand*2.5e7;
+ let v=G.cash*.9+assets()+(G.fin.dep+G.fin.re+G.fin.stk)*.95+ar*mult+Math.max(0,ap)*6+Object.keys(G.techs).length*6e7+G.brand*2.5e7;
  live.forEach(p=>v+=1.5e8*p.q/70);v+=dev.length*4e7+G.emps.length*4e6-debt();
  return Math.max(5e7,v*(1+.2*G.econ));}
 function capValue(){return G.public?G.val*G.sf:G.val}
@@ -329,8 +333,10 @@ function monthEnd(){
  G.cash-=f.tot;m.opex+=f.sal+f.rent+f.perk;m.int+=f.int;
  if(hasT('patent')){const roy=3e7+m.rev*.008;G.cash+=roy;m.rev+=roy;}
  if(OFFICES[G.office].own)G.hqValue*=1.0025;
+ {const f=G.fin;f.dep*=1+baseRate()/12;f.re*=1+.004+G.econ*.003+rnd(-.01,.012);f.stk*=1+G.econ*.01+rnd(-.05,.055);const inc=f.dep*0+f.re*.003;G.cash+=inc;m.inc=(m.inc||0)+inc;}
  G.emps.forEach(e=>{if(!e.founder&&e.skill<98)e.skill=Math.min(98,e.skill+rnd(.1,.45)*(1+G.perks.edu*.2));});
- const profit=m.rev-m.cogs-m.opex-m.mkt-m.rd-m.int-m.oth;
+ const finGain=(G.fin.dep+G.fin.re+G.fin.stk)-(G._finPrev||0);G._finPrev=G.fin.dep+G.fin.re+G.fin.stk;m.inc=(m.inc||0)+Math.max(0,finGain);
+ const profit=m.rev+(m.inc||0)-m.cogs-m.opex-m.mkt-m.rd-m.int-m.oth;
  G.last={rev:m.rev,profit,cogs:m.cogs};
  G.yearProfit+=profit;
  G.products.forEach(p=>{if(p.state==='live'){p.mh=p.mh||[];p.mh.push(p.mrev||0);if(p.mh.length>12)p.mh.shift();p.mrev=0;}});
@@ -350,7 +356,7 @@ function monthEnd(){
  G.comps.forEach(k=>{k.s=clamp(k.s+rnd(-.06,.08)+G.d/360*.012,.15,1.6);k.val*=1+rnd(-.01,.03);});
  // 채무 이자 상환/현금 체크
  if(G.cash<0){G.negM++;log('⚠️ 현금 부족! 자금을 조달하세요 ('+G.negM+'/3개월)','b');
-  if(G.negM>=3){gameOver('파산','현금이 3개월 연속 마이너스였습니다. 회사는 파산 절차에 들어갔습니다.');return;}
+  if(G.negM>=(G.diff===3?1:3)){gameOver('파산','현금이 3개월 연속 마이너스였습니다. 회사는 파산 절차에 들어갔습니다.');return;}
   toast('현금 마이너스! 대출/투자를 받으세요',1);}else G.negM=0;
  if(!G.over)rollEvent();
  marketNews();monthlyReport();
@@ -369,12 +375,12 @@ function monthlyReport(){const h=G.hist,L=h[h.length-1];if(!L)return;const P=h[h
  modal('📑 '+fmtDate(L.d-1).slice(0,7)+' 월간 보고서','<table><tr><td>매출</td><td class="n">'+won(L.rev)+(dr!==null?' <span class="'+(dr>=0?'gr':'rd')+'">('+(dr>=0?'+':'')+dr.toFixed(1)+'%)</span>':'')+'</td></tr><tr><td>순이익</td><td class="n">'+sgn(L.profit)+'</td></tr><tr><td>현금</td><td class="n">'+won(G.cash)+'</td></tr><tr><td>기업가치</td><td class="n">'+won(G.val)+'</td></tr><tr><td>직원</td><td class="n">'+G.emps.length+'명</td></tr>'+(top?'<tr><td>주력 제품</td><td class="n">'+top.name+'</td></tr>':'')+'</table>'+(runway!==null&&runway<6?'<p class="rd">⚠ 현 추세면 약 '+runway.toFixed(1)+'개월 뒤 현금이 바닥납니다.</p>':''),[{l:'확인'},{l:'보고서 끄기',cls:'g',f:()=>{SET.report=false;try{localStorage.setItem('ct_set',JSON.stringify(SET))}catch(e){}}}]);}
 function corpTax(p){let t=0,prev=0;for(const [lim,r] of [[2e8,.09],[200e8,.19],[3000e8,.21],[Infinity,.24]]){if(p>prev)t+=(Math.min(p,lim)-prev)*r;prev=lim;}return t;}
 function netWorth(){return G.own*capValue()+G.wealth;}
-function checkAch(){ACH.forEach(a=>{if(!G.ach[a.k]&&a.c()){G.ach[a.k]=G.d;sfx.good();log('🏅 업적 달성: '+a.n,'g');toast('🏅 '+a.n);}});}
+function checkAch(){ACH.forEach(a=>{if(!G.ach[a.k]&&a.c()){G.ach[a.k]=G.d;sfx.good();const rw=ACH_R[a.k];if(rw){if(rw.t==='cash')G.cash+=rw.v;else if(rw.t==='share')G.acqBonus+=rw.v;else if(rw.t==='mor')G.permMor=(G.permMor||0)+rw.v;else G.brand=clamp(G.brand+rw.v,0,100);log('🎁 업적 보상: '+rwText(rw),'g');}log('🏅 업적 달성: '+a.n,'g');toast('🏅 '+a.n);}});}
 function checkOffers(){}
 function scoreCard(){const yrs=G.d/360,nw=netWorth();const sc=Math.round(Math.log10(Math.max(1e6,nw))*100+Object.keys(G.ach).length*15+G.emps.length*.5+G.stats.bestRev/1e8);
  const grade=nw>=1e13?'S+':nw>=1e12?'S':nw>=1e11?'A':nw>=1e10?'B':nw>=1e9?'C':'D';
  return '<table><tr><td>경영 기간</td><td class="n">'+Math.floor(yrs)+'년 '+Math.floor(G.d%360/30)+'개월</td></tr><tr><td>최종 기업가치</td><td class="n">'+won(G.val)+'</td></tr><tr><td>창업자 지분 / 배당</td><td class="n">'+(G.own*100).toFixed(1)+'% / '+won(G.wealth)+'</td></tr><tr><td><b>개인 자산</b></td><td class="n"><b>'+won(nw)+'</b></td></tr><tr><td>최고 월매출</td><td class="n">'+won(G.stats.bestRev)+'</td></tr><tr><td>누적 채용 / 퇴사</td><td class="n">'+G.stats.hired+' / '+G.stats.quit+'</td></tr><tr><td>업적</td><td class="n">'+Object.keys(G.ach).length+'/'+ACH.length+'</td></tr><tr><td>출시 제품</td><td class="n">'+G.products.length+'개</td></tr><tr><td>점수 / 등급</td><td class="n"><b class="yl">'+sc+'점 · '+grade+'</b></td></tr></table>';}
-function gameOver(t,msg){G.over=1;paused=true;localStorage.removeItem(SAVE_KEY);
+function gameOver(t,msg){G.over=1;paused=true;localStorage.removeItem(sk());
  modal('💀 게임 종료 - '+t,msg+'<br><br>'+scoreCard(),
   [{l:'새 게임',f:()=>showStart()}]);}
 
@@ -478,6 +484,8 @@ const ACT={
  region:d=>{const r=REGIONS[d.k];if(G.regions[d.k])return;if(G.cash<r.c)return toast('자금 부족',1);spend(r.c,'oth');G.regions[d.k]=1;G.brand=clamp(G.brand+2,0,100);log('🌍 '+r.n+' 설립! 시장 +'+Math.round(r.glob*100)+'%','g');},
  exec:d=>{const x=EXECS[d.k];if(G.execs[d.k])return;if(G.cash<x.fee)return toast('자금 부족',1);spend(x.fee,'oth');G.execs[d.k]=1;log('👔 '+x.n+' 영입! ('+x.d+')','g');},
  opt:d=>{const n=G.options+(+d.dir);if(n<0||n>2)return;G.options=n;},
+ finin:d=>{const a=+d.v;if(!(a>0)||G.cash<a)return toast('자금 부족',1);G.cash-=a;G.fin[d.k]+=a;G._finPrev=(G._finPrev||0)+a;log('💼 '+FIN[d.k]+' 투자 '+won(a));},
+ finout:d=>{const f=G.fin[d.k];const a=d.v==='all'?f:Math.min(+d.v,f);if(!(a>0))return;const fee=d.k==='re'?.02:d.k==='stk'?.003:0;G.fin[d.k]-=a;G.cash+=a*(1-fee);G._finPrev=(G._finPrev||0)-a;log('💼 '+FIN[d.k]+' 회수 '+won(a*(1-fee)));},
  save:()=>{save();toast('저장되었습니다')},
  reset:()=>{if(confirm('정말 처음부터 다시 시작할까요?')){paused=true;showStart();}}
 };
@@ -489,8 +497,8 @@ function roundOffer(k){const R=ROUNDS[k];if(G.rounds[k])return {ok:0,why:'이미
  return {ok:1,val,raise:val*R.pct};}
 
 /* ================= 저장 ================= */
-function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(G));}catch(e){}}
-function load(){try{const s=localStorage.getItem(SAVE_KEY);if(!s)return false;G=JSON.parse(s);G.regions=G.regions||{};G.execs=G.execs||{};G.options=G.options||0;if(!isFinite(G.cash))G.cash=1e8;if(!isFinite(G.hqValue))G.hqValue=0;return true}catch(e){return false}}
+function save(){try{localStorage.setItem(sk(),JSON.stringify(G));}catch(e){}}
+function load(){try{const s=localStorage.getItem(sk());if(!s)return false;G=JSON.parse(s);G.regions=G.regions||{};G.execs=G.execs||{};G.options=G.options||0;G.fin=G.fin||{dep:0,re:0,stk:0};G.permMor=G.permMor||0;if(!isFinite(G.cash))G.cash=1e8;if(!isFinite(G.hqValue))G.hqValue=0;return true}catch(e){return false}}
 
 /* ================= UI ================= */
 const TABS=[['overview','📊 개요'],['products','📦 제품'],['staff','👥 직원'],['hire','🧑‍💼 채용'],['rnd','🔬 연구'],['mkt','📣 마케팅'],['fin','🏦 재무'],['inv','💎 투자'],['office','🏢 사무실'],['market','🌐 시장'],['help','❓ 도움말']];
@@ -527,7 +535,7 @@ function vOverview(e){
   ['브랜드',G.brand.toFixed(1)+' / 100'],['창업자 지분',(G.own*100).toFixed(1)+'%'],['내 자산가치',won(mw)],['부채',won(debt())]
  ].map(x=>'<div class="kpi"><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('')+'</div>'+
  '<div class="card"><div class="row sb"><h3>📈 추이</h3><span class="row">'+[['cash','현금'],['rev','월매출'],['profit','월순이익'],['val','기업가치'],['emps','직원수']].map(x=>'<button class="b s '+(chartKey===x[0]?'':'g')+'" data-a="chartk" data-k="'+x[0]+'">'+x[1]+'</button>').join('')+'</span></div><canvas id="cv" width="1000" height="260"></canvas></div>'+
- '<div class="grid"><div class="card"><h3>🏅 업적 ('+Object.keys(G.ach).length+'/'+ACH.length+')</h3>'+ACH.map(a=>'<span class="tag" style="margin:2px;'+(G.ach[a.k]?'color:#fbbf24;border-color:#7a6320':'')+'">'+a.n+'</span>').join('')+'</div>'+
+ '<div class="grid"><div class="card"><h3>🏅 업적 ('+Object.keys(G.ach).length+'/'+ACH.length+')</h3>'+ACH.map(a=>'<span class="tag" title="'+rwText(ACH_R[a.k])+'" style="margin:2px;'+(G.ach[a.k]?'color:#fbbf24;border-color:#7a6320':'')+'">'+a.n+(G.ach[a.k]?'':' <small>('+rwText(ACH_R[a.k])+')</small>')+'</span>').join('')+'</div>'+
  '<div class="card"><h3>🗓 최근 6개월 손익</h3><div class="tblw"><table><tr><th>월</th><th class="n">매출</th><th class="n">순이익</th><th class="n">현금</th></tr>'+h.slice(-6).reverse().map(x=>'<tr><td>'+fmtDate(x.d).slice(0,7)+'</td><td class="n">'+won(x.rev)+'</td><td class="n">'+sgn(x.profit)+'</td><td class="n">'+won(x.cash)+'</td></tr>').join('')+'</table></div>'+
  '<div class="row" style="margin-top:8px">'+btn('💾 저장','save',{},'g s')+btn('📋 성적표','card',{},'g s')+btn('🏁 은퇴','retire2',{},'g s')+btn('🔄 새로 시작','reset',{},'g s')+'</div></div></div>';
 }
@@ -611,6 +619,7 @@ function vFin(e){
  h+='<div class="card"><h3>🏦 대출</h3><p>기준금리 '+(baseRate()*100).toFixed(2)+'% · 내 대출금리 '+(loanRate()*100).toFixed(2)+'% · 가능 한도 <b>'+won(loanLimit())+'</b></p><div class="row">'+
  [1e7,1e8,1e9,1e10].map(a=>btn('+'+won(a),'loan',{v:a},'s',loanLimit()<a)).join('')+' | '+[1e7,1e8,'all'].map(a=>btn('상환 '+(a==='all'?'전액':won(a)),'repay',{v:a},'g s',!G.loans.length)).join('')+'</div>'+
  (G.loans.length?'<table style="margin-top:8px"><tr><th>잔액</th><th class="n">금리</th></tr>'+G.loans.map(l=>'<tr><td>'+won(l.amt)+'</td><td class="n">'+(l.rate*100).toFixed(2)+'%</td></tr>').join('')+'</table>':'')+'</div>';
+ h+='<div class="card"><h3>💼 자산 운용</h3><p class="mu">남는 현금을 굴립니다. 예금은 기준금리, 부동산은 임대수익(월 0.3%)+시세차익(경기 영향, 매도 수수료 2%), 주식은 변동성이 큽니다. 기업가치에는 95%만 반영됩니다.</p><table>'+Object.keys(FIN).map(k=>'<tr><td>'+FIN[k]+'</td><td class="n">'+won(G.fin[k])+'</td><td class="n">'+[1e8,1e9,1e10].map(a=>btn('+'+won(a),'finin',{k,v:a},'g s',G.cash<a)).join(' ')+' '+btn('전액 회수','finout',{k,v:'all'},'g s',G.fin[k]<1)+'</td></tr>').join('')+'</table></div>';
  h+='<div class="card"><h3>💵 배당</h3><p class="mu">회사 현금을 주주에게 배당합니다. 창업자 지분율만큼 내 자산이 됩니다. (지분 '+(G.own*100).toFixed(1)+'%)</p><div class="row">'+[1e7,1e8,1e9,1e10].map(a=>btn(won(a),'divid',{v:a},'g s',G.cash<a)).join('')+'</div></div>';
  h+='<div class="card tblw"><h3>📚 월별 손익표 (최근 12개월)</h3><table><tr><th>월</th><th class="n">매출</th><th class="n">원가</th><th class="n">인건·임대</th><th class="n">마케팅</th><th class="n">R&D</th><th class="n">이자</th><th class="n">순이익</th></tr>'+
  G.hist.slice(-12).reverse().map(x=>'<tr><td>'+fmtDate(x.d).slice(0,7)+'</td><td class="n">'+won(x.rev)+'</td><td class="n">'+won(x.cogs)+'</td><td class="n">'+won(x.opex)+'</td><td class="n">'+won(x.mkt)+'</td><td class="n">'+won(x.rd)+'</td><td class="n">'+won(x.int)+'</td><td class="n">'+sgn(x.profit)+'</td></tr>').join('')+'</table></div>';
@@ -647,15 +656,17 @@ function vMarket(){
 
 /* ================= 시작/루프 ================= */
 function showStart(){
- const has=!!localStorage.getItem(SAVE_KEY);
+const slotInfo=i=>{try{const x=JSON.parse(localStorage.getItem(SAVE_KEY+(i>1?'_'+i:''))||'null');return x?x.name+' · '+fmtDate(x.d).slice(0,7):'비어 있음'}catch(e){return '비어 있음'}};
  modalQ=[];modalOpen=true;$('#ov').classList.add('on');
  $('#md').innerHTML='<h2>🏢 스타트업 타이쿤</h2><p class="mu">차고에서 시작해 제품을 만들고, 사람을 뽑고, 투자를 받아 시총 1조 기업을 만드세요.</p>'+
  '<label>회사 이름</label><input type="text" id="nm" value="나의 스타트업" maxlength="14">'+
  '<label>창업자 특기</label><select id="sp"><option value="dev">개발자형 (개발 속도↑)</option><option value="design">디자이너형 (품질↑)</option><option value="sales">영업형 (인지도↑)</option><option value="researcher">연구형 (기술↑)</option></select>'+
- '<label>난이도 (시작 자금)</label><select id="df"><option value="0">쉬움 2.5억</option><option value="1" selected>보통 1.5억</option><option value="2">어려움 8천만</option></select>'+
- '<div class="row"><button class="b" id="go">🚀 창업하기</button>'+(has?'<button class="b g" id="ct">이어하기</button>':'')+'</div>';
+ '<label>난이도 (시작 자금)</label><select id="df"><option value="0">쉬움 2.5억</option><option value="1" selected>보통 1.5억</option><option value="2">어려움 8천만</option><option value="3">하드코어 6천만 (적자 1개월 즉시 파산)</option></select>'+
+ '<label>저장 슬롯</label><select id="sl">'+[1,2,3].map(i=>'<option value="'+i+'"'+(i===SLOT?' selected':'')+'>슬롯 '+i+' — '+slotInfo(i)+'</option>').join('')+'</select>'+
+ '<div class="row"><button class="b" id="go">🚀 창업하기</button>'+'<button class="b g" id="ct">이어하기</button>'+'</div>';
  $('#md').onclick=e=>{
-  if(e.target.id==='go'){newGame($('#nm').value.trim()||'나의 스타트업',$('#sp').value,+$('#df').value);begin();}
+  if(e.target.id==='go'||e.target.id==='ct'){SLOT=+$('#sl').value;try{localStorage.setItem('ct_slot',SLOT)}catch(x){}}
+  if(e.target.id==='go'){if(localStorage.getItem(sk())&&!confirm('슬롯 '+SLOT+'의 저장 데이터를 덮어쓸까요?'))return;newGame($('#nm').value.trim()||'나의 스타트업',$('#sp').value,+$('#df').value);begin();}
   else if(e.target.id==='ct'){if(load())begin();else toast('불러오기 실패',1);}};}
 function begin(){$('#md').onclick=null;modalOpen=false;$('#ov').classList.remove('on');paused=false;speed=1;dirty=true;render();}
 let acc=0,lastT=performance.now();
