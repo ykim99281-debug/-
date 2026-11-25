@@ -23,7 +23,8 @@
   #hit:before,#hit:after{content:"";position:absolute;left:50%;top:50%;width:30px;height:3px;background:#fff;transform:translate(-50%,-50%) rotate(45deg)}
   #hit:after{transform:translate(-50%,-50%) rotate(-45deg)}
   #hit.head:before,#hit.head:after{background:var(--red)}
-  #vig{position:absolute;inset:0;box-shadow:inset 0 0 160px 40px rgba(255,0,30,.0);transition:box-shadow .3s}
+  #vig{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 45%,rgba(255,0,30,.6) 100%);opacity:0;transition:opacity .3s}
+  #flashfx{position:absolute;inset:0;background:#fff;opacity:0}
   #dmgdir{position:absolute;left:50%;top:50%;width:0;height:0}
   #dmgdir div{position:absolute;left:-60px;top:-170px;width:120px;height:30px;border-top:6px solid var(--red);border-radius:50%;opacity:0;transition:opacity .6s}
   .panel{position:absolute;background:rgba(15,25,35,.75);border-left:4px solid var(--red);padding:8px 14px}
@@ -119,7 +120,7 @@
 <body>
 <div id="hud">
   <div id="scope"></div>
-  <div id="vig"></div>
+  <div id="vig"></div><div id="flashfx"></div>
   <div id="dmgdir"><div></div></div>
   <canvas id="mini" width="260" height="260"></canvas>
   <div id="crosshair"><i class="h" style="left:-14px"></i><i class="h" style="left:6px"></i><i class="v" style="top:-14px"></i><i class="v" style="top:6px"></i><i class="dot"></i></div>
@@ -182,23 +183,27 @@
 "use strict";
 /* ---------- 기본 설정 ---------- */
 const $=id=>document.getElementById(id);
-const renderer=new THREE.WebGLRenderer({antialias:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const _tc={};const setText=(id,v)=>{if(_tc[id]!==v){_tc[id]=v;$(id).textContent=v}};
+const MOBILE=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||navigator.maxTouchPoints>1;
+const renderer=new THREE.WebGLRenderer({antialias:!MOBILE,powerPreference:"high-performance"});
+let qual=1;const qmax=MOBILE?Math.min(devicePixelRatio,1.5):Math.min(devicePixelRatio,2);
+function applyQ(){renderer.setPixelRatio(qmax*qual);renderer.setSize(innerWidth,innerHeight)}
+renderer.setPixelRatio(qmax);
 renderer.setSize(innerWidth,innerHeight);
-renderer.shadowMap.enabled=true;
+renderer.shadowMap.enabled=!MOBILE;
 document.body.appendChild(renderer.domElement);
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x8fb4d8);
 scene.fog=new THREE.Fog(0x8fb4d8,30,110);
 const camera=new THREE.PerspectiveCamera(80,innerWidth/innerHeight,0.12,200);
 scene.add(camera);
-addEventListener("resize",()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()});
+addEventListener("resize",()=>{applyQ();camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()});
 
 scene.add(new THREE.HemisphereLight(0xffffff,0x445566,0.9));
 const sun=new THREE.DirectionalLight(0xfff0d0,0.9);
-sun.position.set(30,50,20);sun.castShadow=true;
+sun.position.set(30,50,20);sun.castShadow=!MOBILE;
 sun.shadow.camera.left=-45;sun.shadow.camera.right=45;sun.shadow.camera.top=45;sun.shadow.camera.bottom=-45;
-sun.shadow.mapSize.set(2048,2048);
+sun.shadow.mapSize.set(1024,1024);
 scene.add(sun);
 
 /* ---------- 저장 / 설정 ---------- */
@@ -233,11 +238,13 @@ function beep(freq,dur,vol,type="sine",slide=0){
 
 /* ---------- 맵 ---------- */
 const HALF=30;
+const _gt={};
 function gridTex(c1,c2,rep){
+  const key=c1+c2+rep;if(_gt[key])return _gt[key];
   const c=document.createElement("canvas");c.width=c.height=128;const x=c.getContext("2d");
   x.fillStyle=c1;x.fillRect(0,0,128,128);x.strokeStyle=c2;x.lineWidth=3;x.strokeRect(0,0,128,128);
   x.globalAlpha=.08;for(let i=0;i<300;i++){x.fillStyle=Math.random()<.5?"#000":"#fff";x.fillRect(Math.random()*128,Math.random()*128,3,3)}
-  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep,rep);return t;
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep,rep);_gt[key]=t;return t;
 }
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(HALF*2,HALF*2),new THREE.MeshLambertMaterial({map:gridTex("#7a8794","#5c6874",30)}));
 floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
@@ -425,10 +432,11 @@ function explode(pos){
   const dp=P.pos.distanceTo(pos);
   if(P.alive&&dp<4.5&&losBetween(c,new THREE.Vector3(P.pos.x,1,P.pos.z)))hurt(70*(1-dp/4.5),{pos:pos,name:"수류탄"});
 }
+const smokeGeo=new THREE.SphereGeometry(1,8,6);
 function popSmoke(pos){
   const grp=new THREE.Group();grp.position.copy(pos);
-  for(let i=0;i<14;i++){
-    const s=new THREE.Mesh(new THREE.SphereGeometry(1.6+Math.random()*1.2,10,8),smokeMat.clone());
+  for(let i=0;i<8;i++){
+    const s=new THREE.Mesh(smokeGeo,smokeMat.clone());s.scale.setScalar(2+Math.random()*1.4);
     s.position.set((Math.random()-.5)*4,Math.random()*2.5+.8,(Math.random()-.5)*4);grp.add(s);
   }
   scene.add(grp);smokes.push({pos:pos.clone().setY(1.8),r:4.2,t:0,life:11,grp});
@@ -469,8 +477,8 @@ function useSkill(i){
     const fw=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion).setY(0).normalize();let n=0;
     bots.forEach(b=>{if(!b.alive||b.team!=="E")return;const dv=new THREE.Vector3().subVectors(b.pos,P.pos).setY(0),L=dv.length();
       if(L<32&&dv.normalize().dot(fw)>.25&&canSee(b)){b.blind=3;n++}});
-    const v=$("vig");v.style.transition="none";v.style.boxShadow="inset 0 0 0 999px rgba(255,255,255,.7)";
-    requestAnimationFrame(()=>{v.style.transition="box-shadow .5s";v.style.boxShadow="inset 0 0 160px 40px rgba(255,0,30,0)"});
+    const v=$("flashfx");v.style.transition="none";v.style.opacity=.75;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{v.style.transition="opacity .6s";v.style.opacity=0}));
     beep(1800,.25,.15,"square",-1200);if(n>0)feed("섬광 적중 "+n+"명");
   }
   sl.t=sl.def.cd;if(sl.ch>0)sl.ch--;
@@ -576,16 +584,17 @@ function endRound(win){
 }
 
 /* ---------- 효과 ---------- */
-const tracers=[];
+const tracers=[],tracerMats={},sparkMats={},sparkGeo=new THREE.BoxGeometry(.04,.04,.04);
 function tracer(a,b,color){
   const geo=new THREE.BufferGeometry().setFromPoints([a,b]);
-  const l=new THREE.Line(geo,new THREE.LineBasicMaterial({color,transparent:true,opacity:.9}));
+  const l=new THREE.Line(geo,tracerMats[color]||(tracerMats[color]=new THREE.LineBasicMaterial({color,transparent:true,opacity:.9})));
   scene.add(l);tracers.push({l,t:.07});
 }
 const sparks=[];
 function spark(pos,color){
-  for(let i=0;i<5;i++){
-    const m=new THREE.Mesh(new THREE.BoxGeometry(.04,.04,.04),new THREE.MeshBasicMaterial({color}));
+  if(sparks.length>70)return;
+  for(let i=0;i<4;i++){
+    const m=new THREE.Mesh(sparkGeo,sparkMats[color]||(sparkMats[color]=new THREE.MeshBasicMaterial({color})));
     m.position.copy(pos);scene.add(m);
     sparks.push({m,v:new THREE.Vector3((Math.random()-.5)*4,Math.random()*3,(Math.random()-.5)*4),t:.4});
   }
@@ -763,7 +772,7 @@ function hurt(d,from){
   if(!P.alive||state==="end")return;
   if(P.armor>0){const ab=Math.min(P.armor,d*.66);P.armor-=ab;d-=ab}
   game.taken+=d;P.hp-=d;beep(120,.12,.2,"sawtooth",-40);
-  const v=$("vig");v.style.boxShadow="inset 0 0 160px 40px rgba(255,0,30,.55)";setTimeout(()=>v.style.boxShadow="inset 0 0 160px 40px rgba(255,0,30,0)",250);
+  const v=$("vig");v.style.opacity=1;clearTimeout(v._t);v._t=setTimeout(()=>v.style.opacity=0,250);
   // 방향 표시
   const dx=from.pos.x-P.pos.x,dz=from.pos.z-P.pos.z,ang=Math.atan2(dx,-dz)-(-P.yaw);
   const el=$("dmgdir");el.style.transform="rotate("+(ang*180/Math.PI)+"deg)";
@@ -961,10 +970,17 @@ let started=false;
 buildGun();updateAmmoHud();
 // 시작 전 배경용 봇 없음
 const clock=new THREE.Clock();
+let perfT=0,perfN=0;
+function adapt(avg){
+  if(avg>.026&&qual>.55){qual=Math.max(.55,qual-.15);applyQ()}
+  else if(avg>.034&&sun.castShadow){sun.castShadow=false}
+  else if(avg<.0175&&qual<1){qual=Math.min(1,qual+.1);applyQ()}
+}
 const up=new THREE.Vector3(0,1,0);
 function loop(){
   requestAnimationFrame(loop);
-  const dt=Math.min(clock.getDelta(),.05);
+  const raw=clock.getDelta(),dt=Math.min(raw,.05);
+  if(raw<.25){perfT+=raw;perfN++;if(perfN>=40){adapt(perfT/perfN);perfT=0;perfN=0}}
   if(playing&&started){
     if(P.alive||state==="end"){
       // 이동
@@ -1044,10 +1060,10 @@ function loop(){
     for(let i=tracers.length-1;i>=0;i--){const t=tracers[i];t.t-=dt;if(t.t<=0){scene.remove(t.l);t.l.geometry.dispose();tracers.splice(i,1)}}
     for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.t-=dt;s.v.y-=9*dt;s.m.position.addScaledVector(s.v,dt);if(s.t<=0){scene.remove(s.m);sparks.splice(i,1)}}
     // 쿨다운 UI
-    $("abGt").textContent=P.nades;$("abG").classList.toggle("cd",P.nades<=0);$("tNade").textContent="수류탄 "+P.nades;
+    setText("abGt",P.nades);$("abG").classList.toggle("cd",P.nades<=0);setText("tNade","수류탄 "+P.nades);
     miniT+=dt;if(miniT>.066){miniT=0;drawMini()}
     setAb("abQ","Q",P.slots[0]);setAb("abE","E",P.slots[1]);
-    if(state==="buy"){buyT-=dt;$("buyT").textContent=Math.max(0,Math.ceil(buyT));if(buyT<=0)endBuy()}
+    if(state==="buy"){buyT-=dt;setText("buyT",Math.max(0,Math.ceil(buyT)));if(buyT<=0)endBuy()}
     // 라운드 전환
     if(state==="end"){
       stateT-=dt;
