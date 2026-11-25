@@ -115,7 +115,7 @@ const UI = {
     let h = `<b>🚕 택시 영업</b> <small class="muted">${taxiNight() ? '🌙 심야 할증 20%' : ''}</small>`;
     if (tx.ride) { const r = tx.ride, bad = Math.min(2, r.crashes) + (r.speedT > 6 ? 1 : 0); h += `<div style="margin:6px 0 2px"><small class="muted">목적지</small> <b>${esc(r.dest.name)}</b></div><div style="font-size:28px;font-weight:800;color:#ffb020" class="tnum">${fmtMoney(taxiFare(r))}</div><div class="row" style="justify-content:space-between"><span>${arrow}</span><span class="tnum">남은 ${Math.round(tx.nav ? tx.nav.rem : tx.dist)}m${tx.nav ? ' <small class="muted">(경로)</small>' : ''}</span></div><small>예상 별점 ${'★'.repeat(Math.max(1, 5 - bad))}${'☆'.repeat(Math.min(4, bad))}</small>`; }
     else h += `<div class="row" style="justify-content:space-between;margin:6px 0"><span>${tx.target ? arrow : '🔍'}</span><span>${tx.target ? '가까운 손님 ' + Math.round(tx.dist) + 'm' : '손님 찾는 중…'}</span></div>`;
-    h += `<div style="border-top:1px solid var(--line);margin-top:6px;padding-top:4px"><small class="muted">이번 영업 ${tx.trips}회 · ${fmtMoney(tx.earn)} · ★${avg}</small></div>`;
+    h += `<div style="border-top:1px solid var(--line);margin-top:6px;padding-top:4px"><small class="muted">이번 영업 ${tx.trips}회 · ${fmtMoney(tx.earn)} · ★${avg}</small><br><small>평점 <b style="color:#ffb020">★${taxiRating().toFixed(1)}</b> · ${taxiDemandLabel()}</small></div>`;
     el.innerHTML = h;
   },
   drawGaps() {

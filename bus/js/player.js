@@ -355,14 +355,15 @@ function makeHailer(near) {
 }
 function setTaxi(on) {
   const b = P.bus; if (!b || !b.isCar) return; SCHOOL.taxi = SCHOOL.taxi || { trips: 0, earn: 0 };
-  if (on) { P.taxi = { hail: [], ride: null, hold: 0, trips: 0, earn: 0, stars: [], spawnT: 0, t: 0, target: null, dist: 0, arrow: 0 }; b.model.setTaxi(1); toast('🚕 택시 영업 시작! 손 흔드는 손님을 찾아보세요', 'gold'); for (let i = 0; i < 4; i++) { const h = makeHailer(true); if (h) P.taxi.hail.push(h); } sfx('chime'); }
+  if (on) { P.taxi = { hail: [], ride: null, hold: 0, trips: 0, earn: 0, stars: [], spawnT: 0, t: 0, target: null, dist: 0, arrow: 0 }; b.model.setTaxi(1); toast('🚕 택시 영업 시작! 손 흔드는 손님을 찾아보세요', 'gold'); for (let i = 0; i < taxiMaxHail(); i++) { const h = makeHailer(true); if (h) P.taxi.hail.push(h); } sfx('chime'); }
   else { taxiClear(); b.model.setTaxi(0); toast('택시 영업을 종료했어요'); }
 }
 function taxiClear() { const tx = P.taxi; if (!tx) return; for (const h of tx.hail) { scene.remove(h.g); disposeTree(h.g); } P.taxi = null; if (beacon) beacon.visible = false; if (P.bus && P.bus.model.setTaxi) P.bus.model.setTaxi(0); }
 function updateTaxi(dt) {
   const tx = P.taxi; if (!tx) return; tx.t += dt;
-  if (!tx.ride && (tx.spawnT -= dt) <= 0) { tx.spawnT = 2; while (tx.hail.length < 5) { const h = makeHailer(false); if (!h) break; tx.hail.push(h); } }
-  for (let i = tx.hail.length - 1; i >= 0; i--) { const h = tx.hail[i]; h.age += dt; h.g.userData.arm.rotation.z = 2.5 + Math.sin(tx.t * 9 + h.ph) * 0.5; if (h.age > 110 || Math.hypot(h.x - P.x, h.z - P.z) > 760) { scene.remove(h.g); disposeTree(h.g); tx.hail.splice(i, 1); } }
+  if (!tx.ride && (tx.spawnT -= dt) <= 0) { tx.spawnT = 2 + (5 - taxiRating()) * 0.8; while (tx.hail.length < taxiMaxHail()) { const h = makeHailer(false); if (!h) break; tx.hail.push(h); } }
+  for (let i = tx.hail.length - 1; i >= 0; i--) { const h = tx.hail[i]; h.age += dt;
+    if (!tx.ride && !h.checked && Math.hypot(h.x - P.x, h.z - P.z) < 32) { h.checked = true; const pc = clamp((3.4 - taxiRating()) * 0.35, 0, 0.6); if (Math.random() < pc) { toast('🙅 평점이 낮아서 손님이 다른 택시를 탔어요 (평점 ★' + taxiRating().toFixed(1) + ')', 'bad'); scene.remove(h.g); disposeTree(h.g); tx.hail.splice(i, 1); continue; } } h.g.userData.arm.rotation.z = 2.5 + Math.sin(tx.t * 9 + h.ph) * 0.5; if (h.age > 110 || Math.hypot(h.x - P.x, h.z - P.z) > 760) { scene.remove(h.g); disposeTree(h.g); tx.hail.splice(i, 1); } }
   let tgt = null;
   if (tx.ride) {
     const r = tx.ride, s = r.dest; r.time += dt; r.rideDist += Math.abs(P.v) * dt; if (Math.abs(P.v) < 1) r.wait += dt; if (Math.abs(P.v) * 3.6 > 60) r.speedT += dt;
@@ -386,7 +387,7 @@ function boardPassenger(h) {
 function endRide() {
   const tx = P.taxi, r = tx.ride; let stars = 5 - Math.min(2, r.crashes); if (r.speedT > 6) stars--; const exp = r.dist0 * 1.4 / 9 + 25; if (r.time > exp * 2.5) stars--; if (r.time > exp * 4) stars--; stars = Math.max(1, stars);
   const fare = taxiFare(r), tip = stars >= 5 ? Math.round(fare * 0.15 / 100) * 100 : stars === 4 ? Math.round(fare * 0.05 / 100) * 100 : 0;
-  SCHOOL.wallet += fare + tip; SCHOOL.taxi.trips++; SCHOOL.taxi.earn += fare + tip; saveSchool(); tx.trips++; tx.earn += fare + tip; tx.stars.push(stars); tx.ride = null; tx.hold = 0; P.bus.model.setTaxi(1);
+  SCHOOL.wallet += fare + tip; SCHOOL.taxi.trips++; SCHOOL.taxi.earn += fare + tip; (SCHOOL.taxi.recent = SCHOOL.taxi.recent || []).push(stars); if (SCHOOL.taxi.recent.length > 20) SCHOOL.taxi.recent.shift(); saveSchool(); tx.trips++; tx.earn += fare + tip; tx.stars.push(stars); tx.ride = null; tx.hold = 0; P.bus.model.setTaxi(1);
   toast('🚕 도착! 요금 ' + fmtMoney(fare) + (tip ? ' + 팁 ' + fmtMoney(tip) : '') + ' · ' + '★'.repeat(stars) + '☆'.repeat(5 - stars), stars >= 4 ? 'gold' : 'good'); sfx('chime');
 }
 function taxiHint() {
@@ -433,3 +434,8 @@ function taxiNav(dt) {
   for (let i = 0; i < n; i++) { pathAt(nv.path, nv.s + 6 + i * 7, _t); _dummy.position.set(_t.x, 0.13, _t.z); _dummy.rotation.set(0, Math.atan2(_t.tx, _t.tz), 0); _dummy.scale.set(0.9, 1, 0.9); _dummy.updateMatrix(); chev.setMatrixAt(i, _dummy.matrix); }
   chev.count = n; chev.visible = n > 0; chev.instanceMatrix.needsUpdate = true;
 }
+
+// 택시 평점 → 손님 수: 최근 20회 평균 별점 (처음엔 4.0점). 높을수록 손님이 많고 빨리 나타나요
+const taxiRating = () => { const r = (SCHOOL.taxi && SCHOOL.taxi.recent) || []; return r.length ? r.reduce((a, b) => a + b, 0) / r.length : 4.0; };
+const taxiMaxHail = () => Math.max(1, Math.round(1.5 + (taxiRating() - 1) * 1.1 + (WX.rainK > 0.3 ? 1 : 0)));
+const taxiDemandLabel = () => { const n = taxiMaxHail(); return n >= 6 ? '손님 많음' : n >= 4 ? '손님 보통' : '손님 적음'; };
