@@ -1302,7 +1302,7 @@ function killEnemy(m){
  const S=m.S,n=m.t.boss?25:rand(3,6)|0;for(let i=0;i<n;i++)dropItem('gold',m.g.position,Math.max(1,Math.round(rand(S.gold[0],S.gold[1])/n)));
  if(m.t.i===0&&Math.random()<.75)dropItem('jelly',m.g.position,1);if(Math.random()<.14)dropItem('pot',m.g.position,1);ensureInv();G.kills=(G.kills|0)+1;gearDrop(m);
  gainXP(S.xp);onKill(m.t.i);if(m.S.bounty){const n=ZONES.filter(z=>G.bd[z.b]||z.b===m.t.i).length;setTimeout(()=>{toast(`🌑 분신 지역 보스 처치! (${n}/${ZONES.length})${n>=ZONES.length?' — 모든 지역을 정복했다!':''}`);bigText(n>=ZONES.length?'전 지역 정복!':'지역 정복!',1,false);updateQuestUI()},900);if(n>=ZONES.length){G.pots+=5;G.gold+=3000}}
- if(m.S.boss){G.bd[m.t.i]=1;if(!m.S.final&&!m.S.final2&&bossOpen())setTimeout(()=>{toast(SEASON===2?'🌑 네 수문장의 분신 조각을 모았다! 북쪽 성문에 복제 마왕이 나타난다!':'🏰 네 지형의 수문장을 모두 쓰러뜨렸다! 북쪽 타락성의 문이 열린다!');bigText('타락성 개방!',1,false);SFX.boom();addShake(.6)},4600)}
+ if(m.S.boss){G.bossKills=(G.bossKills|0)+1;G.bd[m.t.i]=1;if(!m.S.final&&!m.S.final2&&bossOpen())setTimeout(()=>{toast(SEASON===2?'🌑 네 수문장의 분신 조각을 모았다! 북쪽 성문에 복제 마왕이 나타난다!':'🏰 네 지형의 수문장을 모두 쓰러뜨렸다! 북쪽 타락성의 문이 열린다!');bigText('타락성 개방!',1,false);SFX.boom();addShake(.6)},4600)}
  if(m.S.final)setTimeout(victory,1800);else if(m.S.final2)setTimeout(victory2,1800);else if(m.S.boss&&SEASON===1){const af=ENEMIES[m.t.i].after;if(af)setTimeout(()=>{if(mode==='world')dialogue(ENEMIES[m.t.i].n,af)},1700)}}
 function applySeason(){QUESTS=SEASON===2?QUESTS2:QUESTS1;s2G.visible=SEASON===2;for(const m of wmons){const t=m.t,hide=t.only&&t.only!==SEASON;m.S=calcS(t);m.max=m.S.hp;if(hide){m.alive=false;m.g.visible=false;m.dead=1e9;if(m.bar){m.bar.remove();m.bar=null}}else if(t.boss&&G.bd[t.i]){m.alive=false;m.g.visible=false;m.dead=1e9}else respawnWM(m)}}
 function respawnWM(m){const[x,z]=wmonPos(m.t);m.g.position.set(x,hgt(x,z),z);m.tx=x;m.tz=z;m.g.visible=true;m.g.scale.setScalar(m.t.s);m.alive=true;m.rage=false;m.hp=m.max;m.state='idle';m.frozen=0;m.fightT=0;m.combatT=0;if(m.ice)m.ice.visible=false;m.mats.forEach(x=>{x.emissive.copy(x.userData.e0);x.emissiveIntensity=x.userData.i0})}
@@ -1398,6 +1398,7 @@ function openShop(){return new Promise(res=>{mode='dialog';const s=$('#scr');
   {i:'🛏️',n:'푹 쉬기',c:20,f:()=>{G.hp=G.max},d:'HP 전부 회복'}];
   s.innerHTML=`<h2 class="ttl" style="font-size:clamp(34px,9vw,52px)">여관 상점</h2><div class="desc">보유 골드 <b>💰${G.gold}</b></div><div class="cards">${items.map((it,i)=>`<button class="card" data-i="${i}" ${G.gold<it.c?'style="opacity:.5"':''}><div class="ic">${it.i}</div><div>${it.n}</div><small>${it.d}</small><small>💰 ${it.c}</small></button>`).join('')}</div><button class="go" id="shopx" style="font-size:20px;padding:10px 30px;animation:none">나가기</button>`;s.className='on';
   s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{const it=items[b.dataset.i];if(G.gold<it.c){toast('골드가 부족합니다');return}G.gold-=it.c;it.f();SFX.heal();hud();render()});
+  {const x=$('#shopx');const pb=document.createElement('button');pb.textContent='🐾 펫 상점';pb.style.cssText='font-size:18px;padding:10px 22px;margin-left:8px;pointer-events:auto';x.after(pb);pb.onclick=()=>{SFX.ui();s.className='';mode='world';res();setTimeout(openPetShop,60)}}
   $('#shopx').onclick=()=>{SFX.ui();s.className='';mode='world';res()}};render()})}
 function openWeaponShop(){return new Promise(res=>{mode='dialog';const s=$('#scr');
  const render=()=>{const kind=JOBKIND[G.job],list=WP[kind],cur=G.wt[kind],items=[{i:WICON[kind],n:'장착: '+list[cur].n,c:-1,d:'공격 +'+list[cur].a}];
@@ -1539,7 +1540,7 @@ function makeGear(lv,minR=0,boss=false){ensureInv();let r=Math.random();let rar=
  const it={id:Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36),slot,rar,lv:L,name:ADJ[rar]+' '+SLOTS[slot].base[Math.min(4,Math.max(idx,rar>=3?3:idx))],atk:0,hp:0,def:0};
  if(slot==='armor'){it.hp=Math.round(L*3*m)+8;it.def=Math.max(0,Math.round(L*.22*m))}else{it.atk=Math.round(L*.55*m)+1;it.hp=Math.round(L*1.1*m)}return it}
 function gearDrop(m){const S=m.S,boss=!!S.boss;const ch=boss?1:Math.min(.16,.06+(SEASON===2?.04:0)+(S.lv>12?.03:0));if(Math.random()>ch)return;const it=makeGear(S.lv,boss?2:0,boss);dropItem('gear',m.g.position,it)}
-function addGear(it){ensureInv();if(G.inv.length>=40){const v=itemValue(it);G.gold+=v;fxFloat(`가방 가득! 자동판매 +${v}G`,heroHead(),'#ffd84d');return}G.inv.push(it);fxFloat(`${it.name}`,heroHead(),RAR[it.rar].c);toast(`🎁 ${RAR[it.rar].n} ${it.name} 획득! (가방 🎒 / I 키)`);if(it.rar>=3){bigText(it.rar===4?'전설 장비!':'영웅 장비!',1,false);SFX.win()}}
+function addGear(it){ensureInv();if(G.inv.length>=40){const v=itemValue(it);G.gold+=v;fxFloat(`가방 가득! 자동판매 +${v}G`,heroHead(),'#ffd84d');return}G.maxRar=Math.max(G.maxRar|0,it.rar);G.inv.push(it);fxFloat(`${it.name}`,heroHead(),RAR[it.rar].c);toast(`🎁 ${RAR[it.rar].n} ${it.name} 획득! (가방 🎒 / I 키)`);if(it.rar>=3){bigText(it.rar===4?'전설 장비!':'영웅 장비!',1,false);SFX.win()}}
 let bagOpen=false,bagSell=false;
 function openBag(){if(mode!=='world')return;ensureInv();mode='dialog';bagOpen=true;const sc=$('#scr');
  const card=(it,where)=>`<div class="glass" data-w="${where}" data-id="${it.id}" style="padding:6px 8px;text-align:left;cursor:pointer;border-color:${RAR[it.rar].c};font-size:12px;line-height:1.35;pointer-events:auto"><b style="color:${RAR[it.rar].c}">${SLOTS[it.slot].i} ${RAR[it.rar].n} ${it.name}</b><br><span style="opacity:.85">Lv.${it.lv} · ${itemStats(it)}</span><br><span style="opacity:.6">${where==='inv'?(bagSell?'탭: 판매 💰'+itemValue(it):'탭: 장착'):'탭: 해제'}</span></div>`;
@@ -1549,20 +1550,60 @@ function openBag(){if(mode!=='world')return;ensureInv();mode='dialog';bagOpen=tr
   <div class="desc" style="font-size:13px">⚔️ 무기 ${curWeapon().n} (+${curWeapon().a}) · 장비 합계 ⚔️+${es.atk} ❤️+${es.hp} 🛡️+${es.def} · 처치 ${G.kills|0}마리</div>
   <div class="glass" style="padding:10px;width:min(560px,94vw);max-height:62vh;overflow:auto"><div style="font-size:12px;color:var(--yel);margin-bottom:4px">장착 중</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px">${slotHtml}</div>
   <div style="font-size:12px;color:var(--yel);margin:10px 0 4px">가방 (${inv.length}/40)</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:6px">${inv.map(it=>card(it,'inv')).join('')||'<div class="desc">비어 있어요. 몬스터를 잡으면 장비가 나와요!</div>'}</div></div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button id="bsell" style="${bagSell?'border-color:#ff7a93':''}">${bagSell?'💰 판매 모드 ON':'💰 판매 모드'}</button><button id="bjunk">일반·고급 전부 판매</button><button id="bx">닫기</button></div>`;
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center"><button id="bsell" style="${bagSell?'border-color:#ff7a93':''}">${bagSell?'💰 판매 모드 ON':'💰 판매 모드'}</button><button id="bjunk">일반·고급 전부 판매</button><button id="bach">🏆 업적</button><button id="bx">닫기</button></div>`;
   sc.className='on';
   sc.querySelectorAll('[data-w]').forEach(e=>e.onclick=()=>{const id=e.dataset.id;if(e.dataset.w==='eq'){const k=Object.keys(G.eq).find(k=>G.eq[k]&&G.eq[k].id===id);const it=G.eq[k];eqDelta(it,-1);G.eq[k]=null;G.inv.push(it);SFX.ui()}
    else{const it=G.inv.find(x=>x.id===id);if(!it)return;if(bagSell){G.gold+=itemValue(it);G.inv=G.inv.filter(x=>x.id!==id);SFX.heal()}else{const old=G.eq[it.slot];eqDelta(old,-1);G.eq[it.slot]=it;eqDelta(it,1);G.inv=G.inv.filter(x=>x.id!==id);if(old)G.inv.push(old);SFX.win();burst(heroHead(),{color:RAR[it.rar].h,n:30,speed:4,life:.7,up:2})}}hud();render()});
   $('#bsell').onclick=()=>{bagSell=!bagSell;render()};
   $('#bjunk').onclick=()=>{const junk=G.inv.filter(x=>x.rar<=1);if(!junk.length){toast('팔 장비가 없어요');return}if(!confirm(`일반·고급 장비 ${junk.length}개를 모두 팔까요?`))return;let v=0;junk.forEach(x=>v+=itemValue(x));G.gold+=v;G.inv=G.inv.filter(x=>x.rar>1);toast(`💰 ${v}G 획득`);SFX.heal();hud();render()};
+  $('#bach').onclick=()=>{mode='world';openAch()};
   $('#bx').onclick=closeBag};render()}
 function closeBag(){bagOpen=false;bagSell=false;$('#scr').className='';mode='world';hud()}
 function dailyReward(){const t=new Date().toISOString().slice(0,10);if(G.daily===t)return;const streak=(G.daily&&Math.round((new Date(t)-new Date(G.daily))/86400000)===1)?(G.streakD|0)+1:1;G.dailyPrev=1;G.streakD=streak;G.daily=t;const gold=100+Math.min(streak,7)*60,pots=1+(streak>=3?1:0);G.gold+=gold;G.pots+=pots;
  setTimeout(()=>{toast(`📅 출석 ${streak}일차! 💰${gold} + 🧪${pots}`);bigText('출석 보상!',1,false);SFX.win()},3500);if(streak>=7&&!G.s7){G.s7=1;const it=makeGear(Math.max(5,G.lv),3);setTimeout(()=>addGear(it),6000)}}
 
+
+/* ================= PETS & ACHIEVEMENTS ================= */
+const PETS={slime:{n:'아기 슬라임',i:'🟢',price:500,b:0,sc:.3,cd:2.4,desc:'가끔 공격하고 HP를 조금씩 회복해 줘요'},wolf:{n:'새끼 늑대',i:'🐺',price:2500,b:9,sc:.4,cd:1.5,desc:'빠르게 물어뜯어 공격을 도와요'},penguin:{n:'꼬마 펭귄',i:'🐧',price:5000,b:15,sc:.3,cd:2.6,desc:'가끔 적을 얼려 버려요'},dragon:{n:'아기 용',i:'🐲',price:20000,b:3,sc:.2,cd:4.2,desc:'주변 적에게 범위 불꽃을 뿜어요'}};
+let petObj=null,petKey=null,petAtk=1,petHeal=3;
+function setPet(key){if(petObj){scene.remove(petObj.g);disposeObj(petObj.g);petObj=null}petKey=key;if(!key||!PETS[key])return;const def=PETS[key],g=new THREE.Group(),b=builders[def.b](g);g.scale.setScalar(def.sc);g.traverse(o=>{if(o.isMesh)o.castShadow=false});g.position.copy(hero.position).add(new THREE.Vector3(1.5,0,1.5));scene.add(g);petObj={g,b,t:rand(0,6)}}
+function updatePet(dt){const key=G.pet||null;if(key!==petKey)setPet(key);if(!petObj)return;const g=petObj.g,hp=hero.position,y=hero.rotation.y;
+ const tx=hp.x-Math.sin(y)*1.9+Math.cos(y)*1.5,tz=hp.z-Math.cos(y)*1.9-Math.sin(y)*1.5,dx=tx-g.position.x,dz=tz-g.position.z,d=Math.hypot(dx,dz);
+ if(d>30){g.position.set(tx,hgt(tx,tz),tz)}else if(d>.15){const k=Math.min(1,dt*(2+d*1.6));g.position.x+=dx*k;g.position.z+=dz*k;g.rotation.y+=angDiff(g.rotation.y,Math.atan2(dx,dz))*Math.min(1,dt*8)}
+ g.position.y=hgt(g.position.x,g.position.z)+(key==='dragon'?1.1+Math.sin(T*3)*.25:Math.abs(Math.sin(T*(d>.5?9:2)))*.12);petObj.b.tick(T+petObj.t);
+ if(mode!=='world'||G.hp<=0)return;const def=PETS[key];
+ if(key==='slime'){petHeal-=dt;if(petHeal<=0){petHeal=3;if(G.hp<G.max)G.hp=Math.min(G.max,G.hp+Math.max(1,Math.round(G.max*.012)))}}
+ petAtk-=dt;if(petAtk>0)return;let t=null,bd=9;for(const m of wmons){if(!m.alive||m.S.dummy||m.remote)continue;const dd=Math.hypot(m.g.position.x-hp.x,m.g.position.z-hp.z);if(dd<bd){bd=dd;t=m}}if(!t)return;petAtk=def.cd*rand(.9,1.1);
+ const tp=enemyHead(t),from=g.position.clone().add(new THREE.Vector3(0,.7,0));const f=(key==='wolf'?.38:key==='dragon'?.45:key==='penguin'?.22:.16)*ATK();
+ if(key==='dragon'){g.rotation.y=Math.atan2(t.g.position.x-g.position.x,t.g.position.z-g.position.z);for(let i=0;i<10;i++)burst(from.clone().lerp(tp,i/10),{color:pick([0xff6a1a,0xffd23a]),n:3,speed:1.2,life:.5,size:.6,grav:-1});foes(t.g.position,4).forEach(e=>{if(!e.remote)hurtEnemy(e,Math.round(f*rand(.9,1.1)),{kb:2})});SFX.boom&&SFX.hit()}
+ else{burst(from.clone().lerp(tp,.5),{color:key==='penguin'?0x9ee9ff:key==='wolf'?0xffffff:0x7cffb0,n:6,speed:1.5,life:.35});hurtEnemy(t,Math.round(f*rand(.9,1.1)),{kb:1});if(key==='penguin'&&Math.random()<.3)freezeEnemy(t,2.5)}}
+function openPetShop(){if(mode!=='world')return;mode='dialog';const s=$('#scr');G.pets=G.pets||{};
+ const render=()=>{s.innerHTML=`<h2 style="margin:0;font-family:'Black Han Sans',Jua,sans-serif;font-size:clamp(26px,7vw,40px);font-weight:400;color:#ffe9a0">🐾 펫 상점</h2><div class="desc">보유 골드 <b>${G.gold>=1e9?'무한':'💰'+G.gold}</b> · 펫은 한 마리만 데리고 다닐 수 있어요</div><div class="cards">${Object.entries(PETS).map(([k,v])=>{const own=!!G.pets[k],on=G.pet===k;return `<button class="card" data-k="${k}" style="${on?'border-color:#ffd84d':''}"><div class="ic">${v.i}</div><div><b>${v.n}</b></div><small>${v.desc}</small><small>${own?(on?'✅ 함께 있는 중 (탭: 해제)':'보유 중 (탭: 데려가기)'):'💰 '+v.price}</small></button>`}).join('')}</div><button class="go" id="px" style="font-size:20px;padding:10px 30px;animation:none">나가기</button>`;s.className='on';
+  s.querySelectorAll('.card').forEach(b=>b.onclick=()=>{const k=b.dataset.k,v=PETS[k];if(G.pets[k]){G.pet=G.pet===k?null:k;SFX.win()}else{if(G.gold<v.price){toast('골드가 부족합니다');return}G.gold-=v.price;G.pets[k]=1;G.pet=k;SFX.win();bigText('새 펫!',1,false)}hud();render()});
+  $('#px').onclick=()=>{SFX.ui();s.className='';mode='world'}};render()}
+const ACH=[
+ {id:'k1',n:'첫 사냥',d:'몬스터 1마리 처치',p:()=>[G.kills|0,1],g:50},
+ {id:'k100',n:'사냥꾼',d:'몬스터 100마리 처치',p:()=>[G.kills|0,100],g:500},
+ {id:'k1000',n:'학살자',d:'몬스터 1000마리 처치',p:()=>[G.kills|0,1000],g:4000,pot:3},
+ {id:'l10',n:'성장 중',d:'레벨 10 달성',p:()=>[G.lv,10],g:300},
+ {id:'l30',n:'베테랑',d:'레벨 30 달성',p:()=>[G.lv,30],g:1500},
+ {id:'l60',n:'전설의 용사',d:'레벨 60 달성',p:()=>[G.lv,60],g:6000,pot:5},
+ {id:'job',n:'직업을 얻다',d:'전직하기',p:()=>[G.job&&G.job!=='none'?1:0,1],g:400},
+ {id:'b1',n:'수문장 사냥',d:'보스 1마리 처치',p:()=>[G.bossKills|0,1],g:800},
+ {id:'b6',n:'보스 킬러',d:'보스 6마리 처치',p:()=>[G.bossKills|0,6],g:4000,pot:3},
+ {id:'epic',n:'영웅의 증표',d:'영웅 등급 장비 획득',p:()=>[(G.maxRar|0)>=3?1:0,1],g:1000},
+ {id:'leg',n:'전설을 손에',d:'전설 등급 장비 획득',p:()=>[(G.maxRar|0)>=4?1:0,1],g:5000,pot:3},
+ {id:'pet',n:'동반자',d:'펫 구입하기',p:()=>[Object.keys(G.pets||{}).length?1:0,1],g:500},
+ {id:'s2',n:'시즌 2 돌입',d:'시즌 2 시작하기',p:()=>[SEASON===2||G.s1clear?1:0,1],g:2000},
+ {id:'zone',n:'지역 정복자',d:'분신 지역 보스 3마리 처치',p:()=>[ZONES.filter(z=>G.bd[z.b]).length,3],g:3000}];
+let achT=2;
+function checkAch(){G.ach=G.ach||{};for(const a of ACH){if(G.ach[a.id])continue;const[c,t]=a.p();if(c>=t){G.ach[a.id]=1;if(!ADM.role){G.gold+=a.g;G.pots+=a.pot|0}toast(`🏆 업적 달성: ${a.n}! 💰${a.g}${a.pot?' + 🧪'+a.pot:''}`);bigText('업적 달성!',1,false);SFX.win();hud();saveGame()}}}
+function openAch(){mode='dialog';bagOpen=true;const sc=$('#scr');G.ach=G.ach||{};const done=ACH.filter(a=>G.ach[a.id]).length;
+ sc.innerHTML=`<h2 style="margin:0;font-family:'Black Han Sans',Jua,sans-serif;font-size:clamp(24px,6vw,34px);font-weight:400;color:#ffe9a0">🏆 업적 (${done}/${ACH.length})</h2><div class="glass" style="padding:10px;width:min(520px,94vw);max-height:64vh;overflow:auto;display:flex;flex-direction:column;gap:6px">${ACH.map(a=>{const[c,t]=a.p(),ok=!!G.ach[a.id];return `<div class="glass" style="padding:6px 10px;text-align:left;font-size:13px;${ok?'border-color:#ffd84d':'opacity:.8'}"><b>${ok?'✅':'⬜'} ${a.n}</b> <span style="opacity:.7">— ${a.d}</span><br><span style="opacity:.8">${ok?'달성!':Math.min(c,t)+' / '+t} · 보상 💰${a.g}${a.pot?' + 🧪'+a.pot:''}</span></div>`}).join('')}</div><button id="ax">돌아가기</button>`;sc.className='on';$('#ax').onclick=()=>{mode='world';openBag()}}
+
 /* ================= ADMIN / EVENTS / BAN ================= */
 const SUPERMAIL="geab980ebaa85eca480@brainrpg.local";
-const BUILD=2026111901,TAG='r10 (장비·가방·출석)';
+const BUILD=2026111901,TAG='r11 (펫·업적)';
 let kicked=false,CFG={};
 let banned=false,ADM={role:null},EVT={type:null,until:0,by:''},srvOff=0,unsubAll=[];
 const EVTS={xp3:{n:'경험치 3배',i:'📈'},gold3:{n:'골드 3배',i:'💰'},atk2:{n:'공격력 2배',i:'⚔️'},god:{n:'받는 피해 절반',i:'🛡️'}};
@@ -1763,7 +1804,7 @@ function frame(){requestAnimationFrame(frame);
  const cp=H.cape.geometry,ba=cp.userData.base,pa=cp.attributes.position.array;for(let i=0;i<pa.length;i+=3){const y=ba[i+1];const f=(.75-y)/1.5;pa[i+2]=ba[i+2]+Math.sin(T*3+y*3.5+ba[i]*2)*.09*f+f*.12*(1+Math.sin(T*1.5))}cp.attributes.position.needsUpdate=true;if((frameNo&3)===0)cp.computeVertexNormals();
  H.plume.rotation.x=-.9+Math.sin(T*3)*.1;
  PSa.update(dt);PSs.update(dt);
- for(const fn of[updateWorld,updateHeroCombat,updateEnemies,updateProjs,updateHProjs,updateDrops]){try{fn(dt)}catch(e){reportErr(e,fn.name)}}
+ for(const fn of[updateWorld,updateHeroCombat,updateEnemies,updateProjs,updateHProjs,updateDrops,updatePet]){try{fn(dt)}catch(e){reportErr(e,fn.name)}}
  // camera (orbit follow)
  if(mode==='title')camYaw+=real*.12;
  camDistC=lerp(camDistC,camDistT*(aspect<1?1.3:1),1-Math.pow(.02,real));
@@ -1780,6 +1821,7 @@ function frame(){requestAnimationFrame(frame);
  sky.material.uniforms.boost.value=lerp(sky.material.uniforms.boost.value,gg*.9+boomBoost,.05);boomBoost*=.96;
  if(G.hp>0&&G.hp<G.max&&mode==='world'&&PA.stun<=0){const village=Math.hypot(hp.x,hp.z)<19;G.hp=Math.min(G.max,G.hp+dt*(village?2.5:0))}
  {const r=G.hp/G.max,dg=$('#danger');dg.style.opacity=(r<.3&&G.hp>0&&mode==='world')?((.45+.55*Math.abs(Math.sin(T*5)))*(1-r/.3)).toFixed(2):0;if(r<.3&&G.hp>0&&mode==='world'&&frameNo%50===0)tone(70,.14,'sine',.12)}
+ achT-=real;if(achT<=0&&mode==='world'){achT=2;try{checkAch()}catch(e){reportErr(e,'ach')}}
  presT-=real;if(presT<=0){presT=1.4;try{presencePush()}catch(e){reportErr(e,'presence')}}try{updateRemote(dt);updateBars();updateGuide()}catch(e){reportErr(e,'ui')}
  hudT-=real;if(hudT<=0){hudT=.1;hud()}
  try{composer.render()}catch(e){reportErr(e,'render')}
@@ -1795,7 +1837,7 @@ worldG.visible=true;camSmooth.set(-4+Math.sin(camYaw)*6,3,2+Math.cos(camYaw)*6);
 applySeason();updateQuestUI();updateEnv(.01);
 frame();title();
 const ld=$('#load');ld.style.opacity=0;setTimeout(()=>ld.remove(),700);
-window.__game={makeGear,addGear,openBag,eqSum,dropItem,stats:()=>({fx:fxList.length,tw:tweens.length,pr:projs.length,hp:hprojs.length,dr:drops.length,rem:REM.size,sc:scene.children.length,tex:renderer.info.memory.textures,geo:renderer.info.memory.geometries,calls:renderer.info.render.calls,wm:wmons.length}),startSeason2,applyJob,setOutfit,setWeapon,hero,camera,G,PA,doAction,tp(x,z){hero.position.set(x,hgt(x,z),z)},talk,chief,get mode(){return mode},get qi(){return qi},get qprog(){return qprog},get qstate(){return qstate},get wmons(){return wmons},get tod(){return tod},setTod(v){tod=v},interact,get nearTarget(){return nearTarget}};
+window.__game={PETS,setPet,openPetShop,openAch,checkAch,makeGear,addGear,openBag,eqSum,dropItem,stats:()=>({fx:fxList.length,tw:tweens.length,pr:projs.length,hp:hprojs.length,dr:drops.length,rem:REM.size,sc:scene.children.length,tex:renderer.info.memory.textures,geo:renderer.info.memory.geometries,calls:renderer.info.render.calls,wm:wmons.length}),startSeason2,applyJob,setOutfit,setWeapon,hero,camera,G,PA,doAction,tp(x,z){hero.position.set(x,hgt(x,z),z)},talk,chief,get mode(){return mode},get qi(){return qi},get qprog(){return qprog},get qstate(){return qstate},get wmons(){return wmons},get tod(){return tod},setTod(v){tod=v},interact,get nearTarget(){return nearTarget}};
 </script>
 </body>
 </html>
