@@ -115,7 +115,7 @@ select,input.txt{font:inherit;padding:5px 8px;user-select:text;-webkit-user-sele
   <div class="help" id="helpTxt">
     <b>PC</b> WASD 이동 · 스페이스 점프 · Shift 달리기 · 왼쪽 클릭 부수기/공격 · 오른쪽 클릭 설치/먹기/장착 · 1~9/휠 선택 · E 가방/제작 · T 채팅 · F3 정보<br>
     <b>크리에이티브</b> 스페이스 두 번 = 비행 · 블록 무한 &nbsp; <b>서바이벌</b> 밤엔 좀비·크리퍼! 깊은 지하엔 용암과 다이아몬드가 있어요<br>
-    <b>괭이</b>로 흙을 갈고 씨앗을 심으면 밀이 자라요 → 빵 · <b>상자</b>에 물건 보관 · <b>작업대/화로</b> 블록을 우클릭하면 열려요 (Shift+우클릭: 그 옆에 블록 설치) · <b>횃불</b>은 주변을 밝혀요 · 침대 우클릭: 밤 건너뛰기 · <b>활</b> 우클릭 발사 · <b>TNT</b> 라이터로 점화
+    <b>마을</b>의 주민을 우클릭하면 에메랄드로 거래 (나침반을 들면 마을 방향 표시) · <b>괭이</b>로 흙을 갈고 씨앗을 심으면 밀이 자라요 → 빵 · <b>상자</b>에 물건 보관 · <b>작업대/화로</b> 블록을 우클릭하면 열려요 (Shift+우클릭: 그 옆에 블록 설치) · <b>횃불</b>은 주변을 밝혀요 · 침대 우클릭: 밤 건너뛰기 · <b>활</b> 우클릭 발사 · <b>TNT</b> 라이터로 점화
   </div>
 </div>
 
@@ -220,7 +220,7 @@ const ITEM={
   112:{n:'석탄',k:'mat'},113:{n:'다이아몬드',k:'mat'},114:{n:'철 주괴',k:'mat'},115:{n:'금 주괴',k:'mat'},140:{n:'화약',k:'mat'},
   116:{n:'라이터',k:'lighter'},
   141:{n:'막대기',k:'mat'},152:{n:'부싯돌',k:'mat'},150:{n:'활',k:'bow',tier:2},151:{n:'화살',k:'ammo'},153:{n:'시계',k:'gadget'},154:{n:'나침반',k:'gadget'},
-  142:{n:'씨앗',k:'seed'},143:{n:'밀',k:'mat'},144:{n:'빵',k:'food',food:6},
+  145:{n:'에메랄드',k:'mat'},142:{n:'씨앗',k:'seed'},143:{n:'밀',k:'mat'},144:{n:'빵',k:'food',food:6},
   125:{n:'나무 괭이',k:'hoe',mk:'soil',tier:1},126:{n:'돌 괭이',k:'hoe',mk:'soil',tier:2},127:{n:'철 괭이',k:'hoe',mk:'soil',tier:3},128:{n:'다이아 괭이',k:'hoe',mk:'soil',tier:4}
 };
 const ARM_T=[['금',[2,5,3,1]],['철',[2,6,5,2]],['다이아',[3,8,6,3]]],ARM_S=['투구','갑옷','바지','신발'];
@@ -323,6 +323,7 @@ function iconURL(id){
       else if(it.slot===1){P(c,3,2,4,3);P(c,9,2,4,3);P(c,3,4,10,9);P('#0003',3,11,10,2);P('#0002',7,2,2,4);P('#fff6',4,5,2,3);}
       else if(it.slot===2){P(c,3,2,10,4);P(c,3,6,4,8);P(c,9,6,4,8);P('#0003',3,5,10,1);}
       else{P(c,2,8,5,5);P(c,9,8,5,5);P('#0003',2,12,5,1);P('#0003',9,12,5,1);}}
+    else if(id===145){P('#1fbf5a',5,3,6,2);P('#1fbf5a',3,5,10,6);P('#1fbf5a',5,11,6,2);P('#8affb4',5,5,2,2);P('#0f7a3a',9,8,3,3);}
     else if(id===142){P('#6a8a2a',4,5,2,2);P('#8aaa3a',8,4,2,2);P('#6a8a2a',6,9,2,2);P('#8aaa3a',10,8,2,2);P('#6a8a2a',5,12,2,2);P('#8aaa3a',9,11,2,2);}
     else if(id===143){for(const x of[4,8,12]){P('#c8a030',x,5,2,9);P('#e8c850',x-1,3,4,3);}}
     else if(id===144){P('#b8783a',2,6,12,7);P('#d8984a',3,5,10,3);P('#8a5424',2,11,12,2);P('#f0c070',5,6,2,1);P('#f0c070',9,7,2,1);}
@@ -401,6 +402,95 @@ let edits=new Map();
 const urgent=new Set();
 let netOut=[],net=null;
 
+/* ================= 마을 ================= */
+const vCache=new Map(),villagerDone=new Set();
+const SLOTS=[[-26,-26],[0,-26],[26,-26],[-26,0],[26,0],[-26,26],[0,26],[26,26]];
+function villageAt(gx,gz){
+  const k=gx+','+gz;if(vCache.has(k))return vCache.get(k);
+  let v=null;
+  if(hash3(gx,901,gz)<.55){
+    const vx=gx*128+24+Math.floor(hash3(gx,902,gz)*80),vz=gz*128+24+Math.floor(hash3(gx,903,gz)*80),h=heightAt(vx,vz);
+    if(h>SEA+2&&h<75&&biomeAt(vx,vz,h)!==3){
+      const bl=[];
+      SLOTS.forEach((sl,i)=>{
+        const wx=vx+sl[0],wz=vz+sl[1];let lo=999,hi=-1;
+        for(const[ox,oz]of[[0,0],[-4,-4],[4,-4],[-4,4],[4,4]]){const hh=heightAt(wx+ox,wz+oz);if(hh<lo)lo=hh;if(hh>hi)hi=hh;}
+        if(lo<=SEA+1||hi-lo>5)return;
+        const r=hash3(gx*10+i,904,gz),type=r<.45?'house':r<.65?'farm':r<.78?'smithy':r<.92?'hut':null;if(!type)return;
+        const door=(Math.abs(sl[0])>=Math.abs(sl[1])&&sl[0]!==0)?[-Math.sign(sl[0]),0]:[0,-Math.sign(sl[1])];
+        bl.push({type,x:wx,z:wz,B:heightAt(wx,wz),door,i,key:gx+','+gz+','+i});
+      });
+      if(bl.length>=3)v={x:vx,z:vz,B:h,bl,gx,gz};
+    }
+  }
+  vCache.set(k,v);return v;
+}
+const LOOT=[[144,1,4],[110,1,3],[114,1,3],[115,1,2],[112,2,6],[142,2,5],[31,3,8],[7,4,10],[145,1,3],[151,2,6],[143,2,5],[8,4,8],[113,1,1],[134,1,3]];
+function villageLoot(wx,y,wz){
+  const a=new Array(27).fill(null),n=3+Math.floor(hash3(wx,907,wz)*4);
+  for(let k=0;k<n;k++){const e=LOOT[Math.floor(hash3(wx+k*13,908+k,wz)*LOOT.length)],c=e[1]+Math.floor(hash3(wx,909+k,wz+k)*(e[2]-e[1]+1));a[Math.floor(hash3(wx,910+k,wz)*27)]=mkSlot(e[0],c);}
+  return a;
+}
+function genVillages(cx,cz,d,vchest){
+  const x0=cx*CS,z0=cz*CS;
+  const inC=(x,z)=>x>=x0&&x<x0+CS&&z>=z0&&z<z0+CS;
+  const put=(x,y,z,id)=>{if(x<x0||x>=x0+CS||z<z0||z>=z0+CS||y<0||y>=CH)return;d[(y*CS+(z-z0))*CS+(x-x0)]=id;};
+  const prep=(x,z,by)=>{if(!inC(x,z))return;const th=heightAt(x,z);for(let y=th+1;y<by;y++)put(x,y,z,y<by-1?B.COBBLE:B.DIRT);for(let y=by;y<=Math.max(th,by)+12&&y<CH;y++)put(x,y,z,0);};
+  for(let gx=Math.floor((x0-64)/128);gx<=Math.floor((x0+CS+64)/128);gx++)for(let gz=Math.floor((z0-64)/128);gz<=Math.floor((z0+CS+64)/128);gz++){
+    const v=villageAt(gx,gz);if(!v)continue;
+    if(v.x+64<x0||v.x-64>x0+CS||v.z+64<z0||v.z-64>z0+CS)continue;
+    // 길
+    for(let t=-40;t<=40;t++)for(let w=-1;w<=1;w++)for(const[px,pz]of[[v.x+t,v.z+w],[v.x+w,v.z+t]]){
+      if(!inC(px,pz))continue;const th=heightAt(px,pz);if(th<=SEA)continue;
+      const li=(th*CS+(pz-z0))*CS+(px-x0),cur=d[li];if(cur===B.GRASS||cur===B.DIRT||cur===B.SAND||cur===B.SNOW)d[li]=B.GRAVEL;}
+    // 가로등
+    for(const[ox,oz]of[[10,3],[-10,3],[10,-3],[-10,-3],[3,10],[-3,10],[3,-10],[-3,-10]]){
+      const wx=v.x+ox,wz=v.z+oz;if(!inC(wx,wz))continue;const th=heightAt(wx,wz);if(th<=SEA)continue;
+      for(let y=th+1;y<=th+3;y++)put(wx,y,wz,B.LOG);put(wx,th+4,wz,B.TORCH);}
+    // 우물
+    {const by=v.B;
+      for(let dx=-3;dx<=3;dx++)for(let dz=-3;dz<=3;dz++)prep(v.x+dx,v.z+dz,by);
+      for(let dx=-2;dx<=2;dx++)for(let dz=-2;dz<=2;dz++){
+        const wx=v.x+dx,wz=v.z+dz,m=Math.max(Math.abs(dx),Math.abs(dz));
+        if(m===2){put(wx,by,wz,B.COBBLE);put(wx,by+1,wz,B.COBBLE);if(Math.abs(dx)===2&&Math.abs(dz)===2){put(wx,by+2,wz,B.LOG);put(wx,by+3,wz,B.LOG);}}
+        else{put(wx,by-2,wz,B.COBBLE);put(wx,by-1,wz,B.WATER);put(wx,by,wz,B.WATER);}
+        put(wx,by+4,wz,B.PLANKS);
+      }}
+    // 건물
+    for(const b of v.bl){
+      const hw=b.type==='farm'?4:b.type==='hut'?2:3,by=b.B;
+      if(b.x+hw+2<x0||b.x-hw-2>=x0+CS||b.z+hw+2<z0||b.z-hw-2>=z0+CS)continue;
+      for(let dx=-hw-1;dx<=hw+1;dx++)for(let dz=-hw-1;dz<=hw+1;dz++)prep(b.x+dx,b.z+dz,by);
+      if(b.type==='farm'){
+        for(let dx=-hw;dx<=hw;dx++)for(let dz=-hw;dz<=hw;dz++){
+          const wx=b.x+dx,wz=b.z+dz;
+          if(dx===0)put(wx,by,wz,B.WATER);
+          else{put(wx,by,wz,B.FARM);const r=hash3(wx,905,wz);put(wx,by+1,wz,r<.6?38:r<.8?37:36);}
+        }
+        continue;
+      }
+      const dxC=b.x+b.door[0]*hw,dzC=b.z+b.door[1]*hw;
+      for(let dx=-hw;dx<=hw;dx++)for(let dz=-hw;dz<=hw;dz++){
+        const wx=b.x+dx,wz=b.z+dz,edge=Math.max(Math.abs(dx),Math.abs(dz))===hw,corner=Math.abs(dx)===hw&&Math.abs(dz)===hw;
+        put(wx,by,wz,corner?B.LOG:B.PLANKS);
+        if(edge){if(corner){for(let y=1;y<=3;y++)put(wx,by+y,wz,B.LOG);}else{put(wx,by+1,wz,B.COBBLE);put(wx,by+2,wz,B.PLANKS);put(wx,by+3,wz,B.PLANKS);}}
+      }
+      for(const[wx,wz]of[[b.x+hw,b.z],[b.x-hw,b.z],[b.x,b.z+hw],[b.x,b.z-hw]])if(!(wx===dxC&&wz===dzC))put(wx,by+2,wz,B.GLASS);
+      put(dxC,by+1,dzC,0);put(dxC,by+2,dzC,0);
+      for(let l=0;l<=hw+1;l++){const half=hw+1-l;for(let dx=-half;dx<=half;dx++)for(let dz=-half;dz<=half;dz++)put(b.x+dx,by+4+l,b.z+dz,l===0?B.COBBLE:B.PLANKS);}
+      put(b.x-hw+1,by+1,b.z-hw+1,B.BED);put(b.x+hw-1,by+1,b.z-hw+1,B.TABLE);
+      const cxp=b.x+hw-1,czp=b.z+hw-1;put(cxp,by+1,czp,B.CHEST);if(inC(cxp,czp))vchest.push([cxp,by+1,czp]);
+      if(b.type==='smithy'){put(b.x-hw+1,by+1,b.z+hw-1,B.FURNACE);put(b.x-hw+1,by+2,b.z+hw-1,B.TORCH);}
+      else put(b.x-hw+1,by+1,b.z+hw-1,B.TORCH);
+      put(b.x+hw-1,by+2,b.z-hw+1,B.TORCH);
+      if(inC(b.x,b.z)&&!villagerDone.has(b.key)){
+        villagerDone.add(b.key);
+        const profs=['farmer','butcher','mason'],prof=b.type==='smithy'?'smith':profs[Math.floor(hash3(b.i,906,v.gx*7+v.gz)*3)];
+        makeMob('villager',b.x+.5,by+1.01,b.z+.5,{prof,home:{x:b.x+.5,z:b.z+.5},vkey:b.key});
+      }
+    }
+  }
+}
 function genChunk(cx,cz){
   const d=new Uint8Array(CS*CH*CS),top=new Uint8Array(CS*CS);let maxY=0;
   for(let z=0;z<CS;z++)for(let x=0;x<CS;x++){
@@ -446,7 +536,9 @@ function genChunk(cx,cz){
       const ch=2+Math.floor(hash3(wx,779,wz)*3);for(let ly=1;ly<=ch;ly++)put(tx,h+ly,tz,B.CACTUS,true);
     }
   }
+  const vchest=[];genVillages(cx,cz,d,vchest);
   const e=edits.get(ck(cx,cz));if(e)for(const[i,v]of e)d[i]=v;
+  for(const[wx,y,wz]of vchest){const idx=(y*CS+(wz-cz*CS))*CS+(wx-cx*CS);if(d[idx]===B.CHEST){const key=`${wx},${y},${wz}`;if(!chests.has(key))chests.set(key,villageLoot(wx,y,wz));}}
   for(let z=0;z<CS;z++)for(let x=0;x<CS;x++){
     let y=CH-1;while(y>0){const b=d[(y*CS+z)*CS+x];if(blocksLight(b))break;y--;}
     top[z*CS+x]=y+1;if(y+1>maxY)maxY=y+1;
@@ -549,7 +641,7 @@ function buildMesh(c){
       if(!draw)continue;
       const t=def.t[F.f],u0=(t%TW)*q,v0=1-(((t/TW)|0)+1)*q,dy=def.liquid&&fi===2?-.1:0;
       let cr=1,cg=1;
-      if(!def.fb){cr=F.s*(ny>=topv(nx,nz)?1:.38);
+      if(!def.fb){cr=F.s*(ny>=topv(nx,nz)?1:.5);
         if(near.length){const tl=lightAt(ox+nx+.5,ny+.5,oz+nz+.5);if(tl>0)cg=Math.min(1,tl*tl*.4+tl*.6)*(.7+.3*F.s);else cg=0;}else cg=0;}
       const base=A.p.length/3;
       for(let k=0;k<4;k++){const v=F.c[k];A.p.push(x+v[0],y+v[1]+(v[1]===1?dy:0),z+v[2]);A.c.push(cr,cg,0);}
@@ -665,6 +757,15 @@ function chatLine(txt,col){
 
 /* ================= 인벤토리 / 제작 화면 ================= */
 let held=null,invKind='hand',curChestKey=null;
+const PROFN={farmer:'농부',butcher:'정육점 주인',mason:'건축가',smith:'대장장이'};
+const TRADES={
+  farmer:[[[143,20],[145,1]],[[142,12],[145,1]],[[110,8],[145,1]],[[145,1],[144,5]],[[145,2],[110,5]],[[145,2],[142,10]],[[145,3],[127,1]],[[145,6],[137,1]]],
+  butcher:[[[111,6],[145,1]],[[135,6],[145,1]],[[112,12],[145,1]],[[145,1],[134,4]],[[145,1],[136,4]],[[145,2],[151,12]],[[145,5],[150,1]]],
+  mason:[[[7,24],[145,1]],[[8,24],[145,1]],[[6,24],[145,1]],[[145,1],[9,8]],[[145,1],[31,8]],[[145,2],[28,2]],[[145,3],[34,1]],[[145,2],[22,6]]],
+  smith:[[[114,4],[145,1]],[[115,3],[145,1]],[[113,1],[145,4]],[[145,3],[103,1]],[[145,4],[119,1]],[[145,5],[107,1]],[[145,10],[205,1]],[[145,14],[104,1]],[[145,1],[112,8]]]
+};
+let curTrader=null;
+function openTrade(m){curTrader=m;openInv('trade');}
 function openChest(x,y,z){const key=`${x},${y},${z}`;if(!chests.has(key))chests.set(key,new Array(27).fill(null));curChestKey=key;openInv('chest');}
 function openInv(kind){if(state!=='play')return;invKind=typeof kind==='string'?kind:'hand';state='inv';if(document.pointerLockElement)document.exitPointerLock();input.breaking=input.using=false;held=null;renderInv();$('inv').classList.remove('hidden');}
 function closeInv(){if(state!=='inv')return;state='play';$('inv').classList.add('hidden');renderHotbar();lockPointer();}
@@ -699,7 +800,7 @@ function smelt(inId,outId){
 }
 function renderInv(){
   const creative=mode==='creative',kind=invKind;
-  $('invTitle').textContent=creative?'크리에이티브 — 아이템을 눌러 선택한 핫바 칸에 넣기':kind==='chest'?'📦 상자 — 아이템을 눌러 집고, 칸을 눌러 옮기기':kind==='table'?'🔨 작업대 (재료가 있으면 초록색)':kind==='furnace'?`🔥 화로 — 연료 ${P.fuel}칸 (석탄 6 · 원목 2 · 판자 1)`:'제작 — 작업대에서 더 많이 만들 수 있어요';
+  $('invTitle').textContent=creative?'크리에이티브 — 아이템을 눌러 선택한 핫바 칸에 넣기':kind==='trade'?'🧑‍🌾 마을 주민 ('+(PROFN[curTrader&&curTrader.prof]||'')+') — 에메랄드로 거래':kind==='chest'?'📦 상자 — 아이템을 눌러 집고, 칸을 눌러 옮기기':kind==='table'?'🔨 작업대 (재료가 있으면 초록색)':kind==='furnace'?`🔥 화로 — 연료 ${P.fuel}칸 (석탄 6 · 원목 2 · 판자 1)`:'제작 — 작업대에서 더 많이 만들 수 있어요';
   const cr=$('craft');cr.innerHTML='';cr.style.display=kind==='chest'?'none':'flex';
   if(creative){
     cr.style.flexDirection='row';cr.style.flexWrap='wrap';cr.style.maxHeight='190px';
@@ -714,7 +815,10 @@ function renderInv(){
       const im=new Image();im.src=iconURL(oid);e.appendChild(im);
       const t=document.createElement('span');t.innerHTML=txt;e.appendChild(t);
       e.onclick=()=>{if(ok)fn();};cr.appendChild(e);};
-    if(kind==='furnace'){
+    if(kind==='trade'){
+      for(const[g,o]of(TRADES[curTrader&&curTrader.prof]||[]))row(o[0],o[1],`<b>${nameOf(o[0])} ×${o[1]}</b> ← ${nameOf(g[0])} ${g[1]} (보유 ${countItem(g[0])})`,countItem(g[0])>=g[1],()=>{
+        removeItem(g[0],g[1]);if(addItem(o[0],o[1])>0)toast('가방이 가득 찼어요');sfx('eat');renderInv();renderHotbar();});
+    }else if(kind==='furnace'){
       for(const[a,b]of SMELT)row(b,1,`<b>${nameOf(b)}</b> ← ${nameOf(a)} 1 (보유 ${countItem(a)})`,countItem(a)>0&&(P.fuel>0||fuelAvail()),()=>smelt(a,b));
     }else{
       let lastCat=-1;
@@ -785,11 +889,16 @@ function makeHumanoid(skin,shirt,pants,armsOut){
   const l1=limb(.26,.7,.26,pants,-.14,.7,0),l2=limb(.26,.7,.26,pants,.14,.7,0);g.add(l1,l2);
   return{g,legs:[l1,l2],arms:[a1,a2]};
 }
-function makeMob(type,x,y,z){
+function makeMob(type,x,y,z,extra){
   const m={type,x,y,z,vx:0,vy:0,vz:0,kx:0,kz:0,yaw:Math.random()*6.28,onGround:false,hitX:false,hitZ:false,
-    hp:{zombie:20,creeper:14,pig:8,cow:12}[type],cd:0,hurtT:0,wt:Math.random()*5,dirT:0,fleeT:0,moving:false,age:0,legs:[],mats:[],fuse:0};
+    hp:{zombie:20,creeper:14,pig:8,cow:12,villager:20}[type],cd:0,hurtT:0,wt:Math.random()*5,dirT:0,fleeT:0,moving:false,age:0,legs:[],mats:[],fuse:0};
+  if(extra)Object.assign(m,extra);
   let g;
   if(type==='zombie'){m.w=.6;m.h=1.85;const h=makeHumanoid(0x5fa04a,0x2b7aa8,0x2a3a8a,true);g=h.g;m.legs=h.legs;}
+  else if(type==='villager'){
+    m.w=.6;m.h=1.85;const col={farmer:0x6a8a3a,butcher:0xe8e0d0,mason:0x8a8a8a,smith:0x2a2a2a}[m.prof]||0x7a5a3a;
+    const h=makeHumanoid(0xd0a078,col,0x5a4028,false);g=h.g;g.add(box(.14,.22,.14,0xc09068,0,1.58,.3));m.legs=h.legs;h.arms.forEach(a=>{a.rotation.x=-.7;});
+  }
   else if(type==='creeper'){
     m.w=.6;m.h=1.6;g=new THREE.Group();
     g.add(box(.5,.5,.5,0x4fa84a,0,1.35,0));g.add(box(.5,.8,.3,0x4fa84a,0,.8,0));
@@ -970,6 +1079,7 @@ function sleepBed(){
   else toast('🛏 리스폰 지점을 저장했어요 (잠은 밤에만 잘 수 있어요)');
 }
 function useItem(){
+  if(mobHit&&mobHit.type==='villager'){openTrade(mobHit);return;}
   if(hit&&BLK[hit.id].station&&!input.down){
     const st=BLK[hit.id].station;
     if(st==='bed')sleepBed();else if(st==='chest')openChest(hit.x,hit.y,hit.z);else openInv(st);
@@ -1058,7 +1168,7 @@ function updateMobs(dt){
     const m=mobs[i];m.age+=dt;m.cd-=dt;m.hurtT-=dt;m.fleeT-=dt;
     const dx=P.x-m.x,dz=P.z-m.z,dist=Math.hypot(dx,dz)||1e-6;
     const hostile=m.type==='zombie'||m.type==='creeper';
-    if(dist>(hostile?70:100)){removeMob(m);continue;}
+    if(dist>(hostile?70:m.type==='villager'?160:100)){if(m.vkey)villagerDone.delete(m.vkey);removeMob(m);continue;}
     let wx=0,wz=0,speed=0;
     if(hostile){
       if(mode==='survival'&&dist<24){wx=dx/dist;wz=dz/dist;speed=m.type==='creeper'?2.4:2.6;m.yaw=Math.atan2(dx,dz);}
@@ -1072,6 +1182,7 @@ function updateMobs(dt){
     }else{
       m.dirT-=dt;
       if(m.dirT<=0){m.dirT=2+Math.random()*4;m.moving=Math.random()<.6;m.yaw=Math.random()*6.283;}
+      if(m.home&&Math.hypot(m.home.x-m.x,m.home.z-m.z)>10){m.yaw=Math.atan2(m.home.x-m.x,m.home.z-m.z);m.moving=true;}
       if(m.fleeT>0){speed=3.2;wx=Math.sin(m.yaw);wz=Math.cos(m.yaw);}
       else if(m.moving){speed=1.1;wx=Math.sin(m.yaw);wz=Math.cos(m.yaw);}
     }
@@ -1148,7 +1259,7 @@ function updatePlayer(dt){
 }
 
 /* ================= 하늘 / 시간 ================= */
-const cDay=new THREE.Color(0x87c8ff),cNight=new THREE.Color(0x050a1c),cDusk=new THREE.Color(0xf08a50),tmpC=new THREE.Color();
+const cDay=new THREE.Color(0x87c8ff),cNight=new THREE.Color(0x0e1a3c),cDusk=new THREE.Color(0xf08a50),tmpC=new THREE.Color();
 function updateSky(dt){
   tod=(tod+dt/DAY_LEN)%1;
   const a=tod*Math.PI*2,sh=Math.sin(a),dl=daylight();
@@ -1160,8 +1271,8 @@ function updateSky(dt){
   else if(lq===B.LAVA){tmpC.setRGB(.8,.25,.03);scene.fog.near=.05;scene.fog.far=5;ov.style.display='block';ov.style.background='#ff500099';}
   else{const far=RD*CS*.92;scene.fog.far=far;scene.fog.near=far*.5;ov.style.display='none';}
   scene.fog.color.copy(tmpC);scene.background.copy(tmpC);
-  LV.value=.3+.7*dl;
-  amb.intensity=.25+.55*dl;sunL.intensity=.7*dl+.05;
+  LV.value=.52+.48*dl;
+  amb.intensity=.5+.35*dl;sunL.intensity=.7*dl+.05;
   skyG.position.copy(cam);
   sunM.position.set(Math.cos(a)*400,Math.sin(a)*400,60);moonM.position.set(-Math.cos(a)*400,-Math.sin(a)*400,-60);
   sunM.lookAt(cam);moonM.lookAt(cam);starG.material.opacity=Math.max(0,1-dl*1.6);
@@ -1181,13 +1292,29 @@ function tickCrops(dt){
     }
   }
 }
+function nearestVillage(){
+  let best=null,bd=1e9;const gx0=Math.floor(P.x/128),gz0=Math.floor(P.z/128);
+  for(let a=-2;a<=2;a++)for(let c=-2;c<=2;c++){const v=villageAt(gx0+a,gz0+c);if(!v)continue;const d=Math.hypot(v.x-P.x,v.z-P.z);if(d<bd){bd=d;best=v;}}
+  return best?{v:best,d:bd}:null;
+}
+const ARROWS=['⬆','↗','➡','↘','⬇','↙','⬅','↖'];
+function arrowTo(tx,tz){
+  tx-=P.x;tz-=P.z;const fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw),rx=Math.cos(P.yaw),rz=-Math.sin(P.yaw);
+  const rel=Math.atan2(rx*tx+rz*tz,fx*tx+fz*tz);return ARROWS[((Math.round(rel/(Math.PI/4))%8)+8)%8];
+}
+let vNoteT=0,inVillage=false;
+function checkVillage(dt){
+  vNoteT+=dt;if(vNoteT<1.5)return;vNoteT=0;
+  const n=nearestVillage(),inV=!!n&&n.d<48;
+  if(inV&&!inVillage)toast('🏘 마을에 들어왔어요! 주민을 우클릭하면 거래할 수 있어요');
+  inVillage=inV;
+}
 function gadgetInfo(){
   let t='';
   if(countItem(153)){const hh=((tod*24+6)%24),h=Math.floor(hh),m=Math.floor((hh-h)*60);t+=`<br>🕒 ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;}
   if(countItem(154)){
-    const tx=P.sx-P.x,tz=P.sz-P.z,fx=-Math.sin(P.yaw),fz=-Math.cos(P.yaw),rx=Math.cos(P.yaw),rz=-Math.sin(P.yaw);
-    const rel=Math.atan2(rx*tx+rz*tz,fx*tx+fz*tz),idx=((Math.round(rel/(Math.PI/4))%8)+8)%8;
-    t+=`<br>🧭 ${['⬆','↗','➡','↘','⬇','↙','⬅','↖'][idx]} 리스폰 ${Math.round(Math.hypot(tx,tz))}m`;
+    t+=`<br>🧭 ${arrowTo(P.sx,P.sz)} 리스폰 ${Math.round(Math.hypot(P.sx-P.x,P.sz-P.z))}m`;
+    const n=nearestVillage();if(n)t+=`<br>🏘 ${arrowTo(n.v.x,n.v.z)} 마을 ${Math.round(n.d)}m`;
   }
   return t;
 }
@@ -1361,7 +1488,7 @@ function resetWorld(){
 function creativeKit(){[1,2,3,4,7,9,6,8,5].forEach((id,i)=>inv[i]=mkSlot(id,64));}
 function startGame(newMode,load,fromNet){
   audioInit();
-  resetWorld();edits=new Map();chests.clear();
+  resetWorld();edits=new Map();chests.clear();vCache.clear();villagerDone.clear();
   if(!fromNet&&net)closeNet();
   inv=new Array(36).fill(null);P.vx=P.vy=P.vz=0;P.fly=false;P.sel=0;P.hp=20;P.food=20;P.pitch=0;P.yaw=0;P.foodT=P.regT=P.starveT=P.lavaT=0;P.armor=[0,0,0,0];P.fuel=0;
   if(load){
@@ -1543,7 +1670,7 @@ function frame(now){
     if(state==='play'){updatePlayer(dt);interact(dt);}
     else{camera.position.set(P.x,P.y+1.62,P.z);camera.rotation.set(P.pitch,P.yaw,0);}
     if(state!=='dead'){updateMobs(live?dt:0);updateSky(live?dt:0);}
-    if(live){updatePrimed(dt);updateArrows(dt);tickCrops(dt);}
+    if(live){updatePrimed(dt);updateArrows(dt);tickCrops(dt);checkVillage(dt);}
     updateParticles(dt);
     netTick(dt);
     pumpChunks(2,6);
@@ -1554,7 +1681,7 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 
-window.BC={openChest,chests,tickCrops,sortInv,smelt,P,chunks,mobs,remotes,getBlock,setBlock,get state(){return state;},get net(){return net;},get mode(){return mode;},set tod(v){tod=v;},startGame,B,input,addItem,openInv,get inv(){return inv;},explode,openRoom,joinRoom,heightAt,genChunk,sendChat,get SEED(){return SEED;}};
+window.BC={villageAt,nearestVillage,openChest,chests,tickCrops,sortInv,smelt,P,chunks,mobs,remotes,getBlock,setBlock,get state(){return state;},get net(){return net;},get mode(){return mode;},set tod(v){tod=v;},startGame,B,input,addItem,openInv,get inv(){return inv;},explode,openRoom,joinRoom,heightAt,genChunk,sendChat,get SEED(){return SEED;}};
 })();
 </script>
 </body>
