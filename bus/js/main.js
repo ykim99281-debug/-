@@ -4,7 +4,7 @@ function resize() { renderer.setSize(innerWidth, innerHeight); camera.aspect = i
 addEventListener('resize', resize);
 let hiddenAt = 0;
 document.addEventListener('visibilitychange', () => {   // 탭을 숨기면 주행 일시정지 · 소리 끄기 · 숨긴 시간만큼 회사 운영 정산
-  if (!document.hidden && hiddenAt && G && !G.school) { const el = (Date.now() - hiddenAt) / 1000; hiddenAt = 0; if (el > 90) { const rep = liveCatchUp(el, 0.6); if (rep) setTimeout(() => UI.offlineModal(rep, '🌙 탭을 비운 동안의 운영'), 300); } }
+  if (!document.hidden && hiddenAt && G && !G.school) { const el = (Date.now() - hiddenAt) / 1000; hiddenAt = 0; if (el > 90) { const rep = liveCatchUp(el); if (rep) setTimeout(() => UI.offlineModal(rep, '🌙 탭을 비운 동안의 운영'), 300); } }
   if (document.hidden) { hiddenAt = Date.now(); if (G && !G.school) saveCompany(); if (P.active && !P.paused && $('modal').classList.contains('hide')) UI.pauseModal(); if (actx && actx.state === 'running') actx.suspend(); }
   else if (actx && actx.state === 'suspended') actx.resume();
 });

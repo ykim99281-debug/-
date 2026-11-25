@@ -12,7 +12,7 @@ const SCHOOL = (() => { try { return Object.assign({ done: {}, best: {}, license
 const saveSchool = () => { try { localStorage.setItem(SCHOOL_KEY, JSON.stringify(SCHOOL)); } catch (e) { } };
 
 function newState(name, school) {
-  return { name, school: !!school, money: 1500000, rep: 50, pax: 0, gt: 0, hour: 9, speed: 1, routes: [], buses: [], nextRoute: 1, nextBus: 1, stats: { revenue: 0, expense: 0, alighted: 0 }, rate: 0, fare: 1500, up: { garage: 0, workshop: 0, fuel: 0, info: 0, welfare: 0 }, loan: 0, dayNo: 1, day: { rev: 0, fuel: 0, wage: 0, maint: 0 }, reports: [], goals: {}, goodStops: 0, events: [], evNext: 120, anT: 0, headwayTarget: 40, myPay: 0, saveT: 0, pedT: 0, timeT: 0, goalT: 0 };
+  return { name, school: !!school, money: 1500000, rep: 50, pax: 0, gt: 0, hour: 9, speed: 1, routes: [], buses: [], nextRoute: 1, nextBus: 1, stats: { revenue: 0, expense: 0, alighted: 0 }, rate: 0, fare: 1500, up: { garage: 0, workshop: 0, fuel: 0, info: 0, welfare: 0, manager: 0 }, notes: [], unread: 0, loan: 0, dayNo: 1, day: { rev: 0, fuel: 0, wage: 0, maint: 0 }, reports: [], goals: {}, goodStops: 0, events: [], evNext: 120, anT: 0, headwayTarget: 40, myPay: 0, saveT: 0, pedT: 0, timeT: 0, goalT: 0 };
 }
 const level = () => { let l = 1; LEVELS.forEach((t, i) => { if (G.pax >= t) l = i + 1; }); return l; };
 const routeById = id => G.routes.find(r => r.id === id);
@@ -100,7 +100,7 @@ function updateBus(b, dt) {
   if (b.manual) return;
   if (b.phase === 'broken') { b.timer -= dt; a.v = 0; if (b.timer <= 0) { const fee = BUS_TYPES[b.type].price * 0.04; G.money -= fee; G.day.maint += fee; G.stats.expense += fee; b.cond = 60; b.phase = 'run'; toast('🔧 버스 #' + b.id + ' 수리 완료 (' + fmtMoney(fee) + ')', 'good'); } return; }
   if (b.phase === 'run') {
-    const s0 = a.s; a.step(dt, G.gt); if (!G.school) { addRun(b, Math.max(0, a.s - s0)); if (b.cond < 25 && Math.random() < 0.02 * (1 - 0.25 * G.up.welfare) * dt) { b.phase = 'broken'; b.timer = 25; a.v = 0; a.braking = true; a.render(0); G.rep = Math.max(0, G.rep - 1); toast('🔧 버스 #' + b.id + ' 고장! 승객이 불편해해요 (정비소 · 정비 필요)', 'bad'); return; } }
+    const s0 = a.s; a.step(dt, G.gt); if (!G.school) { addRun(b, Math.max(0, a.s - s0)); if (b.cond < 25 && Math.random() < 0.02 * (1 - 0.25 * G.up.welfare) * dt) { b.phase = 'broken'; b.timer = 25; a.v = 0; a.braking = true; a.render(0); G.rep = Math.max(0, G.rep - 1); note('🔧 버스 #' + b.id + ' 고장', 'bad'); toast('🔧 버스 #' + b.id + ' 고장! 승객이 불편해해요 (정비소 · 정비 필요)', 'bad'); return; } }
     if (a.arrived) { b.phase = 'open'; b.doorGoal = 1; b.minDwell = 2.2; b.tick = 0.35; a.v = 0; a.braking = true; a.render(0); }
   } else if (b.phase === 'open') {
     b.minDwell -= dt;
@@ -130,7 +130,7 @@ const GOALS = [
   { id: 'cash', t: '보유 자금 ₩5,000,000', ok: () => G.money >= 5000000, rw: 500000 }
 ];
 function checkGoals() {
-  for (const g of GOALS) if (!G.goals[g.id] && g.ok()) { G.goals[g.id] = 1; G.money += g.rw; toast('🏆 목표 달성: ' + g.t + ' +' + fmtMoney(g.rw), 'gold'); }
+  for (const g of GOALS) if (!G.goals[g.id] && g.ok()) { G.goals[g.id] = 1; G.money += g.rw; note('🏆 목표 달성: ' + g.t + ' +' + fmtMoney(g.rw), 'good'); toast('🏆 목표 달성: ' + g.t + ' +' + fmtMoney(g.rw), 'gold'); }
 }
 
 // ===== 월드 갱신 =====
@@ -173,7 +173,7 @@ function updateWorld(dt) {
 // ===== 저장 =====
 function makeSave() {
   return {
-    ver: 4, gn: GN, ts: Date.now(), name: G.name, myPay: G.myPay, headwayTarget: G.headwayTarget, fare: G.fare, up: G.up, loan: G.loan, dayNo: G.dayNo, day: G.day, reports: G.reports, money: G.money, rep: G.rep, pax: G.pax, gt: G.gt, hour: G.hour, goals: G.goals, goodStops: G.goodStops, nextRoute: G.nextRoute, nextBus: G.nextBus, stats: G.stats,
+    ver: 4, gn: GN, ts: Date.now(), name: G.name, myPay: G.myPay, headwayTarget: G.headwayTarget, fare: G.fare, up: G.up, loan: G.loan, dayNo: G.dayNo, day: G.day, reports: G.reports, money: G.money, rep: G.rep, pax: G.pax, gt: G.gt, hour: G.hour, goals: G.goals, goodStops: G.goodStops, notes: G.notes, unread: G.unread, nextRoute: G.nextRoute, nextBus: G.nextBus, stats: G.stats,
     routes: G.routes.map(r => ({ id: r.id, num: r.num, name: r.name, color: r.color, stopIds: r.stopIds, income: r.income, pax: r.pax, rate: r.rate || 0, rateN: G.buses.filter(b => b.routeId === r.id).length, len: Math.round(r.path.L) })),
     buses: G.buses.map(b => ({ id: b.id, type: b.type, routeId: b.routeId, income: b.income, cond: b.cond, km: b.km, age: b.age, driver: b.driver })), waiting: STOPS.map(s => Math.round(s.waiting))
   };
@@ -200,14 +200,15 @@ function starterRoute() {
 }
 function startCompany(name, saved0) {
   resetWorld(); G = newState(name); lastLvl = 1; const sv = saved0 ? sanitizeSave(saved0) : null, saved = sv && sv.save; let offRep = null;
-  if (saved && saved.ts && !sv.migrated && saved.routes.length) { const el = (Date.now() - saved.ts) / 1000; if (el > 90) offRep = offlineSim(saved, el, 0.6); }
+  if (saved && saved.ts && !sv.migrated && saved.routes.length) { const el = (Date.now() - saved.ts) / 1000; if (el > 90) offRep = offlineSim(saved, el, offEff(saved)); }
   if (saved) {
     Object.assign(G, { name: saved.name || name, money: saved.money, rep: saved.rep, pax: saved.pax, gt: saved.gt, hour: saved.hour, goals: saved.goals || {}, goodStops: saved.goodStops || 0, nextRoute: saved.nextRoute, nextBus: saved.nextBus, stats: Object.assign(G.stats, saved.stats || {}) });
     G.myPay = saved.myPay || 0; G.headwayTarget = saved.headwayTarget === undefined ? 40 : saved.headwayTarget; G.fare = saved.fare; G.up = Object.assign(G.up, saved.up || {}); G.loan = saved.loan; G.dayNo = saved.dayNo || 1; G.day = saved.day || G.day; G.reports = saved.reports || [];
     (saved.waiting || []).forEach((w, i) => { if (STOPS[i] && isFinite(w)) STOPS[i].waiting = w; });
     for (const r of saved.routes) { const rr = makeRoute(r.name || '노선', r.color, r.stopIds, r.id, r.num); rr.income = r.income || 0; rr.pax = r.pax || 0; G.routes.push(rr); }
     for (const b of saved.buses) { const nb = addBus(b.type, b.routeId, true); if (nb) { nb.id = b.id || nb.id; nb.income = b.income || 0; nb.cond = isFinite(b.cond) ? b.cond : 100; nb.km = b.km || 0; nb.age = b.age || 0; if (b.driver && b.driver.name) nb.driver = b.driver; } }
-    lastLvl = level(); G.migrated = sv.migrated; G.offlineReport = offRep;
+    lastLvl = level(); G.migrated = sv.migrated; G.offlineReport = offRep; G.notes = saved.notes || []; G.unread = saved.unread || 0;
+    if (offRep) { note(`🌙 ${Math.round(offRep.realSec / 60)}분 자리 비움 · 순이익 ${fmtMoney(offRep.net)} · 승객 ${offRep.pax}명`, offRep.net >= 0 ? 'good' : 'bad'); for (const l of offRep.log) note(l); }
     if (!G.routes.length) { starterRoute(); }
   } else { starterRoute(); G.speed = 10; }
   WX.lock = false; setWeather('clear'); G.wxT = 240; spawnCars(80); setHQName(G.name); applyTime(G.hour);
@@ -220,6 +221,7 @@ const UPGRADES = {
   workshop: { name: '🔧 정비소', desc: '정비 비용 -20%/레벨 · 야간 자동 정비 · 고장 감소', max: 3, cost: l => Math.round(350000 * Math.pow(1.9, l) / 1000) * 1000 },
   fuel: { name: '⛽ 연료 효율 개선', desc: '연료비 -8%/레벨 (에코 드라이브 교육)', max: 3, cost: l => Math.round(250000 * Math.pow(1.8, l) / 1000) * 1000 },
   info: { name: '📱 승객 정보 시스템', desc: '정류장 도착 안내 · 승객 수요 +8%/레벨', max: 3, cost: l => Math.round(400000 * Math.pow(1.8, l) / 1000) * 1000 },
+  manager: { name: '🧑‍💼 운영 매니저', desc: '자리를 비우거나 자유주행 중일 때 회사 효율 +12%p/레벨 · 반영 시간 +2시간/레벨 · 기본 정비 자동 (일 급여 ₩20,000/레벨)', max: 3, cost: l => Math.round(600000 * Math.pow(1.9, l) / 1000) * 1000 },
   welfare: { name: '🧑‍✈️ 기사 교육·복지', desc: '버스 고장 확률 -25%/레벨', max: 2, cost: l => Math.round(450000 * Math.pow(2, l) / 1000) * 1000 }
 };
 const garageCap = () => 3 + 3 * G.up.garage;
@@ -239,9 +241,9 @@ const loanLimit = () => 1000000 * level();
 function borrow(n) { if (G.loan + n > loanLimit()) { toast('대출 한도 초과 (한도 ' + fmtMoney(loanLimit()) + ')', 'bad'); return; } G.loan += n; G.money += n; toast('🏦 대출 ' + fmtMoney(n) + ' 실행 (일 이자 2%)', 'gold'); }
 function repay(n) { n = Math.min(n, G.loan, Math.max(0, G.money)); if (n <= 0) { toast('상환할 수 없어요', 'bad'); return; } G.loan -= n; G.money -= n; toast('대출 ' + fmtMoney(n) + ' 상환', 'good'); }
 function settleOn(S) {   // 하루 결산 (실시간 G · 저장 데이터 · 오프라인 모두 공용)
-  const d = S.day, rent = 15000 + 8000 * S.up.garage, ins = 3000 * S.buses.length, interest = Math.round(S.loan * 0.02);
+  const d = S.day, rent = 15000 + 8000 * S.up.garage + 20000 * (S.up.manager || 0), ins = 3000 * S.buses.length, interest = Math.round(S.loan * 0.02);
   let maint = d.maint;
-  if (S.up.workshop > 0) for (const b of S.buses) if (!b.manual && b.phase !== 'broken' && b.cond < 60) { const c = Math.round((100 - b.cond) * BUS_TYPES[b.type].price * 0.0008 * (1 - 0.2 * S.up.workshop)); if (S.money > c) { S.money -= c; maint += c; S.stats.expense += c; b.cond = 90; } }
+  if (S.up.workshop > 0 || S.up.manager > 0) for (const b of S.buses) if (!b.manual && b.phase !== 'broken' && b.cond < 60) { const c = Math.round((100 - b.cond) * BUS_TYPES[b.type].price * 0.0008 * (1 - 0.2 * S.up.workshop)); if (S.money > c) { S.money -= c; maint += c; S.stats.expense += c; b.cond = 90; } }
   const cost = d.fuel + d.wage + maint + rent + ins + interest, profit = d.rev - cost, tax = profit > 0 ? Math.round(profit * 0.1) : 0;
   S.money -= rent + ins + interest + tax; S.stats.expense += rent + ins + interest + tax;
   const rep = { day: S.dayNo, rev: d.rev, fuel: d.fuel, wage: d.wage, maint, rent, ins, interest, tax, net: profit - tax };
@@ -249,7 +251,8 @@ function settleOn(S) {   // 하루 결산 (실시간 G · 저장 데이터 · �
   for (const b of S.buses) { b.age = (b.age || 0) + 1; if (b.driver) b.driver.today = 0; }
   return rep;
 }
-function settle() { const rep = settleOn(G); toast(`📒 ${rep.day}일차 결산: 순이익 ${fmtMoney(rep.net)}`, rep.net >= 0 ? 'gold' : 'bad'); }
+function note(text, kind) { if (!G || G.school) return; G.notes.unshift({ t: Date.now(), text, kind: kind || '' }); if (G.notes.length > 40) G.notes.length = 40; G.unread = (G.unread || 0) + 1; }
+function settle() { const rep = settleOn(G); note(`📒 ${rep.day}일차 결산: 순이익 ${fmtMoney(rep.net)}`, rep.net >= 0 ? 'good' : 'bad'); toast(`📒 ${rep.day}일차 결산: 순이익 ${fmtMoney(rep.net)}`, rep.net >= 0 ? 'gold' : 'bad'); }
 
 // ===== 개인 지갑 · 내 차 =====
 const DIV_TAX = 0.154;
@@ -310,13 +313,14 @@ function spawnEvent() {
   const ev = { def, name, x: pl[1], z: pl[2], until: G.gt + rand(150, 240), stops: [] };
   for (const s of STOPS) if (Math.hypot(s.mid.x - ev.x, s.mid.z - ev.z) < 220) { s.evMul = def.m; ev.stops.push(s.id); }
   ev.sprite = labelSprite(def.i + ' ' + def.n, { w: 22, bg: 'rgba(251,146,60,.92)', fg: '#1a0e00' }); ev.sprite.position.set(ev.x, 55, ev.z); scene.add(ev.sprite);
-  G.events.push(ev); toast(def.i + ' ' + name + ' ' + def.n + '! 일대 승객이 ×' + def.m + ' (' + Math.round((ev.until - G.gt) / 60 * 10) / 10 + '분)', 'gold');
+  G.events.push(ev); note(def.i + ' ' + name + ' ' + def.n + ' 시작 (수요 ×' + def.m + ')', 'good'); toast(def.i + ' ' + name + ' ' + def.n + '! 일대 승객이 ×' + def.m + ' (' + Math.round((ev.until - G.gt) / 60 * 10) / 10 + '분)', 'gold');
 }
 function endEvent(ev) { for (const id of ev.stops) STOPS[id].evMul = 1; if (ev.sprite) { scene.remove(ev.sprite); disposeTree(ev.sprite); } G.events.splice(G.events.indexOf(ev), 1); toast(ev.def.i + ' ' + ev.def.n + ' 종료', 'good'); }
 const eventMarkers = () => (G && G.events ? G.events.map(e => ({ x: e.x, z: e.z, c: '#fb923c', big: 1 })) : []);
 
 // ===== 오프라인 운영 · 자유주행 중 회사 운영 =====
 const DAY_S = 600, OFF_CAP = 6 * 3600;
+const offEff = S => 0.6 + 0.12 * ((S.up && S.up.manager) || 0), bgEff = S => 0.8 + 0.05 * ((S.up && S.up.manager) || 0), offCap = S => OFF_CAP + 7200 * ((S.up && S.up.manager) || 0);
 function routeRateEst(r, S, work, all) {   // 노선 수입 ₩/시뮬초
   if (!work.length) return 0;
   if (r.rate > 0 && r.rateN > 0) return (r.rate / 60) * Math.min(1.25, work.length / r.rateN);
@@ -326,8 +330,8 @@ function routeRateEst(r, S, work, all) {   // 노선 수입 ₩/시뮬초
   return Math.min(dem, capS) * 0.7 * S.fare;
 }
 function offlineSim(S, realSec, eff, minSec) {
-  const simSec = Math.min(realSec, OFF_CAP) * eff; if (simSec < (minSec === undefined ? 60 : minSec)) return null;
-  const rep = { realSec: Math.round(realSec), simSec: Math.round(simSec), days: 0, rev: 0, net: 0, pax: 0, breakdowns: 0 }, money0 = S.money, fuelLvl = S.up.fuel || 0, ws = S.up.workshop || 0, wf = S.up.welfare || 0;
+  if (eff === undefined) eff = offEff(S); const simSec = Math.min(realSec, offCap(S)) * eff; if (simSec < (minSec === undefined ? 60 : minSec)) return null;
+  const rep = { realSec: Math.round(realSec), simSec: Math.round(simSec), eff, capH: offCap(S) / 3600, days: 0, rev: 0, net: 0, pax: 0, breakdowns: 0, log: [] }, money0 = S.money, fuelLvl = S.up.fuel || 0, ws = (S.up.workshop || 0) || ((S.up.manager || 0) > 0 ? 1 : 0), wf = S.up.welfare || 0;
   window.__quiet = true;
   try {
     let left = simSec;
@@ -344,7 +348,14 @@ function offlineSim(S, realSec, eff, minSec) {
       }
       S.money += rev - fuel - wage - maint; S.stats.revenue += rev; S.stats.expense += fuel + wage + maint; rep.rev += rev;
       S.day.rev += rev; S.day.fuel += fuel; S.day.wage += wage; S.day.maint += maint; S.day._t = (S.day._t || 0) + step;
-      if (S.day._t >= DAY_S - 0.01) { delete S.day._t; settleOn(S); rep.days++; try { carDay(); } catch (e) { } }
+      if (S.day._t >= DAY_S - 0.01) {
+        const dayRev = S.day.rev, dn = S.dayNo;   // 하루 동안의 사건 (이벤트·사고·날씨·호평)
+        if (Math.random() < 0.25 && dayRev > 0) { const def = EV_DEFS[Math.floor(Math.random() * EV_DEFS.length)], x = Math.round(dayRev * rand(0.1, 0.25)); S.money += x; S.day.rev += x; rep.rev += x; rep.log.push(`${def.i} ${dn}일차 · ${def.n} 덕분에 수입 +${fmtMoney(x)}`); }
+        if (Math.random() < 0.2 && dayRev > 0) { const x = Math.round(dayRev * 0.08); S.money += x; S.day.rev += x; rep.rev += x; rep.log.push(`🌧 ${dn}일차 · 비가 와서 승객이 늘었어요 +${fmtMoney(x)}`); }
+        if (S.buses.length && Math.random() < 0.12 * (1 - 0.25 * wf)) { const b = S.buses[Math.floor(Math.random() * S.buses.length)], fee = Math.round(BUS_TYPES[b.type].price * 0.06); S.money -= fee; S.day.maint += fee; S.rep = Math.max(0, S.rep - 1); rep.log.push(`🚧 ${dn}일차 · 버스 #${b.id} 접촉사고 · 수리비 ${fmtMoney(fee)}`); }
+        if (Math.random() < 0.1) { S.rep = Math.min(100, S.rep + 2); rep.log.push(`👍 ${dn}일차 · 친절 기사 칭찬이 올라왔어요 (평판 +2)`); }
+        delete S.day._t; settleOn(S); rep.days++; try { carDay(); } catch (e) { }
+      }
     }
     S.hour = (S.hour + simSec * HPS) % 24; S.gt += simSec; S.rep = Math.min(100, S.rep + rep.pax * 0.01);
   } finally { window.__quiet = false; }
@@ -352,6 +363,7 @@ function offlineSim(S, realSec, eff, minSec) {
 }
 function liveCatchUp(realSec, eff) {   // 탭을 숨겼다 돌아왔을 때 (회사 모드)
   if (!G || G.school || !G.routes.length) return null; const S = JSON.parse(JSON.stringify(makeSave())); S.day = Object.assign({ rev: 0, fuel: 0, wage: 0, maint: 0 }, S.day); const rep = offlineSim(S, realSec, eff); if (!rep) return null;
+  note(`🌙 ${Math.round(rep.realSec / 60)}분 자리 비움 · 순이익 ${fmtMoney(rep.net)} · 승객 ${rep.pax}명`, rep.net >= 0 ? 'good' : 'bad'); for (const l of rep.log) note(l);
   Object.assign(G, { money: S.money, pax: S.pax, rep: S.rep, hour: S.hour, gt: S.gt, loan: S.loan, reports: S.reports, dayNo: S.dayNo, day: S.day, stats: S.stats });
   for (const sb of S.buses) { const b = busById(sb.id); if (b) { b.cond = sb.cond; b.km = sb.km; b.age = sb.age; b.income = sb.income; if (b.driver && sb.driver) b.driver.today = sb.driver.today || 0; } }
   for (const sr of S.routes) { const r = routeById(sr.id); if (r) { r.income = sr.income; r.pax = sr.pax; } }
@@ -360,12 +372,12 @@ function liveCatchUp(realSec, eff) {   // 탭을 숨겼다 돌아왔을 때 (회
 let BG = null;   // 타이틀에서 시작한 자유주행·교습 중 저장된 회사의 운영
 function bgStart() {
   BG = null; const s0 = loadSaved(); if (!s0) return; const sv = sanitizeSave(s0); if (!sv || sv.migrated || !sv.save.routes.length) return;
-  const c2 = JSON.parse(JSON.stringify(sv.save)); c2.day = Object.assign({ rev: 0, fuel: 0, wage: 0, maint: 0 }, c2.day); window.__quiet = true; let rep = null; try { rep = offlineSim(c2, DAY_S / 0.8, 0.8, 1); } finally { window.__quiet = false; }
-  BG = { t: 0, flushT: 0, live: 0, rate: rep ? rep.net / (DAY_S / 0.8) : 0, name: sv.save.name, sum: { rev: 0, net: 0, pax: 0, days: 0, breakdowns: 0 } };
+  const c2 = JSON.parse(JSON.stringify(sv.save)); c2.day = Object.assign({ rev: 0, fuel: 0, wage: 0, maint: 0 }, c2.day); window.__quiet = true; let rep = null; try { rep = offlineSim(c2, DAY_S / bgEff(c2), bgEff(c2), 1); } finally { window.__quiet = false; }
+  BG = { t: 0, flushT: 0, live: 0, rate: rep ? rep.net / (DAY_S / bgEff(c2)) : 0, name: sv.save.name, sum: { rev: 0, net: 0, pax: 0, days: 0, breakdowns: 0 } };
 }
 function bgUpdate(dt) { if (!BG) return; BG.t += dt; BG.flushT += dt; BG.live += BG.rate * dt; if (BG.flushT >= 30) bgFlush(false); }
 function bgFlush(final) {
   if (!BG) return null; let out = null; const s0 = BG.t > 1 ? loadSaved() : null;
-  if (s0) { const sv = sanitizeSave(s0); if (sv && !sv.migrated) { const S = sv.save; S.day = Object.assign({ rev: 0, fuel: 0, wage: 0, maint: 0 }, S.day); const rep = offlineSim(S, BG.t, 0.8, 1); if (rep) { S.ts = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { } for (const k of ['rev', 'net', 'pax', 'days', 'breakdowns']) BG.sum[k] += rep[k]; } } }
+  if (s0) { const sv = sanitizeSave(s0); if (sv && !sv.migrated) { const S = sv.save; S.day = Object.assign({ rev: 0, fuel: 0, wage: 0, maint: 0 }, S.day); const rep = offlineSim(S, BG.t, bgEff(S), 1); if (rep) { S.ts = Date.now(); S.notes = S.notes || []; for (const l of rep.log.slice().reverse()) { S.notes.unshift({ t: Date.now(), text: '[자유주행 중] ' + l, kind: '' }); S.unread = (S.unread || 0) + 1; } S.notes.length = Math.min(S.notes.length, 40); BG.sum.log = (BG.sum.log || []).concat(rep.log); try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { } for (const k of ['rev', 'net', 'pax', 'days', 'breakdowns']) BG.sum[k] += rep[k]; } } }
   BG.t = 0; BG.flushT = 0; if (final) { out = BG.sum; out.name = BG.name; BG = null; } return out;
 }

@@ -91,17 +91,17 @@ const UI = {
 
   // --- 상단바
   initTop() {
-    $('topbar').innerHTML = `<span class="co" id="tCo"></span><span class="stat" id="tMoney"></span><span class="stat" id="tLv"></span><span class="stat" id="tRep"></span><span class="stat" id="tRate"></span><span class="stat" id="tPay"></span><span class="stat" id="tWx"></span><span class="stat hide" id="tEv"></span><span class="stat" id="tTime"></span><span class="sp"></span>
+    $('topbar').innerHTML = `<span class="co" id="tCo"></span><span class="stat" id="tMoney"></span><span class="stat" id="tLv"></span><span class="stat" id="tRep"></span><span class="stat" id="tRate"></span><span class="stat" id="tPay"></span><span class="stat" id="tWx"></span><span class="stat hide" id="tEv"></span><button class="btn sm" id="tbBell">🔔 <b id="tBellN"></b></button><span class="stat" id="tTime"></span><span class="sp"></span>
       <span class="spd">${[1, 2, 4, 10].map(x => `<button data-sp="${x}">${x}×</button>`).join(' ')}</span><button class="btn sm" id="tbWallet">👛 <span id="tWal"></span></button><button class="btn sm" id="tbSave">💾 저장</button><button class="btn sm" id="tbMenu">메뉴</button>`;
     $('topbar').querySelectorAll('[data-sp]').forEach(b => b.onclick = () => { G.speed = +b.dataset.sp; this.refreshTop(); });
-    $('tbWallet').onclick = () => this.walletModal('wallet');
+    $('tbWallet').onclick = () => this.walletModal('wallet'); $('tbBell').onclick = () => this.notesModal();
     $('tbSave').onclick = () => { saveCompany(); toast('저장했어요', 'good'); }; $('tbMenu').onclick = () => { saveCompany(); this.showTitle(); };
   },
   refreshTop() {
     const l = level(), nl = LEVELS[l] !== undefined ? LEVELS[l] : null, h = Math.floor(G.hour), m = Math.floor((G.hour % 1) * 60);
     $('tCo').textContent = '🚌 ' + G.name; $('tMoney').textContent = '💰 ' + fmtMoney(G.money); $('tLv').textContent = '⭐ Lv.' + l + (nl ? ` (${G.pax}/${nl})` : '');
     $('tRep').textContent = '👍 평판 ' + Math.round(G.rep); $('tPay').textContent = '💵 급여 -' + fmtMoney(this.payRate()) + '/분'; $('tWx').textContent = WX_T[WX.type].i + ' ' + WX_T[WX.type].n; { const ev = G.events && G.events[0]; $('tEv').classList.toggle('hide', !ev); if (ev) $('tEv').textContent = ev.def.i + ' ' + ev.name + ' ' + fmtMS(Math.max(0, ev.until - G.gt)); } $('tRate').textContent = '📈 ' + fmtMoney(G.rate) + '/분'; $('tTime').textContent = '🕒 ' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
-    $('tWal').textContent = fmtMoney(SCHOOL.wallet);
+    $('tWal').textContent = fmtMoney(SCHOOL.wallet); { const n = G.unread || 0; $('tBellN').textContent = n ? n : ''; $('tbBell').style.borderColor = n ? 'var(--accent)' : ''; }
     $('topbar').querySelectorAll('[data-sp]').forEach(b => b.classList.toggle('on', +b.dataset.sp === G.speed));
     { const tb = $('topbar'), top = tb.offsetHeight + 24; if (this._sideTop !== top) { this._sideTop = top; $('side').style.top = top + 'px'; } }
   },
@@ -207,7 +207,7 @@ const UI = {
     h += `<div class="card"><h4>📒 일일 결산</h4>`;
     if (!last) h += `<small class="muted">자정(00:00)에 하루 결산이 이뤄져요. 연료·인건비·정비·임대료·보험·이자를 제하고 이익의 10%가 세금으로 나가요.</small>`;
     else {
-      h += `<small>${last.day}일차</small><table class="tbl"><tr><td>운임 수입</td><td>${fmtMoney(last.rev)}</td></tr><tr><td>연료비</td><td>-${fmtMoney(last.fuel)}</td></tr><tr><td>기사 인건비</td><td>-${fmtMoney(last.wage)}</td></tr><tr><td>정비비</td><td>-${fmtMoney(last.maint)}</td></tr><tr><td>차고지 임대료 · 보험</td><td>-${fmtMoney(last.rent + last.ins)}</td></tr><tr><td>대출 이자</td><td>-${fmtMoney(last.interest)}</td></tr><tr><td>법인세 (10%)</td><td>-${fmtMoney(last.tax)}</td></tr><tr><td><b>순이익</b></td><td><b style="color:${last.net >= 0 ? 'var(--ok)' : 'var(--bad)'}">${fmtMoney(last.net)}</b></td></tr></table>`;
+      h += `<small>${last.day}일차</small><table class="tbl"><tr><td>운임 수입</td><td>${fmtMoney(last.rev)}</td></tr><tr><td>연료비</td><td>-${fmtMoney(last.fuel)}</td></tr><tr><td>기사 인건비</td><td>-${fmtMoney(last.wage)}</td></tr><tr><td>정비비</td><td>-${fmtMoney(last.maint)}</td></tr><tr><td>임대료 · 매니저 · 보험</td><td>-${fmtMoney(last.rent + last.ins)}</td></tr><tr><td>대출 이자</td><td>-${fmtMoney(last.interest)}</td></tr><tr><td>법인세 (10%)</td><td>-${fmtMoney(last.tax)}</td></tr><tr><td><b>순이익</b></td><td><b style="color:${last.net >= 0 ? 'var(--ok)' : 'var(--bad)'}">${fmtMoney(last.net)}</b></td></tr></table>`;
       const mx = Math.max(1, ...G.reports.map(r => Math.abs(r.net))); h += `<div class="bars">${G.reports.slice().reverse().map(r => `<i class="${r.net < 0 ? 'neg' : ''}" style="height:${Math.max(4, Math.abs(r.net) / mx * 100)}%" title="${r.day}일차 ${fmtMoney(r.net)}"></i>`).join('')}</div>`;
     }
     return h + '</div>';
@@ -243,14 +243,19 @@ const UI = {
   },
   driveBus(b) { if (P.active) return; this.follow = null; startManual(b); },
 
+  notesModal() {
+    const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? '방금' : m < 60 ? m + '분 전' : m < 1440 ? Math.floor(m / 60) + '시간 전' : Math.floor(m / 1440) + '일 전'; };
+    this.modal(`<h2>🔔 알림 센터</h2><p class="muted" style="margin-top:0">회사 운영 소식을 모아 보여줘요 (최근 40건)</p>${(G.notes || []).length ? G.notes.map(n => `<div class="card" style="padding:7px 12px;margin-bottom:6px"><div class="row" style="justify-content:space-between"><span style="color:${n.kind === 'bad' ? 'var(--bad)' : n.kind === 'good' ? 'var(--ok)' : 'var(--fg)'}">${esc(n.text)}</span><small class="muted" style="flex:none">${ago(n.t)}</small></div></div>`).join('') : '<p class="muted">아직 소식이 없어요</p>'}<div class="row" style="margin-top:10px"><button class="btn" id="nClr">모두 지우기</button><span style="flex:1"></span><button class="btn pri" id="nX">닫기</button></div>`);
+    G.unread = 0; this.refreshTop(); $('nX').onclick = () => this.closeModal(); $('nClr').onclick = () => { G.notes = []; this.notesModal(); };
+  },
   offlineModal(r, title) {
     const m = Math.round(r.realSec / 60), t = m >= 60 ? Math.floor(m / 60) + '시간 ' + (m % 60) + '분' : m + '분';
-    this.modal(`<h2>${title || '🌙 자리를 비운 동안의 운영'}</h2><p class="muted" style="margin-top:0">${t} 동안 회사가 직접 운영됐어요 (효율 60% · 최대 6시간)</p>
-      <table class="tbl"><tr><td>운행 수입</td><td>${fmtMoney(r.rev)}</td></tr><tr><td>순이익 (비용·세금 반영)</td><td><b style="color:${r.net >= 0 ? 'var(--ok)' : 'var(--bad)'}">${fmtMoney(r.net)}</b></td></tr><tr><td>태운 승객</td><td>${r.pax}명</td></tr><tr><td>결산한 날</td><td>${r.days}일</td></tr><tr><td>버스 고장</td><td>${r.breakdowns}회${r.breakdowns ? ' <small class="muted">(정비소 업그레이드로 줄일 수 있어요)</small>' : ''}</td></tr></table>
+    this.modal(`<h2>${title || '🌙 자리를 비운 동안의 운영'}</h2><p class="muted" style="margin-top:0">${t} 동안 회사가 직접 운영됐어요 (효율 ${Math.round((r.eff || 0.6) * 100)}% · 최대 ${r.capH || 6}시간${r.eff && r.eff < 0.9 ? ' · 🧑‍💼 운영 매니저로 올릴 수 있어요' : ''})</p>
+      <table class="tbl"><tr><td>운행 수입</td><td>${fmtMoney(r.rev)}</td></tr><tr><td>순이익 (비용·세금 반영)</td><td><b style="color:${r.net >= 0 ? 'var(--ok)' : 'var(--bad)'}">${fmtMoney(r.net)}</b></td></tr><tr><td>태운 승객</td><td>${r.pax}명</td></tr><tr><td>결산한 날</td><td>${r.days}일</td></tr><tr><td>버스 고장</td><td>${r.breakdowns}회${r.breakdowns ? ' <small class="muted">(정비소 업그레이드로 줄일 수 있어요)</small>' : ''}</td></tr></table>${r.log && r.log.length ? `<div style="margin-top:8px"><b style="font-size:13px">📰 그동안의 소식</b>${r.log.slice(0, 8).map(l => `<div style="font-size:13px;margin-top:3px">${esc(l)}</div>`).join('')}${r.log.length > 8 ? `<small class="muted">…외 ${r.log.length - 8}건 (알림 센터에서 확인)</small>` : ''}</div>` : ''}
       <button class="btn pri" id="offX" style="margin-top:12px;width:100%">확인</button>`); $('offX').onclick = () => this.closeModal();
   },
   bgModal(o) {
-    this.modal(`<h2>🏢 자유주행 중 회사 운영 결과</h2><p class="muted" style="margin-top:0">${esc(o.name)}은(는) 당신이 운전하는 동안에도 운영됐어요</p><table class="tbl"><tr><td>운행 수입</td><td>${fmtMoney(o.rev)}</td></tr><tr><td>순이익</td><td><b style="color:${o.net >= 0 ? 'var(--ok)' : 'var(--bad)'}">${fmtMoney(o.net)}</b></td></tr><tr><td>태운 승객</td><td>${o.pax}명</td></tr><tr><td>결산한 날</td><td>${o.days}일</td></tr></table><button class="btn pri" id="bgX" style="margin-top:12px;width:100%">확인</button>`); $('bgX').onclick = () => this.closeModal();
+    this.modal(`<h2>🏢 자유주행 중 회사 운영 결과</h2><p class="muted" style="margin-top:0">${esc(o.name)}은(는) 당신이 운전하는 동안에도 운영됐어요</p><table class="tbl"><tr><td>운행 수입</td><td>${fmtMoney(o.rev)}</td></tr><tr><td>순이익</td><td><b style="color:${o.net >= 0 ? 'var(--ok)' : 'var(--bad)'}">${fmtMoney(o.net)}</b></td></tr><tr><td>태운 승객</td><td>${o.pax}명</td></tr><tr><td>결산한 날</td><td>${o.days}일</td></tr></table>${o.log && o.log.length ? `<div style="margin-top:8px">${o.log.slice(0, 6).map(l => `<div style="font-size:13px;margin-top:3px">${esc(l)}</div>`).join('')}</div>` : ''}<button class="btn pri" id="bgX" style="margin-top:12px;width:100%">확인</button>`); $('bgX').onclick = () => this.closeModal();
   },
   // --- 노선 편집기
   openEditor(route) {
