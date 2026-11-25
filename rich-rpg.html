@@ -285,7 +285,13 @@ STOCKS.forEach(s=>s.dy=DY[s.id]||0);
 const TAX0=()=>({div:0,int:0,prop:0,jong:0,fin:0,cg:0,co:0});
 function pay(x){S.cash-=x;if(S.cash<0){S.loan+=Math.ceil(-S.cash);S.cash=0}}
 function totalTax(){return Object.values(S.tax).reduce((a,b)=>a+b,0)}
-let S=null,toastT=null;
+let S=null,toastT=null,SLOT=1;
+const slotKey=n=>n===1?KEY:KEY+'_'+n;
+let SOUND=true;try{SOUND=localStorage.getItem('richrpg_snd')!=='0'}catch(e){}
+let AC=null;
+function sfx(k){
+ if(!SOUND)return;try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const seq={buy:[[660,.07],[880,.09]],sell:[[880,.07],[660,.09]],next:[[440,.05]],ach:[[660,.08],[880,.08],[1320,.14]],err:[[200,.12]],coin:[[1000,.05],[1500,.09]]}[k]||[];let t=AC.currentTime;seq.forEach(([fr,d])=>{const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=fr;g.gain.setValueAtTime(.05,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d);t+=d})}catch(e){}
+}
 const ACH=[
 ['stk','첫 투자','주식을 처음 보유했다',()=>Object.keys(S.h).length>0],
 ['m1','저금통 부자','총자산 100만원',()=>nw()>=1e6],
@@ -306,9 +312,9 @@ const ACH=[
 ['wed','가정을 이루다','결혼했다',()=>!!S.married],
 ['real','실질 부자','물가 반영 자산 1억원(시작 시점 원화)',()=>nw()*100/cpiR(S.t)>=1e8]
 ];
-function checkAch(){ACH.forEach(a=>{if(S.ach[a[0]]===undefined&&a[3]()){S.ach[a[0]]=S.t;if(S.log)S.log.push({txt:'🏆 업적 달성: '+a[1]+' — '+a[2],r:1})}})}
-function save(){try{checkAch()}catch(e){}try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-function load(){try{const j=localStorage.getItem(KEY);if(j){const o=JSON.parse(j);if(o.t0===undefined){o.t0=72;o.t=(o.t||0)+72}return Object.assign({tax:TAX0(),finInc:0,diff:'normal',ach:{},army:0,armyDone:false,armyBusy:false,married:false,kids:0,alt:{},props:{},loan:0,useLoan:false,co:null,npc:{},tab:'stock'},o)}}catch(e){}return null}
+function checkAch(){ACH.forEach(a=>{if(S.ach[a[0]]===undefined&&a[3]()){S.ach[a[0]]=S.t;sfx('ach');if(S.log)S.log.push({txt:'🏆 업적 달성: '+a[1]+' — '+a[2],r:1})}})}
+function save(){try{checkAch()}catch(e){}try{localStorage.setItem(slotKey(SLOT),JSON.stringify(S))}catch(e){}}
+function load(n){try{const j=localStorage.getItem(slotKey(n));if(j){const o=JSON.parse(j);if(o.t0===undefined){o.t0=72;o.t=(o.t||0)+72}return Object.assign({tax:TAX0(),finInc:0,diff:'normal',ach:{},army:0,armyDone:false,armyBusy:false,married:false,kids:0,alt:{},props:{},loan:0,useLoan:false,co:null,npc:{},tab:'stock'},o)}}catch(e){}return null}
 function newGame(name,sy,diff){const t0=((sy||1998)-BASE)*12;
  S={t0,diff:diff||'normal',tax:TAX0(),finInc:0,name:name||'나',t:t0,cash:30000,dep:0,h:{},int:5,mental:80,acted:false,tips:[],log:[],nw:[30000],q:{},locked:false,contrib:30000,over:false,msg:'',ach:{},army:0,armyDone:false,armyBusy:false,married:false,kids:0,alt:{},props:{},loan:0,useLoan:false,co:null,npc:{},tab:'stock'};
  save();
@@ -382,7 +388,7 @@ function coIpo(){
  const c=S.co;if(!c||c.ipo)return;if(c.V<3e9*wage(S.t))return toast('상장 요건: 회사 가치 '+won(3e9*wage(S.t))+' 이상');
  const g=Math.round(c.V*.3*1.2);S.cash+=g;c.own=.7;c.ipo=true;S.mental=Math.min(100,S.mental+10);save();toast('🔔 IPO 성공! 지분 30% 공모 → +'+won(g));
 }
-function toast(m){S.msg=m;render();clearTimeout(toastT);toastT=setTimeout(()=>{S.msg='';render()},2400)}
+function toast(m){sfx(/부족|없어|불가|붕괴|필요|못|확인|아직|미성년/.test(m)?'err':/매도|매각|출금/.test(m)?'sell':/매수|매입|입금|설립|채용|IPO|증자/.test(m)?'buy':'coin');S.msg=m;render();clearTimeout(toastT);toastT=setTimeout(()=>{S.msg='';render()},2400)}
 /* ============ 행동 ============ */
 const bf=()=>0.003*D().fee,sf=()=>0.005*D().fee;const feeOf=a=>feeOf(a)*D().fee;
 function maxBuy(id){const p=price(id);return p?Math.floor(S.cash/(p*(1+bf()))):0}
@@ -573,10 +579,14 @@ async function install(){
  alert(ios?'아이폰/아이패드: Safari 하단의 공유 버튼(□↑) → "홈 화면에 추가"를 눌러주세요.':'크롬/엣지 메뉴(⋮) → "앱 설치" 또는 "홈 화면에 추가"를 눌러주세요.\n(https 주소로 열었을 때만 설치할 수 있어요.)');
 }
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('rich-sw.js').catch(()=>{}));
+function slotInfo(n){const o=load(n);if(!o)return null;const {y,m}=ymOf(Math.min(o.t,N-1));let v=0;try{const bak=S;S=o;v=o.over?nw():nw();S=bak}catch(e){}return{y,m,v,o}}
+function slotList(){
+ const rows=[1,2,3].map(n=>{const i=slotInfo(n);return i?'<div class="stock row sp"><span><b>슬롯 '+n+'</b> · '+i.o.name+' · '+i.y+'년 '+i.m+'월 · '+won(i.v)+(i.o.over?' · 🏁엔딩':'')+'</span><span class="row"><button class="pri" data-a="loadslot" data-id="'+n+'">이어하기</button><button data-a="delslot" data-id="'+n+'">삭제</button></span></div>':''}).join('');
+ return rows?'<div class="card" style="background:var(--card2)"><b>📂 저장된 게임</b>'+rows+'</div>':''}
 function render(){
  const app=$('app');
  if(!S){
-  app.innerHTML='<h1>💰 꼬마 투자왕 RPG</h1><div class="card"><p>설날 세뱃돈 <b class="up">3만원</b>으로 증권계좌를 연 11살 꼬마. 한 턴은 <b>한 달</b>. 실제 코스피와 종목·환율·금·부동산 흐름(근사치)을 따라 2025년까지 살아남아 <b>부자</b>가 되어보자!</p><p class="mut">※ 시세는 실제 역사적 흐름을 바탕으로 한 근사치이며(특히 1990년대·2025년), 구간 사이 값은 보간했습니다. 게임이며 투자 조언이 아닙니다.</p><p>이름</p><input class="name" id="nm" value="나" maxlength="10"><p>시작 연도</p><select id="sy"><option value="1992">1992년 — 증시 개방, 고도성장 → IMF 외환위기까지 (34년)</option><option value="1998">1998년 — IMF 외환위기 한복판 (28년)</option></select><p>난이도</p><select id="df">'+Object.keys(DIFF).map(k=>'<option value="'+k+'"'+(k==='normal'?' selected':'')+'>'+DIFF[k].name+' — '+DIFF[k].d+'</option>').join('')+'</select><div style="margin-top:14px" class="row"><button class="pri" data-a="start">출발 🚀</button>'+installBtn()+'</div></div>';
+  app.innerHTML='<h1>💰 꼬마 투자왕 RPG</h1><div class="card"><p>설날 세뱃돈 <b class="up">3만원</b>으로 증권계좌를 연 11살 꼬마. 한 턴은 <b>한 달</b>. 실제 코스피와 종목·환율·금·부동산 흐름(근사치)을 따라 2025년까지 살아남아 <b>부자</b>가 되어보자!</p><p class="mut">※ 시세는 실제 역사적 흐름을 바탕으로 한 근사치이며(특히 1990년대·2025년), 구간 사이 값은 보간했습니다. 게임이며 투자 조언이 아닙니다.</p>'+slotList()+'<p>새 게임 이름</p><input class="name" id="nm" value="나" maxlength="10"><p>저장 슬롯</p><select id="sl">'+[1,2,3].map(n=>'<option value="'+n+'">슬롯 '+n+(slotInfo(n)?' (덮어쓰기)':' (비어있음)')+'</option>').join('')+'</select><p>시작 연도</p><select id="sy"><option value="1992">1992년 — 증시 개방, 고도성장 → IMF 외환위기까지 (34년)</option><option value="1998">1998년 — IMF 외환위기 한복판 (28년)</option></select><p>난이도</p><select id="df">'+Object.keys(DIFF).map(k=>'<option value="'+k+'"'+(k==='normal'?' selected':'')+'>'+DIFF[k].name+' — '+DIFF[k].d+'</option>').join('')+'</select><div style="margin-top:14px" class="row"><button class="pri" data-a="start">출발 🚀</button>'+installBtn()+'</div></div>';
   return;
  }
  const {y,m}=ymOf(S.t),total=nw(),r=rank(total),age=ageOf(S.t);
@@ -602,7 +612,7 @@ function render(){
  html+=tabBar()+tabBody();
  
  html+='<div class="card">'+chart()+'</div>';
- html+='<div class="card"><div class="row"><button class="pri" data-a="next">▶ 다음 달로</button><button data-a="skip3">3개월 건너뛰기</button><button data-a="skip12">1년 건너뛰기</button>'+installBtn()+'<button data-a="restart" style="margin-left:auto">처음부터</button></div></div>';
+ html+='<div class="card"><div class="row"><button class="pri" data-a="next">▶ 다음 달로</button><button data-a="skip3">3개월 건너뛰기</button><button data-a="skip12">1년 건너뛰기</button>'+installBtn()+'<button data-a="sound">'+(SOUND?'🔊':'🔇')+'</button><button data-a="slots" style="margin-left:auto">📂 슬롯/새 게임</button><button data-a="restart">이 슬롯 삭제</button></div></div>';
  if(S.msg)html+='<div class="toast">'+S.msg+'</div>';
  app.innerHTML=html;
 }
@@ -610,8 +620,12 @@ document.addEventListener('input',e=>{const q=e.target.getAttribute&&e.target.ge
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;const a=b.dataset.a,id=b.dataset.id;
  if(a==='install')return install();
- if(a==='start'){newGame($('nm').value.trim(),+$('sy').value,$('df').value);return render()}
- if(a==='restart'){if(S.over||confirm('처음부터 다시 시작할까요?')){try{localStorage.removeItem(KEY)}catch(x){}S=null;return render()}return}
+ if(a==='loadslot'){SLOT=+id;S=load(SLOT);try{localStorage.setItem('richrpg_slot',SLOT)}catch(x){}return render()}
+ if(a==='delslot'){if(confirm('슬롯 '+id+'의 저장을 삭제할까요?')){try{localStorage.removeItem(slotKey(+id))}catch(x){}render()}return}
+ if(a==='sound'){SOUND=!SOUND;try{localStorage.setItem('richrpg_snd',SOUND?'1':'0')}catch(x){}sfx('coin');return render()}
+ if(a==='slots'){save();S=null;return render()}
+ if(a==='start'){SLOT=+$('sl').value;if(slotInfo(SLOT)&&!confirm('슬롯 '+SLOT+'의 기존 저장을 덮어쓸까요?'))return;newGame($('nm').value.trim(),+$('sy').value,$('df').value);return render()}
+ if(a==='restart'){if(S.over||confirm('처음부터 다시 시작할까요?')){try{localStorage.removeItem(slotKey(SLOT))}catch(x){}S=null;return render()}return}
  if(!S)return;
  if(a==='buy')return buy(id);
  if(a==='sell')return sell(id);
@@ -638,11 +652,11 @@ document.addEventListener('click',e=>{
  if(a==='coinv')return coInvest();
  if(a==='cosell')return coSell();
  if(a==='ipo')return coIpo();
- if(a==='next'){advance();return render()}
+ if(a==='next'){sfx('next');advance();return render()}
  if(a==='skip3')return skip(3);
  if(a==='skip12')return skip(12);
 });
-S=load();render();
+S=null;render();
 </script>
 </body>
 </html>
