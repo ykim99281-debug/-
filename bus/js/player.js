@@ -31,7 +31,7 @@ function startManual(bus, lesson) {
   UI.showDrive(); sfx('start');
 }
 function startLesson(L) {
-  startSchoolWorld();
+  startSchoolWorld(); bgStart();
   const ids = pickStops(L.anchors), r = makeRoute('교습', 0xffb020, ids, -1, 'L'); L.route = r;
   const model = makeBus('city', 0xffb020, '교습 중'); scene.add(model.group); const a = new Agent('bus', model);
   const b = { id: 0, type: 'city', routeId: -1, model, agent: a, pax: [], income: 0, phase: 'run', tick: 0, doorT: 0, doorGoal: 0, manual: false };
@@ -103,6 +103,7 @@ function stopManual(silent) {
   }
   camera.near = 0.5; camera.updateProjectionMatrix(); if (!G.school) G.speed = G.prevSpeed || 1;
   G.state = G.school ? 'school' : 'company';
+  if (G.school && BG) { const out = bgFlush(true); if (out && (out.rev || out.net)) setTimeout(() => UI.bgModal(out), 200); }
   if (!silent) { if (G.school) UI.showTitle(); else UI.showMgmt(); }
 }
 

@@ -1,7 +1,7 @@
 'use strict';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const hex = c => '#' + c.toString(16).padStart(6, '0');
-function toast(text, kind) { const d = document.createElement('div'); d.className = 'toast ' + (kind || ''); d.textContent = text; $('toasts').appendChild(d); setTimeout(() => d.remove(), 2800); while ($('toasts').children.length > 4) $('toasts').firstChild.remove(); }
+function toast(text, kind) { if (window.__quiet) return; const d = document.createElement('div'); d.className = 'toast ' + (kind || ''); d.textContent = text; $('toasts').appendChild(d); setTimeout(() => d.remove(), 2800); while ($('toasts').children.length > 4) $('toasts').firstChild.remove(); }
 function bigText(t, ms) { $('center').textContent = t; setTimeout(() => { if ($('center').textContent === t) $('center').textContent = ''; }, ms || 1200); }
 
 // ===== 소리 =====
@@ -243,6 +243,15 @@ const UI = {
   },
   driveBus(b) { if (P.active) return; this.follow = null; startManual(b); },
 
+  offlineModal(r, title) {
+    const m = Math.round(r.realSec / 60), t = m >= 60 ? Math.floor(m / 60) + '시간 ' + (m % 60) + '분' : m + '분';
+    this.modal(`<h2>${title || '🌙 자리를 비운 동안의 운영'}</h2><p class="muted" style="margin-top:0">${t} 동안 회사가 직접 운영됐어요 (효율 60% · 최대 6시간)</p>
+      <table class="tbl"><tr><td>운행 수입</td><td>${fmtMoney(r.rev)}</td></tr><tr><td>순이익 (비용·세금 반영)</td><td><b style="color:${r.net >= 0 ? 'var(--ok)' : 'var(--bad)'}">${fmtMoney(r.net)}</b></td></tr><tr><td>태운 승객</td><td>${r.pax}명</td></tr><tr><td>결산한 날</td><td>${r.days}일</td></tr><tr><td>버스 고장</td><td>${r.breakdowns}회${r.breakdowns ? ' <small class="muted">(정비소 업그레이드로 줄일 수 있어요)</small>' : ''}</td></tr></table>
+      <button class="btn pri" id="offX" style="margin-top:12px;width:100%">확인</button>`); $('offX').onclick = () => this.closeModal();
+  },
+  bgModal(o) {
+    this.modal(`<h2>🏢 자유주행 중 회사 운영 결과</h2><p class="muted" style="margin-top:0">${esc(o.name)}은(는) 당신이 운전하는 동안에도 운영됐어요</p><table class="tbl"><tr><td>운행 수입</td><td>${fmtMoney(o.rev)}</td></tr><tr><td>순이익</td><td><b style="color:${o.net >= 0 ? 'var(--ok)' : 'var(--bad)'}">${fmtMoney(o.net)}</b></td></tr><tr><td>태운 승객</td><td>${o.pax}명</td></tr><tr><td>결산한 날</td><td>${o.days}일</td></tr></table><button class="btn pri" id="bgX" style="margin-top:12px;width:100%">확인</button>`); $('bgX').onclick = () => this.closeModal();
+  },
   // --- 노선 편집기
   openEditor(route) {
     const E = this.edState = { stops: route ? route.stopIds.slice() : [], name: route ? route.name : '노선 ' + (G.nextRoute), color: route ? route.color : ROUTE_COLORS[(G.nextRoute - 1) % ROUTE_COLORS.length], route, path: null, hover: -1 };
@@ -354,7 +363,7 @@ const UI = {
   },
   startFreeDrive() {
     const f = this.fd; this.closeModal(); initAudio(); startSchoolWorld();
-    for (const c of cars) c.dispose(); cars = []; spawnCars(f.traffic);
+    bgStart(); for (const c of cars) c.dispose(); cars = []; spawnCars(f.traffic);
     G.hour = f.hour; G.freezeHour = f.freeze; if (f.wx === 'auto') { WX.lock = false; setWeather('clear'); G.wxT = 120; } else { WX.lock = true; setWeather(f.wx); } applyTime(G.hour);
     const car = f.car === 0 ? { id: 0, model: 'avante', color: 0xf4f4f6, km: 0 } : SCHOOL.cars.find(c => c.id === f.car);
     startCar(car, { x: f.x, z: f.z }); if (f.taxi) setTaxi(true); else toast('🚗 자유주행 시작! T: 자율주행 · C: 카메라 · Esc: 메뉴', 'gold');
@@ -443,6 +452,7 @@ const UI = {
     const b = P.bus, T = vt(b), r = P.lesson ? P.lesson.route : routeById(b.routeId), si = P.stopInfo, kmh = Math.round(Math.abs(P.v) * 3.6);
     $('hudL').innerHTML = `<span class="chip" style="background:${hex(r ? r.color : 0xffb020)}">${r ? r.num : ''}</span><b>${r ? esc(r.name) : ''}</b> <small class="muted">${T.name}</small><br>🚏 다음: <b>${si ? esc(si.name) : '-'}</b> <span class="tnum">${si ? Math.max(0, Math.round(si.dist)) + 'm' : ''}</span><br>👥 탑승 <b>${b.pax.length}</b>/${T.cap} · 대기 ${si ? Math.floor(si.waiting) : 0}명${P.lesson ? `<br><small class="muted">${P.lesson.title}</small>` : ''}`;
     if (b.isCar) $('hudL').innerHTML = `🚗 <b>${esc(T.name)}</b><br><small class="muted">${T.engName} · 주행 ${(b.carRef.km / 1000).toFixed(1)}km</small><br><small>⛽ 이번 주행 ${fmtMoney(P.fuel)} · 👛 ${fmtMoney(SCHOOL.wallet)}</small><br><small>🏎 ${MODE_N[P.mode]}${P.cruise ? ' · 🚀 크루즈 ' + Math.round(P.cruise * 3.6) + 'km/h' : ''} · 💡 ${['자동', 'ON', 'OFF'][P.lights]}${T.feat.has('hud') ? ' · HUD' : ''}</small>`;
+    if (BG) $('hudL').innerHTML += `<br><small>🏢 ${esc(BG.name)} 운영 중 · 순이익 <b style="color:${BG.live + BG.sum.net >= 0 ? '#4ade80' : '#f87171'}">${BG.live + BG.sum.net >= 0 ? '+' : ''}${fmtMoney(BG.live)}</b></small>`;
     if (P.auto) $('hudL').innerHTML += '<br>🤖 <b style="color:#4ade80">자율주행 중</b>';
     if (G.events && G.events[0]) $('hudL').innerHTML += `<br><small>${G.events[0].def.i} ${G.events[0].name} ${G.events[0].def.n}</small>`;
     if (WX.type !== 'clear') $('hudL').innerHTML += `<br><small>${WX_T[WX.type].i} ${WX_T[WX.type].n}${WX.grip < 0.9 ? ' · <span style="color:#facc15">노면 미끄러움</span>' : ''}${WX.fogK > 0.5 ? ' · 시야 불량' : ''}</small>`;
@@ -465,7 +475,7 @@ const UI = {
     $('bNew').onclick = () => { if (loadSaved() && !confirm('저장된 회사가 있어요.\n새로 시작하면 기존 저장이 덮어써집니다. 계속할까요?')) return; initAudio(); startCompany(($('coName').value || '버스 회사').trim()); this.showMgmt(); toast('환영합니다 사장님! 오른쪽에서 노선을 설계해 보세요', 'gold'); };
     $('bCont').onclick = () => {
       initAudio(); const s = loadSaved(); if (!s) return;
-      try { startCompany(s.name, s); this.showMgmt(); if (G.migrated) this.modal(`<h2>🗺 지도가 확장됐어요</h2><p class="muted">광주 지도가 새로 커져서 이전 노선과 버스는 정리했어요. 보유 버스·노선 비용은 환불(<b>${fmtMoney(G.migrated.refund)}</b>)해 드렸고, 자금·레벨·업그레이드·목표는 그대로예요. 시범 노선과 버스 1대를 드렸으니 새 노선을 설계해 보세요!</p><button class="btn pri" id="mgX">확인</button>`), $('mgX').onclick = () => this.closeModal(); }
+      try { startCompany(s.name, s); this.showMgmt(); if (!G.migrated && G.offlineReport) this.offlineModal(G.offlineReport); if (G.migrated) this.modal(`<h2>🗺 지도가 확장됐어요</h2><p class="muted">광주 지도가 새로 커져서 이전 노선과 버스는 정리했어요. 보유 버스·노선 비용은 환불(<b>${fmtMoney(G.migrated.refund)}</b>)해 드렸고, 자금·레벨·업그레이드·목표는 그대로예요. 시범 노선과 버스 1대를 드렸으니 새 노선을 설계해 보세요!</p><button class="btn pri" id="mgX">확인</button>`), $('mgX').onclick = () => this.closeModal(); }
       catch (e) { console.error(e); toast('저장 데이터를 읽을 수 없어 새 회사로 시작해요', 'bad'); startCompany('광주 시티버스'); this.showMgmt(); }
     };
     $('bSchool').onclick = () => { initAudio(); this.schoolModal(); };

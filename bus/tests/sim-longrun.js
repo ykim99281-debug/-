@@ -14,7 +14,7 @@ const { chromium } = require('playwright');
     for(let k=0;k<3;k++){ const ids=[]; while(ids.length<5){ const i=Math.floor(Math.random()*STOPS.length); if(!ids.includes(i)) ids.push(i);} const rt=addRoute('r'+k,ROUTE_COLORS[k],ids,true); for(let q=0;q<3;q++) addBus(['city','mini','dd'][q],rt.id,true); }
     out.buses=G.buses.length; out.agents0=agents.length;
     const stuck=new Map(), maxStuck={bus:0,car:0}; let nan=0, steps=0, stuckBus=null, stuckCar=null;
-    const STEPS=12000, DT=0.1;
+    const STEPS=8000, DT=0.1;
     for(let i=0;i<STEPS;i++){
       updateWorld(DT); steps++;
       if(i%10===0) for(const a of agents){

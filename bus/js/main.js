@@ -2,8 +2,10 @@
 const CAM = { theta: 0.8, elev: 0.75, dist: 1400, target: new THREE.Vector3(0, 0, 0), dragging: false, idle: 0 };
 function resize() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize);
-document.addEventListener('visibilitychange', () => {   // 탭을 숨기면 주행 일시정지 · 소리 끄기
-  if (document.hidden) { if (P.active && !P.paused && $('modal').classList.contains('hide')) UI.pauseModal(); if (actx && actx.state === 'running') actx.suspend(); }
+let hiddenAt = 0;
+document.addEventListener('visibilitychange', () => {   // 탭을 숨기면 주행 일시정지 · 소리 끄기 · 숨긴 시간만큼 회사 운영 정산
+  if (!document.hidden && hiddenAt && G && !G.school) { const el = (Date.now() - hiddenAt) / 1000; hiddenAt = 0; if (el > 90) { const rep = liveCatchUp(el, 0.6); if (rep) setTimeout(() => UI.offlineModal(rep, '🌙 탭을 비운 동안의 운영'), 300); } }
+  if (document.hidden) { hiddenAt = Date.now(); if (G && !G.school) saveCompany(); if (P.active && !P.paused && $('modal').classList.contains('hide')) UI.pauseModal(); if (actx && actx.state === 'running') actx.suspend(); }
   else if (actx && actx.state === 'suspended') actx.resume();
 });
 
@@ -89,6 +91,7 @@ function frameBody(now) {
   const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
   const active = P.active;
   if (!(active && P.paused)) { const sdt = active ? dt : dt * (G.state === 'company' ? G.speed : 1), n = Math.max(1, Math.ceil(sdt / 0.1)); for (let i = 0; i < n; i++) updateWorld(sdt / n); }
+  if (active && BG) bgUpdate(dt);
   if (active) { updatePlayer(dt); driveCamera(dt); if ((fpsT -= dt) < 0) { fpsT = 0.1; UI.updateHUD(); } } else orbit(dt);
   world.focus = active ? { x: P.x, z: P.z, r: 480 } : { x: CAM.target.x, z: CAM.target.z, r: Math.max(480, CAM.dist * 0.95) };
   if ((sirT = (sirT || 0) - dt) < 0) { sirT = 0.15; let bd = 1e9; for (const a of agents) if (a.emergency) { const d = Math.hypot(a.x - world.focus.x, a.z - world.focus.z); if (d < bd) bd = d; } sirenAudio(bd < 220 ? 1 - bd / 220 : 0); }
@@ -119,4 +122,5 @@ function frame(now) {   // 한 프레임에서 오류가 나도 루프가 멈추
 resize(); buildCity(); buildStops(); initGuides(); initWeather(); UI.init();
 startSchoolWorld(); UI.showTitle();
 requestAnimationFrame(frame);
-window.addEventListener('beforeunload', () => { if (G && !G.school) saveCompany(); });
+window.addEventListener('beforeunload', () => { if (G && !G.school) saveCompany(); else if (BG) bgFlush(false); });
+window.addEventListener('pagehide', () => { if (G && !G.school) saveCompany(); else if (BG) bgFlush(false); });
