@@ -93,7 +93,7 @@ const PKEYS=['lsx','lsz','rsx','rsz','lex','rex','lhx','rhx','lkx','rkx','spx','
 function makePerson(o){
  const s=o.child?0.66:(o.scale||1);
  const g=new THREE.Group(),body=new THREE.Group();g.add(body);body.scale.setScalar(s);
- const P={g,body,o,s,state:'idle',ov:null,t0:Math.random()*20,cur:{},tgt:{},j:{},dv:o.dv||0,yaw:0,speech:null,sp:null,name:o.name||'',r:.35};
+ const P={g,body,o,s,state:'idle',ov:null,t0:Math.random()*20,cur:{},tgt:{},j:{},dv:o.dv||0,yaw:0,speech:null,sp:null,name:o.name||'',r:.35,eyes:[],brows:[],mood:null,moodUntil:0};
  PKEYS.forEach(k=>P.cur[k]=0);
  const skin=mat(o.skin,{roughness:.5}),hair=mat(o.hair,{roughness:.75}),top=mat(o.top,{roughness:.7}),bot=mat(o.bottom,{roughness:.8}),shoe=mat(o.shoe||0x15151c,{roughness:.35,metalness:.25});
  const hips=new THREE.Group();hips.position.y=.95;body.add(hips);P.j.hips=hips;
@@ -113,9 +113,9 @@ function makePerson(o){
  const hm=addMesh(head,new THREE.SphereGeometry(.118,28,22),skin,0,.045,0);hm.scale.set(.93,1.1,1);
  const wm=mat(0xffffff,{roughness:.3}),pm=mat(0x1a1210,{roughness:.2,metalness:.1});
  [-1,1].forEach(sx=>{
-  addMesh(head,new THREE.SphereGeometry(.022,12,10),wm,sx*.043,.07,.098);
-  addMesh(head,new THREE.SphereGeometry(.0125,10,8),pm,sx*.043,.07,.116);
-  const br=addMesh(head,new THREE.BoxGeometry(.045,.008,.01),hair,sx*.043,.108,.108);br.rotation.z=sx*-.12;
+  P.eyes.push(addMesh(head,new THREE.SphereGeometry(.022,12,10),wm,sx*.043,.07,.098));
+  P.eyes.push(addMesh(head,new THREE.SphereGeometry(.0125,10,8),pm,sx*.043,.07,.116));
+  const br=addMesh(head,new THREE.BoxGeometry(.045,.008,.01),hair,sx*.043,.108,.108);br.rotation.z=sx*-.12;P.brows.push(br);
   addMesh(head,new THREE.SphereGeometry(.022,10,8),skin,sx*.108,.04,0).scale.set(.5,1,.8);
  });
  addMesh(head,new THREE.SphereGeometry(.018,10,8),mat(o.skin,{roughness:.5}),0,.035,.118).scale.set(.9,1.1,1);
@@ -175,6 +175,8 @@ function wrapKo(s,n){const out=[];let cur='';for(const ch of String(s)){cur+=ch;
 
 /* ---- 포즈 ---- */
 const BPM=118;
+const MOODS={neutral:{x:1,y:1,r:0,b:-.12,by:0},smile:{x:1.6,y:1.25,r:0,b:-.24,by:.004},surprised:{x:.55,y:2.6,r:0,b:-.02,by:.016},annoyed:{x:1.15,y:.65,r:.1,b:.38,by:-.004}};
+const HUMAN='\n[사람처럼 말하기] 가끔 말끝을 흐리거나 되묻고, 감탄사·ㅋㅋ·머뭇거림 같은 자연스러운 구어체를 써라. 기분(웃음·당황·짜증·경계)을 대사에 드러내고, 매번 같은 말투·길이로 답하지 마라. 플레이어가 방금 한 구체적인 말·행동을 짚어서 반응하라.\n';
 const POSE={
  idle:(P,t,T)=>{T.lsz=.1;T.rsz=.1;T.spx=.02+Math.sin(t*1.6)*.015;T.hdy=Math.sin(t*.5+P.t0)*.2;T.hdx=.03;T.lex=-.08;T.rex=-.08},
  walk:(P,t,T)=>{const w=t*7.5;T.lhx=-Math.sin(w)*.62;T.rhx=Math.sin(w)*.62;T.lkx=Math.max(0,-Math.sin(w))*.95;T.rkx=Math.max(0,Math.sin(w))*.95;T.lsx=Math.sin(w)*.5;T.rsx=-Math.sin(w)*.5;T.lex=-.25;T.rex=-.25;T.hipy=Math.abs(Math.sin(w))*.035;T.spx=.05;T.lsz=.06;T.rsz=.06},
@@ -200,13 +202,15 @@ const POSE={
 function updatePerson(P,dt,now){
  const t=now/1000-P.t0,T=P.tgt;PKEYS.forEach(k=>T[k]=0);P._glass=false;P._card=false;
  let st=P.state;if(P.ov){if(now<P.ov.until)st=P.ov.state;else P.ov=null}
- (POSE[st]||POSE.idle)(P,t,T);
+ (POSE[st]||POSE.idle)(P,t,T);T.hdy+=(P.look||0);
  const k=Math.min(1,dt*11),c=P.cur;PKEYS.forEach(n=>c[n]+=(T[n]-c[n])*k);
  const j=P.j;j.lsh.rotation.set(c.lsx,0,-c.lsz);j.rsh.rotation.set(c.rsx,0,c.rsz);j.lel.rotation.x=c.lex;j.rel.rotation.x=c.rex;
  j.lhp.rotation.x=c.lhx;j.rhp.rotation.x=c.rhx;j.lkn.rotation.x=c.lkx;j.rkn.rotation.x=c.rkx;
  j.spine.rotation.set(c.spx,0,c.spz);j.head.rotation.set(c.hdx,c.hdy,c.hdz);j.hips.position.y=.95+c.hipy;
  P.glass.visible=P._glass;P.card.visible=P._card;
- const talking=(P.sp&&now<P.sp);P.mouth.scale.y=talking?(1+Math.abs(Math.sin(now/90))*1.6):1;
+ const talking=(P.sp&&now<P.sp),md=MOODS[(P.mood&&now<P.moodUntil)?P.mood:'neutral'];
+ if(!P.bl)P.bl=now+rnd(1500,4500);if(now>P.bl){P.blinkEnd=now+130;P.bl=now+rnd(2200,6200)}const cl=now<(P.blinkEnd||0);P.eyes.forEach(e=>e.scale.y=cl?.12:1);
+ P.mouth.scale.set(md.x,(talking?(1+Math.abs(Math.sin(now/90))*1.6):1)*md.y,1);P.mouth.rotation.z=md.r;P.brows.forEach((b,i)=>{b.rotation.z=(i?1:-1)*md.b*-1*-1;b.position.y=.108+md.by});
  if(P.sp&&now>P.sp){P.bubble.visible=false;P.sp=null}
 }
 
@@ -341,7 +345,7 @@ function c3Init(){
   '<canvas id="c3cv"></canvas><div id="c3top"><div><b>🪩 BEAT</b> <span id="c3who"></span></div><div class="c3r"><button id="c3snd">🔊</button><button id="c3x">✖ 나가기</button></div></div>'
   +'<div id="c3vibe"><span>VIBE</span><div class="bar"><i id="c3vb"></i></div></div><div id="c3note"></div>'
   +'<div id="c3tgt" hidden></div><div id="c3log"></div>'
-  +'<div id="c3bar"><input id="c3in" maxlength="120" placeholder="가까이 가서 말을 걸어보세요…"><button class="pri" id="c3send">전송</button><button id="c3actb">🎬 행동</button></div><div id="c3help">탭: 이동/선택 · 드래그: 시점 · WASD/방향키: 이동</div><div id="c3act" hidden></div>';
+  +'<div id="c3bar"><input id="c3in" maxlength="120" placeholder="말 걸기 / 행동은 앞에 /를 붙여 자유롭게 (예: /바로 가서 춤춘다)"><button class="pri" id="c3send">전송</button><button id="c3actb">🎬 행동</button></div><div id="c3help">탭: 이동/선택 · 드래그: 시점 · WASD/방향키: 이동</div><div id="c3act" hidden></div>';
  document.body.appendChild(wrap);
  const cv=$('c3cv');
  const rd=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});rd.outputEncoding=THREE.sRGBEncoding;rd.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
@@ -366,7 +370,7 @@ function c3Bind(){
  $('c3snd').onclick=()=>{SOUND=!SOUND;try{localStorage.setItem('richrpg_snd',SOUND?'1':'0')}catch(e){}$('c3snd').textContent=SOUND?'🔊':'🔇';c3Audio()};
  $('c3in').addEventListener('input',e=>{});
  const A=[['wave','👋 인사'],['dance','💃 춤추기'],['toast','🥂 건배'],['drink','🍹 음료 사기'],['round','🎉 전체 쏘기'],['card','💳 카드 보여주기'],['brag','😎 자랑하기'],['namecard','📇 명함 교환'],['clap','👏 박수'],['bow','🙇 인사(허리)'],['req','🎤 신청곡'],['photo','📸 같이 사진'],['vipreq','👑 VIP 신청'],['vipjudge','📝 VIP 심사 받기'],['bottle','🍾 보틀 서비스(VIP)']];
- $('c3act').innerHTML=A.map(a=>'<button data-k="'+a[0]+'">'+a[1]+'</button>').join('');
+ $('c3act').innerHTML=A.map(a=>'<button data-k="'+a[0]+'">'+a[1]+'</button>').join('')+'<button data-k="custom" class="pri">✍️ 내 행동 직접 입력</button>';
  $('c3act').onclick=e=>{const b=e.target.closest('button');if(b){c3Action(b.dataset.k);$('c3act').hidden=true}};
 }
 function c3Tap(x,y){
@@ -392,7 +396,7 @@ function c3Note(t){const n=$('c3note');if(!n)return;n.textContent=t;n.classList.
 function c3Log(w,t,cls){if(t){C3.log.push({w,t,cls});if(C3.log.length>40)C3.log.shift()}const l=$('c3log');if(!l)return;l.innerHTML=C3.log.slice(-5).map(m=>'<div class="'+(m.cls||'')+'">'+(m.w?'<b>'+esc(m.w)+'</b> ':'')+esc(m.t)+'</div>').join('');l.scrollTop=l.scrollHeight;
  if(!t)return;if(m_isNpc(w)){pushC(S.chat.c,{w,n:w,e:(CLUBP.find(p=>p.n===w)||{}).e,t})}else if(w==='나'){pushC(S.chat.c,{w:'me',t})}}
 function m_isNpc(w){return CLUBP.some(p=>p.n===w)}
-function c3Speak(P,text,secs){setBubble(P,text,secs||6);c3Log(P.name,text)}
+function c3Speak(P,text,secs){setBubble(P,text,secs||6);c3Log(P.name,text);const m=/헉|헐|뭐\?|\?!|대박|잠깐|어머|세상에/.test(text)?'surprised':/허세|꼬마야|못써|안 ?믿|곤란|어렵|규정|정숙|그만/.test(text)?'annoyed':/ㅋ|ㅎ|😜|😊|좋|환영|감사|최고|귀엽/.test(text)?'smile':null;if(m){P.mood=m;P.moodUntil=performance.now()+4500}}
 function c3Near(){let best=null,bd=3.0;C3.npcs.forEach(p=>{if(p.def.vip&&!isVip())return;const d=Math.hypot(p.g.position.x-C3.me.g.position.x,p.g.position.z-C3.me.g.position.z);if(d<bd){bd=d;best=p}});return best}
 function remember(id,text){const a=S.mem[id]||(S.mem[id]=[]);a.push(text);if(a.length>8)a.shift()}
 function nearbyNpcs(r){return C3.npcs.filter(p=>!(p.def.vip&&!isVip())&&Math.hypot(p.g.position.x-C3.me.g.position.x,p.g.position.z-C3.me.g.position.z)<(r||6))}
@@ -418,14 +422,39 @@ async function aiNpc(P,text){
  if(S.proof[id])proofs.push('카드/통장을 직접 보여줌');if(S.proof.all)proofs.push('가게 전체에 한턱 쏴서 돈 쓰는 모습을 모두가 봄');
  const owner=id==='한 사장'?('\n[VIP 심사 진행 중] 미충족 항목: '+(vipIssues().join(' / ')||'없음 (통과 가능)')+'. 평소 대화에서는 결과를 단정하지 말고 질문·압박·힌트만 줘라.'):(P.def.gate?('\n[VIP 회원 여부] '+(isVip()?'회원임':'비회원 — 입장 거절')):'');
  const sys='너는 한국 투자 RPG 속 클럽 〈BEAT〉에 있는 인물 \''+id+'\'이다. 설정: '+P.def.desc+' 플레이어와 같은 공간에서 직접 대화 중이다. 출력은 네 대사 한 개만(이름표·따옴표 금지), 1~2문장.\n'
- +owner+aiRules()+'\n[현실감 규칙] NPC는 플레이어가 직접 말하거나 증거를 보이기 전에는 플레이어의 자산·회사를 모른다. 어린이가 \"나 1조 있다\", \"CEO다\" 같은 거액·사업 주장을 하면 현실의 어른처럼 의심하라(장난·상상·거짓말로 여김, 부모님·나이·증거를 묻거나 비웃을 수 있음). 아래 [신뢰도]와 [증거]가 충분히 높을 때만 점차 믿고 놀라라. 증거 없이 즉시 믿는 것은 금지. 성격에 맞게 반응할 것(바텐더는 허세에 냉정, 대표는 정중하지만 계산적).'
+ +owner+HUMAN+aiRules()+'\n[현실감 규칙] NPC는 플레이어가 직접 말하거나 증거를 보이기 전에는 플레이어의 자산·회사를 모른다. 어린이가 \"나 1조 있다\", \"CEO다\" 같은 거액·사업 주장을 하면 현실의 어른처럼 의심하라(장난·상상·거짓말로 여김, 부모님·나이·증거를 묻거나 비웃을 수 있음). 아래 [신뢰도]와 [증거]가 충분히 높을 때만 점차 믿고 놀라라. 증거 없이 즉시 믿는 것은 금지. 성격에 맞게 반응할 것(바텐더는 허세에 냉정, 대표는 정중하지만 계산적).'
  const mem=(S.mem[id]||[]).join(' / ')||'없음';
  const ctx=aiCtx(id)+'\n[이 인물이 플레이어에 대해 기억하는 것] '+mem+'\n[신뢰도] '+c+'/100 ('+credLabel(c)+') / [증거] '+(proofs.join(', ')||'없음')+'\n[이 달 클럽에서 쓴 돈] '+won(C3.spent||0)+'\n[최근 대화]\n'+C3.log.slice(-6).map(m=>(m.w?m.w+': ':'')+m.t).join('\n');
  const hint=(id==='새벽형 투자자'||id==='강 대표')&&/주식|종목|투자|정보|추천/.test(text)?secretHint('주식','🌙 클럽 찌라시',-30,''):'';
  const out=await aiAsk(sys,[],ctx+'\n'+hint+'\n[플레이어 말] '+text);
  return out.replace(/^[^:：\n]{1,12}[:：]\s*/,'').replace(/^["“]|["”]$/g,'').trim()}
+async function c3Custom(text){
+ const me=C3.me,now=performance.now(),tl=text,dr=Math.round(50000*wage(S.t)/1000)*1000*(isVip()?.7:1);
+ if(/때리|죽이|죽여|칼|총|폭행|찌르|성추행|마약/.test(tl)){c3Note('그런 행동은 할 수 없어요. 다른 행동을 입력해 보세요.');return}
+ c3Log('나','✍️ '+text,'me');
+ // 이동
+ const loc=[[/바|칵테일|술집/,7.2,-0.6,'바'],[/dj|디제이|부스/i,0,-6.4,'DJ 부스'],[/플로어|가운데|춤추는/,0,.6,'플로어'],[/소파|라운지/,-6.8,1.8,'라운지'],[/vip|경호|브이아이피/i,-6.9,-4.8,'VIP 입구'],[/입구|문|출구/,0,9.2,'입구']];
+ let moved=false;const AL={'바텐더':'바텐더 민','dj':'DJ 비트','디제이':'DJ 비트','경호':'경호원 도현','사장':'한 사장','대표':'강 대표','회장':'윤 회장','투자자':'새벽형 투자자','소연':'소연','지훈':'지훈','세라':'세라'};const ak=Object.keys(AL).find(k=>tl.toLowerCase().includes(k)),named=C3.npcs.find(p=>!(p.def.vip&&!isVip())&&(tl.includes(p.def.n)||(ak&&p.def.n===AL[ak])));
+ if(/가서|간다|걸어|다가|이동|향해|찾아|가본다|간다/.test(tl)){if(named){me.dest=null;me.follow=named;moved=true}else{const L=loc.find(l=>l[0].test(tl));if(L){me.follow=null;me.dest={x:L[1],z:L[2]};moved=true;c3Note('🚶 '+L[3]+'(으)로 이동')}}}
+ const map=[[/춤|댄스|흔들/,'dance',9000],[/손.*흔|인사|안녕/,'wave',2200],[/건배|부딪/,'toast',3200],[/박수|짝짝/,'clap',3000],[/절|숙이|사과|감사/,'bow',1800],[/환호|소리.*지|만세|점프|뛰/,'cheer',3500],[/카드|지갑|보여/,'card',3500],[/마시|한 모금|들이/,'drink',2800],[/포즈|사진|셀카|웃/,'pose',2500],[/앉/,'sit',5000],[/말|속삭|귓속|이야기|묻|대화/,'talk',3000]];
+ const m=map.find(x=>x[0].test(tl));if(m){me.ov={state:m[1],until:now+m[2]}}else if(!moved)me.ov={state:'pose',until:now+2000};
+ let vibe=/춤|환호|만세|건배/.test(tl)?6:1;
+ if(/(돈|지폐|팁).*(뿌|던|주|건네)/.test(tl)){const c=dr*5;if(c<=S.cash){pay(c);C3.spent=(C3.spent||0)+c;vibe=14;c3Log('','💸 팁으로 '+won(c)+'을 건넸다','sys')}}
+ const rude=/소리.*(질|쳐)|난동|시비|밀|무시|욕|침|던지/.test(tl);
+ if(rude){vibe=-12;nearbyNpcs(6).forEach(p=>{S.ctrust[p.def.n]=Math.max(0,(S.ctrust[p.def.n]||0)-4)});const g=C3.npcs.find(p=>p.def.gate);if(g)setTimeout(()=>c3Speak(g,'손님, 정숙해 주세요. 계속되면 퇴장 조치합니다.',5),700)}
+ C3.vibe=Math.max(0,Math.min(100,C3.vibe+vibe));
+ const wit=nearbyNpcs(5.5).filter(p=>p!==C3.owner||C3.owner.active);if(!wit.length||rude&&wit.length===1&&wit[0].def.gate)return;
+ wit.forEach(p=>remember(p.def.n,'플레이어가 "'+text.slice(0,40)+'"라는 행동을 했다'));
+ const P=named&&wit.includes(named)?named:(C3.target&&wit.includes(C3.target)?C3.target:wit.sort((a,b)=>Math.hypot(a.g.position.x-me.g.position.x,a.g.position.z-me.g.position.z)-Math.hypot(b.g.position.x-me.g.position.x,b.g.position.z-me.g.position.z))[0]);
+ if(!P||P.def.gate&&!rude&&Math.random()<.5)return;
+ await new Promise(r=>setTimeout(r,moved?2200:600));
+ C3.busy=true;P.faceMe=true;setBubble(P,'…',20);let rep=null;
+ if(aiOn()){try{rep=await aiNpc(P,'(플레이어가 직접 행동함: '+text+(rude?' — 무례한 행동이다':'')+')')}catch(e){S.aiErr=String(e.message||e).slice(0,200)}}
+ if(!rep)rep=rude?pick(['손님, 좀 자제해 주세요 ㅎㅎ','어휴, 분위기 깨지 말자~']):/춤|댄스/.test(tl)?pick(['오 좀 추는데? ㅋㅋ','와 꼬마 댄서다!']):/건배/.test(tl)?'건배~!':/사진/.test(tl)?'찰칵! 잘 나왔다 ㅎㅎ':pick(P.def.lines);
+ C3.busy=false;c3Speak(P,rep,6);save()}
 async function c3Send(){
  const inp=$('c3in'),text=inp.value.trim();if(!text||C3.busy)return;
+ if(/^[\/*]/.test(text)){inp.value='';return c3Custom(text.replace(/^[\/*]+\s*/,'').replace(/\*+$/,''))}
  const P=c3Near();if(!P){c3Note('가까이 가서 말을 걸어보세요! (사람 가까이로 걸어가기)');return}
  inp.value='';c3Log('나',text);setBubble(C3.me,text,4);c3Claim(P,text);
  C3.busy=true;P.ov={state:'talk',until:performance.now()+4000};P.faceMe=true;setBubble(P,'…',20);
@@ -519,6 +548,7 @@ function c3Action(k){
   if(!T)return;C3.busy=true;setBubble(T,'…',20);let rep=null;
   if(aiOn()){try{rep=await aiNpc(T,'(플레이어가 행동함: '+txt+')')}catch(e){S.aiErr=String(e.message||e).slice(0,200)}}
   if(!rep)rep=extra||npcRule(T,txt);C3.busy=false;c3Speak(T,rep,6)};
+ if(k==='custom'){const i=$('c3in');i.value='/';i.placeholder='예) /바텐더에게 가서 윙크하며 칵테일을 주문한다';i.focus();return c3Note('✍️ 하고 싶은 행동을 자유롭게 적고 전송! (예: /DJ에게 다가가 박수친다)')}
  if(k==='vipreq')return ownerCall();
  if(k==='vipjudge')return vipJudge();
  if(k==='bottle')return bottleService();
@@ -571,7 +601,8 @@ function c3Frame(){
  if(now>C3.nextAmb){C3.nextAmb=now+rnd(20000,34000);c3Ambient()}
  if(now>C3.nextCrowd){C3.nextCrowd=now+rnd(3500,7500);c3Crowd()}if(C3.gate)C3.gate.visible=!isVip();
  // 회전 보간 & 포즈
- C3.all.forEach(P=>{let d=P.yaw-P.g.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));P.g.rotation.y+=d*Math.min(1,dt*9);updatePerson(P,dt,now)});
+ C3.all.forEach(P=>{if(P.me){const tg=C3.target;if(tg){const dx=tg.g.position.x-P.g.position.x,dz=tg.g.position.z-P.g.position.z;let a=Math.atan2(dx,dz)-P.g.rotation.y;a=Math.atan2(Math.sin(a),Math.cos(a));P.look=Math.max(-.9,Math.min(.9,a))*.8}else P.look=0}else{const dx=C3.me.g.position.x-P.g.position.x,dz=C3.me.g.position.z-P.g.position.z;if(Math.hypot(dx,dz)<7){let a=Math.atan2(dx,dz)-P.g.rotation.y;a=Math.atan2(Math.sin(a),Math.cos(a));P.look=Math.max(-.9,Math.min(.9,a))*.8}else P.look=0}
+  let d=P.yaw-P.g.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));P.g.rotation.y+=d*Math.min(1,dt*9);updatePerson(P,dt,now)});
  // 타겟 HUD
  const T=c3Near();if(T!==C3.target){C3.target=T;const el=$('c3tgt');if(T){el.hidden=false}else el.hidden=true}
  if(C3.target){const id=C3.target.def.n,c=credOf(id);$('c3tgt').innerHTML='<b>'+C3.target.def.e+' '+id+'</b> · 신뢰도 '+c+' <span class="mut">('+credLabel(c)+')</span><div class="bar"><i style="width:'+c+'%"></i></div>'}
