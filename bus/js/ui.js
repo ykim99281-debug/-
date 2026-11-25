@@ -14,6 +14,7 @@ function initAudio() {
     o1.type = 'sawtooth'; o2.type = 'square'; lp.type = 'lowpass'; lp.frequency.value = 420; g.gain.value = 0; o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(actx.destination); o1.start(); o2.start(); eng = { o1, o2, g };
     const nb = actx.createBuffer(1, actx.sampleRate * 2, actx.sampleRate), nd = nb.getChannelData(0); for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
     const ns = actx.createBufferSource(), bp = actx.createBiquadFilter(), rg = actx.createGain(); ns.buffer = nb; ns.loop = true; bp.type = 'bandpass'; bp.frequency.value = 1400; bp.Q.value = 0.6; rg.gain.value = 0; ns.connect(bp); bp.connect(rg); rg.connect(actx.destination); ns.start(); eng.rg = rg;
+    const so = actx.createOscillator(), sg = actx.createGain(), sf = actx.createBiquadFilter(); so.type = 'sawtooth'; so.frequency.value = 800; sf.type = 'lowpass'; sf.frequency.value = 2200; sg.gain.value = 0; so.connect(sf); sf.connect(sg); sg.connect(actx.destination); so.start(); eng.so = so; eng.sg = sg;
   } catch (e) { actx = null; }
 }
 function tone(f, d, type, vol, when, slide) {
@@ -33,6 +34,7 @@ function sfx(n) {
   else if (n === 'tick') tone(1600, .02, 'square', .025);
   else if (n === 'thunder') { tone(55, 2.0, 'sawtooth', .14, 0, 24); tone(95, 1.3, 'square', .07, .08, 30); }
 }
+function sirenAudio(k) { if (!actx || !eng || !eng.sg) return; const t = actx.currentTime; eng.sg.gain.setTargetAtTime(muted ? 0 : k * 0.035, t, 0.12); if (k > 0) eng.so.frequency.setTargetAtTime(780 + 380 * Math.sin(t * 5.5), t, 0.04); }
 function rainAudio(k) { if (actx && eng && eng.rg) eng.rg.gain.setTargetAtTime(muted ? 0 : k * 0.07, actx.currentTime, 0.4); }
 function engineAudio(speed, thr) {
   if (!actx || !eng) return; const gs = 4.5, gear = Math.min(5, Math.floor(speed / gs)), rpm = (speed - gear * gs) / gs, f = 36 + gear * 3 + rpm * 38 + thr * 6, t = actx.currentTime;
@@ -329,7 +331,7 @@ const UI = {
   },
 
   // --- 자유주행
-  fd: { wx: 'auto', taxi: 0, car: 0, hour: 12, freeze: true, traffic: 34, x: 0, z: 0 },
+  fd: { wx: 'auto', taxi: 0, car: 0, hour: 12, freeze: true, traffic: 60, x: 0, z: 0 },
   freeDriveModal() {
     const f = this.fd; if (f.car !== 0 && !SCHOOL.cars.some(c => c.id === f.car)) f.car = 0;
     const opt = (k, v, t) => `<button class="btn sm ${f[k] === v ? 'pri' : ''}" data-fd="${k}" data-v="${v}">${t}</button>`;
@@ -338,7 +340,7 @@ const UI = {
       <b>모드</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('taxi', 0, '🚗 자유주행')}${opt('taxi', 1, '🚕 택시 영업')}<small class="muted">손 흔드는 손님을 태워 원하는 곳까지!</small></div>
       <b>날씨</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px"><button class="btn sm ${f.wx === 'auto' ? 'pri' : ''}" data-fdw="auto">🎲 자동</button>${Object.entries(WX_T).map(([k, t]) => `<button class="btn sm ${f.wx === k ? 'pri' : ''}" data-fdw="${k}">${t.i} ${t.n}</button>`).join('')}</div>
       <b>시간</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('hour', 7, '🌅 아침')}${opt('hour', 12, '☀ 낮')}${opt('hour', 18, '🌇 저녁')}${opt('hour', 23, '🌙 밤')}<label class="muted" style="font-size:13px"><input type="checkbox" id="fdFreeze" ${f.freeze ? 'checked' : ''}> 시간 고정</label></div>
-      <b>교통량</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('traffic', 0, '없음')}${opt('traffic', 14, '적음')}${opt('traffic', 34, '보통')}${opt('traffic', 70, '많음')}</div>
+      <b>교통량</b><div class="row" style="flex-wrap:wrap;margin:6px 0 12px">${opt('traffic', 0, '없음')}${opt('traffic', 24, '적음')}${opt('traffic', 60, '보통')}${opt('traffic', 120, '많음')}</div>
       <b>출발 위치</b> <small class="muted">(지도를 클릭하세요)</small><canvas id="fdMap" width="480" height="480" style="width:100%;max-width:340px;display:block;margin:6px auto 12px;border-radius:10px;cursor:crosshair"></canvas>
       <div class="row"><button class="btn pri" id="fdGo" style="flex:1">🚗 출발!</button><button class="btn" id="fdX">닫기</button></div>`);
     const c = $('fdMap'), ctx = c.getContext('2d'), draw = () => { const t = drawMap(ctx, 480, { mini: true }); const [x, y] = t.M(f.x, f.z); ctx.beginPath(); ctx.arc(x, y, 9, 0, 7); ctx.fillStyle = '#ffb020'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#000'; ctx.stroke(); };
@@ -411,7 +413,7 @@ const UI = {
     h += `<small class="muted">K 크루즈 · V 주행 모드(ECO/NORMAL/SPORT) · T 자율주행(스마트센스) · L 헤드라이트 · C 카메라${T.feat.has('surround') ? '(서라운드뷰 포함)' : ''}</small>`;
     if (school) {
       h += `<div style="margin:10px 0 4px"><b>시간</b></div><div class="row" style="flex-wrap:wrap;gap:6px">${[[7, '🌅 아침'], [12, '☀ 낮'], [18, '🌇 저녁'], [23, '🌙 밤']].map(([v, t]) => opt(`data-fh="${v}"`, Math.abs(G.hour - v) < 3 && G.freezeHour, t)).join('')}<label class="muted" style="font-size:13px"><input type="checkbox" id="fpFlow" ${G.freezeHour ? '' : 'checked'}> 시간 흐름</label></div>`;
-      h += `<div style="margin:10px 0 4px"><b>교통량</b></div><div class="row" style="flex-wrap:wrap;gap:6px">${[[0, '없음'], [14, '적음'], [34, '보통'], [70, '많음']].map(([v, t]) => opt(`data-ft="${v}"`, cars.length === v, t)).join('')}</div>`;
+      h += `<div style="margin:10px 0 4px"><b>교통량</b></div><div class="row" style="flex-wrap:wrap;gap:6px">${[[0, '없음'], [24, '적음'], [60, '보통'], [120, '많음']].map(([v, t]) => opt(`data-ft="${v}"`, cars.length === v, t)).join('')}</div>`;
     }
     h += `<div style="margin:10px 0 4px"><b>날씨</b></div><div class="row" style="flex-wrap:wrap;gap:6px">${Object.entries(WX_T).map(([k, t]) => opt(`data-wx="${k}"`, WX.type === k, t.i + ' ' + t.n)).join('')}<label class="muted" style="font-size:13px"><input type="checkbox" id="fpWxAuto" ${WX.lock ? '' : 'checked'}> 자동 변화</label></div>`;
     h += `<div style="margin:10px 0 4px"><b>헤드라이트</b></div><div class="row" style="gap:6px">${['자동', '켜기', '끄기'].map((t, i) => opt(`data-fl="${i}"`, P.lights === i, t)).join('')}</div>`;

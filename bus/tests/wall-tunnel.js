@@ -18,14 +18,13 @@ const { chromium } = require('playwright');
           // inside any solid block (not outer) means tunnelled
           for(const bl of world.blocks){ if(P.x>bl.minx+2&&P.x<bl.maxx-2&&P.z>bl.minz+2&&P.z<bl.maxz-2){ crossedBlock++; break; } } }
         keys.KeyW=false;
-        out.push({dt,dir:dir.join(','),maxA:Math.round(maxA),inBlock:crossedBlock,kmh:Math.round(P.v*3.6)});
+        out.push({dt,dir:dir.join(','),maxA:Math.round(maxA),inBlock:crossedBlock,kmh:Math.round(P.v*3.6),esc:maxA>EXT+12});
         stopManual(true);
       }
     }
     return out;
   });
-  const bad=res.filter(r=>r.inBlock>0||r.maxA>EXT_GUESS());
-  function EXT_GUESS(){return 700}
-  console.log(res.map(r=>JSON.stringify(r)).join('\n')); console.log('BAD', JSON.stringify(bad)); console.log(errs);
+  const bad=res.filter(r=>r.inBlock>0||r.esc);
+    console.log(res.map(r=>JSON.stringify(r)).join('\n')); console.log('BAD', JSON.stringify(bad)); console.log(errs);
   await b.close();
 })();

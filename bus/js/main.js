@@ -1,5 +1,5 @@
 'use strict';
-const CAM = { theta: 0.8, elev: 0.75, dist: 900, target: new THREE.Vector3(0, 0, 0), dragging: false, idle: 0 };
+const CAM = { theta: 0.8, elev: 0.75, dist: 1400, target: new THREE.Vector3(0, 0, 0), dragging: false, idle: 0 };
 function resize() { renderer.setSize(innerWidth, innerHeight); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize);
 document.addEventListener('visibilitychange', () => {   // 탭을 숨기면 주행 일시정지 · 소리 끄기
@@ -59,14 +59,14 @@ addEventListener('pointermove', e => {
   else { CAM.theta -= dx * 0.006; CAM.elev = clamp(CAM.elev + dy * 0.005, 0.08, 1.5); }
 });
 cv.addEventListener('wheel', e => { e.preventDefault(); const f = Math.exp(e.deltaY * 0.0012); if (P.active) P.zoom = clamp(P.zoom * f, 0.45, 3.5); else CAM.dist = clamp(CAM.dist * f, 8, 3200); }, { passive: false });
-cv.addEventListener('dblclick', () => { if (!P.active) { CAM.target.set(0, 0, 0); CAM.dist = 900; CAM.elev = 0.75; UI.follow = null; } });
+cv.addEventListener('dblclick', () => { if (!P.active) { CAM.target.set(0, 0, 0); CAM.dist = 1400; CAM.elev = 0.75; UI.follow = null; } });
 
 // ----- 카메라 (경영 · 타이틀)
 const _f = new THREE.Vector3();
 function orbit(dt) {
   camera.up.set(0, 1, 0);
   const fl = UI.follow && G.buses.includes(UI.follow) ? UI.follow : null;
-  if (G.state === 'title') { CAM.theta += dt * 0.07; CAM.dist = 900; CAM.elev = 0.5; CAM.target.set(0, 0, 0); }
+  if (G.state === 'title') { CAM.theta += dt * 0.07; CAM.dist = 1400; CAM.elev = 0.5; CAM.target.set(0, 0, 0); }
   else {
     if (fl) CAM.target.lerp(_f.set(fl.agent.x, 1, fl.agent.z), Math.min(1, dt * 5));
     if (!modalOpen() && !typing({ target: document.activeElement })) {
@@ -84,14 +84,16 @@ function orbit(dt) {
 }
 
 // ----- 루프
-let prev = performance.now(), fpsT = 0;
+let prev = performance.now(), fpsT = 0, sirT = 0;
 function frameBody(now) {
   const dt = Math.min(0.05, (now - prev) / 1000); prev = now;
   const active = P.active;
   if (!(active && P.paused)) { const sdt = active ? dt : dt * (G.state === 'company' ? G.speed : 1), n = Math.max(1, Math.ceil(sdt / 0.1)); for (let i = 0; i < n; i++) updateWorld(sdt / n); }
   if (active) { updatePlayer(dt); driveCamera(dt); if ((fpsT -= dt) < 0) { fpsT = 0.1; UI.updateHUD(); } } else orbit(dt);
-  updateWeather(dt); const fm = clamp(1 - 0.88 * WX.fogK - 0.3 * WX.rainK, 0.08, 1);
-  scene.fog.near = (active ? 320 : Math.max(320, CAM.dist * 0.6)) * fm * fm; scene.fog.far = (active ? 1800 : Math.max(1800, CAM.dist * 2.8)) * fm;
+  world.focus = active ? { x: P.x, z: P.z, r: 480 } : { x: CAM.target.x, z: CAM.target.z, r: Math.max(480, CAM.dist * 0.95) };
+  if ((sirT = (sirT || 0) - dt) < 0) { sirT = 0.15; let bd = 1e9; for (const a of agents) if (a.emergency) { const d = Math.hypot(a.x - world.focus.x, a.z - world.focus.z); if (d < bd) bd = d; } sirenAudio(bd < 220 ? 1 - bd / 220 : 0); }
+  updateWeather(dt); cullChunks(active ? 900 : Math.max(1500, CAM.dist * 2.4), true); const fm = clamp(1 - 0.88 * WX.fogK - 0.3 * WX.rainK, 0.08, 1);
+  scene.fog.near = (active ? 200 : Math.max(320, CAM.dist * 0.6)) * fm * fm; scene.fog.far = (active ? 950 : Math.max(1800, CAM.dist * 2.8)) * fm;
   const fx = active ? P.x : CAM.target.x, fz = active ? P.z : CAM.target.z;
   if (world.sunDir) { sun.position.set(fx + world.sunDir.x, world.sunDir.y, fz + world.sunDir.z); sun.target.position.set(fx, 0, fz); sun.target.updateMatrixWorld(); }
   renderer.shadowMap.needsUpdate = true; renderer.render(scene, camera);

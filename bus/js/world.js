@@ -78,7 +78,23 @@ const ROOF_COL = [0x4a4f58, 0x5a4a44, 0x3e4a55, 0x6b5a4f];
 const HOUSE_COL = [0xf0d9b5, 0xe8c8c0, 0xcfe0c8, 0xf4ecd0, 0xd7d0e8, 0xeadcc0];
 const HOUSE_ROOF = [0xa83c32, 0x7a4a3a, 0x4a5a6e, 0x6b6f2e];
 
-function inst(geo, mat, list, shadow) {
+const CHUNK = 240; world.chunks = [];
+const _fr = new THREE.Frustum(), _pm = new THREE.Matrix4(), _sp = new THREE.Sphere();
+const chunkKey = (x, z) => Math.floor(x / CHUNK) + ',' + Math.floor(z / CHUNK);
+function regChunk(obj, key) { const [a, b] = key.split(',').map(Number); world.chunks.push({ obj, x: (a + 0.5) * CHUNK, z: (b + 0.5) * CHUNK, r: CHUNK * 0.72 + 50 }); }
+function cullChunks(R, useFrustum) {
+  const cx = camera.position.x, cz = camera.position.z; camera.updateMatrixWorld(); _fr.setFromProjectionMatrix(_pm.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse));
+  for (const c of world.chunks) {
+    const d = Math.hypot(cx - c.x, cz - c.z); if (d > R + c.r) { c.obj.visible = false; continue; }
+    if (!useFrustum || d < 200 + c.r) { c.obj.visible = true; continue; }   // 가까운 구역은 항상 (그림자 때문)
+    _sp.center.set(c.x, 20, c.z); _sp.radius = c.r + 40; c.obj.visible = _fr.intersectsSphere(_sp);
+  }
+}
+function inst(geo, mat, list, shadow) {   // 구역별로 나눠 만들어 먼 구역은 그리지 않음
+  const by = new Map(); for (const o of list) { const k = chunkKey(o.x, o.z); if (!by.has(k)) by.set(k, []); by.get(k).push(o); }
+  const out = []; for (const [k, l] of by) { const m = instChunk(geo, mat, l, shadow); regChunk(m, k); out.push(m); } return out;
+}
+function instChunk(geo, mat, list, shadow) {
   const m = new THREE.InstancedMesh(geo, mat, Math.max(1, list.length));
   list.forEach((o, i) => {
     _dummy.position.set(o.x, o.y || 0, o.z); _dummy.rotation.set(0, o.ry || 0, 0); _dummy.scale.set(o.sx === undefined ? 1 : o.sx, o.sy === undefined ? 1 : o.sy, o.sz === undefined ? 1 : o.sz);
@@ -102,7 +118,7 @@ function buildCity() {
   // 블록(보도 슬랩) + 건물
   const wt = winTex();
   windowMat = new THREE.MeshLambertMaterial({ map: wt.map, emissiveMap: wt.em, emissive: 0xffffff, emissiveIntensity: 0, vertexColors: true, side: THREE.DoubleSide });
-  const city = new Merge(), slabs = [], R = srnd, BW = SP - ROAD;
+  const cityM = new Map(), city = { box(x, z, ...a) { const k = chunkKey(x, z); let m = cityM.get(k); if (!m) { m = new Merge(); cityM.set(k, m); } m.box(x, z, ...a); } }, slabs = [], R = srnd, BW = SP - ROAD;
   const CB0 = (GN - 2) / 2, bk = (x, z) => clamp(Math.round(x * FS / SP + CB0), 0, GN - 2) + ',' + clamp(Math.round(z * FS / SP + CB0), 0, GN - 2);
   const K = { wc: bk(-360, 280), bb: bk(120, -120), c1: bk(200, -280), c2: bk(200, -40), st: bk(-360, -120), s1: bk(-280, 200), s2: bk(-200, 200), s3: bk(-200, 280) }, riverBj = Math.round(120 * FS / SP + CB0); world.riverRow = riverBj;
   const parks = {}; for (const [x, z] of [[200, -200], [-360, -360], [40, -360], [-360, 40], [280, 40], [40, 280], [-280, -120]]) parks[bk(x, z)] = 1;
@@ -163,7 +179,7 @@ function buildCity() {
       else if (!park) treeList.push({ x: px, z: pz, s: .8 + R() * .3, street: 1 });
     }
   }
-  scene.add(city.mesh(windowMat));
+  for (const [k, m] of cityM) { const me = m.mesh(windowMat); scene.add(me); regChunk(me, k); }
   // 외곽 보도
   const ow = 10, ol = EXT * 2 + 20;
   for (const [x, z, sx, sz] of [[-EXT - ow / 2, 0, ow, ol], [EXT + ow / 2, 0, ow, ol], [0, -EXT - ow / 2, ol, ow], [0, EXT + ow / 2, ol, ow]]) slabs.push({ x, y: 0.15, z, sx, sz, col: 0x9fa2a9 });
@@ -232,16 +248,16 @@ const PED_PER = 12, stopViews = [];
 let pedBody, pedHead;
 function buildStops() {
   const glass = new THREE.MeshLambertMaterial({ color: 0x9fd0ee, transparent: true, opacity: .4 }), steel = mk(0x3b4048), blue = mk(0x2563eb); glass.userData.noShadow = true;
-  const list = [], cyl = new THREE.CylinderGeometry(0.07, 0.07, 3.6, 6);
+  const lists = new Map(), cyl = new THREE.CylinderGeometry(0.07, 0.07, 3.6, 6);
   for (const s of STOPS) {
-    const yaw = Math.atan2(s.dir.x, s.dir.z), sy = Math.sin(yaw), cy = Math.cos(yaw);
+    const yaw = Math.atan2(s.dir.x, s.dir.z), sy = Math.sin(yaw), cy = Math.cos(yaw), ck = chunkKey(s.curb.x, s.curb.z); if (!lists.has(ck)) lists.set(ck, []); const list = lists.get(ck);
     const W = (lx, ly, lz) => [s.curb.x + lx * cy + lz * sy, 0.3 + ly, s.curb.z - lx * sy + lz * cy];   // 로컬 → 월드
     const B = (mat, lx, ly, lz, w, h, d) => { const [x, y, z] = W(lx, ly, lz); pbox(list, mat, x, y, z, w, h, d, 0, yaw, 0); };
     B(glass, -1.4, 1.25, 0, 0.12, 2.5, 4); B(steel, -0.5, 2.55, 0, 2.2, 0.15, 4.4); for (const z of [-2, 2]) B(steel, -1.4, 1.25, z, 0.12, 2.5, 0.12);
     B(blue, -1.0, 0.6, 0, 0.8, 0.12, 2.6); { const [x, y, z] = W(0.3, 1.8, 3.2); part(list, cyl, steel, x, y, z); } B(blue, 0.3, 3.4, 3.2, 0.12, 0.9, 0.9);
     const sp = labelSprite(s.name, { w: 7 }); sp.position.set(s.curb.x, 5.5, s.curb.z); scene.add(sp); stopViews.push({ sp, x: s.curb.x, z: s.curb.z });
   }
-  mergeParts(scene, list, null);
+  for (const [k, list] of lists) { const gr = new THREE.Group(); mergeParts(gr, list, null); scene.add(gr); regChunk(gr, k); }
   pedBody = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.22, 0.26, 1.0, 6), mk(0xffffff), STOPS.length * PED_PER);
   pedHead = new THREE.InstancedMesh(new THREE.SphereGeometry(0.19, 6, 4), mk(0xf2c9a0), STOPS.length * PED_PER);
   pedBody.castShadow = true; scene.add(pedBody, pedHead);

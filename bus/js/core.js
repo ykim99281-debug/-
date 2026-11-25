@@ -1,6 +1,6 @@
 'use strict';
 // ===== 상수 · 유틸 =====
-const GN = 17, SP = 80, ROAD = 16, OFF = 3.9, RC = 14, HC = (GN - 1) / 2, EXT = HC * SP + ROAD / 2, FS = (GN - 1) / 10;
+const GN = 25, SP = 80, ROAD = 16, OFF = 3.9, RC = 14, HC = (GN - 1) / 2, EXT = HC * SP + ROAD / 2, FS = (GN - 1) / 10;
 const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -71,7 +71,11 @@ PLACES.forEach(p => { p[1] *= FS; p[2] *= FS; }); DISTRICTS.forEach(p => { p[1] 
     for (const g in pools) { if (!pools[g].n.length) continue; const c = pools[g].c, d = (m.x - c[0] * FS) ** 2 + (m.z - c[1] * FS) ** 2; if (d < bd) { bd = d; bg = g; } }
     if (bg) nm[k] = pools[bg].n.shift();
   }
-  keys.forEach((k, i) => { if (!nm[k]) nm[k] = '광주 ' + (i + 1) + '번 정류장'; });
+  const SUF = ['입구', '앞', '사거리', '삼거리', '정문', '후문', '로터리', '시장', '버스터미널', '공원'], sufUsed = {};
+  keys.forEach((k, i) => {
+    if (nm[k]) return; const m = mid[k]; let bn = null, bd = 1e18; for (const [name, x, z] of PLACES) { const d = (m.x - x) ** 2 + (m.z - z) ** 2; if (d < bd) { bd = d; bn = name; } }
+    let n = 0, cand; do { cand = bn + ' ' + SUF[(i + n) % SUF.length]; n++; } while ((sufUsed[cand] || taken.has(cand)) && n < SUF.length * 3); sufUsed[cand] = 1; nm[k] = sufUsed[cand] && n >= SUF.length * 3 ? bn + ' ' + (i + 1) + '번' : cand;
+  });
   const seen = {}; STOPS.forEach(s => { s.name = nm[s.key] + (seen[s.key] ? ' 건너편' : ''); seen[s.key] = 1; });
 })();
 

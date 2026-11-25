@@ -176,7 +176,7 @@ function updatePlayer(dt) {
       if (o === a || o.manual) continue;
       if (Math.abs(o.x - P.x) > 14 || Math.abs(o.z - P.z) > 14) continue;
       for (const po of [-0.3, 0.3, 0]) for (const oo of [-0.25, 0.25]) {
-        const ax = P.x + fx * L * po, az = P.z + fz * L * po, bx = o.x + o.fx * o.len * oo, bz = o.z + o.fz * o.len * oo, dx = ax - bx, dz = az - bz, d = Math.hypot(dx, dz) || 1e-3, r2 = rad + (o.kind === 'car' ? 1.0 : 1.35);
+        const ax = P.x + fx * L * po, az = P.z + fz * L * po, bx = o.x + o.fx * o.len * oo, bz = o.z + o.fz * o.len * oo, dx = ax - bx, dz = az - bz, d = Math.hypot(dx, dz) || 1e-3, r2 = rad + (o.wr || (o.kind === 'car' ? 1.0 : 1.35));
         if (d < r2) { out.x += dx / d * (r2 - d) * 0.5; out.z += dz / d * (r2 - d) * 0.5; P.carHit = true; }
       }
     }
@@ -348,7 +348,7 @@ function makeHailer(near) {
   for (let k = 0; k < 50; k++) {
     const u = Math.floor(Math.random() * NP.length), nb = neighbors(u), v = nb[Math.floor(Math.random() * nb.length)], d = dirOf(u, v), r = rightOf(d), t = rand(-22, 22);
     const x = (NP[u].x + NP[v].x) / 2 + d.x * t + r.x * (ROAD / 2 + 1.4), z = (NP[u].z + NP[v].z) / 2 + d.z * t + r.z * (ROAD / 2 + 1.4), dist = Math.hypot(x - P.x, z - P.z);
-    if (dist < (near ? 50 : 140) || dist > (near ? 320 : 560) || P.taxi.hail.some(h => Math.hypot(h.x - x, h.z - z) < 60)) continue;
+    if (dist < (near ? 50 : 140) || dist > (near ? 320 : 640) || P.taxi.hail.some(h => Math.hypot(h.x - x, h.z - z) < 60)) continue;
     const g = personMesh(); g.position.set(x, 0.3, z); g.rotation.y = Math.atan2(-r.x, -r.z); scene.add(g); return { g, x, z, age: 0, ph: Math.random() * 6 };
   }
   return null;
@@ -363,7 +363,7 @@ function updateTaxi(dt) {
   const tx = P.taxi; if (!tx) return; tx.t += dt;
   if (!tx.ride && (tx.spawnT -= dt) <= 0) { tx.spawnT = 2 + (5 - taxiRating()) * 0.8; while (tx.hail.length < taxiMaxHail()) { const h = makeHailer(false); if (!h) break; tx.hail.push(h); } }
   for (let i = tx.hail.length - 1; i >= 0; i--) { const h = tx.hail[i]; h.age += dt;
-    if (!tx.ride && !h.checked && Math.hypot(h.x - P.x, h.z - P.z) < 32) { h.checked = true; const pc = clamp((3.4 - taxiRating()) * 0.35, 0, 0.6); if (Math.random() < pc) { toast('🙅 평점이 낮아서 손님이 다른 택시를 탔어요 (평점 ★' + taxiRating().toFixed(1) + ')', 'bad'); scene.remove(h.g); disposeTree(h.g); tx.hail.splice(i, 1); continue; } } h.g.userData.arm.rotation.z = 2.5 + Math.sin(tx.t * 9 + h.ph) * 0.5; if (h.age > 110 || Math.hypot(h.x - P.x, h.z - P.z) > 760) { scene.remove(h.g); disposeTree(h.g); tx.hail.splice(i, 1); } }
+    if (!tx.ride && !h.checked && Math.hypot(h.x - P.x, h.z - P.z) < 32) { h.checked = true; const pc = clamp((3.4 - taxiRating()) * 0.35, 0, 0.6); if (Math.random() < pc) { toast('🙅 평점이 낮아서 손님이 다른 택시를 탔어요 (평점 ★' + taxiRating().toFixed(1) + ')', 'bad'); scene.remove(h.g); disposeTree(h.g); tx.hail.splice(i, 1); continue; } } h.g.userData.arm.rotation.z = 2.5 + Math.sin(tx.t * 9 + h.ph) * 0.5; if (h.age > 110 || Math.hypot(h.x - P.x, h.z - P.z) > 900) { scene.remove(h.g); disposeTree(h.g); tx.hail.splice(i, 1); } }
   let tgt = null;
   if (tx.ride) {
     const r = tx.ride, s = r.dest; r.time += dt; r.rideDist += Math.abs(P.v) * dt; if (Math.abs(P.v) < 1) r.wait += dt; if (Math.abs(P.v) * 3.6 > 60) r.speedT += dt;
@@ -379,7 +379,7 @@ function updateTaxi(dt) {
 }
 function boardPassenger(h) {
   const tx = P.taxi; scene.remove(h.g); disposeTree(h.g); tx.hail.splice(tx.hail.indexOf(h), 1); tx.hold = 0;
-  let c = STOPS.filter(s => { const d = Math.hypot(s.mid.x - P.x, s.mid.z - P.z); return d > 300 && d < 1100; }); if (!c.length) c = STOPS.slice().sort((a, b) => Math.hypot(b.mid.x - P.x, b.mid.z - P.z) - Math.hypot(a.mid.x - P.x, a.mid.z - P.z)).slice(0, 5);
+  let c = STOPS.filter(s => { const d = Math.hypot(s.mid.x - P.x, s.mid.z - P.z); return d > 300 && d < 1600; }); if (!c.length) c = STOPS.slice().sort((a, b) => Math.hypot(b.mid.x - P.x, b.mid.z - P.z) - Math.hypot(a.mid.x - P.x, a.mid.z - P.z)).slice(0, 5);
   const dest = c[Math.floor(Math.random() * c.length)], dist0 = Math.hypot(dest.mid.x - P.x, dest.mid.z - P.z);
   tx.ride = { dest, dist0, rideDist: 0, wait: 0, time: 0, crashes: 0, speedT: 0 }; P.bus.model.setTaxi(2); sfx('door');
   toast('🙋 "' + dest.name.replace(' 건너편', '') + '까지 가주세요!" (약 ' + Math.round(dist0) + 'm)', 'gold');

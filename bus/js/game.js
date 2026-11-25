@@ -24,11 +24,15 @@ function resetWorld() {
   cars = [];
   const rr = mulberry(99); STOPS.forEach(s => { s.waiting = Math.floor(rr() * 8); s.evMul = 1; });
 }
+const AMB_MIX = [['car', 56], ['taxi', 9], ['van', 8], ['truck', 7], ['moto', 9], ['police', 2], ['ambulance', 1.5]], AMB_V = { car: [11, 14], taxi: [12, 15], van: [10, 12.5], truck: [8.5, 11], moto: [13, 17], police: [15, 18], ambulance: [16, 19], rivalbus: [10.5, 12.5] };
+function pickAmbient() { let r = Math.random() * AMB_MIX.reduce((a, b) => a + b[1], 0); for (const [k, w] of AMB_MIX) { if ((r -= w) < 0) return k; } return 'car'; }
 function spawnCars(n) {
+  const nb = n >= 20 ? Math.max(3, Math.round(n * 0.06)) : 0;
   for (let i = 0; i < n; i++) {
-    const i0 = Math.floor(Math.random() * (GN - 3)), j0 = Math.floor(Math.random() * (GN - 3)), i1 = Math.min(GN - 1, i0 + 2 + Math.floor(Math.random() * 4)), j1 = Math.min(GN - 1, j0 + 2 + Math.floor(Math.random() * 4));
+    const kind = i < nb ? 'rivalbus' : pickAmbient();
+    const i0 = Math.floor(Math.random() * (GN - 3)), j0 = Math.floor(Math.random() * (GN - 3)), i1 = Math.min(GN - 1, i0 + 2 + Math.floor(Math.random() * 5)), j1 = Math.min(GN - 1, j0 + 2 + Math.floor(Math.random() * 5));
     const path = buildPath(rectLoop(i0, j0, i1, j1, Math.random() < 0.5), {});
-    const m = makeCar(); scene.add(m.group); const a = new Agent('car', m); a.setPath(path, Math.random() * path.L); cars.push(a);
+    const m = makeAmbient(kind); scene.add(m.group); const a = new Agent(kind === 'rivalbus' ? 'bus' : 'car', m); const [v0, v1] = AMB_V[kind]; a.cruise = rand(v0, v1); a.setPath(path, Math.random() * path.L); cars.push(a);
   }
 }
 
@@ -207,9 +211,9 @@ function startCompany(name, saved0) {
     lastLvl = level(); G.migrated = sv.migrated;
     if (!G.routes.length) { starterRoute(); }
   } else { starterRoute(); G.speed = 10; }
-  WX.lock = false; setWeather('clear'); G.wxT = 240; spawnCars(46); setHQName(G.name); applyTime(G.hour);
+  WX.lock = false; setWeather('clear'); G.wxT = 240; spawnCars(80); setHQName(G.name); applyTime(G.hour);
 }
-function startSchoolWorld() { resetWorld(); G = newState('운전교실', true); WX.lock = true; setWeather('clear'); G.hour = 10; spawnCars(34); applyTime(G.hour); setHQName('운전교실'); }
+function startSchoolWorld() { resetWorld(); G = newState('운전교실', true); WX.lock = true; setWeather('clear'); G.hour = 10; spawnCars(60); applyTime(G.hour); setHQName('운전교실'); }
 
 // ===== 현실적 경영: 업그레이드 · 정비 · 대출 · 결산 =====
 const UPGRADES = {
