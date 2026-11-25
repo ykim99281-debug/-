@@ -334,6 +334,7 @@ html,body{margin:0;height:100%;background:#12101f;color:#fff;font-family:"Preten
     <!-- 환생 -->
     <div class="pg" id="pg4">
       <div class="row"><div class="ic" id="clsIc"></div><div class="tx"><b>내 직업: <span id="clsName"></span></b><small id="clsDesc"></small></div><button class="btn" id="changeBtn" style="min-width:84px">🔄 직업<br>바꾸기</button></div>
+      <div class="row" style="display:block"><b>🎚️ 난이도</b><small style="display:block;margin:2px 0 8px;opacity:.8" id="diffInfo"></small><div class="seg" id="diffSeg" style="margin:0"><button data-d="e">😊 쉬움</button><button data-d="n">😐 보통</button><button data-d="h">😈 어려움</button></div></div>
       <div class="row"><div class="ic">👻</div><div class="tx"><b>영혼 <span id="soul">0</span>개</b><small>영혼 1개당 공격력·골드 +10% (영구!)</small></div></div>
       <div class="row">
         <div class="ic">🔥</div>
@@ -1458,18 +1459,19 @@ function step(dt,quiet){
       f.t-=1.2;
       if(shieldT>0){if(!quiet)monAttackFx(f,true);continue}
       if(allies.length&&Math.random()<allies.length/(allies.length+3)){   // 소환수가 대신 맞아요
-        const a=allies[Math.floor(Math.random()*allies.length)];a.hp-=f.dmg;
+        const a=allies[Math.floor(Math.random()*allies.length)];a.hp-=f.dmg*DIFF[dfk()].m;
         if(!quiet&&a.el){a.bar.style.width=Math.max(0,a.hp/a.max*100)+"%";const r=rel(a.sprite);fx(FX.spark,r.cx,r.cy,34,34,[{transform:"scale(.3)",opacity:1},{transform:"scale(1.1)",opacity:0}],{duration:220});if(f.mv)f.mv.animate([{transform:"none"},{transform:"translateX(-34px)"},{transform:"none"}],{duration:300})}
         if(a.hp<=0)killAlly(a);
         continue;
       }
       if(S.cls==="nin"&&Math.random()<0.2){if(!quiet)float("회피!","heal","heroBox");continue}   // 닌자 패시브: 회피 20%
-      hp-=f.dmg*(S.cls==="pal"?0.75:1)*(evOn("god")?0.5:1);   // 성기사 패시브: 받는 피해 -25%
+      hp-=f.dmg*DIFF[dfk()].m*(S.cls==="pal"?0.75:1)*(evOn("god")?0.5:1);   // 성기사 패시브: 받는 피해 -25%
       if(!quiet)monAttackFx(f);
       if(hp<=0){heroDie();break}
     }
     if(monId!==wid)break;
   }
+  {const mx=gc().maxHp,r=DIFF[dfk()].r;if(r&&hp<mx&&hp>0)hp=Math.min(mx,hp+mx*r*dt)}   // 난이도별 자동 회복
   if(PETC[S.cls]){botT-=dt;if(allies.length<PETC[S.cls].n&&botT<=0){botT=4;summonTurret(quiet)}}   // 로봇 패시브: 터렛 자동 설치
   for(const a of allies.slice()){                       // 소환수 공격 (공격력 10%)
     a.t+=dt;
@@ -2600,6 +2602,7 @@ function refreshUI(){
   {const nx=Object.keys(CLS).filter(k=>CLS_NEED[k]===(S.rb||0)+1).map(k=>CLS[k].n).join(", ");const ex=nx?` · 새 직업 해금: ${nx}`:"";
   $("rebInfo").textContent=gain>0?`${S._adm?"🛠️ 관리자 무한 환생 · ":""}${(S.rb||0)+1}번째 환생 가능! 영혼 +${gain}${ex}`:`${(S.rb||0)+1}번째 환생은 스테이지 ${rebReq()}부터 (현재 ${S.stage})${ex}`}
   $("rebBtn").classList.toggle("off",gain<=0);
+  document.querySelectorAll("#diffSeg button").forEach(b=>b.classList.toggle("on",b.dataset.d===dfk()));setT($("diffInfo"),DIFF[dfk()].t);
   $("autoBtn").innerHTML="자동<br>"+(S.auto?"ON":"OFF");$("autoBtn").classList.toggle("on",S.auto);
 }
 function refreshSkills(){
@@ -2666,6 +2669,8 @@ function refreshEquip(){
     it.style.borderColor=RAR[TIER_RAR[i]].c;
   }
 }
+const DIFF={e:{m:.12,r:.03,t:"거의 안 죽어요! 몬스터 공격 12%, 체력이 빨리 차올라요"},n:{m:.4,r:.012,t:"몬스터 공격 40%, 체력이 천천히 차올라요"},h:{m:.8,r:.004,t:"몬스터 공격 80%, 체력이 아주 조금씩 차올라요"}};
+const dfk=()=>DIFF[S.diff]?S.diff:"e";
 const rebReq=()=>S._adm?0:15*((S.rb||0)+1);   // 1번째 환생 15, 2번째 30, 3번째 45 …
 const soulGain=()=>S.stage>=rebReq()?Math.max(1,Math.floor(S.stage/5)-2):0;
 
@@ -2787,6 +2792,7 @@ $("slots").addEventListener("click",e=>{const b=e.target.closest("[data-slot]");
 $("wGrid").addEventListener("click",e=>{const b=e.target.closest("[data-it]");if(b)equip(+b.dataset.it)});
 $("glBtn").onclick=enhanceSlot;
 $("gear").addEventListener("click",e=>{const b=e.target.closest("[data-gear]");if(b){selSlot=b.dataset.gear;document.querySelector('.tab[data-t="2"]').click();refreshUI()}});
+$("diffSeg").onclick=e=>{const b=e.target.closest("[data-d]");if(!b)return;S.diff=b.dataset.d;save();refreshUI();toast("🎚️ 난이도: "+b.textContent)};
 $("autoBtn").onclick=()=>{S.auto=!S.auto;refreshUI()};
 $("changeBtn").onclick=()=>chooseClass(null,true);
 $("rebBtn").onclick=rebirth;$("resetBtn").onclick=reset;
