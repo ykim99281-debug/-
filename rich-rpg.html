@@ -588,24 +588,25 @@ function tabBank(){
  const y=ymOf(S.t).y,rr=(RATE[y]||2)-INF[y];
  return'<div class="card"><b>🏦 은행 예금</b> <span class="mut">(연 '+(RATE[y]||2)+'%, 안전자산)</span><div class="mut">올해 물가상승률 '+INF[y]+'% → 실질금리 <b class="'+(rr>=0?'up':'dn')+'">'+(rr>=0?'+':'')+rr.toFixed(1)+'%</b> '+(rr<0?'(예금해도 돈의 가치가 줄어요!)':'')+'</div><div class="row" style="margin-top:8px"><input type="number" min="1" id="dq" value="'+(S.dq||10000)+'"><button data-a="dep">입금</button><button data-a="wd">출금</button><button data-a="depall">현금 전액 입금</button></div></div>'}
 let GKEY='';try{GKEY=localStorage.getItem('richrpg_gkey')||''}catch(e){}
-const GMODELS=['gemini-3.1-flash-lite','gemini-3.5-flash-lite','gemini-3.8-flash','gemini-flash-lite-latest'];
+const GMODELS=['gemini-3.1-flash-lite','gemini-3.5-flash-lite','gemini-3.8-flash'];
+let LASTMODEL='';
 const aiOn=()=>!!GKEY;
 async function aiAsk(system,turns,userText){
- let lastErr='';
+ const errs=[];
  for(const m of GMODELS){
-  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),20000);
+  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),12000);
   try{
    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+m+':generateContent',{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json','x-goog-api-key':GKEY},
     body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:turns.concat([{role:'user',parts:[{text:userText}]}]),generationConfig:{temperature:.9,maxOutputTokens:400}})});
    clearTimeout(to);
    if(r.status===400||r.status===401||r.status===403){let e='';try{e=(await r.json()).error.message}catch(x){}throw Object.assign(new Error('키 오류('+r.status+') '+e.slice(0,60)),{fatal:true})}
-   if(!r.ok){lastErr='HTTP '+r.status;continue}
+   if(!r.ok){let e='';try{e=(await r.json()).error.message}catch(x){}errs.push(m+' → HTTP '+r.status+' '+e.slice(0,70));continue}
    const d=await r.json(),t=((d.candidates||[])[0]||{}).content;
    const txt=t&&t.parts?t.parts.map(p=>p.text||'').join('').trim():'';
-   if(txt)return txt;lastErr='빈 응답';
-  }catch(e){clearTimeout(to);if(e.fatal)throw e;lastErr=e.name==='AbortError'?'시간 초과':String(e.message||e)}
+   if(txt){LASTMODEL=m;return txt}errs.push(m+' → 빈 응답');
+  }catch(e){clearTimeout(to);if(e.fatal)throw e;const msg=e.name==='AbortError'?'12초 안에 응답 없음':(/Failed to fetch|NetworkError|Load failed/i.test(String(e.message))?'네트워크 차단/실패 (이 파일 주소에서는 외부 통신이 막혔을 수 있어요. 인터넷 연결 또는 https 주소로 여는 것을 확인)':String(e.message||e));errs.push(m+' → '+msg)}
  }
- throw new Error(lastErr||'AI 응답 실패');
+ throw new Error(errs.join(' / ').slice(0,300)||'AI 응답 실패');
 }
 function aiCtx(){const y=ymOf(S.t);return'[현재 게임 상황] '+y.y+'년 '+y.m+'월 / 플레이어 \''+S.name+'\' '+ageOf(S.t)+'세('+stage(S.t)+(S.diff==='god'?', 어린이 CEO':'')+') / 총자산 '+won(nw())+' / '+mdesc()+' / 환율 '+price('us').toLocaleString()+'원 / '+altLine()+' / 이달의 뉴스: '+(HIST[y.y*100+y.m]||'특별한 뉴스 없음')+' / 짜장면 '+won(JJ(S.t))}
 const STYLE={shop:'동네 문방구 사장님. 푸근하고 능청스러운 반말.',broker:'신중한 증권사 지점장. 정중한 존댓말, 리스크를 강조.',friend:'친한 동갑 친구 민수. 편한 반말, ㅋㅋ 자주 씀.',agent:'붙임성 좋은 부동산 사장님. 상냥한 존댓말, 집값·대출에 해박.',senior:'츤데레 대학 선배. 무뚝뚝하지만 챙겨주는 반말.',vc:'냉철한 벤처캐피탈 대표. 간결한 존댓말, 숫자와 팀을 중시.'};
@@ -690,7 +691,7 @@ function clubReplies(text){
 function bubbles(arr){return arr.map(m=>m.w==='me'?'<div class="bub me">'+esc(m.t)+'</div>':m.w==='sys'?'<div class="bub sys">'+esc(m.t)+'</div>':'<div class="bub"><b>'+(m.e||'')+' '+esc(m.n||'')+'</b><br>'+esc(m.t)+'</div>').join('')}
 function chatBox(arr,ph,dis){return'<div id="cbox">'+(arr.length?bubbles(arr):'<div class="bub sys">대화를 시작해보세요!</div>')+'</div><div class="row" style="margin-top:8px"><input id="ci" class="name" style="flex:1;width:auto" maxlength="120" placeholder="'+ph+'" value="'+esc(S.cdraft||'')+'" '+(dis?'disabled':'')+'><button class="pri" data-a="send" '+(dis?'disabled':'')+'>전송</button></div>'}
 function chips(list){return'<div class="row" style="margin-top:6px">'+list.map(t=>'<button data-a="chip" data-t="'+esc(t)+'" style="font-size:12px;padding:5px 9px">'+esc(t)+'</button>').join('')+'</div>'}
-function aiBar(){return'<div class="mut" style="margin:6px 0">🤖 AI 대화(Gemini): <b>'+(aiOn()?'켜짐':'꺼짐 (지금은 간단한 키워드 대화)')+'</b>'+(S.aiErr?' · <span class="up">마지막 오류: '+esc(S.aiErr)+'</span>':'')+' <button data-a="aikey" style="padding:4px 9px;font-size:12px">🔑 '+(aiOn()?'키 변경/삭제':'API 키 입력')+'</button></div>'}
+function aiBar(){return'<div class="mut" style="margin:6px 0">🤖 AI 대화(Gemini): <b>'+(aiOn()?'켜짐':'꺼짐 (지금은 간단한 키워드 대화)')+'</b>'+(S.busy?' · ⏳ 응답 대기 중…':'')+(S.aiErr?' · <span class="up">마지막 오류: '+esc(S.aiErr)+'</span>':'')+' <button data-a="aikey" style="padding:4px 9px;font-size:12px">🔑 '+(aiOn()?'키 변경/삭제':'API 키 입력')+'</button>'+(aiOn()?' <button data-a="aitest" style="padding:4px 9px;font-size:12px">🔧 연결 테스트</button>':'')+'</div>'}
 function tabFriend(){
  const age=ageOf(S.t),ok=n=>(S.diff==='god'||age>=n.minAge)&&!(n.minInt&&S.int<n.minInt),cur=NPCS.find(n=>n.id===S.cf)||NPCS[0];
  const hist=S.chat.f[cur.id]||[];
@@ -713,14 +714,14 @@ async function doSend(){
   const ph={w:id,n:n.name,e:n.emoji,t:'…',pend:true};pushC(hist,ph);
   if((S.chatAff[id]||0)<3){S.chatAff[id]=(S.chatAff[id]||0)+1;S.npc[id]=Math.min(100,(S.npc[id]||0)+1)}
   let rep=null;
-  if(aiOn()){S.busy=true;S.focusChat=true;render();try{rep=await aiFriend(id,text,hist);st.aiErr=''}catch(e){st.aiErr=String(e.message||e).slice(0,70);if(e.fatal)GKEY=GKEY}}
+  if(aiOn()){S.busy=true;S.focusChat=true;render();try{rep=await aiFriend(id,text,hist);st.aiErr=''}catch(e){st.aiErr=String(e.message||e).slice(0,300)}}
   if(!rep)rep=friendReply(id,text);
   ph.t=rep;delete ph.pend;
  }else if(S.tab==='club'&&S.clubIn===S.t){
   pushC(S.chat.c,{w:'me',t:text});
   const ph={w:'sys',t:'손님들이 대답을 고르는 중…',pend:true};pushC(S.chat.c,ph);
   let out=null;
-  if(aiOn()){S.busy=true;S.focusChat=true;render();try{const r=await aiClub(text);out=parseClub(r);if(!out.length)out=null;st.aiErr=''}catch(e){st.aiErr=String(e.message||e).slice(0,70)}}
+  if(aiOn()){S.busy=true;S.focusChat=true;render();try{const r=await aiClub(text);out=parseClub(r);if(!out.length)out=null;st.aiErr=''}catch(e){st.aiErr=String(e.message||e).slice(0,300)}}
   if(!out)out=clubReplies(text);
   const i=S.chat.c.indexOf(ph);if(i>=0)S.chat.c.splice(i,1,...out);
  }
@@ -823,6 +824,7 @@ document.addEventListener('click',e=>{
  if(a==='maxbuya'){S.q[id]=Math.max(1,Math.floor(S.cash));return render()}
  if(a==='maxsella'){S.q[id]=S.alt[id]?Math.ceil(S.alt[id].q*price(id)):1;return render()}
  if(a==='aikey'){const v=prompt('Gemini API 키를 붙여넣으세요.\n(이 브라우저에만 저장되고, 대화할 때 Google로만 전송돼요. 비우면 삭제)',GKEY);if(v===null)return;GKEY=v.trim().replace(/[\s.]+$/,'');try{localStorage.setItem('richrpg_gkey',GKEY)}catch(x){}S.aiErr='';return toast(GKEY?'🤖 AI 대화 켜짐!':'AI 키 삭제됨')}
+ if(a==='aitest'){toast('🔧 연결 테스트 중…');aiAsk('짧게 답하는 도우미','[]'.length?[]:[],'"OK"라고만 답해줘.').then(t=>{alert('✅ 연결 성공!\n모델: '+LASTMODEL+'\n응답: '+t.slice(0,60))}).catch(e=>{alert('❌ 연결 실패\n'+String(e.message||e))});return}
  if(a==='send')return doSend();
  if(a==='chip'){S.cdraft=b.dataset.t;return doSend()}
  if(a==='pickf'){S.cf=id;S.cdraft='';const h=S.chat.f[id]||(S.chat.f[id]=[]);if(!h.length){const n=NPCS.find(x=>x.id===id);pushC(h,{w:id,n:n.name,e:n.emoji,t:pick(PER[id].g)})}save();return render()}
