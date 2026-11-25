@@ -10,11 +10,11 @@
   html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:"Segoe UI","Malgun Gothic",sans-serif;color:var(--cream)}
   canvas{display:block}
   #hud{position:fixed;inset:0;pointer-events:none;display:none;z-index:6}
-  #crosshair{position:absolute;left:50%;top:50%;width:0;height:0}
-  #crosshair i{position:absolute;background:#3cffd0;box-shadow:0 0 2px #000}
-  #crosshair .h{width:8px;height:2px;top:-1px}
-  #crosshair .v{width:2px;height:8px;left:-1px}
-  #crosshair .dot{width:2px;height:2px;left:-1px;top:-1px}
+  #crosshair{position:absolute;left:50%;top:50%;width:0;height:0;transform:scale(var(--xs,1))}
+  .xh i{position:absolute;background:var(--xc,#3cffd0);box-shadow:0 0 2px #000}
+  .xh .h{width:8px;height:2px;top:-1px}
+  .xh .v{width:2px;height:8px;left:-1px}
+  .xh .dot{width:2px;height:2px;left:-1px;top:-1px}
   #scope{position:absolute;inset:0;display:none;background:radial-gradient(circle at center,transparent 0,transparent 26vh,#000 26.3vh)}
   #scope:before,#scope:after{content:"";position:absolute;background:#000}
   #scope:before{left:0;right:0;top:50%;height:1px}
@@ -115,6 +115,9 @@
   #mini{position:absolute;left:14px;top:14px;width:130px;height:130px;border:2px solid rgba(255,255,255,.25);border-radius:6px}
   body.touchmode #mini{left:auto;right:60px;top:8px;width:96px;height:96px}
   body.touchmode #feed{top:112px}
+  #mbox select{background:#0f1923;color:var(--cream);border:1px solid #445;padding:6px;margin-left:8px}
+  .sw{width:30px;height:30px;border-radius:50%;border:3px solid transparent;cursor:pointer}.sw.on{border-color:#fff}
+  #fpsb{position:fixed;left:50%;bottom:3px;transform:translateX(-50%);font-size:11px;opacity:.75;z-index:40;pointer-events:none;display:none}
 </style>
 </head>
 <body>
@@ -123,7 +126,7 @@
   <div id="vig"></div><div id="flashfx"></div>
   <div id="dmgdir"><div></div></div>
   <canvas id="mini" width="260" height="260"></canvas>
-  <div id="crosshair"><i class="h" style="left:-14px"></i><i class="h" style="left:6px"></i><i class="v" style="top:-14px"></i><i class="v" style="top:6px"></i><i class="dot"></i></div>
+  <div id="crosshair" class="xh"><i class="h" style="left:-14px"></i><i class="h" style="left:6px"></i><i class="v" style="top:-14px"></i><i class="v" style="top:6px"></i><i class="dot"></i></div>
   <div id="hit"></div>
   <div id="msg"></div>
   <div id="reload">재장전 중...</div>
@@ -175,6 +178,7 @@
   <button class="mbtn" id="pHome">홈으로</button>
 </div>
 <div id="buy"><div class="bh">구매 단계 <b id="buyT">15</b>초 · <span id="buyCr" style="color:#ffcc33"></span></div><div id="buyItems"></div><button class="mbtn primary" id="buyGo">준비 완료 [Enter]</button></div>
+<div id="fpsb"></div>
 <div id="modal"><div id="mbox"></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -208,7 +212,7 @@ scene.add(sun);
 
 /* ---------- 저장 / 설정 ---------- */
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-const settings=Object.assign({sens:1,vol:.8,diff:1,agent:0,map:0,team:0},store.get("ts_settings",{}));
+const settings=Object.assign({sens:1,vol:.8,diff:1,agent:0,map:0,team:0,xcol:"#3cffd0",xsize:1,fov:80,qlt:"auto",showfps:0},store.get("ts_settings",{}));
 const rec=Object.assign({wins:0,games:0,bestRound:0,kills:0,bestKills:0,heads:0},store.get("ts_rec",{}));
 let lastResult=store.get("ts_last",null);
 const game={kills:0,heads:0,shots:0,hits:0,dmg:0,taken:0};
@@ -266,7 +270,12 @@ const MAPS=[
   walls:[[-5.5,-8,5,2,4],[5.5,-8,5,2,4],[-5.5,8,5,2,4],[5.5,8,5,2,4],[-8,-5.5,2,5,4],[-8,5.5,2,5,4],[8,-5.5,2,5,4],[8,5.5,2,5,4],
    [-22,-22,6,6,4.5],[22,-22,6,6,4.5],[-22,20,6,6,4.5],[22,20,6,6,4.5],[-16,0,2,10,4],[16,0,2,10,4]],
   crates:[[0,0,3,3,2],[-14,10,3,3,2],[14,10,3,3,2],[-14,-12,3,3,2],[14,-12,3,3,2],[0,18,4,2,2],[0,-18,4,2,2],[-24,2,3,3,2],[24,2,3,3,2]],
-  sites:[[-10,-24,0xff4655],[10,-24,0x3cffd0]]}
+  sites:[[-10,-24,0xff4655],[10,-24,0x3cffd0]]},
+ {name:"DOCKS",sky:0x9ab4c8,f1:"#6f7a74",f2:"#555f5a",wall:0x5f7a96,crate:0xb3562f,
+  walls:[[-20,-20,10,3,3.2],[-4,-20,10,3,3.2],[14,-20,10,3,3.2],[-22,-6,3,12,3.2],[22,-6,3,12,3.2],[-8,-8,12,3,3.2],[10,-8,12,3,3.2],
+   [-16,8,10,3,3.2],[16,8,10,3,3.2],[0,2,3,10,3.2]],
+  crates:[[-6,-13,2.5,2.5,2],[6,-13,2.5,2.5,2],[-26,12,3,3,2],[26,12,3,3,2],[0,20,3,3,2],[-10,-27,3,3,2],[10,-27,3,3,2],[-26,-26,3,3,2.4],[26,-26,3,3,2.4]],
+  sites:[[-18,-27,0xff4655],[18,-27,0x3cffd0]]}
 ];
 function buildMap(i){
   const M=MAPS[i]||MAPS[0];
@@ -885,13 +894,44 @@ function openModal(html,init){$("mbox").innerHTML=html+'<button class="mbtn" id=
 function closeModal(){$("modal").style.display="none"}
 const CTL_HTML=`<table><tr><td>W A S D</td><td>이동</td></tr><tr><td>방향키</td><td>시점 이동 (마우스 잠금이 안 될 때)</td></tr><tr><td>마우스</td><td>시점 · 좌클릭 발사 · 우클릭 줌</td></tr><tr><td>Shift</td><td>걷기 (정확도↑, 소음↓)</td></tr><tr><td>Space</td><td>점프</td></tr><tr><td>1~5 / 휠</td><td>권총 · 라이플 · 스나이퍼 · SMG · 샷건</td></tr><tr><td>R</td><td>재장전</td></tr><tr><td>Q · E</td><td>에이전트 스킬 (대시 / 연막 / 치료 / 스캔)</td></tr><tr><td>Z X C V B N M</td><td>구매 단계: VANDAL · OPERATOR · STINGER · BREAKER · 아머 · 스킬충전 · 수류탄</td></tr><tr><td>G</td><td>수류탄 투척 (구매 필요, 1.6초 후 폭발)</td></tr><tr><td>Enter</td><td>구매 완료 / 라운드 시작</td></tr><tr><td>Esc</td><td>일시정지</td></tr><tr><td>모바일</td><td>왼쪽 조이스틱 이동 · 화면 드래그 시점 · 오른쪽 버튼</td></tr></table>`;
 function openCtl(){openModal("<h3>조작법</h3>"+CTL_HTML)}
+const XCOLS=["#3cffd0","#ffffff","#ffee33","#ff4655","#66aaff"];
+function applyQuality(){
+  const q=settings.qlt;
+  qual=q==="low"?.6:q==="mid"?.85:1;
+  sun.castShadow=!MOBILE&&q!=="low";
+  applyQ();
+}
+function applySettings(){
+  const st=document.documentElement.style;
+  st.setProperty("--xc",settings.xcol);st.setProperty("--xs",settings.xsize);
+  $("fpsb").style.display=settings.showfps?"block":"none";
+}
+function saveSet(){store.set("ts_settings",settings)}
 function openSet(){
-  openModal(`<h3>설정</h3><label>감도 <b id="sensV"></b><input type="range" id="sensR" min="0.3" max="2" step="0.1"></label><label>볼륨 <b id="volV"></b><input type="range" id="volR" min="0" max="1" step="0.05"></label>`,()=>{
-    const sr=$("sensR"),vr=$("volR");sr.value=settings.sens;vr.value=settings.vol;
-    const upd=()=>{$("sensV").textContent=settings.sens.toFixed(1);$("volV").textContent=Math.round(settings.vol*100)+"%"};upd();
-    sr.oninput=()=>{settings.sens=parseFloat(sr.value);store.set("ts_settings",settings);upd()};
-    vr.oninput=()=>{settings.vol=parseFloat(vr.value);store.set("ts_settings",settings);if(master)master.gain.value=settings.vol;upd()};
+  openModal(`<h3>설정</h3>
+  <label>감도 <b id="sensV"></b><input type="range" id="sensR" min="0.3" max="2" step="0.1"></label>
+  <label>볼륨 <b id="volV"></b><input type="range" id="volR" min="0" max="1" step="0.05"></label>
+  <label>시야각(FOV) <b id="fovV"></b><input type="range" id="fovR" min="70" max="100" step="1"></label>
+  <label>조준점</label>
+  <div style="position:relative;height:56px;background:#223;margin-bottom:8px"><div class="xh" style="position:absolute;left:50%;top:50%;transform:scale(var(--xs,1))"><i class="h" style="left:-14px"></i><i class="h" style="left:6px"></i><i class="v" style="top:-14px"></i><i class="v" style="top:6px"></i><i class="dot"></i></div></div>
+  <div id="xcols" style="display:flex;gap:10px;margin-bottom:4px"></div>
+  <label>조준점 크기 <b id="xsV"></b><input type="range" id="xsR" min="0.6" max="2" step="0.1"></label>
+  <label>화질 <select id="qltS"><option value="auto">자동 (권장)</option><option value="low">낮음</option><option value="mid">보통</option><option value="high">높음</option></select></label>
+  <label><input type="checkbox" id="fpsC"> FPS 표시</label>`,()=>{
+    const sr=$("sensR"),vr=$("volR"),fr=$("fovR"),xr=$("xsR");
+    sr.value=settings.sens;vr.value=settings.vol;fr.value=settings.fov;xr.value=settings.xsize;
+    $("qltS").value=settings.qlt;$("fpsC").checked=!!settings.showfps;
+    const upd=()=>{$("sensV").textContent=settings.sens.toFixed(1);$("volV").textContent=Math.round(settings.vol*100)+"%";$("fovV").textContent=settings.fov+"°";$("xsV").textContent=settings.xsize.toFixed(1)};upd();
+    sr.oninput=()=>{settings.sens=parseFloat(sr.value);saveSet();upd()};
+    vr.oninput=()=>{settings.vol=parseFloat(vr.value);saveSet();if(master)master.gain.value=settings.vol;upd()};
     vr.onchange=()=>{audio();if(master)master.gain.value=settings.vol;noise(.15,.5,1800)};
+    fr.oninput=()=>{settings.fov=parseInt(fr.value);saveSet();upd()};
+    xr.oninput=()=>{settings.xsize=parseFloat(xr.value);saveSet();applySettings();upd()};
+    $("qltS").onchange=()=>{settings.qlt=$("qltS").value;saveSet();applyQuality()};
+    $("fpsC").onchange=()=>{settings.showfps=$("fpsC").checked?1:0;saveSet();applySettings()};
+    const box=$("xcols");
+    XCOLS.forEach(c=>{const d=document.createElement("div");d.className="sw"+(c===settings.xcol?" on":"");d.style.background=c;
+      d.onclick=()=>{settings.xcol=c;saveSet();applySettings();box.querySelectorAll(".sw").forEach(x=>x.classList.toggle("on",x===d))};box.appendChild(d)});
   });
 }
 function openResult(r){
@@ -972,6 +1012,8 @@ buildGun();updateAmmoHud();
 const clock=new THREE.Clock();
 let perfT=0,perfN=0;
 function adapt(avg){
+  if(settings.showfps)setText("fpsb","FPS "+Math.round(1/avg));
+  if(settings.qlt!=="auto")return;
   if(avg>.026&&qual>.55){qual=Math.max(.55,qual-.15);applyQ()}
   else if(avg>.034&&sun.castShadow){sun.castShadow=false}
   else if(avg<.0175&&qual<1){qual=Math.min(1,qual+.1);applyQ()}
@@ -1024,7 +1066,7 @@ function loop(){
     P.pitch-=P.pitch>0&&!mouseDown?0:0;
     camera.position.set(P.pos.x,P.pos.y+P.eye+Math.sin(P.bob)*.025*(P.walk?.4:1),P.pos.z);
     camera.rotation.set(P.pitch,P.yaw,0,"YXZ");
-    const targetFov=P.scoped?25:80;
+    const targetFov=P.scoped?25:settings.fov;
     camera.fov+=(targetFov-camera.fov)*Math.min(1,dt*14);camera.updateProjectionMatrix();
     gunGroup.visible=!P.scoped;
     if(!P.alive&&state==="play"){
@@ -1080,7 +1122,7 @@ function loop(){
   }
   renderer.render(scene,camera);
 }
-showHome();loop();
+applySettings();applyQuality();showHome();loop();
 })();
 </script>
 </body>
