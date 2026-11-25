@@ -385,13 +385,13 @@ function boardPassenger(h) {
   toast('🙋 "' + dest.name.replace(' 건너편', '') + '까지 가주세요!" (약 ' + Math.round(dist0) + 'm)', 'gold');
 }
 function endRide() {
-  const tx = P.taxi, r = tx.ride; let stars = 5 - Math.min(2, r.crashes); if (r.speedT > 6) stars--; const exp = r.dist0 * 1.4 / 9 + 25; if (r.time > exp * 2.5) stars--; if (r.time > exp * 4) stars--; stars = Math.max(1, stars);
-  const fare = taxiFare(r), tip = stars >= 5 ? Math.round(fare * 0.15 / 100) * 100 : stars === 4 ? Math.round(fare * 0.05 / 100) * 100 : 0;
+  const tx = P.taxi, r = tx.ride, over = taxiOver(r); let stars = 5 - Math.min(2, r.crashes); if (r.speedT > 6) stars--; stars -= over > 2.5 ? 3 : over > 1.7 ? 2 : over > 1.3 ? 1 : 0; const exp = r.dist0 * 1.4 / 9 + 25; if (r.time > exp * 2.5) stars--; if (r.time > exp * 4) stars--; stars = Math.max(1, stars);
+  const fare = taxiCharge(r), capped = taxiFare(r) > fare, tip = over > 1.3 ? 0 : stars >= 5 ? Math.round(fare * 0.15 / 100) * 100 : stars === 4 ? Math.round(fare * 0.05 / 100) * 100 : 0;
   SCHOOL.wallet += fare + tip; SCHOOL.taxi.trips++; SCHOOL.taxi.earn += fare + tip; (SCHOOL.taxi.recent = SCHOOL.taxi.recent || []).push(stars); if (SCHOOL.taxi.recent.length > 20) SCHOOL.taxi.recent.shift(); saveSchool(); tx.trips++; tx.earn += fare + tip; tx.stars.push(stars); tx.ride = null; tx.hold = 0; P.bus.model.setTaxi(1);
-  toast('🚕 도착! 요금 ' + fmtMoney(fare) + (tip ? ' + 팁 ' + fmtMoney(tip) : '') + ' · ' + '★'.repeat(stars) + '☆'.repeat(5 - stars), stars >= 4 ? 'gold' : 'good'); sfx('chime');
+  toast('🚕 도착! 요금 ' + fmtMoney(fare) + (capped ? ' (돌아가서 요금 상한 적용)' : '') + (tip ? ' + 팁 ' + fmtMoney(tip) : '') + ' · ' + '★'.repeat(stars) + '☆'.repeat(5 - stars), stars >= 4 ? 'gold' : 'good'); sfx('chime');
 }
 function taxiHint() {
-  const tx = P.taxi; if (!tx) return ''; if (tx.ride) return '🚕 ' + tx.ride.dest.name + '까지 · 남은 ' + Math.round(tx.nav ? tx.nav.rem : tx.dist) + 'm · 미터기 ' + fmtMoney(taxiFare(tx.ride));
+  const tx = P.taxi; if (!tx) return ''; if (tx.ride) return (taxiOver(tx.ride) > 1.3 ? '😠 길을 돌아가고 있어요! ' : '🚕 ') + tx.ride.dest.name + '까지 · 남은 ' + Math.round(tx.nav ? tx.nav.rem : tx.dist) + 'm · 미터기 ' + fmtMoney(taxiCharge(tx.ride));
   return tx.target ? '🙋 가까운 손님 ' + Math.round(tx.dist) + 'm · 옆에 멈춰 세우면 탑승해요' : '🚕 손님을 찾는 중…';
 }
 function taxiMarkers() { const tx = P.taxi; if (!tx) return null; const m = tx.hail.map(h => ({ x: h.x, z: h.z, c: '#ffd21a' })); if (tx.ride) m.push({ x: tx.ride.dest.curb.x, z: tx.ride.dest.curb.z, c: '#4ade80', big: 1 }); return m; }
@@ -428,6 +428,7 @@ function taxiNav(dt) {
   const pr = projectPath(nv.path, P.x, P.z, nv.s, 70); nv.s = pr.s;
   if (pr.d > 28 && nv.t < 0) { tx.nav = taxiNavBuild(); nv = tx.nav; if (!nv) return; nv.t = 2; }
   const L = nv.path.L, ds = ((nv.sDest - nv.s) % L + L) % L, dd = Math.hypot(P.x - dest0().curb.x, P.z - dest0().curb.z);
+  if (!tx.ride.expDist && nv.rem > 0 && !nv.passed) tx.ride.expDist = nv.rem;
   if (nv.passed) { nv.rem = 0; if (dd > 60 && nv.t < 0) { tx.nav = taxiNavBuild(); return; } }
   else { if (nv.prev !== undefined && nv.prev < 90 && ds > L - 110) { nv.passed = true; nv.rem = 0; } else nv.rem = ds; nv.prev = ds; }
   const n = nv.rem > 12 ? Math.min(18, Math.floor((nv.rem - 6) / 7)) : 0;
@@ -439,3 +440,9 @@ function taxiNav(dt) {
 const taxiRating = () => { const r = (SCHOOL.taxi && SCHOOL.taxi.recent) || []; return r.length ? r.reduce((a, b) => a + b, 0) / r.length : 4.0; };
 const taxiMaxHail = () => Math.max(1, Math.round(1.5 + (taxiRating() - 1) * 1.1 + (WX.rainK > 0.3 ? 1 : 0)));
 const taxiDemandLabel = () => { const n = taxiMaxHail(); return n >= 6 ? '손님 많음' : n >= 4 ? '손님 보통' : '손님 적음'; };
+
+// 정상 경로 기준 요금: 돌아가면 손님이 항의해요 (별점 감점 · 팁 없음 · 요금 상한 160%)
+const taxiExpDist = r => r.expDist || r.dist0 * 1.4;
+const taxiOver = r => r.rideDist / Math.max(100, taxiExpDist(r));
+function taxiExp(r) { let f = TAXI_BASE + taxiExpDist(r) * TAXI_PER_M; if (taxiNight()) f *= 1.2; return Math.round(f / 100) * 100; }
+const taxiCharge = r => Math.min(taxiFare(r), Math.round(taxiExp(r) * 1.6 / 100) * 100);
