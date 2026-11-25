@@ -62,6 +62,7 @@
   #tDash{right:200px;bottom:98px}
   #tSmoke{right:200px;bottom:166px}
   #tWpn{right:70px;bottom:222px}
+  #tNade{right:268px;bottom:132px;font-size:11px}
   body.touchmode #hp{bottom:auto;top:12px;left:12px;font-size:24px;min-width:130px;padding:4px 10px}
   body.touchmode #ammo{right:auto;bottom:auto;top:12px;left:160px;font-size:24px;min-width:110px;padding:4px 10px;border:0;border-left:4px solid var(--red);text-align:left}
   body.touchmode #abil{display:none}
@@ -131,6 +132,7 @@
   <div class="panel" id="ammo"><small id="wname">CLASSIC</small><span id="am">12</span><span style="font-size:22px;opacity:.6"> / <span id="rs">36</span></span></div>
   <div class="panel" id="abil">
     <div class="ab" id="abQ">Q<b>대시</b><span id="abQt"></span></div>
+    <div class="ab" id="abG">G<b>수류탄</b><span id="abGt">0</span></div>
     <div class="ab" id="abE">E<b>연막</b><span id="abEt">2</span></div>
   </div>
   <div class="panel" id="feed"></div>
@@ -146,6 +148,7 @@
   <div class="tb" id="tDash">대시</div>
   <div class="tb" id="tSmoke">연막</div>
   <div class="tb" id="tWpn">무기</div>
+  <div class="tb" id="tNade">수류탄</div>
   <div class="tb" id="tPause">Ⅱ</div>
 </div>
 
@@ -201,9 +204,9 @@ scene.add(sun);
 /* ---------- 저장 / 설정 ---------- */
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const settings=Object.assign({sens:1,vol:.8,diff:1,agent:0,map:0,team:0},store.get("ts_settings",{}));
-const rec=Object.assign({games:0,bestRound:0,kills:0,bestKills:0,heads:0},store.get("ts_rec",{}));
+const rec=Object.assign({wins:0,games:0,bestRound:0,kills:0,bestKills:0,heads:0},store.get("ts_rec",{}));
 let lastResult=store.get("ts_last",null);
-const game={kills:0,heads:0};
+const game={kills:0,heads:0,shots:0,hits:0,dmg:0,taken:0};
 /* ---------- 오디오 ---------- */
 let master=null;
 let actx=null;
@@ -304,7 +307,7 @@ WEAPONS.forEach(w=>{w.ammo=w.mag;w.reserve=w.res});
 
 /* ---------- 플레이어 ---------- */
 const P={pos:new THREE.Vector3(0,0,HALF-4),vel:new THREE.Vector3(),vy:0,yaw:0,pitch:0,hp:100,onGround:true,
-  eye:1.7,w:0,lastShot:0,reloading:0,recoil:0,dash:new THREE.Vector3(),dashT:0,dashCd:0,smokes:2,scoped:false,alive:true,walk:false,bob:0,slots:[],scanT:0,cloak:0,credits:1000,armor:0,owned:[true,false,false,false,false]};
+  eye:1.7,w:0,lastShot:0,reloading:0,recoil:0,dash:new THREE.Vector3(),dashT:0,dashCd:0,smokes:2,scoped:false,alive:true,walk:false,bob:0,slots:[],nades:0,scanT:0,cloak:0,credits:1000,armor:0,owned:[true,false,false,false,false]};
 const keys={};let mouseDown=false,playing=false,locked=false;const joy={x:0,y:0};
 
 // 총 모델
@@ -396,6 +399,32 @@ function throwSmoke(){
   grenades.push({m,v:dir.multiplyScalar(18).add(new THREE.Vector3(0,3,0)),t:0});
   beep(500,.1,.1,"triangle",200);
 }
+const booms=[];
+function throwFrag(){
+  if(!P.alive||state!=="play"||P.nades<=0)return;
+  P.nades--;
+  const dir=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+  const m=new THREE.Mesh(new THREE.SphereGeometry(.14,8,8),new THREE.MeshLambertMaterial({color:0xaa3322}));
+  m.position.copy(camera.position).addScaledVector(dir,.6);scene.add(m);
+  grenades.push({m,v:dir.multiplyScalar(17).add(new THREE.Vector3(0,3.5,0)),t:0,frag:true});
+  beep(420,.1,.1,"triangle",200);
+}
+function explode(pos){
+  const m=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),new THREE.MeshBasicMaterial({color:0xffaa33,transparent:true,opacity:.9}));
+  m.position.copy(pos);scene.add(m);booms.push({m,t:.45});
+  noise(.6,.9,500);beep(80,.4,.25,"sawtooth",-50);
+  const c=pos.clone().setY(Math.max(.6,pos.y));
+  bots.forEach(b=>{
+    if(!b.alive||b.team!=="E")return;
+    const d=b.pos.distanceTo(pos);if(d>7)return;
+    if(!losBetween(c,new THREE.Vector3(b.pos.x,1,b.pos.z)))return;
+    const dmg=Math.max(25,170*(1-d/7));
+    b.hp-=dmg;game.dmg+=dmg;b.flash=.2;b.seen=6;
+    if(b.hp<=0)botDie(b,"",true,false);
+  });
+  const dp=P.pos.distanceTo(pos);
+  if(P.alive&&dp<4.5&&losBetween(c,new THREE.Vector3(P.pos.x,1,P.pos.z)))hurt(70*(1-dp/4.5),{pos:pos,name:"수류탄"});
+}
 function popSmoke(pos){
   const grp=new THREE.Group();grp.position.copy(pos);
   for(let i=0;i<14;i++){
@@ -472,6 +501,7 @@ const SHOP={
   operator:{name:"OPERATOR",price:3500,msg:"보유",can:()=>!P.owned[2],give:()=>{P.owned[2]=true;switchWeapon(2)}},
   stinger:{name:"STINGER",price:1100,msg:"보유",can:()=>!P.owned[3],give:()=>{P.owned[3]=true;switchWeapon(3)}},
   breaker:{name:"BREAKER",price:900,msg:"보유",can:()=>!P.owned[4],give:()=>{P.owned[4]=true;switchWeapon(4)}},
+  nade:{name:"수류탄",price:400,msg:"최대(2)",can:()=>P.nades<2,give:()=>{P.nades++}},
   armor:{name:"아머 +50",price:600,msg:"보유",can:()=>P.armor<50,give:()=>{P.armor=50}},
   skill:{name:"스킬 +1",price:300,msg:"해당없음",can:()=>P.slots.some(x=>x.ch>=0),give:()=>{P.slots.forEach(x=>{if(x.ch>=0)x.ch++})}}
 };
@@ -483,7 +513,7 @@ function onTap(el,fn){
 function renderBuy(){
   $("buyCr").textContent="$"+P.credits;
   const el=$("buyItems");el.innerHTML="";
-  [["vandal","Z"],["operator","X"],["stinger","C"],["breaker","V"],["armor","B"],["skill","N"]].forEach(([k,key])=>{
+  [["vandal","Z"],["operator","X"],["stinger","C"],["breaker","V"],["armor","B"],["skill","N"],["nade","M"]].forEach(([k,key])=>{
     const it=SHOP[k],ok=it.can();
     const d=document.createElement("div");d.className="bi"+(ok&&P.credits>=it.price?"":" dis");
     d.innerHTML="<span>"+key+" · "+it.name+"</span><b>"+(ok?"$"+it.price:it.msg)+"</b>";
@@ -540,8 +570,8 @@ function updateHud(){
 }
 function endRound(win){
   state="end";stateT=3.2;
-  if(win){P.credits+=1800;if(!P.alive){P.owned=[true,false,false,false,false];P.armor=0}winP++;round++;msg("ROUND WIN","#3cffd0");beep(660,.3,.2,"triangle",400)}
-  else{P.credits+=1000;P.owned=[true,false,false,false,false];P.armor=0;winB++;msg("ROUND LOSS","#ff4655");beep(200,.6,.2,"sawtooth",-100)}
+  if(win){P.credits+=1800;if(!P.alive){P.owned=[true,false,false,false,false];P.armor=0;P.nades=0}winP++;round++;msg("ROUND WIN","#3cffd0");beep(660,.3,.2,"triangle",400)}
+  else{P.credits+=1000;P.owned=[true,false,false,false,false];P.armor=0;P.nades=0;winB++;msg("ROUND LOSS","#ff4655");beep(200,.6,.2,"sawtooth",-100)}
   updateHud();
 }
 
@@ -572,7 +602,7 @@ function shoot(){
   if(!P.alive||state==="buy")return;
   if(P.reloading>0||now-P.lastShot<w.rof)return;
   if(w.ammo<=0){startReload();return}
-  P.lastShot=now;w.ammo--;updateAmmoHud();
+  P.lastShot=now;w.ammo--;game.shots++;updateAmmoHud();
   noise(.18,w.vol*.5,w.freq);beep(120,.08,w.vol*.25,"square",-60);
   // 정확도
   const speed=Math.hypot(P.vel.x,P.vel.z);
@@ -590,8 +620,8 @@ function shoot(){
       if(o.userData.bot){
         const b=o.userData.bot,head=o.userData.part==="head";
         const fall=w.pellets?Math.max(.2,Math.min(1,1.35-hits[0].distance/22)):1;
-        const dmg=(head?w.head:w.dmg)*fall;b.hp-=dmg;b.seen=6;b.flash=.15;
-        if(!hitShown){showHit(head);hitShown=true}
+        const dmg=(head?w.head:w.dmg)*fall;b.hp-=dmg;game.dmg+=dmg;b.seen=6;b.flash=.15;
+        if(!hitShown){showHit(head);hitShown=true;game.hits++}
         spark(hits[0].point,0xff3344);
         if(b.hp<=0&&b.alive){killBot(b,head)}
       }else spark(hits[0].point,0xffe0a0);
@@ -732,7 +762,7 @@ function botFire(b,dist,tgt,pd){
 function hurt(d,from){
   if(!P.alive||state==="end")return;
   if(P.armor>0){const ab=Math.min(P.armor,d*.66);P.armor-=ab;d-=ab}
-  P.hp-=d;beep(120,.12,.2,"sawtooth",-40);
+  game.taken+=d;P.hp-=d;beep(120,.12,.2,"sawtooth",-40);
   const v=$("vig");v.style.boxShadow="inset 0 0 160px 40px rgba(255,0,30,.55)";setTimeout(()=>v.style.boxShadow="inset 0 0 160px 40px rgba(255,0,30,0)",250);
   // 방향 표시
   const dx=from.pos.x-P.pos.x,dz=from.pos.z-P.pos.z,ang=Math.atan2(dx,-dz)-(-P.yaw);
@@ -756,9 +786,10 @@ addEventListener("keydown",e=>{
   if(e.code==="KeyR")startReload();
   if(e.code==="KeyQ")useSkill(0);
   if(e.code==="KeyE")useSkill(1);
+  if(e.code==="KeyG")throwFrag();
   if(state==="buy"){
     if(e.code==="KeyZ")buy("vandal");if(e.code==="KeyX")buy("operator");if(e.code==="KeyC")buy("stinger");
-    if(e.code==="KeyV")buy("breaker");if(e.code==="KeyB")buy("armor");if(e.code==="KeyN")buy("skill");
+    if(e.code==="KeyV")buy("breaker");if(e.code==="KeyB")buy("armor");if(e.code==="KeyN")buy("skill");if(e.code==="KeyM")buy("nade");
     if(e.code==="Enter")endBuy();
   }
 });
@@ -810,19 +841,21 @@ function lockPointer(){
 }
 function startGame(){
   audio()&&audio().resume();
-  round=1;winP=0;winB=0;game.kills=0;game.heads=0;
-  P.credits=1000;P.owned=[true,false,false,false,false];P.armor=0;P.w=0;buildGun();applyAgent();
+  round=1;winP=0;winB=0;game.kills=0;game.heads=0;game.shots=0;game.hits=0;game.dmg=0;game.taken=0;
+  P.credits=1000;P.owned=[true,false,false,false,false];P.armor=0;P.nades=0;P.w=0;buildGun();applyAgent();
   started=true;newRound();lockPointer();setPlaying(true);
 }
 function endGame(over){
   if(started){
     rec.games++;rec.bestRound=Math.max(rec.bestRound,round);rec.kills+=game.kills;rec.heads+=game.heads;rec.bestKills=Math.max(rec.bestKills,game.kills);
     store.set("ts_rec",rec);
-    lastResult={over,round,kills:game.kills,heads:game.heads,winP,winB};store.set("ts_last",lastResult);
+    if(over==="win")rec.wins++;store.set("ts_rec",rec);
+    lastResult={over,round:winP+winB,kills:game.kills,heads:game.heads,winP,winB,shots:game.shots,hits:game.hits,dmg:Math.round(game.dmg),taken:Math.round(game.taken)};store.set("ts_last",lastResult);
   }
   started=false;
   if(document.pointerLockElement)document.exitPointerLock();
   setPlaying(false);showHome();
+  if(over&&lastResult)openResult(lastResult);
 }
 function showHome(){
   P.cloak=0;renderer.domElement.style.filter="";renderer.domElement.dataset.f="";
@@ -833,7 +866,7 @@ function showHome(){
   grenades.forEach(g=>scene.remove(g.m));grenades.length=0;
   for(let i=0;i<6;i++){const p=randFree(-HALF+4,HALF-4);const b=makeBot(p.x,p.z);b.yaw=Math.random()*6.28;b.g.rotation.y=b.yaw;bots.push(b)}
   P.scoped=false;$("scope").style.display="none";
-  $("lastCard").innerHTML=(lastResult?`<h4>지난 게임</h4><div class="big">${lastResult.over?"GAME OVER":"종료"} · ROUND ${lastResult.round}</div>킬 ${lastResult.kills} · 헤드샷 ${lastResult.heads}<br>스코어 ${lastResult.winP} : ${lastResult.winB}<br>`:"")+`<h4 style="margin-top:8px">최고 기록</h4>최고 라운드 <b>${rec.bestRound}</b> · 총 킬 <b>${rec.kills}</b><h4 style="margin-top:8px">선택</h4><b>${AGENTS[settings.agent].name}</b> ${AGENTS[settings.agent].desc}<br>맵 <b>${MAPS[settings.map].name}</b>`;
+  $("lastCard").innerHTML=(lastResult?`<h4>지난 게임</h4><div class="big">${lastResult.over==="win"?"VICTORY":lastResult.over?"DEFEAT":"종료"} · ${lastResult.round}라운드</div>킬 ${lastResult.kills} · 헤드샷 ${lastResult.heads}<br>스코어 ${lastResult.winP} : ${lastResult.winB}<br>`:"")+`<h4 style="margin-top:8px">최고 기록</h4>최고 라운드 <b>${rec.bestRound}</b> · 총 킬 <b>${rec.kills}</b><h4 style="margin-top:8px">선택</h4><b>${AGENTS[settings.agent].name}</b> ${AGENTS[settings.agent].desc}<br>맵 <b>${MAPS[settings.map].name}</b>`;
   $("diffSeg").querySelectorAll("div").forEach(d=>d.classList.toggle("on",parseFloat(d.dataset.d)===diff));
   $("modeSeg").querySelectorAll("div").forEach(d=>d.classList.toggle("on",(+d.dataset.m)===(settings.team?1:0)));
   show("home",true);show("pause",false);$("hud").style.display="none";$("touch").style.display="none";
@@ -841,7 +874,7 @@ function showHome(){
 /* 모달 */
 function openModal(html,init){$("mbox").innerHTML=html+'<button class="mbtn" id="mClose" style="width:100%;margin-top:6px">닫기</button>';$("modal").style.display="flex";$("mClose").onclick=closeModal;init&&init()}
 function closeModal(){$("modal").style.display="none"}
-const CTL_HTML=`<table><tr><td>W A S D</td><td>이동</td></tr><tr><td>방향키</td><td>시점 이동 (마우스 잠금이 안 될 때)</td></tr><tr><td>마우스</td><td>시점 · 좌클릭 발사 · 우클릭 줌</td></tr><tr><td>Shift</td><td>걷기 (정확도↑, 소음↓)</td></tr><tr><td>Space</td><td>점프</td></tr><tr><td>1~5 / 휠</td><td>권총 · 라이플 · 스나이퍼 · SMG · 샷건</td></tr><tr><td>R</td><td>재장전</td></tr><tr><td>Q · E</td><td>에이전트 스킬 (대시 / 연막 / 치료 / 스캔)</td></tr><tr><td>Z X C V B N</td><td>구매 단계: VANDAL · OPERATOR · STINGER · BREAKER · 아머 · 스킬충전</td></tr><tr><td>Enter</td><td>구매 완료 / 라운드 시작</td></tr><tr><td>Esc</td><td>일시정지</td></tr><tr><td>모바일</td><td>왼쪽 조이스틱 이동 · 화면 드래그 시점 · 오른쪽 버튼</td></tr></table>`;
+const CTL_HTML=`<table><tr><td>W A S D</td><td>이동</td></tr><tr><td>방향키</td><td>시점 이동 (마우스 잠금이 안 될 때)</td></tr><tr><td>마우스</td><td>시점 · 좌클릭 발사 · 우클릭 줌</td></tr><tr><td>Shift</td><td>걷기 (정확도↑, 소음↓)</td></tr><tr><td>Space</td><td>점프</td></tr><tr><td>1~5 / 휠</td><td>권총 · 라이플 · 스나이퍼 · SMG · 샷건</td></tr><tr><td>R</td><td>재장전</td></tr><tr><td>Q · E</td><td>에이전트 스킬 (대시 / 연막 / 치료 / 스캔)</td></tr><tr><td>Z X C V B N M</td><td>구매 단계: VANDAL · OPERATOR · STINGER · BREAKER · 아머 · 스킬충전 · 수류탄</td></tr><tr><td>G</td><td>수류탄 투척 (구매 필요, 1.6초 후 폭발)</td></tr><tr><td>Enter</td><td>구매 완료 / 라운드 시작</td></tr><tr><td>Esc</td><td>일시정지</td></tr><tr><td>모바일</td><td>왼쪽 조이스틱 이동 · 화면 드래그 시점 · 오른쪽 버튼</td></tr></table>`;
 function openCtl(){openModal("<h3>조작법</h3>"+CTL_HTML)}
 function openSet(){
   openModal(`<h3>설정</h3><label>감도 <b id="sensV"></b><input type="range" id="sensR" min="0.3" max="2" step="0.1"></label><label>볼륨 <b id="volV"></b><input type="range" id="volR" min="0" max="1" step="0.05"></label>`,()=>{
@@ -852,8 +885,12 @@ function openSet(){
     vr.onchange=()=>{audio();if(master)master.gain.value=settings.vol;noise(.15,.5,1800)};
   });
 }
+function openResult(r){
+  const win=r.over==="win",acc=r.shots?Math.round(r.hits/r.shots*100):0,hp=r.kills?Math.round(r.heads/r.kills*100):0;
+  openModal(`<h3 style="color:${win?"#3cffd0":"#ff4655"};font-size:26px">${win?"VICTORY":"DEFEAT"}</h3><table><tr><td>스코어</td><td>${r.winP} : ${r.winB}</td></tr><tr><td>킬</td><td>${r.kills} (헤드샷 ${r.heads}, ${hp}%)</td></tr><tr><td>명중률</td><td>${acc}% (${r.hits}/${r.shots})</td></tr><tr><td>가한 피해</td><td>${r.dmg}</td></tr><tr><td>받은 피해</td><td>${r.taken}</td></tr></table>`);
+}
 function openRec(){
-  openModal(`<h3>기록</h3><table><tr><td>플레이 횟수</td><td>${rec.games}</td></tr><tr><td>최고 라운드</td><td>${rec.bestRound}</td></tr><tr><td>총 킬</td><td>${rec.kills}</td></tr><tr><td>한 게임 최다 킬</td><td>${rec.bestKills}</td></tr><tr><td>총 헤드샷</td><td>${rec.heads}</td></tr></table>`);
+  openModal(`<h3>기록</h3><table><tr><td>플레이 횟수</td><td>${rec.games}</td></tr><tr><td>승리</td><td>${rec.wins}</td></tr><tr><td>최고 라운드</td><td>${rec.bestRound}</td></tr><tr><td>총 킬</td><td>${rec.kills}</td></tr><tr><td>한 게임 최다 킬</td><td>${rec.bestKills}</td></tr><tr><td>총 헤드샷</td><td>${rec.heads}</td></tr></table>`);
 }
 $("mStart").onclick=startGame;
 $("modeSeg").onclick=e=>{const m=e.target.dataset&&e.target.dataset.m;if(m==null)return;settings.team=+m;store.set("ts_settings",settings);showHome()};
@@ -916,6 +953,7 @@ renderer.domElement.addEventListener("click",()=>{if(playing&&!isTouch&&!locked)
   hold("tSmoke",()=>useSkill(1));
   hold("tWpn",()=>nextWeapon(1));
   hold("tPause",()=>setPlaying(false));
+  hold("tNade",throwFrag);
 })();
 let started=false;
 
@@ -992,7 +1030,8 @@ function loop(){
       const np=g.m.position.clone().addScaledVector(g.v,dt);
       if(np.y<.15){np.y=.15;g.v.y*=-.3;g.v.x*=.7;g.v.z*=.7}
       if(hitsObstacle(np.x,np.z,.12)&&np.y<4){g.v.x*=-.4;g.v.z*=-.4}else g.m.position.copy(np);
-      if(g.t>1.4||(g.t>.5&&g.v.length()<1.5)){popSmoke(g.m.position);scene.remove(g.m);grenades.splice(i,1)}
+      if(g.frag){if(g.t>1.6){explode(g.m.position.clone());scene.remove(g.m);grenades.splice(i,1)}}
+      else if(g.t>1.4||(g.t>.5&&g.v.length()<1.5)){popSmoke(g.m.position);scene.remove(g.m);grenades.splice(i,1)}
     }
     for(let i=smokes.length-1;i>=0;i--){
       const s=smokes[i];s.t+=dt;
@@ -1001,9 +1040,11 @@ function loop(){
       if(s.t>s.life){scene.remove(s.grp);smokes.splice(i,1)}
     }
     // 이펙트
+    for(let i=booms.length-1;i>=0;i--){const x=booms[i];x.t-=dt;const k=1-x.t/.45;x.m.scale.setScalar(.5+k*6);x.m.material.opacity=Math.max(0,.9*(1-k));if(x.t<=0){scene.remove(x.m);booms.splice(i,1)}}
     for(let i=tracers.length-1;i>=0;i--){const t=tracers[i];t.t-=dt;if(t.t<=0){scene.remove(t.l);t.l.geometry.dispose();tracers.splice(i,1)}}
     for(let i=sparks.length-1;i>=0;i--){const s=sparks[i];s.t-=dt;s.v.y-=9*dt;s.m.position.addScaledVector(s.v,dt);if(s.t<=0){scene.remove(s.m);sparks.splice(i,1)}}
     // 쿨다운 UI
+    $("abGt").textContent=P.nades;$("abG").classList.toggle("cd",P.nades<=0);$("tNade").textContent="수류탄 "+P.nades;
     miniT+=dt;if(miniT>.066){miniT=0;drawMini()}
     setAb("abQ","Q",P.slots[0]);setAb("abE","E",P.slots[1]);
     if(state==="buy"){buyT-=dt;$("buyT").textContent=Math.max(0,Math.ceil(buyT));if(buyT<=0)endBuy()}
@@ -1011,7 +1052,7 @@ function loop(){
     if(state==="end"){
       stateT-=dt;
       if(stateT<=0){
-        if(winB>=3){endGame(true)}else newRound();
+        if(winB>=3)endGame("loss");else if(winP>=5)endGame("win");else newRound();
       }
     }
   }
