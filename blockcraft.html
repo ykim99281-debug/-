@@ -136,7 +136,7 @@ select,input.txt{font:inherit;padding:5px 8px;user-select:text;-webkit-user-sele
     <div class="grid" id="invGrid"></div>
     <h3 style="margin-top:8px">핫바</h3>
     <div class="grid" id="invHot"></div>
-    <div style="margin-top:8px;text-align:right"><button class="btn sm" id="bCloseInv">닫기 (E)</button></div>
+    <div style="margin-top:8px;display:flex;justify-content:space-between;gap:8px"><button class="btn sm" id="bSortInv">🗂 가방 정리</button><button class="btn sm" id="bCloseInv">닫기 (E)</button></div>
   </div>
 </div>
 
@@ -641,6 +641,26 @@ function chatLine(txt,col){
 let heldIdx=-1,invKind='hand';
 function openInv(kind){if(state!=='play')return;invKind=typeof kind==='string'?kind:'hand';state='inv';if(document.pointerLockElement)document.exitPointerLock();input.breaking=input.using=false;heldIdx=-1;renderInv();$('inv').classList.remove('hidden');}
 function closeInv(){if(state!=='inv')return;state='play';$('inv').classList.add('hidden');renderHotbar();lockPointer();}
+const CATS=['🧱 블록','⛏ 도구','⚔ 무기','🛡 방어구','🍖 음식','📦 재료·기타'];
+function catOf(id){
+  if(id<100)return 0;const k=ITEM[id].k;
+  if(k==='pick'||k==='axe'||k==='shovel')return 1;
+  if(k==='sword'||k==='bow'||k==='ammo')return 2;
+  if(k==='armor')return 3;if(k==='food')return 4;return 5;
+}
+function sortInv(){
+  const items=[];
+  for(let i=9;i<36;i++)if(inv[i])items.push(inv[i]);
+  const merged=[];
+  for(const it of items){
+    const mx=stackMax(it.id);
+    const t=mx>1?merged.find(m=>m.id===it.id&&m.n<mx):null;
+    if(t){const a=Math.min(mx-t.n,it.n);t.n+=a;it.n-=a;if(it.n>0)merged.push(it);}else merged.push(it);
+  }
+  merged.sort((a,b)=>catOf(a.id)-catOf(b.id)||a.id-b.id||b.n-a.n);
+  for(let i=9;i<36;i++)inv[i]=merged[i-9]||null;
+  heldIdx=-1;sfx('click');renderInv();renderHotbar();toast('가방을 정리했어요');
+}
 const fuelAvail=()=>countItem(112)>0||countItem(4)>0||countItem(7)>0;
 function smelt(inId,outId){
   if(!countItem(inId))return;
@@ -670,8 +690,11 @@ function renderInv(){
     if(kind==='furnace'){
       for(const[a,b]of SMELT)row(b,1,`<b>${nameOf(b)}</b> ← ${nameOf(a)} 1 (보유 ${countItem(a)})`,countItem(a)>0&&(P.fuel>0||fuelAvail()),()=>smelt(a,b));
     }else{
-      for(const rc of RECIPES){
-        if(kind!=='table'&&rc.t)continue;
+      let lastCat=-1;
+      const list=RECIPES.filter(r=>kind==='table'||!r.t).map((r,i)=>[r,i]).sort((a,b)=>catOf(a[0].o[0])-catOf(b[0].o[0])||a[1]-b[1]);
+      for(const[rc]of list){
+        const ct=catOf(rc.o[0]);
+        if(ct!==lastCat){lastCat=ct;const h=document.createElement('div');h.textContent=CATS[ct];h.style.cssText='font-weight:700;font-size:12px;color:#444;margin:4px 0 1px';cr.appendChild(h);}
         const ok=rc.i.every(([id,n])=>countItem(id)>=n);
         row(rc.o[0],rc.o[1],`<b>${nameOf(rc.o[0])} ×${rc.o[1]}</b> ← ${rc.i.map(([id,n])=>`${nameOf(id)} ${n}`).join(' + ')}`,ok,()=>{
           for(const[id,n]of rc.i)removeItem(id,n);
@@ -701,6 +724,7 @@ function renderInv(){
   fillGrid($('invGrid'),9,36);fillGrid($('invHot'),0,9);
 }
 $('bCloseInv').onclick=closeInv;
+$('bSortInv').onclick=sortInv;
 
 /* ================= 저장 / 불러오기 ================= */
 const isGuest=()=>net&&net.role==='guest';
@@ -1385,6 +1409,7 @@ addEventListener('keydown',e=>{
     if(k.startsWith('Digit')){const n=+k.slice(5);if(n>=1&&n<=9)selectSlot(n-1);}
     if(k==='Space'){const now=performance.now();if(mode==='creative'&&now-lastSpace<300){P.fly=!P.fly;P.vy=0;toast(P.fly?'비행 모드 ON':'비행 모드 OFF');}lastSpace=now;}
   }else if(state==='inv'&&(k==='KeyE'||k==='Escape')){closeInv();}
+  else if(state==='inv'&&k==='KeyR'){sortInv();}
   if(['Space','ArrowUp','ArrowDown','Tab'].includes(k)&&state==='play')e.preventDefault();
   syncKeys();
 });
@@ -1476,7 +1501,7 @@ function frame(now){
 }
 requestAnimationFrame(frame);
 
-window.BC={smelt,P,chunks,mobs,remotes,getBlock,setBlock,get state(){return state;},get net(){return net;},get mode(){return mode;},set tod(v){tod=v;},startGame,B,input,addItem,openInv,get inv(){return inv;},explode,openRoom,joinRoom,heightAt,genChunk,sendChat,get SEED(){return SEED;}};
+window.BC={sortInv,smelt,P,chunks,mobs,remotes,getBlock,setBlock,get state(){return state;},get net(){return net;},get mode(){return mode;},set tod(v){tod=v;},startGame,B,input,addItem,openInv,get inv(){return inv;},explode,openRoom,joinRoom,heightAt,genChunk,sendChat,get SEED(){return SEED;}};
 })();
 </script>
 </body>
