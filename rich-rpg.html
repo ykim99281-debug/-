@@ -345,7 +345,7 @@ function c3Init(){
   '<canvas id="c3cv"></canvas><div id="c3top"><div><b id="c3name">🪩 BEAT</b> <span id="c3who"></span></div><div class="c3r"><button id="c3snd">🔊</button><button id="c3x">✖ 나가기</button></div></div>'
   +'<div id="c3vibe"><span>VIBE</span><div class="bar"><i id="c3vb"></i></div></div><div id="c3note"></div>'
   +'<div id="c3tgt" hidden></div><div id="c3log"></div>'
-  +'<div id="c3bar"><input id="c3in" maxlength="120" placeholder="말 걸기 / 행동은 앞에 /를 붙여 자유롭게 (예: /바로 가서 춤춘다)"><button class="pri" id="c3send">전송</button><button id="c3actb">🎬 행동</button></div><div id="c3help">탭: 이동/선택 · 드래그: 시점 · WASD/방향키: 이동</div><div id="c3act" hidden></div>';
+  +'<div id="c3bar"><input id="c3in" maxlength="120" placeholder="말 걸기 / 행동은 앞에 /를 붙여 자유롭게 (예: /바로 가서 춤춘다)"><button class="pri" id="c3send">전송</button><button id="c3actb">🎬 행동</button></div><div id="c3spd"></div><div id="c3pad"><div><button data-p="pad_l">◀</button><button data-p="pad_r">▶</button></div><div><button data-p="pad_dn">🛑</button><button data-p="pad_up">⛽</button></div></div><div id="c3help">탭: 이동/선택 · 드래그: 시점 · WASD/방향키: 이동</div><div id="c3act" hidden></div>';
  document.body.appendChild(wrap);
  const cv=$('c3cv');
  const rd=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});rd.outputEncoding=THREE.sRGBEncoding;rd.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
@@ -365,6 +365,7 @@ function c3Bind(){
  window.addEventListener('keydown',e=>{if(!C3.run)return;if(e.target.id==='c3in'){if(e.key==='Enter'){e.preventDefault();c3Send()}return}C3.keys[e.key.toLowerCase()]=true});
  window.addEventListener('keyup',e=>{C3.keys[e.key.toLowerCase()]=false});
  window.addEventListener('resize',()=>{if(C3.run)c3Resize()});
+ document.querySelectorAll('#c3pad button').forEach(b=>{const k=b.dataset.p;const on=e=>{e.preventDefault();C3.keys[k]=true},off=()=>{C3.keys[k]=false};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointerleave',off);b.addEventListener('pointercancel',off)});
  $('c3x').onclick=c3Close;$('c3send').onclick=c3Send;$('c3actb').onclick=()=>{const a=$('c3act');a.hidden=!a.hidden};
  $('c3snd').onclick=()=>{SOUND=!SOUND;try{localStorage.setItem('richrpg_snd',SOUND?'1':'0')}catch(e){}$('c3snd').textContent=SOUND?'🔊':'🔇';c3Audio()};
  $('c3in').addEventListener('input',e=>{});
@@ -425,10 +426,33 @@ async function aiNpc(P,text){
  const hint=(id==='새벽형 투자자'||id==='강 대표')&&/주식|종목|투자|정보|추천/.test(text)?secretHint('주식','🌙 클럽 찌라시',-30,''):'';
  const out=await aiAsk(sys,[],ctx+'\n'+hint+'\n[플레이어 말] '+text);
  return out.replace(/^[^:：\n]{1,12}[:：]\s*/,'').replace(/^["“]|["”]$/g,'').trim()}
+function parseMoney(t){let sum=0;const U={'조':1e12,'억':1e8,'천만':1e7,'백만':1e6,'만':1e4,'천':1e3,'원':1};for(const m of t.matchAll(/(\d[\d,]*(?:\.\d+)?)\s*(조|억|천만|백만|만|천|원)/g))sum+=parseFloat(m[1].replace(/,/g,''))*U[m[2]];return Math.round(sum)}
+function actionCost(tl,dr,nearN){
+ let cost=0;const why=[],q=(()=>{const m=tl.match(/(\d+)\s*(잔|개|명|병|대|번|곡|장|판|인분)/);return m?Math.min(200,+m[1]):1})(),all=/모두|전체|다들|전원|여기 있는 사람|다 같이/.test(tl),mult=all?Math.max(1,nearN):q;
+ const add=(c,w)=>{cost+=Math.round(c);why.push(w)};
+ const amt=parseMoney(tl);
+ if(amt>0&&/뿌|던|주|건네|쓴|쓰|쓸|지불|낸|결제|기부|송금|사|구매|팁|내가/.test(tl))add(amt,'언급한 금액 '+won(amt));
+ else{
+  if(/칵테일|술|맥주|위스키|와인|샴페인|소주|음료|주스|커피|한잔|한 잔|마신|마시/.test(tl))add(dr*mult,(isMinor()?'음료':'술·음료')+(mult>1?' ×'+mult:''));
+  if(/먹|식사|밥|안주|피자|치킨|햄버거|디저트|케이크|도시락/.test(tl)&&!/먹지|안 먹/.test(tl))add(dr*1.2*mult,'음식'+(mult>1?' ×'+mult:''));
+  if(/선물|꽃|반지|목걸이|가방|시계|인형|명품/.test(tl))add(dr*(/반지|목걸이|시계|명품|가방/.test(tl)?25:6)*mult,'선물');
+  if(/팁|지폐|돈.*(뿌|던|주)|(뿌|던).*돈|캐시|현금.*뿌/.test(tl))add(dr*5*mult,'팁·지폐');
+  if(/부순|부수|깨뜨|깬다|깨트|파손|엎|쏟|넘어뜨|망가/.test(tl))add(dr*4,'파손 변상');
+  if(/택시|대리운전|배달/.test(tl))add(dr*1.5,'이동·배달');
+  if(/사진|촬영|폴라로이드|셀카/.test(tl)&&/인화|출력|폴라/.test(tl))add(dr*.5,'인화');
+  if(/신청곡|노래.*신청|곡.*신청/.test(tl))add(dr*.3,'신청곡 팁');
+  if(/한턱|쏜다|쏴|전체.*쏘|보틀/.test(tl))add(dr*(all?Math.max(8,nearN*1.5):10),'한턱');
+  if(/기부|후원/.test(tl))add(dr*10,'기부');
+  if(/입장|예약|티켓|표 ?끊|좌석/.test(tl))add(dr*2,'입장·예약');
+  if(/게임|오락|도박|베팅|내기/.test(tl))add(dr*3,'오락·내기');
+ }
+ return{cost,why}}
 async function c3Custom(text){
  const me=C3.me,now=performance.now(),tl=text,dr=Math.round(50000*wage(S.t)/1000)*1000*(isVip()?.7:1);
  if(/때리|죽이|죽여|칼|총|폭행|찌르|성추행|마약/.test(tl)){c3Note('그런 행동은 할 수 없어요. 다른 행동을 입력해 보세요.');return}
  c3Log('나','✍️ '+text,'me');
+ const AC=actionCost(tl,dr,nearbyNpcs(6).length);
+ if(AC.cost>0){if(AC.cost>S.cash){c3Note('💸 잔액이 부족해서 못 해요! (필요 '+won(AC.cost)+' · '+AC.why.join(', ')+')');return}pay(AC.cost);C3.spent=(C3.spent||0)+AC.cost;c3Log('','💸 −'+won(AC.cost)+' ('+AC.why.join(', ')+')','sys')}
  // 이동
  const loc=VENUES[C3.vname].locs||[];
  let moved=false;const AL={'바텐더':'바텐더 민','dj':'DJ 비트','디제이':'DJ 비트','경호':'경호원 도현','사장':'한 사장','대표':'강 대표','회장':'윤 회장','투자자':'새벽형 투자자','소연':'소연','지훈':'지훈','세라':'세라'};const ak=Object.keys(AL).find(k=>tl.toLowerCase().includes(k)),named=C3.npcs.find(p=>!(p.def.vip&&!isVip())&&(tl.includes(p.def.n)||(ak&&p.def.n===AL[ak])));
@@ -436,7 +460,7 @@ async function c3Custom(text){
  const map=[[/춤|댄스|흔들/,'dance',9000],[/손.*흔|인사|안녕/,'wave',2200],[/건배|부딪/,'toast',3200],[/박수|짝짝/,'clap',3000],[/절|숙이|사과|감사/,'bow',1800],[/환호|소리.*지|만세|점프|뛰/,'cheer',3500],[/카드|지갑|보여/,'card',3500],[/마시|한 모금|들이/,'drink',2800],[/포즈|사진|셀카|웃/,'pose',2500],[/앉/,'sit',5000],[/말|속삭|귓속|이야기|묻|대화/,'talk',3000]];
  const m=map.find(x=>x[0].test(tl));if(m){me.ov={state:m[1],until:now+m[2]}}else if(!moved)me.ov={state:'pose',until:now+2000};
  let vibe=/춤|환호|만세|건배/.test(tl)?6:1;
- if(/(돈|지폐|팁).*(뿌|던|주|건네)/.test(tl)){const c=dr*5;if(c<=S.cash){pay(c);C3.spent=(C3.spent||0)+c;vibe=14;c3Log('','💸 팁으로 '+won(c)+'을 건넸다','sys')}}
+ if(AC.cost>=dr*4)vibe=Math.max(vibe,12);
  const rude=/소리.*(질|쳐)|난동|시비|밀|무시|욕|침|던지/.test(tl);
  if(rude){vibe=-12;nearbyNpcs(6).forEach(p=>{S.ctrust[p.def.n]=Math.max(0,(S.ctrust[p.def.n]||0)-4)});const g=C3.npcs.find(p=>p.def.gate);if(g)setTimeout(()=>c3Speak(g,'손님, 정숙해 주세요. 계속되면 퇴장 조치합니다.',5),700)}
  C3.vibe=Math.max(0,Math.min(100,C3.vibe+vibe));
@@ -446,7 +470,7 @@ async function c3Custom(text){
  if(!P||P.def.gate&&!rude&&Math.random()<.5)return;
  await new Promise(r=>setTimeout(r,moved?2200:600));
  C3.busy=true;P.faceMe=true;setBubble(P,'…',20);let rep=null;
- if(aiOn()){try{rep=await aiNpc(P,'(플레이어가 직접 행동함: '+text+(rude?' — 무례한 행동이다':'')+')')}catch(e){S.aiErr=String(e.message||e).slice(0,200)}}
+ if(aiOn()){try{rep=await aiNpc(P,'(플레이어가 직접 행동함: '+text+(rude?' — 무례한 행동이다':'')+(AC.cost?' — 실제로 '+won(AC.cost)+'을 썼다('+AC.why.join(', ')+')':'')+')')}catch(e){S.aiErr=String(e.message||e).slice(0,200)}}
  if(!rep)rep=rude?pick(['손님, 좀 자제해 주세요 ㅎㅎ','어휴, 분위기 깨지 말자~']):/춤|댄스/.test(tl)?pick(['오 좀 추는데? ㅋㅋ','와 꼬마 댄서다!']):/건배/.test(tl)?'건배~!':/사진/.test(tl)?'찰칵! 잘 나왔다 ㅎㅎ':pick(P.def.lines);
  C3.busy=false;c3Speak(P,rep,6);save()}
 async function c3Send(){
@@ -580,14 +604,14 @@ function c3Frame(){
  const me=C3.me,k=C3.keys,b=now/1000*BPM/60,pulse=Math.pow(1-(b%1),3);
  let mx=0,mz=0;if(k.w||k.arrowup)mz-=1;if(k.s||k.arrowdown)mz+=1;if(k.a||k.arrowleft)mx-=1;if(k.d||k.arrowright)mx+=1;
  let moving=false,sp=C3.drive?7:2.3;
- if(mx||mz){const l=Math.hypot(mx,mz);mx/=l;mz/=l;const fx=-Math.sin(C3.yaw),fz=-Math.cos(C3.yaw),rx=-fz,rz=fx;
+ if(C3.vname==='road'){roadMove(dt)}else if(mx||mz){const l=Math.hypot(mx,mz);mx/=l;mz/=l;const fx=-Math.sin(C3.yaw),fz=-Math.cos(C3.yaw),rx=-fz,rz=fx;
   const vx=fx*(-mz)+rx*mx,vz=fz*(-mz)+rz*mx;me.g.position.x+=vx*sp*dt;me.g.position.z+=vz*sp*dt;me.yaw=Math.atan2(vx,vz);me.dest=null;me.follow=null;me.ov=null;moving=true}
  else if(me.follow||me.dest){
   const tx=me.follow?me.follow.g.position.x:me.dest.x,tz=me.follow?me.follow.g.position.z:me.dest.z,dx=tx-me.g.position.x,dz=tz-me.g.position.z,d=Math.hypot(dx,dz),stop=me.follow?1.5:.12;
   if(d>stop){me.g.position.x+=dx/d*sp*dt;me.g.position.z+=dz/d*sp*dt;me.yaw=Math.atan2(dx,dz);moving=true;me.ov=null}else{if(me.follow){me.faceTo=me.follow;me.follow=null}me.dest=null}}
  if(me.faceTo&&!moving){const dx=me.faceTo.g.position.x-me.g.position.x,dz=me.faceTo.g.position.z-me.g.position.z;me.yaw=Math.atan2(dx,dz)}
  if(moving)me.faceTo=null;
- c3Collide(me);me.state=moving?'walk':'idle';
+ if(C3.vname!=='road')c3Collide(me);me.state=moving?'walk':'idle';
  if(C3.drive){C3.drive.g.position.set(me.g.position.x,.18,me.g.position.z);C3.drive.g.rotation.y=me.yaw}
  (C3.drops||[]).forEach(d=>{const t=Math.min(1,(now-d.t0)/800);d.g.position.y=.18+(1-t)*(1-t)*7});
  C3.npcs.forEach(P=>{
@@ -645,14 +669,14 @@ function c3Open(v){
  C3.sc=V.sc;C3.npcs=V.npcs;C3.crowd=V.crowd;C3.me=V.me;C3.all=V.all;ROOM=V.ROOM;OBST=V.OBST;
  if(V.meKey!==meKey()){buildMe(C3.sc);V.me=C3.me;V.all=C3.all;V.meKey=C3.meKey}
  C3.me.g.position.set(V.spawn[0],0,V.spawn[1]);C3.me.yaw=V.spawn[2];C3.me.dest=null;C3.me.follow=null;C3.me.ov=null;
- $('c3name').textContent=VN.title();$('c3vibe').style.display=v==='club'?'':'none';c3SetActions();$('c3act').hidden=true;
+ $('c3name').textContent=VN.title();$('c3vibe').style.display=v==='club'?'':'none';$('c3spd').style.display='none';$('c3pad').style.display='none';c3SetActions();$('c3act').hidden=true;
  $('c3').style.display='block';$('c3snd').textContent=SOUND?'🔊':'🔇';
  C3.nextAmb=performance.now()+9000;C3.nextCrowd=performance.now()+3000;C3.met={};C3.amb=false;C3.busy=false;
  C3.yaw=0;C3.run=true;C3.clock=performance.now();c3Resize();
  if(C3.lastV!==v){C3.log=[];C3.lastV=v;C3.spent=C3.spent||0;c3Log('','📍 '+VN.title()+' — 사람 가까이 걸어가 말을 걸거나 🎬 행동을 눌러보세요.','sys')}else c3Log('','','');
  if(VN.enter)VN.enter(V);
  c3Audio();requestAnimationFrame(c3Frame);return true}
-function c3Close(){if(C3.drive)carPark();C3.run=false;clearInterval(C3.aiv);const w=$('c3');if(w)w.style.display='none';render()}
+function c3Close(){if(C3.vname==='road'&&C3.rdv)roadSettle();if(C3.drive)carPark();if($('c3spd')){$('c3spd').style.display='none';$('c3pad').style.display='none'}C3.run=false;clearInterval(C3.aiv);const w=$('c3');if(w)w.style.display='none';render()}
 /* ===== 다중 장소 · 연애 · 학교 · 학원 · 자동차 매장 ===== */
 const VENUES={};C3.V={};
 const bxm=(sc,w,h,d,x,y,z,c,o)=>addMesh(sc,new THREE.BoxGeometry(w,h,d),mat(c,o),x,y,z);
@@ -835,6 +859,72 @@ VENUES.field={where:'현장학습·운동회 장소(공원)',title:()=>'🚌 현
   if(k==='quiz'){const qs=[...QUIZ].sort(()=>Math.random()-.5).slice(0,3);let ok=0;for(const q of qs){const a=prompt('🧠 경제 캠프 퀴즈\n\n'+q[0]+'\n'+q[1].map((x,i)=>(i+1)+') '+x).join('\n')+'\n\n(번호 입력)');if(a===null)break;if(parseInt(a)-1===q[2])ok++}
    c3Log('','🧠 퀴즈 '+ok+'/3 정답','sys');if(ok>0&&rew()){S.int=Math.min(100,S.int+ok);SCH().grade=Math.min(100,SCH().grade+ok*2);c3Note('🧠 '+ok+'문제 정답! 분석력 +'+ok)}else c3Note('🧠 '+ok+'/3 정답');c3Speak(teacher,ok===3?'전부 맞혔어요! 경제 박사네요!':ok?'잘했어요! 조금만 더 공부하면 완벽해요.':'괜찮아요, 오늘 배운 걸 기억해 두세요.',6);save();return true}
   return false}};
+/* ---- 🛣 드라이브(차 몰기) ---- */
+const RDX=40,RDZ=28;
+VENUES.road={where:'도로(드라이브 코스)',title:()=>'🛣 드라이브',
+ build(){
+  const sc=new THREE.Scene();sc.background=new THREE.Color(0x9fd6ff);sc.fog=new THREE.Fog(0xb8dcff,50,190);
+  sc.add(new THREE.HemisphereLight(0xffffff,0x5f9a4a,1.0));const sun=new THREE.DirectionalLight(0xfff0d0,1.1);sun.position.set(30,50,20);sc.add(sun);
+  const bx=(...a)=>bxm(sc,...a),OB=[];const ob=(w,d,x,z)=>OB.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2});
+  const gr=addMesh(sc,new THREE.PlaneGeometry(500,500),mat(0x6bbd52,{roughness:1}),0,0,0);gr.rotation.x=-Math.PI/2;
+  const road=addMesh(sc,new THREE.RingGeometry(.86,1.14,96),mat(0x2b2d36,{roughness:.9,side:THREE.DoubleSide}),0,.03,0);road.rotation.x=-Math.PI/2;road.scale.set(RDX,RDZ,1);
+  for(let i=0;i<72;i++){const a=i/72*Math.PI*2;const d=addMesh(sc,new THREE.BoxGeometry(.25,.02,1.6),new THREE.MeshBasicMaterial({color:0xffe27a}),RDX*Math.cos(a),.06,RDZ*Math.sin(a));d.rotation.y=Math.atan2(-RDX*Math.sin(a),RDZ*Math.cos(a))}
+  // 건물/나무 (도로 바깥·안쪽)
+  let seed=7;const R=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
+  for(let i=0;i<46;i++){const a=R()*6.28,out=R()<.55,rr=out?1.32+R()*.9:.15+R()*.5,x=RDX*Math.cos(a)*rr,z=RDZ*Math.sin(a)*rr,w=3+R()*5,d=3+R()*5,h=4+R()*16,c=[0xc9ced8,0x9fb0c8,0xd9c9a8,0xb8c4a8,0xe0b0a0][i%5];bx(w,h,d,x,h/2,z,c,{roughness:.7});ob(w,d,x,z)}
+  for(let i=0;i<30;i++){const a=R()*6.28,rr=.72+R()*.1+(R()<.5?.45:0),x=RDX*Math.cos(a)*rr,z=RDZ*Math.sin(a)*rr;bx(.4,2.4,.4,x,1.2,z,0x7a4a2a);addMesh(sc,new THREE.SphereGeometry(1.5,10,8),mat(0x2f8f3f,{roughness:1}),x,3.2,z);ob(.9,.9,x,z)}
+  // 콘(장애물)
+  [.9,2.1,3.3,4.4,5.6].forEach((a,i)=>{const x=RDX*Math.cos(a),z=RDZ*Math.sin(a);addMesh(sc,new THREE.ConeGeometry(.35,.9,12),mat(0xff7a1a),x,.45,z);ob(.7,.7,x,z)});
+  // 단속 카메라·톨게이트
+  [[0,RDZ],[0,-RDZ]].forEach(p=>{bx(.3,5,.3,p[0]+5,2.5,p[1]*1.14,0x888899);bx(1.6,.8,1.2,p[0]+5,5,p[1]*1.14,0x222233);bx(.5,.3,.2,p[0]+5,5,p[1]*1.14+(p[1]>0?-.7:.7),0xff2a2a)});
+  bx(.4,3,.4,-RDX-4,1.5,0,0xffd24a);bx(.4,3,.4,-RDX+4,1.5,0,0xffd24a);bx(8.4,.8,.8,-RDX,3.2,0,0xffd24a);
+  const lb=(t,x,y,z,col)=>{const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:canvasTex(256,64,(c,w,h)=>{c.fillStyle='rgba(8,10,20,.8)';c.fillRect(0,0,w,h);c.fillStyle=col;c.font='bold 28px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(t,w/2,h/2)}),transparent:true,fog:false}));sp.scale.set(4,1,1);sp.position.set(x,y,z);sc.add(sp)};
+  lb('📸 과속 단속',5,7,RDZ*1.14,'#ff7a7a');lb('📸 과속 단속',5,7,-RDZ*1.14,'#ff7a7a');lb('🛣 톨게이트',-RDX,5,0,'#ffd878');
+  const me=newMe();me.g.position.set(RDX,0,-2);me.yaw=0;me.g.rotation.y=0;sc.add(me.g);
+  return{sc,npcs:[],crowd:[],me,all:[me],ROOM:{x0:-120,x1:120,z0:-90,z1:90},OBST:OB,spawn:[RDX,-2,0],meKey:meKey()}},
+ actions:()=>[['park','🅿 주차하고 내리기'],['honk','📯 경적']],
+ locs:[],
+ enter(V){
+  const own=(S.cars||[]);if(!own.length){c3Note('차가 없어요! 자동차 매장에서 먼저 구입하세요');return}
+  const best=own.reduce((a,c)=>c.p>a.p?c:a,own[0]),d=CARS[best.m],g=makeCar(d);g.position.set(C3.me.g.position.x,.18,C3.me.g.position.z);C3.sc.add(g);
+  C3.drive={g,d,car:best};C3.me.g.visible=false;C3.dist=9.5;C3.me.yaw=0;
+  C3.rdv={sp:0,dist:0,cool:0,cam:0,toll:0,cost:0,th:0,auto:isMinor(),km:0};
+  $('c3spd').style.display='block';$('c3pad').style.display=isMinor()?'none':'flex';
+  c3Log('나','🚗 '+d.n+'에 탑승! '+(isMinor()?'(미성년자라 기사님이 운전해요 — 구경만 하세요)':'WASD/방향키 또는 화면 버튼으로 운전'),'me');
+  c3Note(isMinor()?'🚖 기사님 운전으로 드라이브 중':'🏎 운전 시작! 과속·충돌은 벌금·수리비가 나가요')},
+ act(k){
+  if(k==='park'){roadEnd();return true}
+  if(k==='honk'){sfx('err');c3Note('📯 빵빵!');return true}
+  return false}};
+function roadMove(dt){
+ const me=C3.me,r=C3.rdv,dv=C3.drive;if(!r||!dv)return;
+ const k=C3.keys,d=dv.d,maxv=d.t==='sup'?42:d.t==='sport'?36:d.t==='kei'?22:28,P=me.g.position;
+ let acc=0,steer=0;
+ if(r.auto){r.sp=Math.min(13,(r.sp||0)+5*dt);r.th+=dt*r.sp/34;const nx=RDX*Math.cos(r.th),nz=RDZ*Math.sin(r.th);me.yaw=Math.atan2(-RDX*Math.sin(r.th),RDZ*Math.cos(r.th));P.x=nx;P.z=nz;r.dist+=r.sp*dt}
+ else{
+  const up=k.w||k.arrowup||k.pad_up,dn=k.s||k.arrowdown||k.pad_dn,lf=k.a||k.arrowleft||k.pad_l,rt=k.d||k.arrowright||k.pad_r;
+  if(!up&&!dn&&!lf&&!rt&&me.dest){const dx=me.dest.x-P.x,dz=me.dest.z-P.z;if(Math.hypot(dx,dz)<4)me.dest=null;else{let a=Math.atan2(dx,dz)-me.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));steer=Math.max(-1,Math.min(1,a*2));acc=1}}
+  else{if(up||dn||lf||rt)me.dest=null;acc=up?1:dn?-1:0;steer=(lf?1:0)-(rt?1:0)}
+  r.sp+=(acc>0?10*(1-Math.max(0,r.sp)/maxv):acc<0?-18:(r.sp>0?-4:4))*dt;r.sp=Math.max(-6,Math.min(maxv,r.sp));if(!acc&&Math.abs(r.sp)<.4)r.sp=0;
+  const rad=Math.hypot(P.x/RDX,P.z/RDZ),onRoad=Math.abs(rad-1)<.15;if(!onRoad)r.sp=Math.min(r.sp,r.sp>8?r.sp-12*dt:r.sp);
+  me.yaw+=steer*Math.min(1.5,Math.abs(r.sp)/5)*dt*1.6*(r.sp>=0?1:-1);
+  const nx=P.x+Math.sin(me.yaw)*r.sp*dt,nz=P.z+Math.cos(me.yaw)*r.sp*dt;
+  let hit=false;OBST.forEach(o=>{if(nx>o.x0-1.1&&nx<o.x1+1.1&&nz>o.z0-1.1&&nz<o.z1+1.1)hit=true});
+  if(Math.abs(nx)>118||Math.abs(nz)>88)hit=true;
+  if(hit){const v=Math.abs(r.sp);if(v>5&&r.cool<=0){const dmg=Math.round(dv.car.p*(v/45)*.12/1e4)*1e4;pay(dmg);r.cost+=dmg;S.mental=Math.max(1,S.mental-3);c3Log('','💥 충돌! 수리비 −'+won(dmg),'sys');c3Note('💥 쾅! 수리비 '+won(dmg));sfx('err');r.cool=1.2}r.sp=-r.sp*.3}
+  else{P.x=nx;P.z=nz;r.dist+=Math.abs(r.sp)*dt}
+ }
+ r.cool-=dt;r.cam-=dt;r.toll-=dt;
+ if(r.cam<=0)[[0,RDZ],[0,-RDZ]].forEach(p=>{if(Math.hypot(P.x-(p[0]+2),P.z-p[1])<7&&r.sp>22&&!r.auto){const fine=Math.round(150000*wage(S.t)*(r.sp/22)/1e3)*1e3;pay(fine);r.cost+=fine;r.cam=6;c3Log('','📸 과속 단속! 벌금 −'+won(fine)+' ('+Math.round(r.sp*3.6)+'km/h)','sys');c3Note('📸 과속 벌금 '+won(fine))}});
+ if(r.toll<=0&&Math.hypot(P.x+RDX,P.z)<4){const t=Math.round(3000*wage(S.t)/100)*100;pay(t);r.cost+=t;r.toll=8;c3Log('','🛣 통행료 −'+won(t),'sys')}
+ let a=(me.yaw+Math.PI)-C3.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));C3.yaw+=a*Math.min(1,dt*2.5);
+ $('c3spd').textContent='🚗 '+Math.round(Math.abs(r.sp)*3.6)+' km/h · '+(r.dist/1000).toFixed(2)+' km'+(r.cost?' · 💸 −'+won(r.cost):'')}
+function roadSettle(){
+ const r=C3.rdv;if(!r)return;C3.rdv=null;const km=r.dist/1000,fuel=Math.round(km*1500*wage(S.t)/100)*100;
+ if(fuel>0)pay(fuel);S.driven=(S.driven||0)+r.dist;S.mental=Math.min(100,S.mental+Math.min(8,Math.round(km*1.5)));
+ c3Log('','🛣 드라이브 종료: '+km.toFixed(2)+'km · 기름값 −'+won(fuel)+(r.cost?' · 벌금/수리 −'+won(r.cost):'')+' · 멘탈 +'+Math.min(8,Math.round(km*1.5)),'sys');save()}
+function roadEnd(){roadSettle();$('c3spd').style.display='none';$('c3pad').style.display='none';if(C3.drive)carPark();c3Close()}
+(function(){const st=document.createElement('style');st.textContent='#c3spd{position:absolute;left:50%;top:92px;transform:translateX(-50%);background:#000b;border:1px solid var(--gold);border-radius:12px;padding:6px 14px;font-weight:800;display:none;z-index:3}#c3pad{position:absolute;left:12px;right:12px;bottom:116px;justify-content:space-between;display:none;pointer-events:none;z-index:3}#c3pad div{display:flex;gap:8px;pointer-events:auto}#c3pad button{width:62px;height:62px;font-size:24px;border-radius:50%;background:#000a}';document.head.appendChild(st)})();
 /* ---- 자동차 매장 ---- */
 const CARS=[{n:'경차 별이',t:'kei',c:0xffcf3a,p:6e6},{n:'준중형 세단 그랜드',t:'sedan',c:0xdfe4ee,p:1.2e7},{n:'SUV 트레일',t:'suv',c:0x2c6a3a,p:2.2e7},{n:'수입 세단 벨라',t:'sedan',c:0x14141c,p:6e7},{n:'스포츠카 블레이즈',t:'sport',c:0xd1002a,p:1.6e8},{n:'슈퍼카 아스트라',t:'sup',c:0xffb000,p:3.5e8}];
 function makeCar(d){
@@ -1229,6 +1319,7 @@ const ACH=[
 ['net','인맥왕','인맥 60 이상',()=>netStat()>=60],
 ['army','대한민국 건아','군 복무를 마쳤다',()=>S.armyDone&&S.army===0],
 ['wed','가정을 이루다','결혼했다',()=>!!S.married],
+['drive','드라이버','5km 이상 운전했다',()=>(S.driven||0)>=5000],
 ['car','자동차 오너','자동차를 구매했다',()=>!!(S.cars&&S.cars.length)],
 ['cargive','차 뿌리기','근처 사람들에게 차를 선물했다',()=>(S.carsGiven||0)>=1],
 ['fleet','차 부자','차를 10대 이상 보유했다',()=>(S.cars||[]).length>=10],
@@ -1504,6 +1595,7 @@ function tabTown(){
  return'<div class="card"><b>🏙 마을 (모두 3D)</b> <span class="mut">걸어 다니며 사람들과 말하고 행동해요. 말 걸기·행동은 입력창에 /를 붙여 자유롭게!</span>'
  +btn('school','🏫',SCH_NAME[st],'수업·시험·친구·급식. 성적 '+Math.round(sc.grade)+'점'+(a>=19?' · 대학 캠퍼스에는 연애 후보도 있어요':''))
  +btn('field','🚌','현장학습·운동회','도시락·달리기·줄다리기·경제 캠프 퀴즈 · 친구들과 우정 쌓기')
+ +btn('road','🛣','드라이브 (차 몰기)','내 차로 달려요! 기름값·과속 벌금·충돌 수리비가 실제로 나가요'+((S.cars&&S.cars.length)?'':' · 먼저 자동차 매장에서 차를 사세요'))
  +btn('academy','📖','학원','수강 중: '+(act.join(', ')||'없음')+' · 분석력을 올려요')
  +btn('cars','🚗','자동차 매장','보유 차량: '+car+(a<19&&S.diff!=='god'?' · 미성년자는 계약 불가':''))
  +btn('club','🪩','클럽 〈BEAT〉','VIP·연애·사장님 심사 · 입장료 '+won(Math.round(30000*wage(S.t)/1000)*1000))
@@ -1772,7 +1864,8 @@ document.addEventListener('click',e=>{
  if(a==='send')return doSend();
  if(a==='chip'){S.cdraft=b.dataset.t;return doSend()}
  if(a==='pickf'){S.cf=id;S.cdraft='';const h=S.chat.f[id]||(S.chat.f[id]=[]);if(!h.length){const n=NPCS.find(x=>x.id===id);pushC(h,{w:id,n:n.name,e:n.emoji,t:pick(PER[id].g)})}save();return render()}
- if(a==='go3d'){if(id==='club'){if(S.clubIn!==S.t){clubAct('enter');if(S.clubIn!==S.t)return}}return void c3Open(id)}
+ if(a==='go3d'){if(id==='road'&&!(S.cars&&S.cars.length))return toast('🚗 차가 없어요! 자동차 매장에서 먼저 구입하세요');
+  if(id==='club'){if(S.clubIn!==S.t){clubAct('enter');if(S.clubIn!==S.t)return}}return void c3Open(id)}
  if(a==='club3d'){if(S.clubIn!==S.t){clubAct('enter');if(S.clubIn!==S.t)return}return void c3Open()}
  if(a==='clubenter')return clubAct('enter');
  if(a==='clubdrink')return clubAct('drink');
