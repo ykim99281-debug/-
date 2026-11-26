@@ -561,6 +561,7 @@ function bottleService(){
  save()}
 /* ---- 행동 ---- */
 function c3Action(k){
+ if(k==='meetup')return c3MeetUp();
  if(k==='hire')return c3Hire();
  if(k==='gift'||k==='date'||k==='confess')return c3Love(k);
  {const VN=VENUES[C3.vname];if(VN&&VN.act&&VN.act(k))return}
@@ -628,7 +629,7 @@ function c3Frame(){
  C3.all.forEach(P=>{if(P.me){const tg=C3.target;if(tg){const dx=tg.g.position.x-P.g.position.x,dz=tg.g.position.z-P.g.position.z;let a=Math.atan2(dx,dz)-P.g.rotation.y;a=Math.atan2(Math.sin(a),Math.cos(a));P.look=Math.max(-.9,Math.min(.9,a))*.8}else P.look=0}else{const dx=C3.me.g.position.x-P.g.position.x,dz=C3.me.g.position.z-P.g.position.z;if(Math.hypot(dx,dz)<7){let a=Math.atan2(dx,dz)-P.g.rotation.y;a=Math.atan2(Math.sin(a),Math.cos(a));P.look=Math.max(-.9,Math.min(.9,a))*.8}else P.look=0}
   let d=P.yaw-P.g.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));P.g.rotation.y+=d*Math.min(1,dt*9);updatePerson(P,dt,now)});
  const T=c3Near();if(T!==C3.target){C3.target=T;$('c3tgt').hidden=!T}
- if(C3.target){const id=C3.target.def.n,c=credOf(id),lv=C3.target.def.love&&!isMinor();$('c3tgt').innerHTML='<b>'+C3.target.def.e+' '+id+'</b> · 신뢰도 '+c+' <span class="mut">('+credLabel(c)+')</span><div class="bar"><i style="width:'+c+'%"></i></div>'+(lv?'<div class="mut">💗 호감도 '+(S.love[id]||0)+(S.partner===id?' · 💑 연인':'')+(wealthKnown(id)?' · 💰 재력 인지':'')+'</div><div class="bar"><i style="width:'+(S.love[id]||0)+'%;background:#ff5b9a"></i></div>':'')+(C3.target.def.cls?'<div class="mut">🤝 우정 '+(S.fr[id]||0)+((S.fr[id]||0)>=50?' · 단짝 ⭐':'')+'</div><div class="bar"><i style="width:'+(S.fr[id]||0)+'%;background:#7affc8"></i></div>':'')}
+ if(C3.target){const id=C3.target.def.n,c=credOf(id),lv=C3.target.def.love&&!isMinor();$('c3tgt').innerHTML='<b>'+C3.target.def.e+' '+id+'</b> · 신뢰도 '+c+' <span class="mut">('+credLabel(c)+')</span><div class="bar"><i style="width:'+c+'%"></i></div>'+(lv?'<div class="mut">💗 호감도 '+(S.love[id]||0)+(S.partner===id?' · 💑 연인':'')+(wealthKnown(id)?' · 💰 재력 인지':'')+((S.love[id]||0)>=30?' · 💞 따로 만나기 가능':'')+'</div><div class="bar"><i style="width:'+(S.love[id]||0)+'%;background:#ff5b9a"></i></div>':'')+(C3.target.def.cls?'<div class="mut">🤝 우정 '+(S.fr[id]||0)+((S.fr[id]||0)>=50?' · 단짝 ⭐':'')+'</div><div class="bar"><i style="width:'+(S.fr[id]||0)+'%;background:#7affc8"></i></div>':'')}
  $('c3who').textContent=ymOf(S.t).y+'년 '+ymOf(S.t).m+'월 · 💰 '+won(S.cash)+(club&&isVip()?' · 👑 VIP':'')+(S.partner?' · 💑':'');
  if(club){
   C3.vibe=Math.max(0,C3.vibe-dt*.35);$('c3vb').style.width=C3.vibe+'%';
@@ -761,7 +762,7 @@ VENUES.school={where:'학교',title:()=>'🏫 '+SCH_NAME[stageKey()],stage:stage
   const npcs=spawnDefs(sc,defs);
   const me=newMe();me.g.position.set(2,0,0);me.yaw=Math.PI/2;me.g.rotation.y=me.yaw;sc.add(me.g);
   return{sc,npcs,crowd:[],me,all:[...npcs,me],ROOM:{x0:-11.5,x1:12.5,z0:-8.5,z1:8.5},OBST:OB,spawn:[2,0,Math.PI/2],meKey:meKey()}},
- actions:()=>[['study','📚 수업 듣기'],['ask','✋ 질문하기'],['exam','📝 시험 보기'],['lunch','🍱 '+(stageKey()==='u'?'학식':'급식')],['play','⚽ 친구와 놀기'],['studytog','🤝 같이 공부'],['tipfr','🤫 단짝에게 정보'],['clubact','🎯 동아리 활동'],['club_eco','📈 경제동아리 가입'],['club_cod','💻 코딩동아리 가입'],['club_soc','⚽ 축구부 가입'],['club_band','🎸 밴드부 가입'],['pres','🗳 '+(stageKey()==='u'?'학생회장':'학급회장')+' 출마'],['market','🏪 장터 열기'],['wave','👋 인사']].concat(stageKey()==='u'?[['gift','🎁 선물'],['date','🍽 데이트'],['confess','💘 고백']]:[]),
+ actions:()=>[['study','📚 수업 듣기'],['ask','✋ 질문하기'],['exam','📝 시험 보기'],['lunch','🍱 '+(stageKey()==='u'?'학식':'급식')],['play','⚽ 친구와 놀기'],['meetup','💞 따로 만나기'],['studytog','🤝 같이 공부'],['tipfr','🤫 단짝에게 정보'],['clubact','🎯 동아리 활동'],['club_eco','📈 경제동아리 가입'],['club_cod','💻 코딩동아리 가입'],['club_soc','⚽ 축구부 가입'],['club_band','🎸 밴드부 가입'],['pres','🗳 '+(stageKey()==='u'?'학생회장':'학급회장')+' 출마'],['market','🏪 장터 열기'],['wave','👋 인사']].concat(stageKey()==='u'?[['gift','🎁 선물'],['date','🍽 데이트'],['confess','💘 고백']]:[]),
  locs:[[/교실|칠판|선생/,-9.3,0,'교실'],[/운동장|밖|축구/,7,0,'운동장'],[/정문|문/,-.2,0,'교실 문']],
  act(k,T){
   const s=schoolMonth(),me=C3.me,now=performance.now(),teacher=C3.npcs[0],st=stageKey(),inRoom=me.g.position.x<-1;
@@ -983,12 +984,13 @@ VENUES.cars={where:'자동차 매장',title:()=>'🚗 자동차 매장',
   if(k==='showkey'){if(!(S.cars&&S.cars.length)){c3Note('아직 차가 없어요!');return true}S.carSeen=true;me.ov={state:'pose',until:now+2500};c3Log('나','🔑 내 차 키를 슬쩍 보여준다','me');remember(sp.def.n,'본인 소유 차량이 있음을 보여줌');S.ctrust[sp.def.n]=Math.min(40,(S.ctrust[sp.def.n]||0)+5);c3Speak(sp,'오, 보유 차량이 있으시군요. 대단하세요!',5);save();return true}
   return false}};
 /* ---- 클럽 정의 ---- */
-const CLUB_ACTS=[['wave','👋 인사'],['dance','💃 춤추기'],['toast','🥂 건배'],['drink','🍹 음료 사기'],['round','🎉 전체 쏘기'],['card','💳 카드 보여주기'],['brag','😎 자랑하기'],['namecard','📇 명함 교환'],['clap','👏 박수'],['bow','🙇 인사(허리)'],['req','🎤 신청곡'],['photo','📸 같이 사진'],['gift','🎁 선물'],['date','🍽 데이트'],['confess','💘 고백'],['carkey','🔑 차 키 자랑'],['hire','🧑‍💼 비서 채용 신청'],['cargive','🚗 차 뿌리기'],['vipreq','👑 VIP 신청'],['vipjudge','📝 VIP 심사 받기'],['bottle','🍾 보틀 서비스(VIP)']];
+const CLUB_ACTS=[['wave','👋 인사'],['dance','💃 춤추기'],['toast','🥂 건배'],['drink','🍹 음료 사기'],['round','🎉 전체 쏘기'],['card','💳 카드 보여주기'],['brag','😎 자랑하기'],['namecard','📇 명함 교환'],['clap','👏 박수'],['bow','🙇 인사(허리)'],['req','🎤 신청곡'],['photo','📸 같이 사진'],['gift','🎁 선물'],['date','🍽 데이트'],['confess','💘 고백'],['carkey','🔑 차 키 자랑'],['meetup','💞 따로 만나기'],['hire','🧑‍💼 비서 채용 신청'],['cargive','🚗 차 뿌리기'],['vipreq','👑 VIP 신청'],['vipjudge','📝 VIP 심사 받기'],['bottle','🍾 보틀 서비스(VIP)']];
 VENUES.club={where:'클럽 〈BEAT〉',title:()=>'🪩 BEAT',
  build(){const sc=new THREE.Scene();buildClub(sc);C3.me=null;buildPeople(sc);return{sc,npcs:C3.npcs,crowd:C3.crowd,me:C3.me,all:C3.all,ROOM:CLUB_ROOM,OBST:CLUB_OBST,spawn:[0,8.5,Math.PI],meKey:meKey()}},
  actions:()=>CLUB_ACTS,locs:[[/바|칵테일|술집/,7.2,-.6,'바'],[/dj|디제이|부스/i,0,-6.4,'DJ 부스'],[/플로어|가운데|춤추는/,0,.6,'플로어'],[/소파|라운지/,-6.8,1.8,'라운지'],[/vip|경호|브이아이피/i,-6.9,-4.8,'VIP 입구'],[/입구|문|출구/,0,9.2,'입구']]};
 function c3SetActions(){const VN=VENUES[C3.vname],list=VN.actions().concat([['custom','✍️ 내 행동 직접 입력']]);$('c3act').innerHTML=list.map(a=>'<button data-k="'+a[0]+'"'+(a[0]==='custom'?' class="pri"':'')+'>'+a[1]+'</button>').join('')}
-function spawnDefs(sc,defs){const list=[];defs.forEach(d=>{const P=makePerson(d.o);P.def=d;P.name=d.n;P.state=d.state||'idle';P.dv=d.dv||0;P.g.position.set(d.pos[0],d.pos[1]||0,d.pos[2]);P.home=P.g.position.clone();P.fix=!d.wander;if(d.look)P.yaw=Math.atan2(d.look[0],d.look[2]);P.g.rotation.y=P.yaw;P.wander=!!d.wander;sc.add(P.g);list.push(P)});return list}
+const NPC_REG={};NPC_DEF.forEach(d=>NPC_REG[d.n]=d);
+function spawnDefs(sc,defs){const list=[];defs.forEach(d=>{NPC_REG[d.n]=d;const P=makePerson(d.o);P.def=d;P.name=d.n;P.state=d.state||'idle';P.dv=d.dv||0;P.g.position.set(d.pos[0],d.pos[1]||0,d.pos[2]);P.home=P.g.position.clone();P.fix=!d.wander;if(d.look)P.yaw=Math.atan2(d.look[0],d.look[2]);P.g.rotation.y=P.yaw;P.wander=!!d.wander;sc.add(P.g);list.push(P)});return list}
 function newMe(){const a=ageOf(S.t);const me=makePerson({child:a<=14,skin:0xf2c9a5,hair:0x1a1410,hairStyle:'short',top:0xffd24a,bottom:0x2a4a9a,outfit:'tee',shoe:0xffffff,name:'⭐ '+S.name,labelColor:'#7affc8',scale:a<19?.94:1});me.me=true;return me}
 function LOVE(P){if(!(P.def.love&&!isMinor()))return'';const id=P.def.n;return'\n[연애 감정] 호감도 '+(S.love[id]||0)+'/100. 플레이어의 재력을 '+(wealthKnown(id)?'알고 있다(증거·신뢰 확보)':'아직 모른다(확실한 증거 없이는 단정 금지)')+'. '+(P.def.loveW>1?'당신은 은근히 경제력을 중시한다. ':P.def.loveW<.8?'당신은 돈보다 사람됨을 중시한다. ':'')+(S.partner===id?'플레이어와 연인 사이다. ':'')}
 
@@ -1124,6 +1126,57 @@ VENUES.office={where:'사장님 사무실(비서실)',title:()=>'🏢 비서실'
   if(k==='bonus'){const b=Math.round(1000000*w/1e5)*1e5;if(b>S.cash){c3Note('보너스 '+won(b)+' 필요');return true}pay(b);s0.loyal=Math.min(100,s0.loyal+12);me.ov={state:'bow',until:now+1500};P.ov={state:'bow',until:now+2000};c3Log('나','🎁 보너스 −'+won(b)+' (충성도 +12 → '+Math.round(s0.loyal)+')','me');c3Speak(P,pickNew('bn',['사장님… 감사합니다! 더 열심히 챙길게요.','이렇게 신경 써 주시다니, 정말 감사해요.']),6);save();return true}
   if(k==='praise'){if(!once('praise',3))return true;s0.loyal=Math.min(100,s0.loyal+3);me.ov={state:'clap',until:now+2000};c3Speak(P,pickNew('pr',['과찬이세요 ㅎㅎ','그렇게 말씀해 주시니 힘이 나네요.','별말씀을요, 제 일인걸요!']),5);save();return true}
   if(k==='fire'){if(!confirm('📤 '+s0.n+'을(를) 해고할까요? (퇴직금 1개월치)'))return true;pay(s0.sal);const n=s0.n;S.secretary=null;P.ov={state:'bow',until:now+2000};c3Log('','📤 '+n+' 퇴사 처리 (퇴직금 −'+won(s0.sal)+')','sys');c3Speak(P,'그동안 감사했습니다.',5);save();setTimeout(()=>c3Close(),2500);return true}
+  return false}};
+/* ---- 💞 따로 만나기 (카페) ---- */
+function meetDef(n){return NPC_REG[n]||{n,e:'🙂',cls:true,o:{skin:0xf2c9a5,hair:0x2a1a10,hairStyle:'short',top:0x4aa3ff,bottom:0x2a3a6a,outfit:'tee',name:n},desc:'친한 친구.',lines:['오랜만이야!','뭐 먹을래?','요즘 어떻게 지내?']}}
+function meetOk(id){const lv=(S.love[id]||0)>=30&&!isMinor()&&((NPC_REG[id]||{}).love),fr=(S.fr&&S.fr[id]||0)>=30;return lv?'love':fr?'friend':null}
+function meetList(){const names=new Set([...Object.keys(S.love||{}),...Object.keys(S.fr||{})]);return [...names].filter(n=>meetOk(n)).map(n=>({n,kind:meetOk(n)}))}
+function c3MeetUp(){
+ const T=c3Near();if(!T||T.sec||T.def.hired)return c3Note('호감도(또는 우정) 30 이상인 사람 가까이에서 신청하세요');
+ const id=T.def.n,k=meetOk(id);if(!k){if(isMinor()&&T.def.love)return c3Note('연애 상대와의 만남은 만 19세부터예요');return c3Note(id+'와(과) 따로 만나려면 호감도(친구는 우정) 30 이상이 필요해요 (현재 '+(T.def.love&&!isMinor()?(S.love[id]||0):(S.fr[id]||0))+')')}
+ C3.meet=id;c3Close();c3Open('cafe')}
+VENUES.cafe={where:'단둘이 만난 카페',title:()=>'☕ 카페 — '+(C3.meet||''),stage:()=>C3.meet||'x',
+ build(){
+  const sc=new THREE.Scene();sc.background=new THREE.Color(0x2a1a14);sc.fog=new THREE.Fog(0x2a1a14,18,40);
+  sc.add(new THREE.AmbientLight(0xffe6c8,.8));sc.add(new THREE.HemisphereLight(0xfff0dd,0x553322,.5));
+  [[-3,3,0],[3,3,-2],[0,3,4]].forEach(p=>{const l=new THREE.PointLight(0xffb870,1.2,10);l.position.set(...p);sc.add(l);addMesh(sc,new THREE.SphereGeometry(.14,10,8),new THREE.MeshBasicMaterial({color:0xffd9a0}),p[0],3.2,p[2])});
+  const bx=(...a)=>bxm(sc,...a),OB=[];const ob=(w,d,x,z)=>OB.push({x0:x-w/2,x1:x+w/2,z0:z-d/2,z1:z+d/2});
+  const fl=addMesh(sc,new THREE.PlaneGeometry(16,16),mat(0x8a5a36,{roughness:.6}),0,0,0);fl.rotation.x=-Math.PI/2;
+  const wc=0xeed9c0;bx(.3,3.4,14,-7,1.7,0,wc);ob(.3,14,-7,0);bx(.3,3.4,14,7,1.7,0,wc);ob(.3,14,7,0);bx(14,3.4,.3,0,1.7,7,wc);ob(14,.3,0,7);bx(14,3.4,.3,0,1.7,-7,wc);ob(14,.3,0,-7);
+  const view=canvasTex(512,160,(c,w,h)=>{const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#2b2f5a');g.addColorStop(1,'#ff9a6a');c.fillStyle=g;c.fillRect(0,0,w,h);for(let i=0;i<30;i++){const bw=14+Math.random()*30,bh=20+Math.random()*70;c.fillStyle='#14182c';c.fillRect(i*17,h-bh,bw,bh)}});
+  addMesh(sc,new THREE.PlaneGeometry(8,2.6),new THREE.MeshBasicMaterial({map:view}),0,2,-6.8);bx(8.4,.12,.12,0,3.35,-6.8,0x5a3a22);bx(8.4,.12,.12,0,.7,-6.8,0x5a3a22);
+  bx(5,1.1,1.1,-3.5,.55,-5.2,0x5a3a22);ob(5,1.1,-3.5,-5.2);bx(5,.1,1.3,-3.5,1.13,-5.2,0xc9a36b);
+  [-5,-4.2,-3.4,-2.6,-1.8].forEach((x,i)=>bx(.2,.3,.2,x,1.33,-5.2,[0xffffff,0xffd24a,0xff7a7a,0x7aff7a,0x7ab0ff][i]));
+  const menu=canvasTex(256,128,(c,w,h)=>{c.fillStyle='#1c1410';c.fillRect(0,0,w,h);c.fillStyle='#ffe0b0';c.font='bold 26px sans-serif';c.textAlign='center';c.fillText('☕ MENU',w/2,34);c.font='20px sans-serif';c.fillText('아메리카노 · 라떼 · 케이크',w/2,70);c.fillText('오늘의 디저트 🍰',w/2,100)});
+  addMesh(sc,new THREE.PlaneGeometry(2.4,1.2),new THREE.MeshBasicMaterial({map:menu}),-3.5,2.5,-6.85);
+  [[2,-1.2],[-2.2,1.6],[3.2,3.4],[-4.2,4.2]].forEach(p=>{bx(1.2,.08,1.2,p[0],.78,p[1],0xc9a36b);bx(.1,.76,.1,p[0],.38,p[1],0x5a3a22);ob(1.2,1.2,p[0],p[1]);bx(.4,.45,.4,p[0]+.95,.22,p[1],0x7a4a2a);bx(.4,.45,.4,p[0]-.95,.22,p[1],0x7a4a2a);addMesh(sc,new THREE.CylinderGeometry(.09,.07,.1,10),mat(0xffffff),p[0]-.2,.87,p[1]);addMesh(sc,new THREE.CylinderGeometry(.09,.07,.1,10),mat(0xffffff),p[0]+.2,.87,p[1])});
+  [[-6,5.8],[6,5.8],[6,-5.8]].forEach(p=>{bx(.5,.5,.5,p[0],.25,p[1],0x7a4a2a);addMesh(sc,new THREE.SphereGeometry(.55,10,8),mat(0x2f8f3f,{roughness:1}),p[0],.9,p[1])});
+  const g=Object.assign({},meetDef(C3.meet),{pos:[2.95,0,-1.2],fix:true,wander:false,state:'sit',look:[-1,0,0],hired:false,sec:false,vip:false,gate:false});
+  const ba={n:'바리스타',e:'🧑‍🍳',o:{skin:0xe8b890,hair:0x3a2a1a,hairStyle:'short',top:0x1b1b1b,bottom:0x1b1b1b,outfit:'apron',name:'🧑‍🍳 바리스타'},pos:[-3.5,0,-6.2],fix:true,state:'pour',look:[0,0,1],desc:'동네 카페 바리스타. 친절하고 눈치가 빠르며 손님 사생활은 캐묻지 않음.',lines:['주문하시겠어요?','오늘은 원두가 아주 좋아요.','두 분 자리는 창가가 좋겠죠?','디저트도 같이 드릴까요?']};
+  const npcs=spawnDefs(sc,[g,ba]);
+  const me=newMe();me.g.position.set(-2,0,4.5);me.yaw=Math.PI/2;me.g.rotation.y=Math.PI/2;sc.add(me.g);
+  return{sc,npcs,crowd:[],me,all:[...npcs,me],ROOM:{x0:-6.5,x1:6.5,z0:-6.5,z1:6.5},OBST:OB,spawn:[-2,4.5,Math.PI/2],meKey:meKey()}},
+ enter(V){
+  const id=C3.meet,P=C3.npcs[0],k=meetOk(id)||'friend',first=(S.meetM||(S.meetM={}))[id]!==S.t;
+  C3.meetVisit={walk:false,photo:false};
+  if(first){S.meetM[id]=S.t;if(k==='love')S.love[id]=Math.min(100,(S.love[id]||0)+3);else frUp(P,3);S.meetN=(S.meetN||0)+1;c3Log('','💞 '+id+'와(과) 단둘이 만났다 ('+(k==='love'?'호감':'우정')+' +3)','sys')}
+  const L=k==='love'?['오늘은 둘이서만 보네요. 와줘서 고마워요 ☺️','여기 제가 좋아하는 자리예요. 앉아서 천천히 얘기해요.','시간 내줘서 고마워요. 오늘 어땠어요?']:['왔구나! 뭐 먹을래?','오늘은 우리 둘이서만 놀자 ㅎㅎ','여기 자리 맡아놨어~'];
+  setTimeout(()=>{if(C3.run&&C3.vname==='cafe')c3Speak(P,pickNew('cf',L),7)},900)},
+ actions:()=>{const k=meetOk(C3.meet),l=[['order','☕ 음료 주문'],['dessert','🍰 디저트 나눠먹기'],['gift','🎁 선물'],['walk','🚶 같이 산책'],['photo','📸 같이 사진']];if(k==='love')l.push(['confess','💘 고백']);l.push(['leave','🚪 헤어지기(나가기)']);return l.concat([['wave','👋 인사']])},
+ locs:[[/창|창가/,.5,-4,'창가'],[/카운터|바리스타/,-3,-3.5,'카운터'],[/자리|테이블/,1.2,-1.2,'자리']],
+ act(k){
+  const id=C3.meet,P=C3.npcs[0],ba=C3.npcs[1],me=C3.me,now=performance.now(),dr=Math.round(50000*wage(S.t)/1000)*1000,kind=meetOk(id)||'friend',love=kind==='love';
+  const gain=a=>{if(love){const known=wealthKnown(id);S.love[id]=Math.min(100,(S.love[id]||0)+a+(known&&(P.def.loveW||1)>1?1:0))}else frUp(P,a)};
+  const near=Math.hypot(P.g.position.x-me.g.position.x,P.g.position.z-me.g.position.z)<3.6;
+  const rx=async(txt,fb)=>{C3.busy=true;P.faceMe=true;setBubble(P,'…',20);let rep=null;if(aiOn()){try{rep=await aiNpc(P,'(둘만의 카페에서 플레이어가: '+txt+')')}catch(e){S.aiErr=String(e.message||e).slice(0,200)}}C3.busy=false;c3Speak(P,rep||fb,7)};
+  const spend=(c,why)=>{if(c>S.cash){c3Note('💸 잔액 부족 (필요 '+won(c)+')');return false}pay(c);C3.spent=(C3.spent||0)+c;c3Log('','💸 −'+won(c)+' ('+why+')','sys');return true};
+  if(k==='leave'){c3Speak(P,love?'오늘 정말 즐거웠어요. 또 만나요!':'오늘 재밌었다! 또 놀자~',4);setTimeout(()=>c3Close(),1800);save();return true}
+  if(k==='order'){if(!near){c3Note('자리에 앉은 상대 가까이로 가요');return true}if(!spend(Math.round(dr*1.5),'음료 두 잔'))return true;me.ov={state:'toast',until:now+3000};P.ov={state:'toast',until:now+3000};gain(4);S.mental=Math.min(100,S.mental+2);c3Log('나','☕ 음료를 주문해 함께 마셨다 ('+(love?'호감':'우정')+' +4)','me');c3Speak(ba,'주문하신 음료 나왔습니다!',4);rx('음료를 사서 함께 마심','잘 마실게요! 향이 정말 좋네요 ☺️');save();return true}
+  if(k==='dessert'){if(!near){c3Note('자리에 앉은 상대 가까이로 가요');return true}if(!spend(Math.round(dr*2),'디저트'))return true;me.ov={state:'drink',until:now+3000};P.ov={state:'drink',until:now+3000};gain(5);c3Log('나','🍰 디저트를 나눠 먹었다 ('+(love?'호감':'우정')+' +5)','me');rx('디저트를 시켜 나눠 먹음','와, 이거 맛있다! 한 입 더 먹어도 돼요? 😊');save();return true}
+  if(k==='walk'){const v=C3.meetVisit||(C3.meetVisit={});if(v.walk){c3Note('오늘 산책은 이미 했어요');return true}v.walk=true;me.dest={x:.5,z:-4.6};P.ov={state:'walk',until:now+2500};setTimeout(()=>{P.g.position.set(1.4,0,-4.2);P.yaw=Math.PI/2*-1},1800);gain(7);c3Log('나','🚶 창가로 같이 걸으며 이야기했다 ('+(love?'호감':'우정')+' +7)','me');setTimeout(()=>rx('함께 창가로 걸어가 야경과 하늘을 보며 이야기함','여기서 보는 풍경이 참 좋네요. 오늘 같이 있어서 좋아요.'),2300);save();return true}
+  if(k==='photo'){const v=C3.meetVisit||(C3.meetVisit={});if(!near){c3Note('상대 가까이로 가요');return true}if(v.photo){c3Note('오늘 사진은 이미 찍었어요');return true}v.photo=true;me.ov={state:'pose',until:now+2500};P.ov={state:'pose',until:now+2500};const fl=document.createElement('div');fl.className='c3flash';$('c3').appendChild(fl);setTimeout(()=>fl.remove(),500);gain(3);c3Log('나','📸 같이 사진을 찍었다 ('+(love?'호감':'우정')+' +3)','me');rx('같이 사진을 찍음','찰칵! 잘 나왔다 ㅎㅎ 나중에 보내줘요~');save();return true}
+  if(k==='gift'){if(love){return c3Love('gift')}if(!near){c3Note('상대 가까이로 가요');return true}if(!spend(Math.round(dr*6),'선물'))return true;me.ov={state:'bow',until:now+1800};frUp(P,8);c3Log('나','🎁 선물을 줬다 (우정 +8)','me');rx('선물을 건넴','우와 선물이야? 고마워!! 소중히 쓸게!');save();return true}
+  if(k==='confess'){return c3Love('confess')}
   return false}};
 /*CLUB3D-END*/
 </script>
@@ -1404,6 +1457,7 @@ const ACH=[
 ['wed','가정을 이루다','결혼했다',()=>!!S.married],
 ['drive','드라이버','5km 이상 운전했다',()=>(S.driven||0)>=5000],
 ['sec','사장님','비서를 채용했다',()=>!!S.secretary],
+['meet','단둘이','따로 만나기를 해봤다',()=>(S.meetN||0)>=1],
 ['car','자동차 오너','자동차를 구매했다',()=>!!(S.cars&&S.cars.length)],
 ['cargive','차 뿌리기','근처 사람들에게 차를 선물했다',()=>(S.carsGiven||0)>=1],
 ['fleet','차 부자','차를 10대 이상 보유했다',()=>(S.cars||[]).length>=10],
@@ -1685,6 +1739,7 @@ function tabTown(){
  +btn('academy','📖','학원','수강 중: '+(act.join(', ')||'없음')+' · 분석력을 올려요')
  +btn('cars','🚗','자동차 매장','보유 차량: '+car+(a<19&&S.diff!=='god'?' · 미성년자는 계약 불가':''))
  +btn('club','🪩','클럽 〈BEAT〉','VIP·연애·사장님 심사 · 입장료 '+won(Math.round(30000*wage(S.t)/1000)*1000))
+ +(()=>{const L=meetList();return L.length?'<div class="stock"><b>💞 따로 만나기</b> <span class="mut">호감도/우정 30 이상인 사람과 단둘이</span><div class="row" style="margin-top:6px">'+L.map(x=>'<button class="pri" data-a="meet3d" data-id="'+x.n+'">'+(x.kind==='love'?'💗':'🤝')+' '+x.n+'</button>').join('')+'</div></div>':'<div class="mut" style="margin-top:6px">💞 따로 만나기: 호감도(연애 후보) 또는 우정(친구)이 30 이상이면 단둘이 만날 수 있어요</div>'})()
  +'<div class="mut" style="margin-top:8px">💑 연애: '+(S.partner?S.partner+' (연인)':(a<19?'만 19세부터 가능해요':'아직 없음 — 클럽·캠퍼스에서 만나보세요. 상대가 내 재력을 알면 호감 확률이 올라가요'))+'</div></div>'}
 function tabAch(){const n=Object.keys(S.ach).length;
  return'<div class="card"><b>🏆 업적</b> <span class="mut">('+n+' / '+ACH.length+')</span>'+ACH.map(a=>{const d=S.ach[a[0]];return'<div class="stock"><b>'+(d!==undefined?'✅ ':'⬜ ')+a[1]+'</b> <span class="mut">'+a[2]+(d!==undefined?' · '+ymOf(d).y+'년 '+ymOf(d).m+'월':'')+'</span></div>'}).join('')+'</div>'}
@@ -1950,6 +2005,7 @@ document.addEventListener('click',e=>{
  if(a==='send')return doSend();
  if(a==='chip'){S.cdraft=b.dataset.t;return doSend()}
  if(a==='pickf'){S.cf=id;S.cdraft='';const h=S.chat.f[id]||(S.chat.f[id]=[]);if(!h.length){const n=NPCS.find(x=>x.id===id);pushC(h,{w:id,n:n.name,e:n.emoji,t:pick(PER[id].g)})}save();return render()}
+ if(a==='meet3d'){C3.meet=id;return void c3Open('cafe')}
  if(a==='go3d'){if(id==='office'&&!S.secretary)return toast('🧑‍💼 비서가 없어요! 클럽에서 먼저 채용하세요');
   if(id==='road'&&!(S.cars&&S.cars.length))return toast('🚗 차가 없어요! 자동차 매장에서 먼저 구입하세요');
   if(id==='club'){if(S.clubIn!==S.t){clubAct('enter');if(S.clubIn!==S.t)return}}return void c3Open(id)}
