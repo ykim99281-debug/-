@@ -102,6 +102,7 @@ function person(o = {}) {
   if (k === 'hard') { add(U.head, new THREE.SphereGeometry(U1 * .62, 16, 10, 0, Math.PI * 2, 0, Math.PI * .5), M('#ffb020'), 0, U1 * .3, 0); }
   if (k === 'manager') { add(g, BOX(.09, .5, .02), M('#c4281c'), 0, U1 * 3.2, U1 * .52); }
   if (k === 'apron') { add(g, BOX(U1 * 1.7, U1 * 1.5, .03), M(o.apron || '#4b974b'), 0, U1 * 2.7, U1 * .52); }
+  if (k === 'tophat') { add(U.head, new THREE.CylinderGeometry(U1 * .6, U1 * .6, U1 * .1, 20), M('#111'), 0, U1 * .52, 0); add(U.head, new THREE.CylinderGeometry(U1 * .38, U1 * .38, U1 * .6, 20), M('#111'), 0, U1 * .85, 0); add(U.head, new THREE.CylinderGeometry(U1 * .39, U1 * .39, U1 * .12, 20), M(hc), 0, U1 * .62, 0); }
   if (k === 'hood') { add(U.head, new THREE.CylinderGeometry(U1 * .6, U1 * .6, U1 * .3, 20), M('#222a38'), 0, U1 * .42, 0); }
   if (k === 'crown') {
     const gold = M('#ffd23f', { metalness: .8, roughness: .25, emissive: '#7a5200', emissiveIntensity: .35 });
@@ -315,9 +316,14 @@ export function createWorld(canvas, view, cb) {
   }
 
   // ---------- 플레이어(사장님) ----------
-  const player = person({ kind: 'crown', shirt: '#c4281c', pants: '#1f1f23', skin: '#f5cd30', face: 'grin' });
-  player.add(nameTag('👑 나 (사장님)', { color: '#ffe066', y: player.userData.h + .45 }));
-  player.position.set(0, 0, 17); scene.add(player);
+  let player = null, look = { hat: 'crown', shirt: '#c4281c', pants: '#1f1f23', skin: '#f5cd30', cap: '#c4281c' };
+  function buildPlayer() {
+    const old = player, p = person({ kind: look.hat === 'none' ? undefined : look.hat, cap: look.cap, shirt: look.shirt, pants: look.pants, skin: look.skin, face: 'grin' });
+    p.add(nameTag('나 (사장님)', { color: '#ffe066', y: p.userData.h + .45 }));
+    if (old) { p.position.copy(old.position); p.rotation.y = old.rotation.y; scene.remove(old); } else p.position.set(0, 0, 17);
+    scene.add(p); player = p;
+  }
+  buildPlayer();
   let pvy = 0, pAir = 0, pYaw = Math.PI, moveTarget = null;
   const marker = new THREE.Mesh(new THREE.TorusGeometry(.45, .07, 8, 28), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .9 })); marker.rotation.x = Math.PI / 2; marker.visible = false; scene.add(marker);
   const keys = {}; let joy = { x: 0, y: 0 };
@@ -601,6 +607,7 @@ export function createWorld(canvas, view, cb) {
     setJoy(x, y) { joy = { x, y }; },
     jump,
     celebrate() { let n = 0; const id = setInterval(() => { const p = player.position; burst(p.x + rnd(-8, 8), rnd(8, 15), p.z - rnd(4, 14)); if (++n > 6) clearInterval(id); }, 260); },
+    setLook(l) { look = Object.assign({}, look, l); buildPlayer(); },
     teleport(x, z) { player.position.set(x, 0, z); moveTarget = null; camTarget.set(x, 1.5, z - 2.2); },
     setNight(v) { tod = v ? .0 : .38; },
   };

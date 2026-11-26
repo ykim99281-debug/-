@@ -81,7 +81,7 @@ function beep(k){
 
 const KEY='cvs_boss_v1';
 let S=load();
-function def(){return{money:0,total:0,staff:{},goods:{},ups:{},fran:0,t:Date.now(),taps:0,ach:{},mute:false,daily:'',streak:0,evs:0}}
+function def(){return{money:0,total:0,staff:{},goods:{},ups:{},fran:0,t:Date.now(),taps:0,ach:{},mute:false,daily:'',streak:0,evs:0,look:{hat:'crown',shirt:'#c4281c',pants:'#1f1f23',skin:'#f5cd30',cap:'#c4281c'},own:{},t0:Date.now()}}
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d)return Object.assign(def(),d)}catch(e){}return def()}
 function save(){S.t=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
@@ -94,6 +94,17 @@ const perSec=()=>STAFF.reduce((a,s)=>a+lv(S.staff,s.id)*s.ps,0)*mult();
 const perTap=()=>(1+GOODS.reduce((a,g)=>a+lv(S.goods,g.id)*g.add,0))*mult();
 const rankIdx=()=>{let r=0;RANKS.forEach((x,i)=>{if(S.total>=x[0])r=i});return r};
 
+const HATS=[['crown','👑','황금 왕관',0],['none','🙂','모자 없음',0],['cap','🧢','야구 모자',300],['tophat','🎩','실크햇',5000],['hard','⛑️','안전모',2000],['hood','🧥','후드',1500]];
+const SHIRTS=[['#c4281c','🟥','빨강',0],['#0d69ac','🟦','파랑',200],['#4b974b','🟩','초록',200],['#f5cd30','🟨','노랑',200],['#7b2fbe','🟪','보라',800],['#1f1f23','⬛','블랙',800],['#e0508a','🌸','핑크',800],['#ffd23f','✨','골드',30000]];
+const SKINS=[['#f5cd30','🟡','클래식 노랑',0],['#fdd8b5','🧑','살구',0],['#c4915e','🧑🏽','구릿빛',0],['#9ae07a','🟢','라임',1000],['#8fd3ff','🔵','하늘',1000],['#c8a2ff','🟣','라벤더',1000]];
+function lookRows(L){
+  const grp=(title,list,key)=>{
+    const h=document.createElement('div');h.className='sub';h.style.cssText='margin:10px 2px 6px;font-weight:800';h.textContent=title;L.appendChild(h);
+    list.forEach(([val,ic,nm,c])=>{const id=key+':'+val,have=c===0||S.own[id],on=S.look[key]===val;
+      L.appendChild(row(ic,nm,on?'착용 중':have?'보유':'꾸미기 아이템',on?'착용 중':have?'착용':`구매<br>₩${fmt(c)}`,on||(!have&&S.money<c),()=>{if(!have){S.money-=c;S.own[id]=1;beep('buy')}S.look[key]=val;if(key==='hat'&&val==='cap')S.look.cap=S.look.shirt;if(V3)V3.setLook(S.look);save();render(1)}))});
+  };
+  grp('🎩 모자',HATS,'hat');grp('👕 상의',SHIRTS,'shirt');grp('🧑 피부색',SKINS,'skin');
+}
 let tab='staff';
 function buy(id){
   const [k,key]=id.split(':');let it,n,c;
@@ -139,6 +150,7 @@ function renderList(){
     L.appendChild(row(g.ic,`${g.nm} Lv.${n}`,g.ds,`입고<br>₩${fmt(c)}`,S.money<c,()=>buy('g:'+g.id)))});
   else if(tab==='store')UPS.forEach(u=>{const have=S.ups[u.id];
     L.appendChild(row(u.ic,u.nm,u.ds,have?'완료':`구매<br>₩${fmt(u.cost)}`,have||S.money<u.cost,()=>buy('u:'+u.id)))});
+  else if(tab==='look')lookRows(L);
   else if(tab==='ach'){
     ACH.forEach(a=>{const d=row(S.ach[a.id]?'🏆':'🔒',a.nm,a.ds+' · 수입 +2%',null);d.classList.add('ach');if(S.ach[a.id])d.classList.add('done');L.appendChild(d)});
   }
@@ -148,7 +160,7 @@ function renderList(){
     d.innerHTML=`누적 매출: ₩${fmt(S.total)}<br>업적: ${achN()}/${ACH.length} · 연속 출석 ${S.streak}일<br>총 클릭: ${S.taps.toLocaleString()}회<br>프랜차이즈 지점: ${S.fran}개 (수입 +${S.fran*50}%)<br>
     <span class="sub">누적 매출 ₩${fmt(need)} 달성 시 프랜차이즈를 열 수 있어요. 모든 진행은 초기화되지만 영구 수입 +50%!</span>`;
     const b=document.createElement('button');b.className='btn2 prest';b.textContent=`🏆 프랜차이즈 ${S.fran+1}호점 오픈`;b.disabled=S.total<need;b.style.opacity=b.disabled?.4:1;
-    b.onclick=()=>{if(S.total<need||!confirm('진행 상황이 초기화되고 영구 보너스를 얻습니다. 진행할까요?'))return;const o=S;S=def();S.fran=o.fran+1;S.taps=o.taps;S.ach=o.ach;S.mute=o.mute;S.daily=o.daily;S.streak=o.streak;S.evs=o.evs;lastRank=0;checkAch();save();render(1);toast('🎉 프랜차이즈 오픈!')};
+    b.onclick=()=>{if(S.total<need||!confirm('진행 상황이 초기화되고 영구 보너스를 얻습니다. 진행할까요?'))return;const o=S;S=def();S.fran=o.fran+1;S.taps=o.taps;S.ach=o.ach;S.mute=o.mute;S.daily=o.daily;S.streak=o.streak;S.evs=o.evs;S.look=o.look;S.own=o.own;S.t0=o.t0;lastRank=0;checkAch();save();render(1);toast('🎉 프랜차이즈 오픈!')};
     const r=document.createElement('button');r.className='btn2 reset';r.textContent='데이터 완전 초기화';
     r.onclick=()=>{if(confirm('정말 모든 데이터를 삭제할까요?')){S=def();lastRank=0;save();render(1)}};
     d.appendChild(b);d.appendChild(r);L.appendChild(d);
@@ -223,9 +235,13 @@ render();
 lastRank=rankIdx();
 try{
   V3=createWorld($('gl'),$('view'),{onTap:()=>doTap(null,null),onPad:id=>{const ok=buy(id);if(!ok&&Date.now()-(padMsg||0)>1500){padMsg=Date.now();toast('💸 돈이 부족해요!')}return ok},onPay:()=>{beep('coin')}});
-  window.__V3=V3;setTimeout(()=>{const l=$('load');l.style.opacity=0;setTimeout(()=>l.remove(),600)},600);
+  window.__V3=V3;V3.setLook(S.look);setTimeout(()=>{const l=$('load');l.style.opacity=0;setTimeout(()=>l.remove(),600)},600);
 }catch(e){console.warn('3D 불가',e);$('view').style.display='none';$('nogl').style.display='block'}
 render(1);checkAch();setTimeout(daily,800);
+const BOTS=[['편의점왕 👑',9e5,2.4],['야간점장 🌙',2e5,2.0],['알바천국 🧑‍🎓',6e4,1.6],['24시사장 🏪',2e4,1.3],['초코맨 🍫',4e3,1.0]];
+function lb(){const h=(Date.now()-(S.t0||Date.now()))/36e5;const rows=BOTS.map(([n,b,r])=>[n,b*Math.exp(r*h*3)]);rows.push(['나 (사장님)',S.total,1]);rows.sort((a,b)=>b[1]-a[1]);
+  $('lb').innerHTML='<b>🏆 순위</b>'+rows.slice(0,6).map((r,i)=>`<div class="${r[2]===1?'me':''}">${i+1}. ${r[0]} <span>₩${fmt(r[1])}</span></div>`).join('')}
+lb();setInterval(lb,2000);
 $('menu').onclick=()=>{$('sheet').classList.toggle('open');render(1)};$('close').onclick=()=>$('sheet').classList.remove('open');
 $('jump').onclick=()=>V3&&V3.jump();
 (function(){const j=$('joy'),k=$('knob');let id=null;const R=44;
