@@ -134,6 +134,11 @@ const PERKS={
 const EDU_DISC=[0,.1,.25,.4];
 const REGIONS={jp:{n:'🇯🇵 일본 지사',c:5e8,m:3e7,glob:.12,brand:15,emps:20},sea:{n:'🌏 동남아 지사',c:3e8,m:2e7,glob:.10,brand:12,emps:15},eu:{n:'🇪🇺 유럽 지사',c:2e9,m:1.2e8,glob:.18,brand:25,emps:50},us:{n:'🇺🇸 미국 지사',c:3e9,m:2e8,glob:.25,brand:30,emps:60}};
 const EXECS={cto:{n:'CTO',d:'개발 속도 +20% · 신제품 품질 +4',fee:3e8,m:3e7},cmo:{n:'CMO',d:'인지도 획득 +25%',fee:3e8,m:3e7},cfo:{n:'CFO',d:'법인세 -5% · 대출금리 -0.5%p',fee:3e8,m:3e7},coo:{n:'COO',d:'팀 효율 +15%p · 유지보수 부담 -20%',fee:3e8,m:3e7},chro:{n:'CHRO',d:'전 직원 사기 +5 · 채용풀 향상',fee:3e8,m:3e7}};
+const SCN={free:{n:'자유 플레이',d:'목표 없이 자유롭게 키웁니다.'},
+ s1:{n:'도전 ① 5년 안에 월 매출 10억',dl:5,d:'5년 안에 월 매출 10억 원을 달성하세요.',chk:()=>lastRev()>=1e9,prog:()=>lastRev()/1e9},
+ s2:{n:'도전 ② 3년 안에 기업가치 500억',dl:3,d:'3년 안에 기업가치 500억 원을 달성하세요.',chk:()=>G.val>=5e10,prog:()=>G.val/5e10},
+ s3:{n:'도전 ③ 직원 15명 이하로 월 매출 3억',dl:6,d:'직원 15명 이하를 유지한 채 6년 안에 월 매출 3억 원을 달성하세요.',chk:()=>lastRev()>=3e8&&G.emps.length<=15,prog:()=>lastRev()/3e8},
+ s4:{n:'도전 ④ 8년 안에 IPO',dl:8,d:'8년 안에 기업공개(IPO)에 성공하세요.',chk:()=>G.public,prog:()=>G.public?1:avgRev3()/4e9}};
 const FIN={dep:'정기예금',re:'부동산',stk:'주식 포트폴리오'};
 const OPTIONS=[{n:'없음',m:0,dil:0},{n:'핵심 인재 스톡옵션',m:4,dil:.005},{n:'전 직원 스톡옵션',m:8,dil:.01}];
 const regionMkt=()=>Object.keys(G.regions).reduce((s,k)=>s+REGIONS[k].glob,0);
@@ -186,12 +191,12 @@ let actx=null;
 function beep(f,d,t){if(!SET.sound)return;try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();const o=actx.createOscillator(),g=actx.createGain();o.type=t||'sine';o.frequency.value=f;g.gain.value=.05;o.connect(g);g.connect(actx.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+d);o.stop(actx.currentTime+d);}catch(e){}}
 const sfx={good(){beep(660,.15);setTimeout(()=>beep(880,.2),120)},bad(){beep(200,.3,'sawtooth')},ev(){beep(440,.12)},cash(){beep(1000,.08)}};
 
-function newGame(name,spec,diff){
+function newGame(name,spec,diff,scn){
  const cash=[2.5e8,1.5e8,8e7,6e7][diff];
  const g={v:1,name,diff,d:0,cash,own:1,totalShares:1e7,public:false,sf:1,rounds:{},loans:[],emps:[],cand:[],products:[],techs:{},research:null,
   office:0,hqValue:0,perks:{food:0,welfare:0,edu:0,flex:0},crunch:false,brand:3,camps:[],comps:[],econ:.1,econShock:0,ep:rnd(0,6.28),
   hist:[],log:[],mon:{rev:0,cogs:0,opex:0,mkt:0,rd:0,int:0,oth:0,tax:0},last:{rev:0,profit:0},nid:1,acqBonus:0,acqCount:0,glob:0,
-  regions:{},execs:{},options:0,fin:{dep:0,re:0,stk:0},permMor:0,taxLoss:0,yearProfit:0,negM:0,ach:{},wealth:0,moraleMod:0,idea:0,val:0,goal:0,over:0,promoCd:{},
+  scn:scn||'free',scnDone:0,targets:[],regions:{},execs:{},options:0,fin:{dep:0,re:0,stk:0},permMor:0,taxLoss:0,yearProfit:0,negM:0,ach:{},wealth:0,moraleMod:0,idea:0,val:0,goal:0,over:0,promoCd:{},
   stats:{bestRev:0,hired:0,quit:0}};
  G=g;
  G.emps.push({id:G.nid++,name:'창업자 (CEO)',role:'ceo',spec,skill:60,sal:3e6,morale:80,founder:1,trainCd:0,hired:0});
@@ -360,10 +365,18 @@ function monthEnd(){
   toast('현금 마이너스! 대출/투자를 받으세요',1);}else G.negM=0;
  if(!G.over)rollEvent();
  marketNews();monthlyReport();
+ if(G.d%90===0||!G.targets.length)genTargets();
+ checkScn();
  checkAch();checkOffers();
  if(G.val>=1e12&&!G.goal){G.goal=1;modal('🏆 목표 달성!','기업가치 <b>1조 원</b>을 돌파했습니다!<br>당신은 한국을 대표하는 기업가가 되었습니다. 계속해서 더 큰 제국을 만들어 보세요.<br><br>지분 가치 '+won(netWorth()),[{l:'계속 경영',cls:''}]);}
  save();
 }
+function genTargets(){G.targets=[];const types=Object.keys(PT).filter(t=>!PT[t].tech||hasT(PT[t].tech));
+ for(let i=0;i<3;i++){const t=pick(types),T=PT[t];const users=Math.max(5,marketSize(t)*rnd(.003,.012));const q=Math.round(rnd(40,85));
+  G.targets.push({id:G.nid++,name:pick(['블루','제트','모모','리빗','나노','쿼카','오렌지','하이퍼'])+pick(['랩','웍스','소프트','테크','스튜디오']),type:t,users,q,price:T.price,cost:Math.round((users*T.price*10+5e7+q*2e7)/1e6)*1e6,staff:ri(2,5)});}}
+function checkScn(){const sc=SCN[G.scn];if(!sc||!sc.chk)return;
+ if(!G.scnDone&&sc.chk()){G.scnDone=1;sfx.good();modal('🏆 도전 성공!',sc.n+'<br><br>'+scoreCard(),[{l:'계속 경영'}]);}
+ else if(!G.scnDone&&G.d>=sc.dl*360){gameOver('도전 실패','제한 시간 안에 목표를 달성하지 못했습니다.<br><span class="mu">'+sc.d+'</span>');}}
 function marketNews(){if(Math.random()>.5||!G.comps.length)return;const k=pick(G.comps);
  const n=[k.name+', '+PT[k.type].n+' 신제품 공개… 업계 "게임 체인저 될까"',k.name+', 시리즈 투자 유치 소식',k.name+'의 핵심 개발자 대거 이직설',k.name+', 가격 인하 단행… 출혈 경쟁 우려','업계 전문가 "'+PT[k.type].n+' 시장, 올해 성장세 뚜렷"',G.econ>.3?'증시 훈풍… 스타트업 투자 심리 회복':G.econ<-.3?'경기 침체 장기화… 스타트업 투자 한파':'금리 동결… 시장 관망세'];
  const t=pick(n);log('📰 '+t,'news');}
@@ -486,6 +499,10 @@ const ACT={
  opt:d=>{const n=G.options+(+d.dir);if(n<0||n>2)return;G.options=n;},
  finin:d=>{const a=+d.v;if(!(a>0)||G.cash<a)return toast('자금 부족',1);G.cash-=a;G.fin[d.k]+=a;G._finPrev=(G._finPrev||0)+a;log('💼 '+FIN[d.k]+' 투자 '+won(a));},
  finout:d=>{const f=G.fin[d.k];const a=d.v==='all'?f:Math.min(+d.v,f);if(!(a>0))return;const fee=d.k==='re'?.02:d.k==='stk'?.003:0;G.fin[d.k]-=a;G.cash+=a*(1-fee);G._finPrev=(G._finPrev||0)-a;log('💼 '+FIN[d.k]+' 회수 '+won(a*(1-fee)));},
+ buyt:d=>{const t=G.targets.find(x=>x.id==+d.id);if(!t)return;if(G.cash<t.cost)return toast('자금 부족',1);G.cash-=t.cost;G.targets.splice(G.targets.indexOf(t),1);
+  G.products.push({id:G.nid++,name:t.name,type:t.type,state:'live',scope:1,need:0,prog:0,q:t.q,price:t.price,users:t.users,aw:30,bugs:20,sat:60,upd:null,born:G.d,rev:0,ver:1,mh:[]});
+  let hired=0;for(let i=0;i<t.staff;i++){if(G.emps.length>=OFFICES[G.office].cap)break;const r=pick(['dev','dev','design','sales']);const sk=Math.round(clamp(t.q*.75+rnd(-8,8),20,90));G.emps.push({id:G.nid++,name:rname(),role:r,skill:sk,sal:salFor(r,sk),morale:65,trainCd:0,hired:G.d});hired++;}
+  G.acqCount++;G.brand=clamp(G.brand+1.5,0,100);log('🤝 스타트업 '+t.name+' 인수 ('+won(t.cost)+', 인력 '+hired+'명 합류)','g');},
  save:()=>{save();toast('저장되었습니다')},
  reset:()=>{if(confirm('정말 처음부터 다시 시작할까요?')){paused=true;showStart();}}
 };
@@ -498,7 +515,7 @@ function roundOffer(k){const R=ROUNDS[k];if(G.rounds[k])return {ok:0,why:'이미
 
 /* ================= 저장 ================= */
 function save(){try{localStorage.setItem(sk(),JSON.stringify(G));}catch(e){}}
-function load(){try{const s=localStorage.getItem(sk());if(!s)return false;G=JSON.parse(s);G.regions=G.regions||{};G.execs=G.execs||{};G.options=G.options||0;G.fin=G.fin||{dep:0,re:0,stk:0};G.permMor=G.permMor||0;if(!isFinite(G.cash))G.cash=1e8;if(!isFinite(G.hqValue))G.hqValue=0;return true}catch(e){return false}}
+function load(){try{const s=localStorage.getItem(sk());if(!s)return false;G=JSON.parse(s);G.regions=G.regions||{};G.execs=G.execs||{};G.options=G.options||0;G.fin=G.fin||{dep:0,re:0,stk:0};G.scn=G.scn||'free';G.targets=G.targets||[];G.permMor=G.permMor||0;if(!isFinite(G.cash))G.cash=1e8;if(!isFinite(G.hqValue))G.hqValue=0;return true}catch(e){return false}}
 
 /* ================= UI ================= */
 const TABS=[['overview','📊 개요'],['products','📦 제품'],['staff','👥 직원'],['hire','🧑‍💼 채용'],['rnd','🔬 연구'],['mkt','📣 마케팅'],['fin','🏦 재무'],['inv','💎 투자'],['office','🏢 사무실'],['market','🌐 시장'],['help','❓ 도움말']];
@@ -530,6 +547,7 @@ function vOverview(e){
  if(teamEff()<.8)w+='<div class="warn">🧭 팀 규모에 비해 매니저가 부족해 효율이 '+Math.round(teamEff()*100)+'%입니다.</div>';
  Object.keys(ROUNDS).forEach(k=>{if(!G.rounds[k]&&roundOffer(k).ok&&k!=='ipo'||(k==='ipo'&&roundOffer(k).ok))w+='<div class="warn ok">💎 '+ROUNDS[k].n+' 가능! [투자] 탭을 확인하세요.</div>'});
  const mw=netWorth();
+ const sc=SCN[G.scn];if(sc&&sc.chk){const left=Math.max(0,sc.dl*360-G.d);w+='<div class="warn '+(G.scnDone?'ok':'')+'">🎯 '+sc.n+' — '+(G.scnDone?'달성 완료!':'남은 기간 '+Math.floor(left/360)+'년 '+Math.floor(left%360/30)+'개월 · 진행률 '+Math.min(100,Math.round(sc.prog()*100))+'%')+'<br><span class="mu">'+sc.d+'</span></div>';}
  return w+'<div class="kpis">'+[
   ['월 매출(예상)',won(e.rev)],['월 비용(예상)',won(e.cogs+e.tot)],['지난달 매출',won(L.rev)],['지난달 순이익',sgn(L.profit)],
   ['브랜드',G.brand.toFixed(1)+' / 100'],['창업자 지분',(G.own*100).toFixed(1)+'%'],['내 자산가치',won(mw)],['부채',won(debt())]
@@ -652,6 +670,7 @@ function vMarket(){
  h+='<div class="card tblw"><h3>🏁 경쟁사 / M&A</h3><table><tr><th>회사</th><th>분야</th><th class="n">세력</th><th class="n">가치</th><th class="n">인수가</th><th></th></tr>'+
  G.comps.map(c=>'<tr><td>'+c.name+'</td><td>'+PT[c.type].ic+' '+PT[c.type].n+'</td><td class="n">'+c.s.toFixed(2)+'</td><td class="n">'+won(c.val)+'</td><td class="n">'+won(c.val*1.3)+'</td><td>'+btn('인수','acquire',{id:c.id},'s',G.cash<c.val*1.3)+'</td></tr>').join('')+'</table><p class="mu">인수 시 해당 분야 경쟁이 사라지고, 점유율 보너스·기술 획득·브랜드 상승 효과를 얻습니다.</p></div>';
  h+='<div class="card"><h3>🌍 해외 진출</h3><p class="mu">지사를 세우면 시장 규모가 영구적으로 커집니다. (현재 +'+Math.round((regionMkt())*100)+'%)</p><div class="grid">'+Object.keys(REGIONS).map(k=>{const r=REGIONS[k],ok=G.brand>=r.brand&&G.emps.length>=r.emps;return '<div class="card"><b>'+r.n+'</b> '+(G.regions[k]?'<span class="tag gr">운영중</span>':'')+'<div class="mu">시장 +'+Math.round(r.glob*100)+'% · 설립비 '+won(r.c)+' · 월 '+won(r.m)+'<br>조건: 브랜드 '+r.brand+' · 직원 '+r.emps+'명</div>'+(G.regions[k]?'':btn('설립','region',{k},'s',!ok||G.cash<r.c))+'</div>'}).join('')+'</div></div>';
+ h+='<div class="card tblw"><h3>🧪 스타트업 인수 (신사업 M&A)</h3><p class="mu">매 분기 새로운 매물이 나옵니다. 인수하면 완성된 제품과 이용자, 일부 인력이 합류합니다.</p><table><tr><th>회사</th><th>분야</th><th class="n">이용자</th><th class="n">품질</th><th class="n">인력</th><th class="n">인수가</th><th></th></tr>'+G.targets.map(t=>'<tr><td>'+t.name+'</td><td>'+PT[t.type].ic+' '+PT[t.type].n+'</td><td class="n">'+num(t.users)+'</td><td class="n">'+t.q+'</td><td class="n">'+t.staff+'명</td><td class="n">'+won(t.cost)+'</td><td>'+btn('인수','buyt',{id:t.id},'s',G.cash<t.cost)+'</td></tr>').join('')+'</table></div>';
  return h;}
 
 /* ================= 시작/루프 ================= */
@@ -662,11 +681,12 @@ const slotInfo=i=>{try{const x=JSON.parse(localStorage.getItem(SAVE_KEY+(i>1?'_'
  '<label>회사 이름</label><input type="text" id="nm" value="나의 스타트업" maxlength="14">'+
  '<label>창업자 특기</label><select id="sp"><option value="dev">개발자형 (개발 속도↑)</option><option value="design">디자이너형 (품질↑)</option><option value="sales">영업형 (인지도↑)</option><option value="researcher">연구형 (기술↑)</option></select>'+
  '<label>난이도 (시작 자금)</label><select id="df"><option value="0">쉬움 2.5억</option><option value="1" selected>보통 1.5억</option><option value="2">어려움 8천만</option><option value="3">하드코어 6천만 (적자 1개월 즉시 파산)</option></select>'+
+ '<label>모드</label><select id="sc">'+Object.keys(SCN).map(k=>'<option value="'+k+'">'+SCN[k].n+'</option>').join('')+'</select>'+
  '<label>저장 슬롯</label><select id="sl">'+[1,2,3].map(i=>'<option value="'+i+'"'+(i===SLOT?' selected':'')+'>슬롯 '+i+' — '+slotInfo(i)+'</option>').join('')+'</select>'+
  '<div class="row"><button class="b" id="go">🚀 창업하기</button>'+'<button class="b g" id="ct">이어하기</button>'+'</div>';
  $('#md').onclick=e=>{
   if(e.target.id==='go'||e.target.id==='ct'){SLOT=+$('#sl').value;try{localStorage.setItem('ct_slot',SLOT)}catch(x){}}
-  if(e.target.id==='go'){if(localStorage.getItem(sk())&&!confirm('슬롯 '+SLOT+'의 저장 데이터를 덮어쓸까요?'))return;newGame($('#nm').value.trim()||'나의 스타트업',$('#sp').value,+$('#df').value);begin();}
+  if(e.target.id==='go'){if(localStorage.getItem(sk())&&!confirm('슬롯 '+SLOT+'의 저장 데이터를 덮어쓸까요?'))return;newGame($('#nm').value.trim()||'나의 스타트업',$('#sp').value,+$('#df').value,$('#sc').value);begin();}
   else if(e.target.id==='ct'){if(load())begin();else toast('불러오기 실패',1);}};}
 function begin(){$('#md').onclick=null;modalOpen=false;$('#ov').classList.remove('on');paused=false;speed=1;dirty=true;render();}
 let acc=0,lastT=performance.now();
