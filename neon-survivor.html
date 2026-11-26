@@ -50,7 +50,7 @@
   <h1>NEON <span>SURVIVOR</span></h1>
   <p>끝없이 몰려오는 네온 군단 속에서 살아남으세요.<br>무기는 자동 발사 — 당신은 <b>움직이기만</b> 하면 됩니다.</p>
   <button class="btn" id="startBtn">START</button>
-  <div class="hint">이동: WASD / 방향키 / 화면 터치 드래그 · 일시정지: ESC · 최고 기록 <span id="best">0:00</span></div>
+  <div class="hint">이동: WASD / 방향키 / 터치 드래그 · 대시(무적+돌진 피해): SPACE / 마우스 클릭 / 더블탭 · 일시정지: ESC · 최고 기록 <span id="best">0:00</span></div>
 </div>
 
 <div class="layer" id="levelup">
@@ -130,6 +130,7 @@ const keys = {};
 addEventListener('keydown', e => {
   keys[e.code] = true;
   if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) e.preventDefault();
+  if ((e.code === 'Space' || e.code === 'ShiftLeft') && state === 'play') tryDash();
   if (e.code === 'Escape' || e.code === 'KeyP') togglePause();
   if (state === 'levelup' && ['Digit1','Digit2','Digit3'].includes(e.code)) pickUpgrade(+e.code.slice(-1) - 1);
 });
@@ -145,9 +146,20 @@ cv.addEventListener('pointermove', e => { if (joy.on && e.pointerId === joy.id) 
 const endJoy = e => { if (e.pointerId === joy.id) joy.on = false; };
 cv.addEventListener('pointerup', endJoy); cv.addEventListener('pointercancel', endJoy);
 
+let lastTap = 0;
+cv.addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse'){ const n = performance.now(); if (n - lastTap < 280) tryDash(); lastTap = n; } else if (state === 'play') tryDash(); });
+function tryDash(){
+  if (dashCd > 0 || state !== 'play') return;
+  dashT = .18; dashCd = 1.1; P.inv = Math.max(P.inv, .3); sfx('sawtooth', 200, 900, .15, .15);
+  let ix = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0), iy = (keys.KeyS || keys.ArrowDown ? 1 : 0) - (keys.KeyW || keys.ArrowUp ? 1 : 0);
+  if (joy.on){ ix = joy.x - joy.sx; iy = joy.y - joy.sy; }
+  if (!ix && !iy){ ix = Math.cos(P.face); iy = Math.sin(P.face); }
+  const m = Math.hypot(ix, iy) || 1; P.dx = ix / m; P.dy = iy / m;
+}
 /* ---------- game state ---------- */
 let state = 'title'; // title | play | levelup | pause | over
 let P, enemies, bullets, ebullets, gems, parts, texts, rings;
+let combo = 0, comboT = 0, maxCombo = 0, dashT = 0, dashCd = 0, swarmT = 40, pickups = [], hitstop = 0, chainT = 0, missT = 0, bolts = [], missiles = [];
 let t, kills, spawnT, bossT, shake, cam, flashT, orbAngle, novaT, fireT, offered, bossAlive;
 
 const ENEMY = {
@@ -155,15 +167,18 @@ const ENEMY = {
   dart:   { r: 8,  hp: 8,   spd: 130, dmg: 6,  col: '#ffe14d', xp: 1, sides: 4 },
   tank:   { r: 20, hp: 70,  spd: 38,  dmg: 16, col: '#ff7a2f', xp: 4, sides: 6 },
   split:  { r: 14, hp: 26,  spd: 55,  dmg: 10, col: '#8a5bff', xp: 2, sides: 5 },
+  shooter:{ r: 12, hp: 22,  spd: 70,  dmg: 8,  col: '#4dff88', xp: 3, sides: 5 },
+  charger:{ r: 15, hp: 40,  spd: 50,  dmg: 18, col: '#ff4d4d', xp: 3, sides: 4 },
   mini:   { r: 7,  hp: 6,   spd: 95,  dmg: 5,  col: '#b69bff', xp: 0, sides: 3 },
   boss:   { r: 46, hp: 900, spd: 42,  dmg: 25, col: '#ff2f6b', xp: 40, sides: 8 },
 };
 
 function reset(){
   P = { x: 0, y: 0, vx: 0, vy: 0, r: 10, hp: 100, maxhp: 100, speed: 190, magnet: 90, regen: 0,
-        lvl: 1, xp: 0, next: 5, dmgMul: 1, inv: 0, face: 0,
-        bolt: { rate: 0, count: 1, pierce: 0 }, blades: 0, nova: 0 };
+        lvl: 1, xp: 0, next: 4, dmgMul: 1, inv: 0, face: 0,
+        bolt: { rate: 0, count: 1, pierce: 0 }, blades: 0, nova: 0, chain: 0, missile: 0 };
   enemies = []; bullets = []; ebullets = []; gems = []; parts = []; texts = []; rings = [];
+  combo = 0; comboT = 0; maxCombo = 0; dashT = 0; dashCd = 0; swarmT = 40; pickups = []; hitstop = 0; chainT = 1; missT = 2; bolts = []; missiles = [];
   t = 0; kills = 0; spawnT = 0; bossT = 90; shake = 0; flashT = 0; orbAngle = 0; novaT = 2; fireT = 0; bossAlive = false;
   cam = { x: 0, y: 0 };
   updateHUD();
@@ -190,6 +205,8 @@ const UPG = [
   { id: 'dmg',    ic: '💥', col: '#ffe14d', name: 'HI-YIELD',    desc: '모든 피해량 +25%',          max: 8, ok: () => true,         fn: () => P.dmgMul += .25 },
   { id: 'blade',  ic: '✴',  col: '#ff2fb3', name: 'ORBIT BLADES',desc: '몸 주위를 도는 칼날 +1',    max: 6, ok: () => true,         fn: () => P.blades++ },
   { id: 'nova',   ic: '◎',  col: '#8a5bff', name: 'PULSE NOVA',  desc: '주기적 충격파 (강화 시 더 빠르고 넓게)', max: 5, ok: () => true, fn: () => P.nova++ },
+  { id: 'chain',  ic: '⚡', col: '#ffe14d', name: 'CHAIN LIGHTNING', desc: '번개가 적 사이를 튀며 연쇄 (강화 시 더 많이 튐)', max: 5, ok: () => true, fn: () => P.chain++ },
+  { id: 'missile',ic: '🚀', col: '#ff7a2f', name: 'HOMING MISSILES', desc: '유도 미사일 발사 후 범위 폭발', max: 5, ok: () => true, fn: () => P.missile++ },
   { id: 'speed',  ic: '»',  col: '#7affd1', name: 'THRUSTERS',   desc: '이동 속도 +12%',            max: 5, ok: () => true,         fn: () => P.speed *= 1.12 },
   { id: 'hp',     ic: '♥',  col: '#ff2f6b', name: 'ARMOR CORE',  desc: '최대 체력 +30, 전체 회복',   max: 6, ok: () => true,         fn: () => { P.maxhp += 30; P.hp = P.maxhp; } },
   { id: 'magnet', ic: '◉',  col: '#7affd1', name: 'MAGNET',      desc: '경험치 흡수 범위 +40%',      max: 5, ok: () => true,         fn: () => P.magnet *= 1.4 },
@@ -224,7 +241,7 @@ reset = function(){ for (const k in taken) delete taken[k]; _reset(); };
 /* ---------- spawning ---------- */
 function spawnEnemy(kind){
   const d = ENEMY[kind], a = Math.random() * TAU, dist = Math.hypot(W, H) / 2 + 60;
-  const hpMul = 1 + t / 60 * .45;
+  const hpMul = 1 + t / 60 * .3;
   enemies.push({ kind, x: P.x + Math.cos(a) * dist, y: P.y + Math.sin(a) * dist, r: d.r,
     hp: d.hp * hpMul * (kind === 'boss' ? 1 + t / 200 : 1), mhp: 0, spd: d.spd * (1 + Math.min(t / 600, .5)) * rnd(.92, 1.08),
     dmg: d.dmg, col: d.col, xp: d.xp, sides: d.sides, flash: 0, rot: rnd(0, TAU), kx: 0, ky: 0, shootT: 2 });
@@ -232,10 +249,11 @@ function spawnEnemy(kind){
 }
 function pickKind(){
   const r = Math.random();
-  if (t < 25) return 'grunt';
-  if (t < 60) return r < .75 ? 'grunt' : 'dart';
+  if (t < 15) return r < .8 ? 'grunt' : 'dart';
+  if (t < 45) return r < .55 ? 'grunt' : r < .8 ? 'dart' : r < .92 ? 'shooter' : 'split';
+  if (t < 90) return r < .4 ? 'grunt' : r < .6 ? 'dart' : r < .75 ? 'shooter' : r < .88 ? 'charger' : 'split';
   if (t < 120) return r < .5 ? 'grunt' : r < .75 ? 'dart' : r < .9 ? 'split' : 'tank';
-  return r < .35 ? 'grunt' : r < .6 ? 'dart' : r < .8 ? 'split' : 'tank';
+  return r < .25 ? 'grunt' : r < .45 ? 'dart' : r < .6 ? 'shooter' : r < .75 ? 'charger' : r < .9 ? 'split' : 'tank';
 }
 
 /* ---------- fx ---------- */
@@ -249,22 +267,25 @@ function ring(x, y, r, col){ rings.push({ x, y, r: 0, mr: r, col, life: .4, max:
 function text(x, y, s, col = '#fff'){ texts.push({ x: x + rnd(-8, 8), y, s, col, life: .6 }); }
 
 function damageEnemy(e, dmg, kx = 0, ky = 0){
-  dmg *= P.dmgMul;
+  dmg *= P.dmgMul * (1 + Math.min(combo, 100) * .005);
   e.hp -= dmg; e.flash = .08; e.kx += kx; e.ky += ky;
   text(e.x, e.y - e.r, Math.round(dmg), '#fff'); S.hit();
   if (e.hp <= 0 && !e.dead){
     e.dead = true; kills++; S.kill();
+    combo++; comboT = 2.2; maxCombo = Math.max(maxCombo, combo);
+    if (combo % 25 === 0){ text(P.x, P.y - 40, combo + ' COMBO!', '#ffe14d'); ring(P.x, P.y, 160, '#ffe14d'); shake = Math.max(shake, 5); }
+    if (Math.random() < (e.kind === 'boss' ? 0 : .02)) pickups.push({ x: e.x, y: e.y, type: ['heal', 'bomb', 'magnet'][(Math.random() * 3) | 0], life: 14 });
     burst(e.x, e.y, e.col, e.kind === 'boss' ? 60 : 12, e.kind === 'boss' ? 400 : 170);
     ring(e.x, e.y, e.r * 2.5, e.col);
     if (e.kind === 'split') for (let i = 0; i < 3; i++){ spawnEnemy('mini'); const m = enemies[enemies.length - 1]; m.x = e.x + rnd(-10, 10); m.y = e.y + rnd(-10, 10); }
     if (e.xp > 0) dropGem(e.x, e.y, e.xp);
-    if (e.kind === 'boss'){ bossAlive = false; shake = 18; P.hp = Math.min(P.maxhp, P.hp + 40); for (let i = 0; i < 10; i++) dropGem(e.x + rnd(-50, 50), e.y + rnd(-50, 50), 4); }
+    if (e.kind === 'boss'){ bossAlive = false; shake = 18; hitstop = .25; P.hp = Math.min(P.maxhp, P.hp + 40); for (let i = 0; i < 10; i++) dropGem(e.x + rnd(-50, 50), e.y + rnd(-50, 50), 4); }
   }
 }
 function dropGem(x, y, v){ gems.push({ x, y, v, vx: rnd(-40, 40), vy: rnd(-40, 40), pulled: false }); }
 function hurtPlayer(d){
-  if (P.inv > 0) return;
-  P.hp -= d; P.inv = .5; shake = Math.max(shake, 8); flashT = .18; S.hurt();
+  if (P.inv > 0 || dashT > 0) return;
+  P.hp -= d; P.inv = .5; combo = Math.floor(combo / 2); shake = Math.max(shake, 8); flashT = .18; S.hurt();
   burst(P.x, P.y, '#ff2f6b', 14, 200);
   if (P.hp <= 0) gameOver();
 }
@@ -274,7 +295,7 @@ function gameOver(){
   if (nb){ best = t; try { localStorage.setItem('neonSurvivorBest', String(t)); } catch (e) {} }
   $('best').textContent = fmt(best);
   $('overTitle').textContent = nb ? 'NEW RECORD!' : 'GAME OVER';
-  $('overStats').innerHTML = `생존 시간 <b>${fmt(t)}</b><br>처치 <b>${kills}</b> · 레벨 <b>${P.lvl}</b><br>최고 기록 <b>${fmt(best)}</b>`;
+  $('overStats').innerHTML = `생존 시간 <b>${fmt(t)}</b><br>최대 콤보 <b>${maxCombo}</b><br>처치 <b>${kills}</b> · 레벨 <b>${P.lvl}</b><br>최고 기록 <b>${fmt(best)}</b>`;
   setTimeout(() => $('over').classList.add('on'), 700);
 }
 function updateHUD(){
@@ -301,6 +322,13 @@ function update(dt){
   const m = Math.hypot(ix, iy); if (m > 1){ ix /= m; iy /= m; }
   P.vx += (ix * P.speed - P.vx) * Math.min(1, dt * 14);
   P.vy += (iy * P.speed - P.vy) * Math.min(1, dt * 14);
+  if (dashT > 0){
+    dashT -= dt; P.vx = P.dx * 700; P.vy = P.dy * 700;
+    for (const e of enemies) if (!e.dead && (e.x - P.x) ** 2 + (e.y - P.y) ** 2 < (e.r + 24) ** 2 && !(e.dashHit > 0)){ e.dashHit = .3; damageEnemy(e, 20, P.dx * 300, P.dy * 300); }
+    parts.push({ x: P.x, y: P.y, vx: 0, vy: 0, life: .35, max: .35, col: '#fff', sz: 9 });
+  }
+  dashCd -= dt; for (const e of enemies) if (e.dashHit > 0) e.dashHit -= dt;
+  if (comboT > 0){ comboT -= dt; if (comboT <= 0) combo = 0; }
   P.x += P.vx * dt; P.y += P.vy * dt;
   if (m > .1) P.face = Math.atan2(iy, ix);
   P.inv = Math.max(0, P.inv - dt);
@@ -309,10 +337,10 @@ function update(dt){
 
   // spawn
   spawnT -= dt;
-  if (spawnT <= 0 && enemies.length < 320){
-    const n = 1 + Math.floor(t / 35);
+  if (spawnT <= 0 && enemies.length < 420){
+    const n = 2 + Math.floor(t / 18);
     for (let i = 0; i < n; i++) spawnEnemy(pickKind());
-    spawnT = Math.max(.14, .85 - t * .0035);
+    spawnT = Math.max(.1, .5 - t * .003);
   }
   bossT -= dt;
   if (bossT <= 0){ bossT = 90; bossAlive = true; spawnEnemy('boss'); S.boss(); shake = 12; text(P.x, P.y - 60, '⚠ BOSS ⚠', '#ff2f6b'); }
@@ -349,6 +377,66 @@ function update(dt){
     }
   }
 
+  // weapon: chain lightning
+  if (P.chain > 0){
+    chainT -= dt;
+    if (chainT <= 0){
+      const tg = nearest(P.x, P.y, 420);
+      if (tg){
+        chainT = Math.max(.7, 1.9 - P.chain * .25); S.nova();
+        let cur = tg, from = { x: P.x, y: P.y }, left = 3 + P.chain * 2; const hit = new Set(), path = [from];
+        while (cur && left-- > 0){
+          hit.add(cur); path.push({ x: cur.x, y: cur.y }); damageEnemy(cur, 16);
+          let nx = null, nd = 190 * 190;
+          for (const o of enemies) if (!hit.has(o) && !o.dead){ const d = (o.x - cur.x) ** 2 + (o.y - cur.y) ** 2; if (d < nd){ nd = d; nx = o; } }
+          cur = nx;
+        }
+        bolts.push({ path, life: .18 });
+      }
+    }
+  }
+  // weapon: missiles
+  if (P.missile > 0){
+    missT -= dt;
+    if (missT <= 0){
+      missT = Math.max(1, 2.8 - P.missile * .3);
+      for (let i = 0; i < P.missile + 1; i++){ const a = rnd(0, TAU); missiles.push({ x: P.x, y: P.y, vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, life: 2.5, tg: null }); }
+    }
+  }
+  for (const m of missiles){
+    if (!m.tg || m.tg.dead) m.tg = nearest(m.x, m.y, 700);
+    if (m.tg){ const a = Math.atan2(m.vy, m.vx), ta = Math.atan2(m.tg.y - m.y, m.tg.x - m.x); let da = ta - a; while (da > Math.PI) da -= TAU; while (da < -Math.PI) da += TAU; const na = a + clamp(da, -dt * 6, dt * 6); m.vx = Math.cos(na) * 380; m.vy = Math.sin(na) * 380; }
+    m.x += m.vx * dt; m.y += m.vy * dt; m.life -= dt;
+    parts.push({ x: m.x, y: m.y, vx: 0, vy: 0, life: .3, max: .3, col: '#ff7a2f', sz: 3 });
+    let boom = m.life <= 0;
+    for (const e of enemies) if (!e.dead && (e.x - m.x) ** 2 + (e.y - m.y) ** 2 < (e.r + 7) ** 2){ boom = true; break; }
+    if (boom){
+      m.life = 0; const R = 70 + P.missile * 8; ring(m.x, m.y, R, '#ff7a2f'); burst(m.x, m.y, '#ff7a2f', 16, 220); sfx('sawtooth', 140, 40, .25, .15, .04);
+      for (const e of enemies) if (!e.dead && Math.hypot(e.x - m.x, e.y - m.y) < R + e.r) damageEnemy(e, 22 + P.missile * 5, (e.x - m.x) * 2, (e.y - m.y) * 2);
+    }
+  }
+  missiles = missiles.filter(m => m.life > 0);
+  for (const b of bolts) b.life -= dt; bolts = bolts.filter(b => b.life > 0);
+
+  // pickups
+  for (const k of pickups){
+    k.life -= dt;
+    if ((k.x - P.x) ** 2 + (k.y - P.y) ** 2 < 28 ** 2){
+      k.life = 0; sfx('square', 500, 1400, .25, .2);
+      if (k.type === 'heal'){ P.hp = Math.min(P.maxhp, P.hp + 35); text(P.x, P.y - 30, '+HP', '#ff7a9b'); }
+      else if (k.type === 'magnet'){ for (const g of gems) g.pulled = true; text(P.x, P.y - 30, 'MAGNET!', '#7affd1'); }
+      else { shake = 14; hitstop = .12; ring(P.x, P.y, 600, '#ffe14d'); S.boss(); for (const e of enemies) if (e.kind !== 'boss') damageEnemy(e, 9999); else damageEnemy(e, 150); text(P.x, P.y - 30, 'NUKE!', '#ffe14d'); }
+    }
+  }
+  pickups = pickups.filter(k => k.life > 0);
+  // swarm event
+  swarmT -= dt;
+  if (swarmT <= 0){
+    swarmT = 45; text(P.x, P.y - 60, '⚠ SWARM ⚠', '#ffe14d'); S.boss();
+    const n = 28 + Math.floor(t / 10), rad = Math.hypot(W, H) / 2 + 40;
+    for (let i = 0; i < n; i++){ spawnEnemy('dart'); const e = enemies[enemies.length - 1], a = i / n * TAU; e.x = P.x + Math.cos(a) * rad; e.y = P.y + Math.sin(a) * rad; e.spd *= 1.1; }
+  }
+
   // bullets
   for (const b of bullets){
     b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
@@ -366,8 +454,19 @@ function update(dt){
   // enemies
   for (const e of enemies){
     if (e.dead) continue;
-    const dx = P.x - e.x, dy = P.y - e.y, d = Math.hypot(dx, dy) || 1;
-    e.x += (dx / d * e.spd + e.kx) * dt; e.y += (dy / d * e.spd + e.ky) * dt;
+    let dx = P.x - e.x, dy = P.y - e.y; const d = Math.hypot(dx, dy) || 1;
+    let mv = e.spd;
+    if (e.kind === 'shooter'){
+      if (d < 260) mv = -e.spd * .6;
+      else if (d < 340) mv = 0;
+      e.shootT -= dt;
+      if (e.shootT <= 0 && d < 500){ e.shootT = 2.2; ebullets.push({ x: e.x, y: e.y, vx: dx / d * 210, vy: dy / d * 210, life: 4 }); }
+    } else if (e.kind === 'charger'){
+      e.chT = (e.chT === undefined ? rnd(1, 3) : e.chT) - dt;
+      if (e.chT <= 0 && !e.charging){ e.charging = .6; e.cdx = dx / d; e.cdy = dy / d; }
+      if (e.charging > 0){ e.charging -= dt; mv = e.charging > .25 ? 0 : 520; if (e.charging <= 0){ e.chT = rnd(2, 3.5); e.charging = 0; } dx = e.cdx * d; dy = e.cdy * d; }
+    }
+    e.x += (dx / d * mv + e.kx) * dt; e.y += (dy / d * mv + e.ky) * dt;
     e.kx *= Math.pow(.02, dt); e.ky *= Math.pow(.02, dt);
     e.flash = Math.max(0, e.flash - dt); e.rot += dt * (e.kind === 'boss' ? .6 : 1.5);
     if (d < e.r + P.r) hurtPlayer(e.dmg);
@@ -418,7 +517,7 @@ function update(dt){
     else { g.x += g.vx * dt; g.y += g.vy * dt; g.vx *= .94; g.vy *= .94; }
     if (d < P.r + 6){
       g.dead = true; P.xp += g.v; S.gem();
-      while (P.xp >= P.next){ P.xp -= P.next; P.lvl++; P.next = Math.floor(P.next * 1.32 + 3); openLevelUp(); }
+      while (P.xp >= P.next){ P.xp -= P.next; P.lvl++; P.next = Math.floor(P.next * 1.22 + 2); openLevelUp(); }
     }
   }
   gems = gems.filter(g => !g.dead);
@@ -472,6 +571,18 @@ function render(blades){
       ctx.fillStyle = e.col; ctx.fillRect(e.x - 40, e.y - e.r - 14, 80 * clamp(e.hp / e.mhp, 0, 1), 5);
     }
   }
+  // charger telegraph
+  for (const e of enemies) if (e.charging > .25){ ctx.strokeStyle = 'rgba(255,77,77,.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(e.x, e.y); ctx.lineTo(e.x + e.cdx * 260, e.y + e.cdy * 260); ctx.stroke(); }
+  // pickups
+  ctx.font = '20px sans-serif'; ctx.textAlign = 'center';
+  for (const k of pickups){ ctx.globalAlpha = k.life < 3 ? (Math.floor(k.life * 8) % 2 ? .3 : 1) : 1; ctx.shadowColor = '#fff'; ctx.shadowBlur = 14; ctx.fillText(k.type === 'heal' ? '💖' : k.type === 'bomb' ? '💣' : '🧲', k.x, k.y + 7 + Math.sin(t * 5) * 3); }
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+  // lightning
+  ctx.shadowColor = '#ffe14d'; ctx.shadowBlur = 16; ctx.lineWidth = 3;
+  for (const b of bolts){ ctx.strokeStyle = `rgba(255,240,130,${b.life / .18})`; ctx.beginPath(); b.path.forEach((q, i) => { const jx = rnd(-6, 6), jy = rnd(-6, 6); ctx[i ? 'lineTo' : 'moveTo'](q.x + jx, q.y + jy); }); ctx.stroke(); }
+  // missiles
+  ctx.fillStyle = '#ffb27a'; ctx.shadowColor = '#ff7a2f';
+  for (const m of missiles){ ctx.beginPath(); ctx.arc(m.x, m.y, 5, 0, TAU); ctx.fill(); }
   // enemy bullets
   ctx.fillStyle = '#ff2f6b'; ctx.shadowColor = '#ff2f6b'; ctx.shadowBlur = 12;
   for (const b of ebullets){ ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, TAU); ctx.fill(); }
@@ -490,6 +601,9 @@ function render(blades){
     ctx.restore();
   }
   ctx.shadowBlur = 0;
+  // dash cooldown arc
+  ctx.strokeStyle = dashCd > 0 ? 'rgba(255,255,255,.25)' : 'rgba(122,255,209,.8)'; ctx.lineWidth = 2; ctx.beginPath();
+  ctx.arc(P.x, P.y, 20, -Math.PI / 2, -Math.PI / 2 + TAU * (1 - clamp(dashCd / 1.1, 0, 1))); ctx.stroke();
   // pickup range hint
   ctx.strokeStyle = 'rgba(0,240,255,.07)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(P.x, P.y, P.magnet, 0, TAU); ctx.stroke();
   // particles (additive)
@@ -504,6 +618,14 @@ function render(blades){
   ctx.globalAlpha = 1;
   ctx.restore();
 
+  // combo
+  if (combo >= 3){
+    const sc = 1 + Math.min(combo, 150) / 150 * .8, pulse = 1 + (comboT > 2 ? (comboT - 2) * 1.5 : 0);
+    ctx.save(); ctx.textAlign = 'center'; ctx.font = `900 ${34 * sc * pulse}px sans-serif`; ctx.fillStyle = combo >= 50 ? '#ffe14d' : '#fff';
+    ctx.shadowColor = combo >= 50 ? '#ff2fb3' : '#00f0ff'; ctx.shadowBlur = 18; ctx.fillText(combo + ' COMBO', W / 2, 110);
+    ctx.fillStyle = 'rgba(255,255,255,.7)'; ctx.fillRect(W / 2 - 60, 120, 120 * clamp(comboT / 2.2, 0, 1), 3);
+    ctx.font = '600 12px sans-serif'; ctx.shadowBlur = 0; ctx.fillText('피해 +' + Math.round(Math.min(combo, 100) * .5) + '%', W / 2, 146); ctx.restore();
+  }
   // damage vignette
   if (flashT > 0){
     const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .3, W / 2, H / 2, Math.max(W, H) * .75);
@@ -523,7 +645,7 @@ function render(blades){
 let last = performance.now(), idleBlades = [];
 function frame(now){
   const dt = Math.min((now - last) / 1000, .05); last = now;
-  if (state === 'play'){ idleBlades = update(dt); render(idleBlades); }
+  if (state === 'play'){ if (hitstop > 0){ hitstop -= dt; render(idleBlades); requestAnimationFrame(frame); return; } idleBlades = update(dt); render(idleBlades); }
   else if (state === 'title'){
     // attract mode: drifting particles over grid
     t += dt; P.x = Math.cos(t * .3) * 200; P.y = Math.sin(t * .2) * 200; P.vx = P.vy = 0;
