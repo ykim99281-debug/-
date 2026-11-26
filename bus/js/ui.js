@@ -101,7 +101,7 @@ const UI = {
     const l = level(), nl = LEVELS[l] !== undefined ? LEVELS[l] : null, h = Math.floor(G.hour), m = Math.floor((G.hour % 1) * 60);
     $('tCo').textContent = '🚌 ' + G.name; $('tMoney').textContent = '💰 ' + fmtMoney(G.money); $('tLv').textContent = '⭐ Lv.' + l + (nl ? ` (${G.pax}/${nl})` : '');
     $('tRep').textContent = '👍 평판 ' + Math.round(G.rep); $('tPay').textContent = '💵 급여 -' + fmtMoney(this.payRate()) + '/분'; $('tWx').textContent = WX_T[WX.type].i + ' ' + WX_T[WX.type].n; { const ev = G.events && G.events[0]; $('tEv').classList.toggle('hide', !ev); if (ev) $('tEv').textContent = ev.def.i + ' ' + ev.name + ' ' + fmtMS(Math.max(0, ev.until - G.gt)); } $('tRate').textContent = '📈 ' + fmtMoney(G.rate) + '/분'; $('tTime').textContent = '🕒 ' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
-    $('tWal').textContent = fmtMoney(SCHOOL.wallet); { const n = G.unread || 0; $('tBellN').textContent = n ? n : ''; $('tbBell').style.borderColor = n ? 'var(--accent)' : ''; }
+    $('tWal').textContent = fmtMoney(SCHOOL.wallet); { const n = G.unread || 0; $('tBellN').textContent = n ? n : ''; $('tbBell').style.borderColor = (n || G.pending.length) ? 'var(--accent)' : ''; if (G.pending.length) $('tBellN').textContent = (n ? n + ' ' : '') + '⚠'; }
     $('topbar').querySelectorAll('[data-sp]').forEach(b => b.classList.toggle('on', +b.dataset.sp === G.speed));
     { const tb = $('topbar'), top = tb.offsetHeight + 24; if (this._sideTop !== top) { this._sideTop = top; $('side').style.top = top + 'px'; } }
   },
@@ -172,8 +172,8 @@ const UI = {
         <div class="row"><select data-route="${b.id}" ${b.manual ? 'disabled' : ''}>${G.routes.map(q => `<option value="${q.id}" ${q.id === b.routeId ? 'selected' : ''}>${q.num} ${esc(q.name)}</option>`).join('')}</select><small>승객 ${b.pax.length}/${T.cap}</small></div>
         <div class="meter"><i style="width:${b.pax.length / T.cap * 100}%"></i></div>
         <small>정비 상태 <b style="color:${cc}">${Math.round(b.cond)}%</b> · 주행 ${(b.km / 1000).toFixed(1)}km · 연식 ${b.age}일</small><div class="meter"><i style="width:${b.cond}%;background:${cc}"></i></div>
-        <small>👨‍✈️ ${esc(b.driver.name)} · 오늘 급여 ${fmtMoney(b.driver.today)}</small><br><small>⏱ 앞차 ${rg && rg.ahead ? fmtMS(rg.ahead.t) : '-'} · 뒷차 ${rg && rg.behind ? fmtMS(rg.behind.t) : '-'} <span class="muted">(배차 간격)</span></small><br><small>누적 수입 ${fmtMoney(b.income)} · 인건비 ${fmtMoney(T.wage)}/초</small>
-        <div class="acts"><button class="btn sm" data-bdrive="${b.id}">🎮 운전하기</button><button class="btn sm" data-bfollow="${b.id}">👁 관제</button><button class="btn sm" data-bsvc="${b.id}" ${b.cond >= 95 ? 'disabled' : ''}>🔧 정비 ${fmtMoney(serviceCost(b))}</button><button class="btn sm bad" data-bsell="${b.id}">매각 ${fmtMoney(busValue(b))}</button></div></div>`;
+        <small>👨‍✈️ ${esc(b.driver.name)} · 오늘 급여 ${fmtMoney(b.driver.today)} <span class="muted">(×${(dwm(b.driver) * (G.wageMul || 1)).toFixed(2)})</span></small><br><small>${['safety', 'kind', 'skill'].map(s => `${STAT_N[s]} <b style="color:var(--accent)">${'★'.repeat(b.driver[s])}</b>${'☆'.repeat(5 - b.driver[s])}`).join(' · ')}</small><br><small>⏱ 앞차 ${rg && rg.ahead ? fmtMS(rg.ahead.t) : '-'} · 뒷차 ${rg && rg.behind ? fmtMS(rg.behind.t) : '-'} <span class="muted">(배차 간격)</span></small><br><small>누적 수입 ${fmtMoney(b.income)} · 인건비 ${fmtMoney(T.wage)}/초</small>
+        <div class="acts">${['safety', 'kind', 'skill'].map(s => `<button class="btn sm" data-train="${b.id}|${s}" ${b.driver[s] >= 5 ? 'disabled' : ''}>${STAT_N[s].split(' ')[0]}교육 ${b.driver[s] >= 5 ? 'MAX' : fmtMoney(60000 * b.driver[s])}</button>`).join('')}<button class="btn sm" data-swap="${b.id}">🔄 기사 교체</button></div><div class="acts"><button class="btn sm" data-bdrive="${b.id}">🎮 운전하기</button><button class="btn sm" data-bfollow="${b.id}">👁 관제</button><button class="btn sm" data-bsvc="${b.id}" ${b.cond >= 95 ? 'disabled' : ''}>🔧 정비 ${fmtMoney(serviceCost(b))}</button><button class="btn sm bad" data-bsell="${b.id}">매각 ${fmtMoney(busValue(b))}</button></div></div>`;
     }
     return h;
   },
@@ -182,6 +182,8 @@ const UI = {
     b.querySelectorAll('[data-route]').forEach(x => x.onchange = () => { reassignBus(busById(+x.dataset.route), +x.value); this.renderTab(true); });
     b.querySelectorAll('[data-bdrive]').forEach(x => x.onclick = () => this.driveBus(busById(+x.dataset.bdrive)));
     b.querySelectorAll('[data-bfollow]').forEach(x => x.onclick = () => { this.follow = busById(+x.dataset.bfollow); CAM.dist = 40; toast('버스를 따라가는 중 · 휠로 확대/축소'); });
+    b.querySelectorAll('[data-train]').forEach(x => x.onclick = () => { const [id, st] = x.dataset.train.split('|'); if (trainDriver(busById(+id), st)) this.renderTab(true); });
+    b.querySelectorAll('[data-swap]').forEach(x => x.onclick = () => { const bb = busById(+x.dataset.swap); if (confirm(bb.driver.name + ' 기사를 퇴직금 ₩50,000을 주고 교체할까요? (새 기사의 능력은 무작위)') && swapDriver(bb)) this.renderTab(true); });
     b.querySelectorAll('[data-bsvc]').forEach(x => x.onclick = () => { serviceBus(busById(+x.dataset.bsvc)); this.renderTab(true); });
     b.querySelectorAll('[data-bsell]').forEach(x => x.onclick = () => { if (confirm('이 버스를 매각할까요?')) { const bs = busById(+x.dataset.bsell); if (this.follow === bs) this.follow = null; sellBus(bs); this.renderTab(true); } });
   },
@@ -243,6 +245,11 @@ const UI = {
   },
   driveBus(b) { if (P.active) return; this.follow = null; startManual(b); },
 
+  decisionModal() {
+    const p = G.pending[0]; if (!p) return; const d = DECISIONS.find(x => x.k === p.k); this.decOpen = true;
+    this.modal(`<h2>${d.icon} ${d.title}</h2><p class="muted" style="margin-top:0">${d.desc}</p>${d.opts.map((o, i) => `<button class="btn ${i === 0 ? 'pri' : ''}" data-dec="${i}" style="width:100%;text-align:left;margin-bottom:8px" ${o.cost && G.money < o.cost ? 'disabled' : ''}><b>${o.t}</b>${o.cost ? ' · ' + fmtMoney(o.cost) : ''}<br><small style="opacity:.8">${o.d}</small></button>`).join('')}<small class="muted">대기 중인 안건 ${G.pending.length}건 · Esc로 잠시 미룰 수 있어요</small>`);
+    $('modalBox').querySelectorAll('[data-dec]').forEach(b => b.onclick = () => { if (resolveDecision(+b.dataset.dec) !== null) { this.decOpen = false; this.closeModal(); this.refreshTop(); } });
+  },
   notesModal() {
     const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? '방금' : m < 60 ? m + '분 전' : m < 1440 ? Math.floor(m / 60) + '시간 전' : Math.floor(m / 1440) + '일 전'; };
     this.modal(`<h2>🔔 알림 센터</h2><p class="muted" style="margin-top:0">회사 운영 소식을 모아 보여줘요 (최근 40건)</p>${(G.notes || []).length ? G.notes.map(n => `<div class="card" style="padding:7px 12px;margin-bottom:6px"><div class="row" style="justify-content:space-between"><span style="color:${n.kind === 'bad' ? 'var(--bad)' : n.kind === 'good' ? 'var(--ok)' : 'var(--fg)'}">${esc(n.text)}</span><small class="muted" style="flex:none">${ago(n.t)}</small></div></div>`).join('') : '<p class="muted">아직 소식이 없어요</p>'}<div class="row" style="margin-top:10px"><button class="btn" id="nClr">모두 지우기</button><span style="flex:1"></span><button class="btn pri" id="nX">닫기</button></div>`);
@@ -491,6 +498,13 @@ const UI = {
     addEventListener('pointerdown', () => { UI.down = true; }, true); addEventListener('pointerup', () => { UI.down = false; }, true); addEventListener('pointercancel', () => { UI.down = false; }, true);
     document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { this.tab = b.dataset.t; this.renderTab(true); });
     this.bindMap();
-    let tk = 0; setInterval(() => { if (G && G.state === 'company') { this.refreshTop(); this.liveTick(); if (++tk % 4 === 0) this.renderTab(false); } }, 300);
+    let tk = 0; setInterval(() => {
+      if (G && G.state === 'company') {
+        this.refreshTop(); this.liveTick(); if (++tk % 4 === 0) this.renderTab(false);
+        const idle = $('modal').classList.contains('hide') && $('editor').classList.contains('hide');
+        if (this.decOpen && idle) { this.decOpen = false; this.decCool = Date.now() + 20000; }
+        if (idle && G.pending.length && !this.decOpen && (this.decCool || 0) < Date.now()) this.decisionModal();
+      }
+    }, 300);
   }
 };

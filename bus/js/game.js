@@ -12,7 +12,7 @@ const SCHOOL = (() => { try { return Object.assign({ done: {}, best: {}, license
 const saveSchool = () => { try { localStorage.setItem(SCHOOL_KEY, JSON.stringify(SCHOOL)); } catch (e) { } };
 
 function newState(name, school) {
-  return { name, school: !!school, money: 1500000, rep: 50, pax: 0, gt: 0, hour: 9, speed: 1, routes: [], buses: [], nextRoute: 1, nextBus: 1, stats: { revenue: 0, expense: 0, alighted: 0 }, rate: 0, fare: 1500, up: { garage: 0, workshop: 0, fuel: 0, info: 0, welfare: 0, manager: 0 }, notes: [], unread: 0, loan: 0, dayNo: 1, day: { rev: 0, fuel: 0, wage: 0, maint: 0 }, reports: [], goals: {}, goodStops: 0, events: [], evNext: 120, anT: 0, headwayTarget: 40, myPay: 0, saveT: 0, pedT: 0, timeT: 0, goalT: 0 };
+  return { name, school: !!school, money: 1500000, rep: 50, pax: 0, gt: 0, hour: 9, speed: 1, routes: [], buses: [], nextRoute: 1, nextBus: 1, stats: { revenue: 0, expense: 0, alighted: 0 }, rate: 0, fare: 1500, up: { garage: 0, workshop: 0, fuel: 0, info: 0, welfare: 0, manager: 0 }, notes: [], unread: 0, pending: [], decNext: 700, wageMul: 1, strikeUntil: 0, loan: 0, dayNo: 1, day: { rev: 0, fuel: 0, wage: 0, maint: 0 }, reports: [], goals: {}, goodStops: 0, events: [], evNext: 120, anT: 0, headwayTarget: 40, myPay: 0, saveT: 0, pedT: 0, timeT: 0, goalT: 0 };
 }
 const level = () => { let l = 1; LEVELS.forEach((t, i) => { if (G.pax >= t) l = i + 1; }); return l; };
 const routeById = id => G.routes.find(r => r.id === id);
@@ -68,8 +68,8 @@ function addBus(type, routeId, free) {
   if (!free) { if (G.buses.length >= garageCap()) { toast('🅿 차고지가 가득 찼어요. 회사 탭에서 차고지를 확장하세요', 'bad'); return null; } if (G.money < T.price) return null; G.money -= T.price; }
   const model = makeBus(type, r.color, r.num + ' ' + r.name); scene.add(model.group);
   const a = new Agent('bus', model); a.cruise = Math.min(13, T.vmax - 5);
-  const b = { id: G.nextBus++, type, routeId, model, agent: a, pax: [], income: 0, phase: 'run', tick: 0, doorT: 0, doorGoal: 0, minDwell: 0, manual: false, cond: 100, km: 0, age: 0, timer: 0, vAvg: 7, holdT: 0, driver: { name: DRIVERS[(G.nextBus * 7) % DRIVERS.length], today: 0, total: 0 } };
-  G.buses.push(b); placeBusOnRoute(b); return b;
+  const b = { id: G.nextBus++, type, routeId, model, agent: a, pax: [], income: 0, phase: 'run', tick: 0, doorT: 0, doorGoal: 0, minDwell: 0, manual: false, cond: 100, km: 0, age: 0, timer: 0, vAvg: 7, holdT: 0, driver: newDriver() };
+  G.buses.push(b); applyDriverCruise(b); placeBusOnRoute(b); return b;
 }
 function sellBus(b, noRefund) {
   if (b.manual && P.active) stopManual(false);
@@ -80,7 +80,7 @@ function reassignBus(b, routeId) { if (b.manual) return; b.routeId = routeId; co
 
 // ===== 승객 =====
 function pay(b, amount) {
-  G.day.rev += amount; G.money += amount; { const rr0 = routeById(b.routeId); if (rr0) rr0.inc60 = (rr0.inc60 || 0) + amount; } G.stats.revenue += amount; b.income += amount; G.pax++; G.rep = Math.min(100, G.rep + 0.01);
+  G.day.rev += amount; G.money += amount; { const rr0 = routeById(b.routeId); if (rr0) rr0.inc60 = (rr0.inc60 || 0) + amount; } G.stats.revenue += amount; b.income += amount; G.pax++; G.rep = Math.min(100, G.rep + 0.002 + 0.002 * ((b.driver && b.driver.kind) || 3));
   const r = routeById(b.routeId); if (r) { r.income += amount; r.pax++; }
 }
 function serveTick(b, dt, stop, si) {
@@ -98,9 +98,12 @@ function updateBus(b, dt) {
   const a = b.agent;
   b.doorT += clamp(b.doorGoal - b.doorT, -1.6 * dt, 1.6 * dt); b.model.setDoor(b.doorT); b.vAvg += (Math.abs(a.v) - b.vAvg) * Math.min(1, dt / 40);
   if (b.manual) return;
-  if (b.phase === 'broken') { b.timer -= dt; a.v = 0; if (b.timer <= 0) { const fee = BUS_TYPES[b.type].price * 0.04; G.money -= fee; G.day.maint += fee; G.stats.expense += fee; b.cond = 60; b.phase = 'run'; toast('🔧 버스 #' + b.id + ' 수리 완료 (' + fmtMoney(fee) + ')', 'good'); } return; }
+  if (b.phase === 'strike') { if (G.gt > G.strikeUntil) { b.phase = 'run'; a.braking = false; if (!G.strikeNoted) { G.strikeNoted = true; toast('🪧 파업이 끝나 운행을 재개했어요', 'good'); note('🪧 파업 종료 · 운행 재개', 'good'); } } else { a.v = 0; a.braking = true; return; } }
+  else if (G.strikeUntil > G.gt && b.phase === 'run') { b.phase = 'strike'; G.strikeNoted = false; a.v = 0; a.braking = true; return; }
+  if (b.phase === 'broken') { b.timer -= dt; a.v = 0; if (b.timer <= 0) { const fee = BUS_TYPES[b.type].price * (b.accident ? 0.06 : 0.04); G.money -= fee; G.day.maint += fee; G.stats.expense += fee; if (!b.accident) b.cond = 60; b.accident = false; b.phase = 'run'; toast('🔧 버스 #' + b.id + ' 수리 완료 (' + fmtMoney(fee) + ')', 'good'); } return; }
   if (b.phase === 'run') {
-    const s0 = a.s; a.step(dt, G.gt); if (!G.school) { addRun(b, Math.max(0, a.s - s0)); if (b.cond < 25 && Math.random() < 0.02 * (1 - 0.25 * G.up.welfare) * dt) { b.phase = 'broken'; b.timer = 25; a.v = 0; a.braking = true; a.render(0); G.rep = Math.max(0, G.rep - 1); note('🔧 버스 #' + b.id + ' 고장', 'bad'); toast('🔧 버스 #' + b.id + ' 고장! 승객이 불편해해요 (정비소 · 정비 필요)', 'bad'); return; } }
+    const s0 = a.s; a.step(dt, G.gt); if (!G.school) { addRun(b, Math.max(0, a.s - s0));
+      if (Math.random() < 0.0008 * (1.35 - 0.2 * ((b.driver && b.driver.safety) || 3)) * dt * (WX.rainK > 0.3 ? 1.6 : 1)) { b.phase = 'broken'; b.accident = true; b.timer = 15; a.v = 0; a.braking = true; a.render(0); G.rep = Math.max(0, G.rep - 0.5); toast('🚧 버스 #' + b.id + ' 접촉사고! (기사 ' + b.driver.name + ')', 'bad'); note('🚧 버스 #' + b.id + ' 접촉사고 · ' + b.driver.name + ' 기사', 'bad'); return; } if (b.cond < 25 && Math.random() < 0.02 * (1 - 0.25 * G.up.welfare) * dt) { b.phase = 'broken'; b.timer = 25; a.v = 0; a.braking = true; a.render(0); G.rep = Math.max(0, G.rep - 1); note('🔧 버스 #' + b.id + ' 고장', 'bad'); toast('🔧 버스 #' + b.id + ' 고장! 승객이 불편해해요 (정비소 · 정비 필요)', 'bad'); return; } }
     if (a.arrived) { b.phase = 'open'; b.doorGoal = 1; b.minDwell = 2.2; b.tick = 0.35; a.v = 0; a.braking = true; a.render(0); }
   } else if (b.phase === 'open') {
     b.minDwell -= dt;
@@ -144,7 +147,7 @@ function updateWorld(dt) {
   for (const b of G.buses) updateBus(b, dt);
   for (const c of cars) c.step(dt, G.gt);
   if (!G.school) {
-    let wage = 0; for (const b of G.buses) if (!b.manual && !(P.active && P.auto && P.bus === b)) { const w = BUS_TYPES[b.type].wage * dt; wage += w; b.driver.today += w; b.driver.total += w; }
+    let wage = 0; for (const b of G.buses) if (!b.manual && !(P.active && P.auto && P.bus === b)) { const w = BUS_TYPES[b.type].wage * dt * (G.wageMul || 1) * dwm(b.driver); wage += w; b.driver.today += w; b.driver.total += w; }
     G.money -= wage; G.stats.expense += wage; G.day.wage += wage;
     if (P.active && P.bus && !P.bus.isCar && P.bus.manual && !P.paused) {   // 내 급여 (대표 겸 기사) 실시간 지급
       const w = BUS_TYPES[P.bus.type].wage * dt, net = w * (1 - 0.033); G.money -= w; G.day.wage += w; G.stats.expense += w; SCHOOL.wallet += net; G.myPay += net; P.earn = (P.earn || 0) + net;
@@ -163,6 +166,7 @@ function updateWorld(dt) {
   if (!G.school && G.money < 0 && ((G.warnT = (G.warnT || 0) - dt) < 0)) { G.warnT = 60; toast('⚠ 회사 자금이 바닥났어요! 버스를 매각하거나 대출·인출 취소로 메우세요', 'bad'); }
   if (!G.school) {
     if ((G.anT -= dt) < 0) { G.anT = 2; for (const r of G.routes) { r.rate = (r.rate || 0) + ((r.inc60 || 0) * 30 - (r.rate || 0)) * 0.2; r.inc60 = 0; } }
+    if (G.gt > G.decNext) { if (G.pending.length < 2 && G.routes.length) spawnDecision(); G.decNext = G.gt + rand(700, 1100); }
     if (G.gt > G.evNext) { if (G.events.length < 2) spawnEvent(); G.evNext = G.gt + rand(280, 480); }
     for (let i = G.events.length - 1; i >= 0; i--) if (G.gt > G.events[i].until) endEvent(G.events[i]);
   }
@@ -173,7 +177,7 @@ function updateWorld(dt) {
 // ===== 저장 =====
 function makeSave() {
   return {
-    ver: 4, gn: GN, ts: Date.now(), name: G.name, myPay: G.myPay, headwayTarget: G.headwayTarget, fare: G.fare, up: G.up, loan: G.loan, dayNo: G.dayNo, day: G.day, reports: G.reports, money: G.money, rep: G.rep, pax: G.pax, gt: G.gt, hour: G.hour, goals: G.goals, goodStops: G.goodStops, notes: G.notes, unread: G.unread, nextRoute: G.nextRoute, nextBus: G.nextBus, stats: G.stats,
+    ver: 4, gn: GN, ts: Date.now(), name: G.name, myPay: G.myPay, headwayTarget: G.headwayTarget, fare: G.fare, up: G.up, loan: G.loan, dayNo: G.dayNo, day: G.day, reports: G.reports, money: G.money, rep: G.rep, pax: G.pax, gt: G.gt, hour: G.hour, goals: G.goals, goodStops: G.goodStops, notes: G.notes, unread: G.unread, pending: G.pending.map(p => p.k), decNext: G.decNext, wageMul: G.wageMul, nextRoute: G.nextRoute, nextBus: G.nextBus, stats: G.stats,
     routes: G.routes.map(r => ({ id: r.id, num: r.num, name: r.name, color: r.color, stopIds: r.stopIds, income: r.income, pax: r.pax, rate: r.rate || 0, rateN: G.buses.filter(b => b.routeId === r.id).length, len: Math.round(r.path.L) })),
     buses: G.buses.map(b => ({ id: b.id, type: b.type, routeId: b.routeId, income: b.income, cond: b.cond, km: b.km, age: b.age, driver: b.driver })), waiting: STOPS.map(s => Math.round(s.waiting))
   };
@@ -206,8 +210,9 @@ function startCompany(name, saved0) {
     G.myPay = saved.myPay || 0; G.headwayTarget = saved.headwayTarget === undefined ? 40 : saved.headwayTarget; G.fare = saved.fare; G.up = Object.assign(G.up, saved.up || {}); G.loan = saved.loan; G.dayNo = saved.dayNo || 1; G.day = saved.day || G.day; G.reports = saved.reports || [];
     (saved.waiting || []).forEach((w, i) => { if (STOPS[i] && isFinite(w)) STOPS[i].waiting = w; });
     for (const r of saved.routes) { const rr = makeRoute(r.name || '노선', r.color, r.stopIds, r.id, r.num); rr.income = r.income || 0; rr.pax = r.pax || 0; G.routes.push(rr); }
-    for (const b of saved.buses) { const nb = addBus(b.type, b.routeId, true); if (nb) { nb.id = b.id || nb.id; nb.income = b.income || 0; nb.cond = isFinite(b.cond) ? b.cond : 100; nb.km = b.km || 0; nb.age = b.age || 0; if (b.driver && b.driver.name) nb.driver = b.driver; } }
-    lastLvl = level(); G.migrated = sv.migrated; G.offlineReport = offRep; G.notes = saved.notes || []; G.unread = saved.unread || 0;
+    for (const b of saved.buses) { const nb = addBus(b.type, b.routeId, true); if (nb) { nb.id = b.id || nb.id; nb.income = b.income || 0; nb.cond = isFinite(b.cond) ? b.cond : 100; nb.km = b.km || 0; nb.age = b.age || 0; if (b.driver && b.driver.name) nb.driver = Object.assign({ safety: 3, kind: 3, skill: 3, today: 0, total: 0 }, b.driver); applyDriverCruise(nb); } }
+    lastLvl = level(); G.migrated = sv.migrated; G.offlineReport = offRep; G.notes = saved.notes || []; G.unread = saved.unread || 0; G.pending = (saved.pending || []).filter(k => DECISIONS.some(d => d.k === k)).map(k => ({ k })); G.decNext = isFinite(saved.decNext) ? saved.decNext : G.gt + 700; G.wageMul = saved.wageMul || 1;
+    if (offRep) for (let i = 0; i < Math.min(3, Math.floor(offRep.days / 8)); i++) spawnDecision();
     if (offRep) { note(`🌙 ${Math.round(offRep.realSec / 60)}분 자리 비움 · 순이익 ${fmtMoney(offRep.net)} · 승객 ${offRep.pax}명`, offRep.net >= 0 ? 'good' : 'bad'); for (const l of offRep.log) note(l); }
     if (!G.routes.length) { starterRoute(); }
   } else { starterRoute(); G.speed = 10; }
@@ -234,7 +239,7 @@ const serviceCost = b => Math.round((100 - b.cond) * BUS_TYPES[b.type].price * 0
 function serviceBus(b) { const c = serviceCost(b); if (G.money < c) { toast('정비비가 부족해요', 'bad'); return false; } G.money -= c; G.day.maint += c; G.stats.expense += c; b.cond = 100; if (b.phase === 'broken') b.timer = 0; toast('🔧 정비 완료 ' + fmtMoney(c), 'good'); return true; }
 const busValue = b => Math.round(BUS_TYPES[b.type].price * (0.3 + 0.5 * b.cond / 100) * Math.max(0.5, 1 - 0.03 * b.age));
 function addRun(b, dist) {
-  if (dist <= 0) return; const f = BUS_TYPES[b.type].fuel * (1 - 0.08 * G.up.fuel) * dist;
+  if (dist <= 0) return; const f = BUS_TYPES[b.type].fuel * (1 - 0.08 * G.up.fuel) * (1.1 - 0.04 * ((b.driver && b.driver.skill) || 3)) * dist;
   G.money -= f; G.day.fuel += f; G.stats.expense += f; b.km += dist; b.cond = Math.max(0, b.cond - dist * 0.0025);
 }
 const loanLimit = () => 1000000 * level();
@@ -343,7 +348,7 @@ function offlineSim(S, realSec, eff, minSec) {
         for (const b of work) b.income = (b.income || 0) + rr / work.length;
       }
       for (const b of S.buses) {
-        const T = BUS_TYPES[b.type], ok = b.cond >= 25; wage += T.wage * step; if (ok) { const m = 13 * 0.6 * step; fuel += T.fuel * m * (1 - 0.08 * fuelLvl); b.km = (b.km || 0) + m; b.cond = Math.max(0, b.cond - m * 0.0025); }
+        const T = BUS_TYPES[b.type], ok = b.cond >= 25; wage += T.wage * step * (S.wageMul || 1) * dwm(b.driver); if (ok) { const m = 13 * 0.6 * step; fuel += T.fuel * m * (1 - 0.08 * fuelLvl); b.km = (b.km || 0) + m; b.cond = Math.max(0, b.cond - m * 0.0025); }
         if (b.cond < 25 && ws === 0 && Math.random() < 0.6) { const fee = T.price * 0.04; maint += fee; b.cond = 60; rep.breakdowns++; S.rep = Math.max(0, S.rep - 1 * (1 - 0.25 * wf)); }
       }
       S.money += rev - fuel - wage - maint; S.stats.revenue += rev; S.stats.expense += fuel + wage + maint; rep.rev += rev;
@@ -352,7 +357,8 @@ function offlineSim(S, realSec, eff, minSec) {
         const dayRev = S.day.rev, dn = S.dayNo;   // 하루 동안의 사건 (이벤트·사고·날씨·호평)
         if (Math.random() < 0.25 && dayRev > 0) { const def = EV_DEFS[Math.floor(Math.random() * EV_DEFS.length)], x = Math.round(dayRev * rand(0.1, 0.25)); S.money += x; S.day.rev += x; rep.rev += x; rep.log.push(`${def.i} ${dn}일차 · ${def.n} 덕분에 수입 +${fmtMoney(x)}`); }
         if (Math.random() < 0.2 && dayRev > 0) { const x = Math.round(dayRev * 0.08); S.money += x; S.day.rev += x; rep.rev += x; rep.log.push(`🌧 ${dn}일차 · 비가 와서 승객이 늘었어요 +${fmtMoney(x)}`); }
-        if (S.buses.length && Math.random() < 0.12 * (1 - 0.25 * wf)) { const b = S.buses[Math.floor(Math.random() * S.buses.length)], fee = Math.round(BUS_TYPES[b.type].price * 0.06); S.money -= fee; S.day.maint += fee; S.rep = Math.max(0, S.rep - 1); rep.log.push(`🚧 ${dn}일차 · 버스 #${b.id} 접촉사고 · 수리비 ${fmtMoney(fee)}`); }
+        const avgSafe = S.buses.length ? S.buses.reduce((a, b) => a + ((b.driver && b.driver.safety) || 3), 0) / S.buses.length : 3;
+        if (S.buses.length && Math.random() < 0.12 * (1 - 0.25 * wf) * (1.35 - 0.2 * avgSafe) / 0.75) { const b = S.buses[Math.floor(Math.random() * S.buses.length)], fee = Math.round(BUS_TYPES[b.type].price * 0.06); S.money -= fee; S.day.maint += fee; S.rep = Math.max(0, S.rep - 1); rep.log.push(`🚧 ${dn}일차 · 버스 #${b.id} 접촉사고 · 수리비 ${fmtMoney(fee)}`); }
         if (Math.random() < 0.1) { S.rep = Math.min(100, S.rep + 2); rep.log.push(`👍 ${dn}일차 · 친절 기사 칭찬이 올라왔어요 (평판 +2)`); }
         delete S.day._t; settleOn(S); rep.days++; try { carDay(); } catch (e) { }
       }
@@ -364,6 +370,7 @@ function offlineSim(S, realSec, eff, minSec) {
 function liveCatchUp(realSec, eff) {   // 탭을 숨겼다 돌아왔을 때 (회사 모드)
   if (!G || G.school || !G.routes.length) return null; const S = JSON.parse(JSON.stringify(makeSave())); S.day = Object.assign({ rev: 0, fuel: 0, wage: 0, maint: 0 }, S.day); const rep = offlineSim(S, realSec, eff); if (!rep) return null;
   note(`🌙 ${Math.round(rep.realSec / 60)}분 자리 비움 · 순이익 ${fmtMoney(rep.net)} · 승객 ${rep.pax}명`, rep.net >= 0 ? 'good' : 'bad'); for (const l of rep.log) note(l);
+  for (let i = 0; i < Math.min(3, Math.floor(rep.days / 8)); i++) spawnDecision();
   Object.assign(G, { money: S.money, pax: S.pax, rep: S.rep, hour: S.hour, gt: S.gt, loan: S.loan, reports: S.reports, dayNo: S.dayNo, day: S.day, stats: S.stats });
   for (const sb of S.buses) { const b = busById(sb.id); if (b) { b.cond = sb.cond; b.km = sb.km; b.age = sb.age; b.income = sb.income; if (b.driver && sb.driver) b.driver.today = sb.driver.today || 0; } }
   for (const sr of S.routes) { const r = routeById(sr.id); if (r) { r.income = sr.income; r.pax = sr.pax; } }
@@ -380,4 +387,44 @@ function bgFlush(final) {
   if (!BG) return null; let out = null; const s0 = BG.t > 1 ? loadSaved() : null;
   if (s0) { const sv = sanitizeSave(s0); if (sv && !sv.migrated) { const S = sv.save; S.day = Object.assign({ rev: 0, fuel: 0, wage: 0, maint: 0 }, S.day); const rep = offlineSim(S, BG.t, bgEff(S), 1); if (rep) { S.ts = Date.now(); S.notes = S.notes || []; for (const l of rep.log.slice().reverse()) { S.notes.unshift({ t: Date.now(), text: '[자유주행 중] ' + l, kind: '' }); S.unread = (S.unread || 0) + 1; } S.notes.length = Math.min(S.notes.length, 40); BG.sum.log = (BG.sum.log || []).concat(rep.log); try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { } for (const k of ['rev', 'net', 'pax', 'days', 'breakdowns']) BG.sum[k] += rep[k]; } } }
   BG.t = 0; BG.flushT = 0; if (final) { out = BG.sum; out.name = BG.name; BG = null; } return out;
+}
+
+// ===== 기사 능력치 · 선택형 경영 사건 =====
+const newDriver = () => ({ name: DRIVERS[Math.floor(Math.random() * DRIVERS.length)], today: 0, total: 0, safety: 2 + Math.floor(Math.random() * 3), kind: 2 + Math.floor(Math.random() * 3), skill: 2 + Math.floor(Math.random() * 3) });
+const dwm = d => d && d.safety ? 0.7 + 0.1 * (d.safety + d.kind + d.skill) / 3 : 1;   // 능력이 좋을수록 급여도 높아요
+function applyDriverCruise(b) { b.agent.cruise = Math.min(13, BUS_TYPES[b.type].vmax - 5) * (0.94 + 0.03 * ((b.driver && b.driver.skill) || 3)); }
+const STAT_N = { safety: '🛡 안전', kind: '🤝 친절', skill: '⚙ 숙련' };
+function trainDriver(b, stat) {
+  const d = b.driver, lv = d[stat]; if (lv >= 5) { toast('이미 최고 수준이에요'); return false; } const cost = 60000 * lv; if (G.money < cost) { toast('교육비가 부족해요', 'bad'); return false; }
+  G.money -= cost; G.stats.expense += cost; d[stat]++; applyDriverCruise(b); toast(`${d.name} 기사 ${STAT_N[stat]} ${d[stat]}단계!`, 'good'); note(`🎓 ${d.name} 기사 ${STAT_N[stat]} 교육 완료 (${d[stat]}/5)`, 'good'); return true;
+}
+function swapDriver(b) { if (G.money < 50000) { toast('퇴직금이 부족해요', 'bad'); return false; } G.money -= 50000; G.stats.expense += 50000; const old = b.driver.name; b.driver = newDriver(); applyDriverCruise(b); toast(`${old} → ${b.driver.name} 기사 교체`, 'good'); return true; }
+const DECISIONS = [
+  { k: 'union', icon: '🪧', title: '기사 노조의 임금 인상 요구', desc: '노조가 기사 임금을 올려 달라고 요구하고 있어요. 어떻게 할까요?', opts: [
+    { t: '수락', d: '임금 +8% (영구) · 평판 +3', fx: () => { G.wageMul = (G.wageMul || 1) * 1.08; G.rep = Math.min(100, G.rep + 3); return '임금 +8%, 평판 +3'; } },
+    { t: '거절', d: '40% 확률로 파업 (3분간 전 노선 운행 중단) · 평판 -4', fx: () => { if (Math.random() < 0.4) { G.strikeUntil = G.gt + 180; G.rep = Math.max(0, G.rep - 4); return '🪧 파업이 시작됐어요! 평판 -4'; } return '다행히 파업은 없었어요'; } },
+    { t: '협상', d: '₩300,000 합의금 · 임금 +3%', cost: 300000, fx: () => { G.wageMul = (G.wageMul || 1) * 1.03; G.rep = Math.min(100, G.rep + 1); return '합의 타결 · 임금 +3%'; } }] },
+  { k: 'fire', icon: '🔥', title: '차고지 소규모 화재', desc: '차고지에서 작은 불이 나 일부 설비가 손상됐어요.', opts: [
+    { t: '정식 수리', d: '₩500,000', cost: 500000, fx: () => '완벽하게 복구했어요' },
+    { t: '임시 수리', d: '₩150,000 · 전 버스 정비 상태 -15', cost: 150000, fx: () => { for (const b of G.buses) b.cond = Math.max(5, b.cond - 15); return '버스 정비 상태가 나빠졌어요'; } },
+    { t: '방치', d: '30% 확률로 버스 1대 소실 · 평판 -2', fx: () => { if (Math.random() < 0.3 && G.buses.length) { const b = G.buses[G.buses.length - 1]; sellBus(b, true); G.rep = Math.max(0, G.rep - 2); return '🔥 버스 #' + b.id + ' 소실! 평판 -2'; } return '다행히 번지지 않았어요'; } }] },
+  { k: 'city', icon: '🏛', title: '시청의 공공 노선 지원 제안', desc: '시청이 요금을 낮추는 조건으로 보조금을 주겠대요.', opts: [
+    { t: '수락', d: '보조금 +₩900,000 · 평판 +2 · 기본 요금 -100원', fx: () => { G.money += 900000; G.rep = Math.min(100, G.rep + 2); G.fare = Math.max(1000, G.fare - 100); return '보조금 ₩900,000 수령 · 요금 ' + fmtMoney(G.fare); } },
+    { t: '거절', d: '변화 없음', fx: () => '제안을 정중히 거절했어요' }] },
+  { k: 'acquire', icon: '🚌', title: '경쟁사 중고 버스 인수 제안', desc: '문 닫는 소형 운수회사가 정비 상태 70%의 시내버스를 싸게 넘기겠대요.', opts: [
+    { t: '인수', d: '₩400,000 · 시내버스 1대 (차고지 여유 필요)', cost: 400000, fx: () => { if (G.buses.length >= garageCap() || !G.routes.length) { G.money += 400000; return '차고지가 가득 차 계약이 취소됐어요 (환불)'; } const b = addBus('city', G.routes[0].id, true); b.cond = 70; return '시내버스 #' + b.id + ' 인수 완료'; } },
+    { t: '거절', d: '변화 없음', fx: () => '제안을 거절했어요' }] },
+  { k: 'press', icon: '📰', title: '지역 방송 인터뷰 요청', desc: '지역 방송사가 버스 회사 대표 인터뷰를 요청했어요.', opts: [
+    { t: '출연', d: '성공하면 평판 +4, 말실수하면 -3 (50%)', fx: () => { if (Math.random() < 0.5) { G.rep = Math.min(100, G.rep + 4); return '인터뷰 대성공! 평판 +4'; } G.rep = Math.max(0, G.rep - 3); return '말실수로 구설수… 평판 -3'; } },
+    { t: '거절', d: '변화 없음', fx: () => '출연을 사양했어요' }] },
+  { k: 'festival', icon: '🎪', title: '지역 축제 후원 요청', desc: '축제 주최 측이 후원을 부탁해요. 후원하면 행사 때 승객이 몰려요.', opts: [
+    { t: '후원', d: '₩200,000 · 평판 +3 · 지역 행사 개최', cost: 200000, fx: () => { G.rep = Math.min(100, G.rep + 3); if (G.events.length < 2) spawnEvent(); return '축제 후원! 평판 +3'; } },
+    { t: '거절', d: '변화 없음', fx: () => '후원을 정중히 거절했어요' }] }
+];
+function spawnDecision() { if (G.pending.length >= 3) return; const free = DECISIONS.filter(d => !G.pending.some(p => p.k === d.k)); if (!free.length) return; const d = free[Math.floor(Math.random() * free.length)]; G.pending.push({ k: d.k }); note(d.icon + ' 결정이 필요해요: ' + d.title, 'bad'); toast(d.icon + ' 결정이 필요한 안건이 도착했어요!', 'gold'); }
+function resolveDecision(i) {
+  const p = G.pending[0]; if (!p) return null; const d = DECISIONS.find(x => x.k === p.k), o = d.opts[i]; if (!o) return null;
+  if (o.cost && G.money < o.cost) { toast('자금이 부족해요', 'bad'); return null; }
+  if (o.cost) { G.money -= o.cost; G.stats.expense += o.cost; }
+  const res = o.fx(); G.pending.shift(); note(`${d.icon} ${d.title}: ${o.t} → ${res}`, 'good'); toast(d.icon + ' ' + res, 'gold'); return res;
 }
