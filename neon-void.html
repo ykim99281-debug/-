@@ -55,7 +55,8 @@
   </div>
   <div class="stat" id="bestline"></div>
   <button id="go">START</button>
-  <div class="row"><button class="sm" id="shopbtn">SHOP · 기체/강화</button><button class="sm" id="fs" style="display:none">전체화면</button><button class="sm" id="inst" style="display:none">앱 설치</button></div>
+  <button class="sm" id="dailybtn" style="margin-top:.7em">오늘의 도전 <span id="dbest"></span></button>
+  <div class="row"><button class="sm" id="shopbtn">SHOP · 기체/강화</button><button class="sm" id="mus">음악 ON</button><button class="sm" id="fs" style="display:none">전체화면</button><button class="sm" id="inst" style="display:none">앱 설치</button></div>
 </div>
 <div id="over" class="ov hide">
   <h1 style="font-size:clamp(2rem,8vw,3rem)">GAME OVER</h1>
@@ -83,7 +84,26 @@ addEventListener('resize',fit);fit();
 
 /* ---------- audio (synth) ---------- */
 let AC=null,muted=false;
-function audio(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume()}
+function audio(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();if(AC&&!MUS)musicStart()}
+let MUS=null,musicOn=true;
+function musicStart(){MUS={step:0,next:AC.currentTime+.15,id:setInterval(musTick,25)}}
+function mnote(f,t,d,type,vol){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d+.02)}
+function musTick(){
+  if(!MUS)return;
+  if(muted||!musicOn||mode==='pause'){MUS.next=AC.currentTime+.1;return}
+  const boss=mode==='play'&&S&&S.boss,bpm=mode==='play'?(boss?154:132):100,sd=60/bpm/4;
+  while(MUS.next<AC.currentTime+.12){musStep(MUS.step,MUS.next,sd,boss);MUS.next+=sd;MUS.step++}
+}
+const SCALE=[0,3,7,10,12,10,7,3];
+function musStep(i,t,sd,boss){
+  const st=i&15,bar=(i>>4)&3,root=[55,55,65.41,49][bar];
+  if(st%4===0){const o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(40,t+.12);g.gain.setValueAtTime(.16,t);g.gain.exponentialRampToValueAtTime(.0001,t+.15);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+.17)}
+  if(st%2===0)mnote(root*(st%8===6?2:1),t,sd*1.8,'sawtooth',.045);
+  if(st%2===1)mnote(9000,t,.03,'square',.006);
+  const n=SCALE[(i+(bar>1?2:0))%8];
+  mnote(root*8*Math.pow(2,n/12),t,sd*.9,'square',boss?.02:.014);
+  if(boss&&st%4===2)mnote(root*16*Math.pow(2,SCALE[(i>>1)%8]/12),t,sd*1.5,'sawtooth',.016);
+}
 function tone(f,d,type='square',vol=.06,slide=0){
   if(!AC||muted)return;const t=AC.currentTime,o=AC.createOscillator(),g=AC.createGain();
   o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(30,f+slide),t+d);
@@ -112,6 +132,12 @@ let best=0;try{best=+localStorage.getItem('nv_best')||0}catch(e){}
 let S,keys={},touch=null,touchN=0,mode='menu';
 const rnd=(a,b)=>a+Math.random()*(b-a),pick=a=>a[Math.random()*a.length|0];
 const TAU=Math.PI*2;
+let SR=null,daily=false;
+const srand=()=>SR?SR():Math.random(),srnd=(a,b)=>a+srand()*(b-a),spick=a=>a[srand()*a.length|0];
+function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()};
+const dailySeed=()=>[...todayStr()].reduce((a,c)=>(a*31+c.charCodeAt(0))|0,7);
+const dbKey=()=>'nv_d_'+todayStr();
 const vib=n=>{try{navigator.vibrate&&navigator.vibrate(n)}catch(e){}};
 let SAVE={coins:0,ship:0,owned:[true,false,false],up:{hp:0,bomb:0,dmg:0,mag:0}};
 try{const o=JSON.parse(localStorage.getItem('nv_save')||'{}');Object.assign(SAVE,o);SAVE.up=Object.assign({hp:0,bomb:0,dmg:0,mag:0},o.up||{})}catch(e){}
@@ -123,10 +149,10 @@ const SHIPS=[
 ];
 
 function newGame(){
-  const sh=SHIPS[SAVE.ship],U=SAVE.up,mhp=3+sh.hp+U.hp;
+  const sh=SHIPS[daily?0:SAVE.ship],U=daily?{hp:0,bomb:0,dmg:0,mag:0}:SAVE.up,mhp=3+sh.hp+U.hp;
   S={coins:0,t:0,score:0,combo:0,comboT:0,mult:1,wave:0,waveT:0,toSpawn:[],spawnT:0,boss:null,
      p:{x:W/2,y:H-110,vx:0,vy:0,r:11,hp:mhp,maxhp:mhp,inv:0,power:1,rapid:0,shield:0,bombs:2+U.bomb,fire:0,trail:[],
-        ship:SAVE.ship,col:sh.col,spd:sh.spd,rate:sh.rate,dm:sh.dmg*(1+.1*U.dmg),bw:sh.bw,mag:110+U.mag*50},
+        ship:daily?0:SAVE.ship,col:sh.col,spd:sh.spd,rate:sh.rate,dm:sh.dmg*(1+.1*U.dmg),bw:sh.bw,mag:110+U.mag*50},
      bul:[],ebul:[],en:[],fx:[],pu:[],shake:0,flash:0,msgs:[],kills:0,
      stars:Array.from({length:90},()=>({x:rnd(0,W),y:rnd(0,H),z:rnd(.2,1)}))};
   nextWave();
@@ -151,16 +177,16 @@ function nextWave(){
     if(w>=2)pool.push('swoop');
     if(w>=3)pool.push('gun');
     if(w>=4&&i%5===4)pool=['tank'];
-    list.push(pick(pool));
+    list.push(spick(pool));
   }
   S.toSpawn=list;S.spawnT=1.2;
 }
 function spawnEnemy(k,fx,fy){
   const T=TYPES[k],hpScale=1+S.wave*.08;
-  const e={k,x:rnd(40,W-40),y:-30,hp:Math.ceil(T.hp*hpScale),max:0,r:T.r,sp:T.sp*(1+S.wave*.02),pts:T.pts,col:T.col,
-           shoot:T.shoot,st:rnd(0,1.5),ph:rnd(0,TAU),t:0,hit:0,x0:0,dir:Math.random()<.5?-1:1};
+  const e={k,x:srnd(40,W-40),y:-30,hp:Math.ceil(T.hp*hpScale),max:0,r:T.r,sp:T.sp*(1+S.wave*.02),pts:T.pts,col:T.col,
+           shoot:T.shoot,st:srnd(0,1.5),ph:srnd(0,TAU),t:0,hit:0,x0:0,dir:srand()<.5?-1:1};
   e.max=e.hp;e.x0=e.x;
-  if(k==='swoop'){e.x=e.dir>0?-20:W+20;e.y=rnd(60,200)}
+  if(k==='swoop'){e.x=e.dir>0?-20:W+20;e.y=srnd(60,200)}
   if(fx!==undefined){e.x=fx;e.x0=fx;e.y=fy;if(k==='swoop')e.dir=fx<W/2?1:-1}
   S.en.push(e);
 }
@@ -174,7 +200,7 @@ function spawnBoss(){
   const bt=(S.wave/5-1)%4,D=BOSSES[bt],hp=60+S.wave*14;
   msg('⚠ WARNING ⚠',D.n);
   S.boss={k:'boss',bt,name:D.n,sides:D.sides,pats:D.pat,x:W/2,y:-120,ty:130,hp,max:hp,r:48,col:D.col,pts:8000,t:0,hit:0,ph:0,atk:2,pat:-1,enter:true};
-  S.en.push(S.boss);
+  S.en.push(S.boss);shake(10);S.flash=.4;tone(70,1,'sawtooth',.1,-30);
 }
 
 /* ---------- effects ---------- */
@@ -197,12 +223,12 @@ function killEnemy(e){
   burst(e.x,e.y,e.col,e.k==='boss'?80:18,e.k==='boss'?420:240,e.k==='boss'?1.4:.6,3);
   ring(e.x,e.y,e.col,e.k==='boss'?200:50);
   if(e.k==='boss'){sfx.big();vib([60,40,120]);shake(24);S.flash=1;S.en.forEach(o=>{if(o!==e)o.hp=0});S.ebul.length=0;
-    for(let i=0;i<4;i++)dropPU(e.x+rnd(-50,50),e.y+rnd(-30,30),true);S.boss=null}
+    for(let i=0;i<4;i++)dropPU(e.x+rnd(-50,50),e.y+rnd(-30,30),true);S.boss=null;S.slow=.7}
   else{sfx.boom();shake(e.k==='tank'?8:3);
     const ch=e.k==='tank'?1:.12;if(Math.random()<ch)dropPU(e.x,e.y)}
 }
 function dropPU(x,y,force){
-  const roll=Math.random();let k;
+  const roll=srand();let k;
   if(roll<.4)k='power';else if(roll<.62)k='rapid';else if(roll<.82)k='shield';else if(roll<.93)k='bomb';else k='heal';
   S.pu.push({k,x,y,vy:60,t:0});
 }
@@ -414,7 +440,7 @@ function draw(){
   ctx.textBaseline='alphabetic';ctx.textAlign='left';ctx.fillStyle='#fff';ctx.font='bold 22px system-ui';
   glow('#6a5cff',8);ctx.fillText(String(Math.floor(S.score)).padStart(7,'0'),14,32);noGlow();
   ctx.textAlign='right';ctx.fillStyle='#ffe14a';ctx.font='bold 16px system-ui';ctx.fillText('◆ '+S.coins,W-60,32);ctx.textAlign='left';
-  ctx.font='12px system-ui';ctx.fillStyle='#9aa';ctx.fillText('BEST '+Math.max(best,S.score|0)+'  ·  WAVE '+S.wave,14,50);
+  ctx.font='12px system-ui';ctx.fillStyle='#9aa';ctx.fillText((daily?'DAILY · ':'')+'BEST '+Math.max(best,S.score|0)+'  ·  WAVE '+S.wave,14,50);
   if(S.mult>1){ctx.fillStyle='#ffe14a';ctx.font='bold 18px system-ui';ctx.fillText('x'+S.mult+' COMBO '+S.combo,14,74);
     ctx.fillStyle='#ffe14a44';ctx.fillRect(14,80,90,4);ctx.fillStyle='#ffe14a';ctx.fillRect(14,80,90*Math.max(0,S.comboT/2.4),4)}
   // hp & bombs
@@ -434,20 +460,28 @@ function heart(x,y){ctx.beginPath();ctx.moveTo(x+8,y+14);ctx.bezierCurveTo(x-6,y
 
 /* ---------- flow ---------- */
 let last=0,raf=0;
+function fxStep(dt){for(const f of S.fx){f.life-=dt;if(f.type==='p'){f.x+=f.vx*dt;f.y+=f.vy*dt;f.vx*=.97;f.vy*=.97}else if(f.type==='r')f.r=f.R*(1-f.life/f.max)}
+  S.fx=S.fx.filter(f=>f.life>0);S.shake=Math.max(0,S.shake-dt*40);S.flash=Math.max(0,S.flash-dt*2)}
 function loop(now){
-  const dt=Math.min(.033,(now-last)/1000);last=now;
-  if(mode==='play')update(dt);
+  let dt=Math.min(.033,(now-last)/1000);last=now;
+  if(S&&S.slow>0){S.slow-=dt;dt*=.3}
+  if(mode==='play')update(dt);else if(mode==='over'&&S)fxStep(dt);
   if(S)draw();
   raf=requestAnimationFrame(loop);
 }
-function start(){audio();newGame();mode='play';['menu','over','pz'].forEach(i=>$(i).classList.add('hide'))}
+function start(d){if(d!==undefined)daily=d;SR=daily?mulberry(dailySeed()):null;audio();newGame();mode='play';['menu','over','pz'].forEach(i=>$(i).classList.add('hide'))}
 function gameOver(){
   mode='over';const s=Math.floor(S.score),nb=s>best;
   if(nb){best=s;try{localStorage.setItem('nv_best',best)}catch(e){}}
-  const earn=S.coins+S.wave*10;SAVE.coins+=earn;save();updateMenu();vib([100,50,200]);
+  let earn=S.coins+S.wave*10,dnote='';
+  if(daily){const k=dbKey();let db=0;try{db=+localStorage.getItem(k)||0}catch(e){}
+    if(s>db){try{localStorage.setItem(k,s)}catch(e){}dnote='<div class="stat">🏆 오늘의 도전 신기록!</div>'}
+    if(SAVE.dailyDone!==todayStr()){SAVE.dailyDone=todayStr();earn+=200;dnote+='<div class="stat">첫 도전 보너스 <b>◆ 200</b></div>'}
+    updateDaily()}
+  SAVE.coins+=earn;save();updateMenu();vib([100,50,200]);
   burst(S.p.x,S.p.y,'#37f0ff',50,360,1.2,3);sfx.big();shake(20);
   setTimeout(()=>{
-    $('result').innerHTML=`<div class="stat">SCORE <b>${s}</b>${nb?' 🏆 신기록!':''}</div><div class="stat">웨이브 <b>${S.wave}</b> · 격추 <b>${S.kills}</b></div><div class="stat">최고 <b>${best}</b></div><div class="stat">획득 <b>◆ ${earn}</b> (보유 ${SAVE.coins})</div>`;
+    $('result').innerHTML=`<div class="stat">SCORE <b>${s}</b>${nb&&!daily?' 🏆 신기록!':''}</div>${daily?'<div class="stat">오늘의 도전 모드</div>':''}${dnote}<div class="stat">웨이브 <b>${S.wave}</b> · 격추 <b>${S.kills}</b></div><div class="stat">최고 <b>${best}</b></div><div class="stat">획득 <b>◆ ${earn}</b> (보유 ${SAVE.coins})</div>`;
     $('over').classList.remove('hide');
   },900);
   // keep animating fx during delay
@@ -457,7 +491,9 @@ function togglePause(){
   if(mode==='play'){mode='pause';$('pz').classList.remove('hide')}
   else if(mode==='pause'){mode='play';$('pz').classList.add('hide')}
 }
-$('go').onclick=start;$('again').onclick=start;$('resume').onclick=togglePause;$('pause').onclick=e=>{e.stopPropagation();togglePause()};
+$('go').onclick=()=>start(false);$('again').onclick=()=>start();$('dailybtn').onclick=()=>start(true);$('resume').onclick=togglePause;$('pause').onclick=e=>{e.stopPropagation();togglePause()};
+function updateDaily(){let db=0;try{db=+localStorage.getItem(dbKey())||0}catch(e){}$('dbest').textContent=db?'(최고 '+db+')':'(오늘 첫 도전 +◆200)'}
+updateDaily();
 function updateMenu(){$('bestline').innerHTML=(best?'BEST '+best+' · ':'')+'◆ '+SAVE.coins+'<br>기체 <b>'+SHIPS[SAVE.ship].n+'</b> · '+SHIPS[SAVE.ship].d}
 updateMenu();
 const UPS=[['hp','❤ 최대 체력 +1',3,400],['bomb','💣 시작 폭탄 +1',3,300],['dmg','⚔ 공격력 +10%',5,500],['mag','🧲 아이템 자석 범위',3,250]];
@@ -483,6 +519,8 @@ $('shopbody').onclick=e=>{
   else if(u){const k=u.dataset.up,d=UPS.find(x=>x[0]===k),lv=SAVE.up[k],cost=d[3]*(lv+1);
     if(lv<d[2]&&SAVE.coins>=cost){SAVE.coins-=cost;SAVE.up[k]++;save();audio();sfx.pick();renderShop()}}
 };
+$('mus').onclick=()=>{musicOn=!musicOn;$('mus').textContent=musicOn?'음악 ON':'음악 OFF';try{localStorage.setItem('nv_mus',musicOn?1:0)}catch(e){}};
+try{if(localStorage.getItem('nv_mus')==='0'){musicOn=false;$('mus').textContent='음악 OFF'}}catch(e){}
 // fullscreen + install
 const fsb=$('fs');if(document.documentElement.requestFullscreen){fsb.style.display='';fsb.onclick=()=>{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}}
 let dip=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();dip=e;$('inst').style.display=''});
