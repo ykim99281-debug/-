@@ -125,10 +125,11 @@ if("ontouchstart" in window||(window.matchMedia&&matchMedia("(pointer:coarse)").
 
 /* ===== 게임 열기/닫기 (플레이 중에는 월드 렌더링 정지) ===== */
 var inGame=false;
+var BASE=/^https?:$/.test(location.protocol)?"":"https://ykim99281-debug.github.io/-/";
 function openGame(g){
   if(g.id==="obby"){closeModals();startObby();return}
   closeModals();inGame=true;
-  $("gf").src=g.u;$("gv").classList.add("on");
+  $("gf").src=BASE+g.u;$("gv").classList.add("on");
 }
 function closeGame(){
   inGame=false;$("gv").classList.remove("on");$("gf").src="about:blank";
