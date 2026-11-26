@@ -6,5 +6,5 @@ const out = esbuild.buildSync({
 });
 const js = out.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
 const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
-fs.writeFileSync(path.join(__dirname, '..', 'convenience.html'), tpl.replace('/*__BUNDLE__*/', () => js));
-console.log('built convenience.html', (js.length / 1024).toFixed(0) + 'KB js');
+fs.writeFileSync(path.join(__dirname, '..', 'index.html'), tpl.replace('/*__BUNDLE__*/', () => js));
+console.log('built index.html', (js.length / 1024).toFixed(0) + 'KB js');

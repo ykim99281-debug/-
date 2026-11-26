@@ -251,4 +251,4 @@ $('jump').onclick=()=>V3&&V3.jump();
  const end=e=>{if(e.pointerId!==id)return;id=null;k.style.transform='';if(V3)V3.setJoy(0,0)};
  j.addEventListener('pointerup',end);j.addEventListener('pointercancel',end)})();
 setTimeout(()=>{const h=$('hint');h.style.opacity=0},9000);
-if('serviceWorker' in navigator)navigator.serviceWorker.register('convenience-sw.js').catch(()=>{});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
