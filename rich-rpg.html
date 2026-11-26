@@ -1045,10 +1045,10 @@ function carSell(){
  if(!confirm('🚗 내 차 '+n+'대를 모두 '+won(v)+'에 팔까요? (감가 반영)'))return;
  S.cash+=v;S.cars=[];garageRefresh();c3Log('나','💰 차 '+n+'대를 팔았다 (+'+won(v)+')','me');save()}
 /* ---- 🧑‍💼 비서 ---- */
-const HIRE={'유나':{role:'리서치 비서',skill:'research',sal:2.8e6,desc:'경제·데이터 분석과 시장 조사를 맡음. 꼼꼼하고 영리하며 숫자에 강함. 존댓말을 씀.'},'미나':{role:'홍보·인맥 비서',skill:'network',sal:3.2e6,desc:'홍보, 섭외, 인맥 관리를 맡음. 센스 있고 사교적이며 트렌드에 밝음. 존댓말을 씀.'},'태준':{role:'수행·운영 비서',skill:'ops',sal:2.5e6,desc:'수행, 일정, 잡무와 운영을 맡음. 과묵하고 성실하며 든든함. 정중한 말투.'},'지훈':{role:'영업·섭외 비서',skill:'network',sal:2.6e6,desc:'영업과 협상, 섭외를 맡음. 말솜씨가 좋고 붙임성이 있음. 정중하지만 유쾌한 말투.'},'소연':{role:'일정·의전 비서',skill:'ops',sal:2.7e6,desc:'일정 관리와 의전을 맡음. 차분하고 눈치가 빠르며 세련됨. 존댓말을 씀.'},'정 기자':{role:'정보·홍보 비서',skill:'research',sal:3.0e6,desc:'정보 수집과 홍보를 맡음(전직 기자). 호기심이 많고 출처를 따짐. 존댓말을 씀.'}};
-const SEC_LINES=['사장님, 오늘 일정 정리해 둘까요?','필요하신 거 있으면 말씀만 하세요.','보고드릴 게 하나 있습니다.','제가 알아보고 바로 말씀드리겠습니다.','무리하지 마시고 쉬어가며 하세요.','시장 분위기 체크해 두었습니다.','오늘도 좋은 하루 되세요, 사장님.','그 건은 제가 처리해 두겠습니다.'];
-function secDef(){const s0=S.secretary,base=NPC_DEF.find(d=>d.n===s0.n),H=HIRE[s0.n];return Object.assign({},base,{o:Object.assign({},base.o,{name:'🧑‍💼 '+s0.n+' (비서)',labelColor:'#7affc8'}),hired:true,sec:true,love:false,vip:false,wander:false,fix:true,state:'idle',look:null,desc:'플레이어(사장)의 비서('+H.role+'). '+H.desc+' 사장을 존중하고 업무에 충실함.',lines:SEC_LINES})}
-function SECP(P){if(!P.def.sec||!S.secretary)return'';const s0=S.secretary;return'\n[직장 관계] 당신은 플레이어(사장님)의 비서이며 직무는 "'+s0.role+'"이다. 월급은 '+won(s0.sal)+', 충성도 '+Math.round(s0.loyal)+'/100. 비서로서 업무상 플레이어의 실제 재정과 일정을 알고 있다(위 [숨겨진 진실]은 당신에게 예외로 공개됨). 전문적이고 충직하지만 필요하면 걱정·조언·반론도 한다. 로맨틱하거나 성적인 관계로 발전시키지 말고, 업무 관계를 유지하라.'}
+const HIRE={'유나':{role:'일상 비서',skill:'daily',sal:1.6e6,desc:'일상 전반(식사·일정·심부름·건강)을 챙겨주는 비서. 꼼꼼하고 세심하며 잔소리가 조금 있음. 존댓말을 씀.'},'미나':{role:'일상 비서',skill:'daily',sal:1.8e6,desc:'일상 비서. 센스 있고 트렌디해서 선물·맛집·옷 고르기를 잘 도와줌. 밝고 수다스러운 존댓말.'},'태준':{role:'일상 비서',skill:'daily',sal:1.5e6,desc:'일상 비서. 과묵하지만 든든해서 짐·심부름·이동을 척척 처리함. 정중하고 간결한 말투.'},'지훈':{role:'일상 비서',skill:'daily',sal:1.5e6,desc:'일상 비서. 유쾌하고 말이 많아 분위기를 풀어주며 약속·예약을 잘 잡음. 친근한 존댓말.'},'소연':{role:'일상 비서',skill:'daily',sal:1.7e6,desc:'일상 비서. 차분하고 세련되어 일정·의전·기념일을 잘 챙김. 부드러운 존댓말.'},'정 기자':{role:'일상 비서',skill:'daily',sal:1.6e6,desc:'일상 비서(전직 기자). 호기심 많고 수다스러우며 세상 소식과 일상 정보를 잘 알려줌. 존댓말.'}};
+const SEC_LINES=['오늘 점심은 드셨어요?','필요하신 거 있으면 말씀만 하세요~','날씨가 변덕스러워요, 겉옷 챙기세요.','약속 시간 잊지 않으셨죠?','무리하지 마시고 쉬어가며 하세요.','오늘 컨디션은 어떠세요?','이것저것 챙겨 두었어요.','커피 한 잔 내려드릴까요?'];
+function secDef(){const s0=S.secretary,base=NPC_DEF.find(d=>d.n===s0.n),H=HIRE[s0.n];return Object.assign({},base,{o:Object.assign({},base.o,{name:'🧑‍💼 '+s0.n+' (비서)',labelColor:'#7affc8'}),hired:true,sec:true,love:false,vip:false,wander:false,fix:true,state:'idle',look:null,desc:'플레이어의 일상 비서. '+H.desc+' 플레이어를 존중하고 편안하게 챙겨줌.',lines:SEC_LINES})}
+function SECP(P){if(!P.def.sec||!S.secretary)return'';const s0=S.secretary;return'\n[직장 관계] 당신은 플레이어(사장님)의 일상 비서이며 직무는 "'+s0.role+'"이다. 월급은 '+won(s0.sal)+', 충성도 '+Math.round(s0.loyal)+'/100. 일상 비서로서 식사, 일정, 심부름, 컨디션, 소소한 대화를 담당하며 플레이어의 생활을 잘 안다(위 [숨겨진 진실]은 당신에게 예외로 공개됨). 편안하고 다정하게 챙기되 필요하면 걱정·잔소리·조언도 한다. 로맨틱하거나 성적인 관계로 발전시키지 말고 직장 관계를 유지하라.'}
 function syncHired(V){V.npcs.forEach(p=>{if(p.sec)return;const h=!!(S.secretary&&S.secretary.n===p.def.n);p.def.hired=h;p.g.visible=!h})}
 function secCompanion(V){
  if(V.sec){V.sc.remove(V.sec.g);let i=V.npcs.indexOf(V.sec);if(i>=0)V.npcs.splice(i,1);i=V.all.indexOf(V.sec);if(i>=0)V.all.splice(i,1);V.sec=null}
@@ -1077,9 +1077,8 @@ function secMonthly(ev){
  if(S.cash<s0.sal){s0.loyal-=15;ev.push({txt:'🧑‍💼 월급을 못 줬다… '+s0.n+'의 충성도가 떨어졌다',r:1})}else{pay(s0.sal);ev.push({txt:'🧑‍💼 비서 '+s0.n+' 월급 −'+won(s0.sal),r:1})}
  s0.loyal=Math.max(0,s0.loyal-.5);
  if(s0.loyal<8){ev.push({txt:'🧑‍💼 '+s0.n+'이(가) 사직서를 냈다…',r:1});S.secretary=null;return}
- if(s0.skill==='research'){const t=stockTipText('🧑‍💼 비서 '+s0.n,s0.loyal,.15);if(t)ev.push({txt:'🧑‍💼 '+s0.n+'의 시장 보고: '+t,r:1})}
- else if(s0.skill==='network'){const c=NPCS.filter(n=>['broker','senior','vc','agent'].includes(n.id)&&(!n.minInt||S.int>=n.minInt)&&(S.diff==='god'||ageOf(S.t)>=n.minAge));if(c.length){const n=pick(c);S.npc[n.id]=Math.min(100,(S.npc[n.id]||0)+2);ev.push({txt:'🧑‍💼 '+s0.n+'이(가) '+n.emoji+' '+n.name+'와의 만남을 주선했다 (친밀도 +2)',r:1})}}
- else{S.mental=Math.min(100,S.mental+2);if(S.co){S.co.V*=1.01;ev.push({txt:'🧑‍💼 '+s0.n+'의 운영 지원으로 회사 가치 +1%, 멘탈 +2',r:1})}else ev.push({txt:'🧑‍💼 '+s0.n+'이(가) 일정을 챙겨 멘탈 +2',r:1})}}
+ S.mental=Math.min(100,S.mental+3);
+ ev.push({txt:'🧑‍💼 '+s0.n+': '+pick(['도시락 챙겨뒀어요, 거르지 말고 드세요!','이번 달 일정 정리해 뒀어요. 한결 여유로우실 거예요.','집 정리랑 빨래는 제가 해뒀어요 ㅎㅎ','약속 시간 알림 맞춰놨어요.','감기 조심하세요, 따뜻한 차 준비해뒀어요.'])+' (멘탈 +3)',r:1})}
 /* ---- 🏢 비서실 ---- */
 VENUES.office={where:'사장님 사무실(비서실)',title:()=>'🏢 비서실',stage:()=>S.secretary?S.secretary.n:'none',
  build(){
@@ -1105,21 +1104,26 @@ VENUES.office={where:'사장님 사무실(비서실)',title:()=>'🏢 비서실'
   const npcs=spawnDefs(sc,[d]);npcs[0].sec=true;
   const me=newMe();me.g.position.set(0,0,5.5);me.yaw=Math.PI;me.g.rotation.y=Math.PI;sc.add(me.g);
   return{sc,npcs,crowd:[],me,all:[...npcs,me],ROOM:{x0:-8,x1:8,z0:-6.6,z1:8.6},OBST:OB,spawn:[0,5.5,Math.PI],meKey:meKey()}},
- actions:()=>[['brief','📋 브리핑 받기'],['research','🔍 시장 조사 지시'],['schedule','📅 일정 정리(휴식)'],['delegate','💼 회사 업무 위임'],['bonus','🎁 보너스 주기'],['praise','👏 격려하기'],['fire','📤 해고(퇴사 처리)'],['wave','👋 인사']],
+ actions:()=>[['brief','🗓 오늘의 일상 브리핑'],['meal','🍱 식사 챙겨달라고'],['errand','🛒 심부름 부탁'],['care','😴 휴식·컨디션 케어'],['chores','🧹 집안일 맡기기'],['anniv','🎂 기념일·선물 준비'],['chat','☕ 커피 한잔 수다'],['bonus','🎁 보너스 주기'],['praise','👏 고마워하기'],['fire','📤 해고(퇴사 처리)'],['wave','👋 인사']],
  locs:[[/책상|비서/,0,-3.2,'비서 책상'],[/소파|쉬/,-5,3.4,'소파'],[/창|야경/,0,-5.6,'창가']],
  act(k){
-  const s0=S.secretary,me=C3.me,now=performance.now(),P=C3.npcs[0],w=wage(S.t);if(!s0)return true;
-  const mo=(S.secAct||(S.secAct={}));const once=(key)=>{if(mo[key]===S.t){c3Note('이번 달에는 이미 했어요');return false}mo[key]=S.t;return true};
-  const bonusAcc=.05+s0.loyal/500+(s0.skill==='research'?.08:0);
-  if(k==='brief'){me.ov={state:'talk',until:now+3000};const y=ymOf(S.t),pc=S.t>0?kospi[S.t]/kospi[S.t-1]-1:0,t=stockTipText('🧑‍💼 '+s0.n,s0.loyal,bonusAcc);
-   c3Speak(P,'사장님, '+y.y+'년 '+y.m+'월 보고입니다. 총자산 '+won(nw())+', 현금 '+won(S.cash)+'. 코스피는 '+kospi[S.t].toLocaleString()+'('+(pc>=0?'+':'')+(pc*100).toFixed(1)+'%)입니다.'+(t?' 참고로 '+t:''),12);P.ov={state:'talk',until:now+4000};return true}
-  if(k==='research'){if(!once('research'))return true;const fee=Math.round(500000*w/1000)*1000;if(fee>S.cash){mo.research=-1;c3Note('조사비 '+won(fee)+'가 필요해요');return true}pay(fee);me.ov={state:'pose',until:now+2000};const ts=[];for(let i=0;i<3;i++){const t=stockTipText('🧑‍💼 '+s0.n+' 조사',s0.loyal,bonusAcc+.06);if(t)ts.push(t)}
-   c3Log('나','🔍 시장 조사 지시 (조사비 −'+won(fee)+')','me');c3Speak(P,ts.length?'조사 결과입니다. '+ts.join(' / '):'오늘은 눈에 띄는 신호가 없네요.',14);S.int=Math.min(100,S.int+.5);save();return true}
-  if(k==='schedule'){if(!once('schedule'))return true;me.ov={state:'sit',until:now+3000};S.mental=Math.min(100,S.mental+6);c3Log('나','📅 일정을 정리하고 한숨 돌렸다 (멘탈 +6)','me');c3Speak(P,pickNew('sc',['불필요한 약속은 정리해 두었습니다. 잠시 쉬세요.','오늘은 일정이 여유로워요. 커피 한 잔 드릴까요?']),6);save();return true}
-  if(k==='delegate'){if(!S.co){c3Note('위임할 회사가 없어요! (🏢 회사 탭에서 설립)');return true}if(!once('delegate'))return true;const fee=Math.round(300000*w/1000)*1000;if(fee>S.cash){mo.delegate=-1;c3Note('위임 비용 '+won(fee)+' 필요');return true}pay(fee);const g=.02+(s0.skill==='ops'?.015:0)+s0.loyal/5000;S.co.V*=1+g;c3Log('나','💼 회사 업무 위임 (−'+won(fee)+', 회사 가치 +'+(g*100).toFixed(1)+'%)','me');c3Speak(P,'네, 회사 건은 제가 챙겨두겠습니다.',6);save();return true}
-  if(k==='bonus'){const b=Math.round(1000000*w/1e5)*1e5;if(b>S.cash){c3Note('보너스 '+won(b)+' 필요');return true}pay(b);s0.loyal=Math.min(100,s0.loyal+12);me.ov={state:'bow',until:now+1500};P.ov={state:'bow',until:now+2000};c3Log('나','🎁 보너스 −'+won(b)+' (충성도 +12 → '+Math.round(s0.loyal)+')','me');c3Speak(P,pickNew('bn',['사장님… 감사합니다! 더 열심히 하겠습니다.','이렇게 신경 써 주시다니, 정말 감사해요.']),6);save();return true}
-  if(k==='praise'){if(!once('praise'))return true;s0.loyal=Math.min(100,s0.loyal+3);me.ov={state:'clap',until:now+2000};c3Speak(P,pickNew('pr',['과찬이세요, 사장님 ㅎㅎ','그렇게 말씀해 주시니 힘이 나네요.']),5);save();return true}
-  if(k==='fire'){if(!confirm('📤 '+s0.n+'을(를) 해고할까요? (퇴직금 1개월치)'))return true;pay(s0.sal);const n=s0.n;S.secretary=null;P.ov={state:'bow',until:now+2000};c3Log('','📤 '+n+' 퇴사 처리 (퇴직금 −'+won(s0.sal)+')','sys');c3Speak(P,'그동안 감사했습니다, 사장님.',5);save();setTimeout(()=>c3Close(),2500);return true}
+  const s0=S.secretary,me=C3.me,now=performance.now(),P=C3.npcs[0],w=wage(S.t),dr=Math.round(50000*w/1000)*1000;if(!s0)return true;
+  const mo=(S.secAct||(S.secAct={}));const once=(key,n)=>{const c=mo[key]&&mo[key].t===S.t?mo[key].n:0;if(c>=(n||1)){c3Note('이번 달에는 이미 충분히 했어요');return false}mo[key]={t:S.t,n:c+1};return true};
+  const spend=(c,why)=>{if(c>S.cash){c3Note('💸 잔액 부족 (필요 '+won(c)+')');return false}pay(c);C3.spent=(C3.spent||0)+c;c3Log('','💸 −'+won(c)+' ('+why+')','sys');return true};
+  if(k==='brief'){me.ov={state:'talk',until:now+3000};const y=ymOf(S.t),mm=y.m,wt=(mm===12||mm<=2)?'추워요, 따뜻하게 입으세요 🧣':(mm>=6&&mm<=8)?'덥고 습해요, 물 자주 드세요 💧':(mm===3||mm===4||mm===5)?'봄이라 포근해요 🌸':'선선해요 🍂',notes=[];
+   if(S.partner)notes.push(S.partner+'님과(와) 연락 한번 해보세요');if(S.school&&S.school.exam!==S.t&&ageOf(S.t)<=25)notes.push('이번 달 시험 아직 안 보셨어요');if(S.mental<40)notes.push('요즘 많이 지쳐 보여요, 쉬세요');if(S.cars&&S.cars.length)notes.push('차 유지비 나가는 달이에요');
+   const h=HIST[y.y*100+y.m];c3Speak(P,y.y+'년 '+y.m+'월이에요. 날씨는 '+wt+(h?' 뉴스로는 "'+h.slice(0,40)+'".':'')+(notes.length?' 챙길 일: '+notes.join(', ')+'.':' 오늘은 특별한 일정이 없어요.'),14);P.ov={state:'talk',until:now+4000};return true}
+  if(k==='meal'){if(!once('meal',2))return true;if(!spend(Math.round(dr*2),'식사 주문'))return true;me.ov={state:'drink',until:now+3000};P.ov={state:'talk',until:now+2500};S.mental=Math.min(100,S.mental+4);c3Log('나','🍱 식사를 챙겨 먹었다 (멘탈 +4)','me');c3Speak(P,pickNew('ml',['오늘은 따뜻한 국물요리로 준비했어요. 천천히 드세요.','샐러드랑 도시락 시켜놨어요, 거르지 마세요!','입맛 없으셔도 조금이라도 드셔야 해요.']),6);save();return true}
+  if(k==='errand'){if(!once('errand',3))return true;const it=pick(['택배 찾아오기','세탁소 다녀오기','필요한 문구·생필품 사오기','화분 물주기와 우편 정리','약국에서 상비약 사오기']),c=Math.round(dr*(1+Math.random()*3));if(!spend(c,it))return true;me.ov={state:'wave',until:now+1500};S.mental=Math.min(100,S.mental+2);c3Log('나','🛒 심부름: '+it+' (멘탈 +2)','me');c3Speak(P,'다녀왔어요! '+it+' 끝났습니다 😊',6);save();return true}
+  if(k==='care'){if(!once('care'))return true;me.ov={state:'sit',until:now+3500};S.mental=Math.min(100,S.mental+7);c3Log('나','😴 소파에서 쉬었다 (멘탈 +7)','me');c3Speak(P,pickNew('cr',['오늘은 일정 비워뒀어요. 푹 쉬세요.','따뜻한 차 가져다 드릴게요. 눈 좀 붙이세요.','컨디션 관리가 제일 중요해요. 저한테 맡기세요.']),6);save();return true}
+  if(k==='chores'){if(!once('chores'))return true;if(!spend(Math.round(dr*2),'집안일·청소 대행'))return true;S.mental=Math.min(100,S.mental+3);P.ov={state:'pour',until:now+3000};c3Log('나','🧹 집안일을 맡겼다 (멘탈 +3)','me');c3Speak(P,'청소랑 정리 다 해뒀어요. 집이 한결 환해졌죠?',6);save();return true}
+  if(k==='anniv'){if(!S.partner){c3Note('챙길 기념일이 없어요! (연인이 생기면 이용)');return true}if(!once('anniv'))return true;if(!spend(Math.round(dr*15),'기념일 선물·식사 예약'))return true;S.love[S.partner]=Math.min(100,(S.love[S.partner]||0)+10);c3Log('나','🎂 '+S.partner+'와(과)의 기념일을 챙겼다 (호감 +10)','me');c3Speak(P,'예약이랑 선물 준비 끝났어요. 분명 좋아하실 거예요!',7);save();return true}
+  if(k==='chat'){if(!once('chat'))return true;me.ov={state:'toast',until:now+3000};P.ov={state:'toast',until:now+3000};s0.loyal=Math.min(100,s0.loyal+3);S.mental=Math.min(100,S.mental+3);C3.busy=true;setBubble(P,'…',20);
+   (async()=>{let rep=null;if(aiOn()){try{rep=await aiNpc(P,'(플레이어가 커피를 한잔하며 가볍게 수다를 떨자고 한다. 최근 있었던 일이나 날씨·점심·취미 같은 일상 얘기를 먼저 꺼내 편하게 대화를 시작해라. 1~2문장)')}catch(e){S.aiErr=String(e.message||e).slice(0,200)}}
+    C3.busy=false;c3Speak(P,rep||pickNew('ct',['요즘 날씨가 오락가락해서 감기 걸리기 딱 좋아요. 사장님은 괜찮으세요?','어제 퇴근길에 본 노을이 정말 예뻤어요 ㅎㅎ','점심 뭐 드실지 고민되시죠? 제가 맛집 하나 알아뒀어요.','쉬는 날엔 뭐 하세요? 저는 산책이 좋더라고요.']),9);c3Log('','☕ 수다로 충성도 +3, 멘탈 +3','sys');save()})();return true}
+  if(k==='bonus'){const b=Math.round(1000000*w/1e5)*1e5;if(b>S.cash){c3Note('보너스 '+won(b)+' 필요');return true}pay(b);s0.loyal=Math.min(100,s0.loyal+12);me.ov={state:'bow',until:now+1500};P.ov={state:'bow',until:now+2000};c3Log('나','🎁 보너스 −'+won(b)+' (충성도 +12 → '+Math.round(s0.loyal)+')','me');c3Speak(P,pickNew('bn',['사장님… 감사합니다! 더 열심히 챙길게요.','이렇게 신경 써 주시다니, 정말 감사해요.']),6);save();return true}
+  if(k==='praise'){if(!once('praise',3))return true;s0.loyal=Math.min(100,s0.loyal+3);me.ov={state:'clap',until:now+2000};c3Speak(P,pickNew('pr',['과찬이세요 ㅎㅎ','그렇게 말씀해 주시니 힘이 나네요.','별말씀을요, 제 일인걸요!']),5);save();return true}
+  if(k==='fire'){if(!confirm('📤 '+s0.n+'을(를) 해고할까요? (퇴직금 1개월치)'))return true;pay(s0.sal);const n=s0.n;S.secretary=null;P.ov={state:'bow',until:now+2000};c3Log('','📤 '+n+' 퇴사 처리 (퇴직금 −'+won(s0.sal)+')','sys');c3Speak(P,'그동안 감사했습니다.',5);save();setTimeout(()=>c3Close(),2500);return true}
   return false}};
 /*CLUB3D-END*/
 </script>
@@ -1676,7 +1680,7 @@ function tabTown(){
  return'<div class="card"><b>🏙 마을 (모두 3D)</b> <span class="mut">걸어 다니며 사람들과 말하고 행동해요. 말 걸기·행동은 입력창에 /를 붙여 자유롭게!</span>'
  +btn('school','🏫',SCH_NAME[st],'수업·시험·친구·급식. 성적 '+Math.round(sc.grade)+'점'+(a>=19?' · 대학 캠퍼스에는 연애 후보도 있어요':''))
  +btn('field','🚌','현장학습·운동회','도시락·달리기·줄다리기·경제 캠프 퀴즈 · 친구들과 우정 쌓기')
- +btn('office','🏢','비서실',(S.secretary?'비서 '+S.secretary.n+' ('+S.secretary.role+') · 충성도 '+Math.round(S.secretary.loyal)+' · 월급 '+won(S.secretary.sal):'비서가 없어요 — 🪩 클럽에서 마음에 드는 사람에게 "비서 채용 신청"'))
+ +btn('office','🏢','비서실',(S.secretary?'일상 비서 '+S.secretary.n+' · 충성도 '+Math.round(S.secretary.loyal)+' · 월급 '+won(S.secretary.sal):'비서가 없어요 — 🪩 클럽에서 마음에 드는 사람에게 "비서 채용 신청"'))
  +btn('road','🛣','드라이브 (차 몰기)','내 차로 달려요! 기름값·과속 벌금·충돌 수리비가 실제로 나가요'+((S.cars&&S.cars.length)?'':' · 먼저 자동차 매장에서 차를 사세요'))
  +btn('academy','📖','학원','수강 중: '+(act.join(', ')||'없음')+' · 분석력을 올려요')
  +btn('cars','🚗','자동차 매장','보유 차량: '+car+(a<19&&S.diff!=='god'?' · 미성년자는 계약 불가':''))
