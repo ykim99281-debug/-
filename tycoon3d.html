@@ -166,6 +166,7 @@ button:focus-visible{outline:2px solid var(--mint);outline-offset:2px}
     </div>
     <button class="btn" id="bStart">게임 시작</button>
     <button class="btn alt" id="bNew" style="display:none">새로 시작</button>
+    <div style="margin-top:14px;font-size:12px;color:var(--dim)"><span id="verTxt"></span> <a id="mainLink" href="tycoon-main.html" style="display:none;color:var(--mint);margin-left:8px">← 메인 · 업데이트 노트</a><div id="updNote" style="display:none;margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(94,234,212,.12);color:var(--mint)">🆕 새 버전이 있어요. 페이지를 새로고침하세요.</div></div>
   </div>
 </div>
 
@@ -203,6 +204,7 @@ const pick=a=>a[(Math.random()*a.length)|0];
 const fmt=n=>'₩'+Math.round(n).toLocaleString('ko-KR');
 
 /* ============================== 상수 · 데이터 ============================== */
+const VERSION='1.3.0';
 const T=2, GW=20, GD=22, DOOR_X=9, WALK_Z2=16, SAVE='latte-house-3d-v1';
 const EXPANDS=[{x0:6,x1:13,z0:6,z1:12},{x0:4,x1:15,z0:4,z1:12},{x0:2,x1:17,z0:2,z1:12}];
 const EXP_COST=[0,1500,5200], MKT_COST=l=>250*Math.pow(2,l), HIRE_COST=n=>150+250*n;
@@ -974,6 +976,10 @@ function boot(fresh){
   if(!fresh&&load()){Object.assign(room,EXPANDS[S.expand]);buildShop();(S.items||[]).forEach(i=>placeItem(i.t,i.x,i.z,i.r,true));if(S.hour>=22)S.hour=7;}
   else{Object.assign(room,EXPANDS[0]);buildShop();startStarter();}
   derive();syncStaff();}
+$('verTxt').textContent='v'+VERSION;
+if(/^https?:$/.test(location.protocol)&&/tycoon3d/.test(location.pathname)){$('mainLink').style.display='inline';
+  fetch('tycoon-updates.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.version&&j.version!==VERSION)$('updNote').style.display='block';}).catch(()=>{});
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('tycoon-sw.js',{scope:'./tycoon'}).catch(()=>{});}
 makeIcons();
 initAmbient();
 boot(false);syncBranches();
