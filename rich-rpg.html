@@ -1241,6 +1241,15 @@ function c3Fade(text,ms,cb){
  let el=document.getElementById('c3fade');if(!el){el=document.createElement('div');el.id='c3fade';el.style.cssText='position:absolute;inset:0;background:#000;color:#ffe9b8;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:20px;font-weight:700;opacity:0;transition:opacity .7s;z-index:9;pointer-events:none';$('c3').appendChild(el)}
  el.textContent=text;el.style.pointerEvents='auto';requestAnimationFrame(()=>el.style.opacity=1);
  setTimeout(()=>{try{cb&&cb()}catch(e){}el.style.opacity=0;setTimeout(()=>el.style.pointerEvents='none',800)},ms)}
+function partyAct(k){
+ const me=C3.me,now=performance.now(),dr=Math.round(50000*wage(S.t)/1000)*1000,G=C3.npcs,hv=C3.homeV||(C3.homeV={gain:0}),sp=(c,why)=>{if(c>S.cash){c3Note('💸 잔액 부족 (필요 '+won(c)+')');return false}pay(c);C3.spent=(C3.spent||0)+c;c3Log('','💸 −'+won(c)+' ('+why+')','sys');return true};
+ const once=key=>{if(hv[key]){c3Note('이건 이미 했어요');return false}hv[key]=true;return true},grp=a=>G.forEach(q=>rideGain(q,a)),all=st=>G.forEach(q=>q.ov={state:st,until:now+3500}),say=t=>{const q=pick(G);if(q)c3Speak(q,t,5)};
+ if(k==='pcook'){if(hv.pcook){c3Note('음식은 이미 차렸어요');return true}if(!sp(Math.round(dr*4),'파티 음식·음료'))return true;hv.pcook=true;me.ov={state:'pour',until:now+3000};all('drink');S.mental=Math.min(100,S.mental+4);grp(3);c3Log('나','🍳 음식을 한가득 차렸다 (멘탈 +4, 모두 +3)','me');say(pickNew('pc',['우와 상다리 부러지겠다!','이거 직접 만든 거예요? 맛있어요!','배불러서 못 움직이겠다 ㅋㅋ']));save();return true}
+ if(k==='ptoast'){if(hv.ptoast){c3Note('건배는 이미 했어요');return true}if(!sp(Math.round(dr*3),'건배 음료'))return true;hv.ptoast=true;me.ov={state:'toast',until:now+3500};all('toast');S.mental=Math.min(100,S.mental+4);grp(3);c3Log('나','🥂 다 같이 건배! (멘탈 +4, 모두 +3)','me');say(pickNew('pt2',['집들이를 축하하며, 건배~!','모두의 행복을 위하여!','오늘 이 순간을 위하여! 짠!']));save();return true}
+ if(k==='pgame'){if(!once('pgame'))return true;me.ov={state:'cheer',until:now+3500};all('cheer');S.mental=Math.min(100,S.mental+3);grp(3);c3Log('나','🎮 단체 게임으로 웃음바다! (멘탈 +3, 모두 +3)','me');say(pickNew('pg',['한 판 더 해요! 이번엔 제가 이겨요!','우리 팀 반칙이에요 ㅋㅋㅋ','목 쉬겠다 ㅎㅎ']));save();return true}
+ if(k==='pmovie'){if(!once('pmovie'))return true;me.ov={state:'sit',until:now+4500};all('sit');S.mental=Math.min(100,S.mental+2);grp(2);c3Log('나','📺 다 같이 영화를 봤다 (멘탈 +2, 모두 +2)','me');say(pickNew('pm',['이 장면에서 울 뻔했어요 ㅠ','팝콘 더 없어요?','같이 보니까 더 재밌다!']));save();return true}
+ if(k==='pspeech'){if(!once('pspeech'))return true;me.ov={state:'bow',until:now+2500};all('clap');S.mental=Math.min(100,S.mental+1);grp(2);c3Log('나','🎤 인사말: 와줘서 고맙다고 말했다 (모두 +2)','me');say(pickNew('ps',['짝짝짝! 멋진 인사말이었어요!','감동이에요, 초대해 줘서 고마워요.','앞으로도 자주 모여요!']));save();return true}
+ return undefined}
 function setHomeLight(sc,f){sc.children.forEach(o=>{if(o.isLight){if(o.userData.i0===undefined)o.userData.i0=o.intensity;o.intensity=o.userData.i0*f}})}
 function startNight(){
  const V=C3.V.home,P=C3.npcs[0];C3.night={on:true,t:22*60,sleepy:10,coffee:0,air:-1,said:{},id:P.def.n,kind:homeGuestOk(P.def.n),gain:0,acts:0};
@@ -1285,7 +1294,7 @@ function c3InviteHome(){
  const id=T.def.n;if(!homeGuestOk(id))return c3Note(id+'와(과)는 아직 집에 초대할 사이가 아니에요 (우정 30↑ / 연애 호감 50↑ / 비서)');
  C3.guest=id;c3Close();c3Open('home')}
 function houseTv(sc,x,y,z,w,h,ry){const m=addMesh(sc,new THREE.BoxGeometry(w,h,.08),new THREE.MeshBasicMaterial({color:0x6aa8ff}),x,y,z);m.rotation.y=ry||0;return m}
-VENUES.home={where:'플레이어의 집',title:()=>'🏠 '+((HOMES[S.home]||{}).n||'우리 집')+(C3.guest?' — '+C3.guest+'와(과) 같이':''),stage:()=>(S.home||'')+'|'+(C3.guest||''),
+VENUES.home={where:'플레이어의 집',title:()=>'🏠 '+((HOMES[S.home]||{}).n||'우리 집')+(C3.guest==='*party'?' — 🎉 집들이 파티':C3.guest?' — '+C3.guest+'와(과) 같이':''),stage:()=>(S.home||'')+'|'+(C3.guest||''),
  build(){
   const H=HOMES[S.home]||HOMES.pl,sc=new THREE.Scene();sc.background=new THREE.Color(0x18161f);sc.fog=new THREE.Fog(0x18161f,24,60);
   sc.add(new THREE.AmbientLight(0xffe9d0,.85));sc.add(new THREE.HemisphereLight(0xfff0dd,0x554433,.5));
@@ -1315,16 +1324,18 @@ VENUES.home={where:'플레이어의 집',title:()=>'🏠 '+((HOMES[S.home]||{}).
   if(H.lux){bx(1.8,.9,1.2,-hw+1.4,.45,D*.28,0x111111);bx(1.8,.08,.5,-hw+1.4,.94,D*.28-.1,0xffffff);ob(1.8,1.2,-hw+1.4,D*.28);addMesh(sc,new THREE.SphereGeometry(.4,12,10),new THREE.MeshBasicMaterial({color:0xffe9b0}),0,2.3,D*.05);bx(2.2,1.1,.5,hw-1.4,.55,-D*.32,0x3a2a22);[0,1,2,3].forEach(k=>addMesh(sc,new THREE.CylinderGeometry(.06,.07,.3,8),mat([0xffd24a,0xff7a7a,0x7aff7a,0x7ab0ff][k],{transparent:true,opacity:.8,emissive:[0x554400,0x552222,0x225522,0x223355][k]}),hw-2+k*.3,1.25,-D*.32))}
   // 사람
   const gid=C3.guest;let defs=[];
-  if(gid){const isSec=S.secretary&&S.secretary.n===gid,d=Object.assign({},isSec?secDef():meetDef(gid),{sec:false,fix:false,wander:true,area:{cx:-W*.1,cz:D*.12,r:2.4},arrive:'talk',state:'idle',look:null,hired:false,vip:false,gate:false,pos:[-W*.1,0,D*.35]});defs.push(d)}
+  if(gid==='*party'){homeGuests().slice(0,6).forEach((g,i)=>defs.push(Object.assign({},(g.kind==='sec'?secDef():meetDef(g.n)),{sec:false,fix:false,wander:true,area:{cx:-W*.1+((i%3)-1)*1.3,cz:D*.1+Math.floor(i/3)*1.8-.4,r:1.8},arrive:'talk',state:'idle',look:null,hired:false,vip:false,gate:false,pos:[-W*.25+i*1.3,0,D*.3]})))}
+  else if(gid){const isSec=S.secretary&&S.secretary.n===gid,d=Object.assign({},isSec?secDef():meetDef(gid),{sec:false,fix:false,wander:true,area:{cx:-W*.1,cz:D*.12,r:2.4},arrive:'talk',state:'idle',look:null,hired:false,vip:false,gate:false,pos:[-W*.1,0,D*.35]});defs.push(d)}
   const npcs=spawnDefs(sc,defs);
   const me=newMe();me.g.position.set(0,0,hd-1);me.yaw=Math.PI;me.g.rotation.y=Math.PI;sc.add(me.g);
   return{sc,npcs,crowd:[],me,all:[...npcs,me],ROOM:{x0:-hw+.5,x1:hw-.5,z0:-hd+.5,z1:hd-.5},OBST:OB,spawn:[0,hd-1,Math.PI],meKey:meKey(),dawn}},
  frame(now,dt){homeNight(now,dt)},
- enter(V){C3.night=null;const gid=C3.guest;C3.homeV={gain:0,cook:false,movie:false,game:false};if(gid){const P=C3.npcs[0];setTimeout(()=>{if(C3.run&&C3.vname==='home')c3Speak(P,pickNew('hm',homeGuestOk(gid)==='love'?['우와, 집 예쁘다… 초대해 줘서 고마워요 ☺️','여기가 사장님… 아니, 당신의 집이군요. 아늑해요.']:['우와 집 좋다!! 구경해도 돼?','여기서 맨날 사는 거야? 부럽다~','초대해줘서 고마워!']),7)},900)}},
- actions:()=>{if(C3.night&&C3.night.on)return[['n_coffee','☕ 커피 한잔 (졸음↓)'],['n_game','🎮 게임 (졸음↓)'],['n_talk','💬 속마음 수다 (졸음↓)'],['n_air','🌬 창가 바람 쐬기 (졸음↓)'],['n_movie','📺 영화 (졸음↑)'],['n_quit','😴 그만 자기'],['wave','👋 인사']];const g=!!C3.guest,l=[['cook','🍳 요리하기'],['movie','📺 영화 보기'],['game','🎮 게임하기']];if(g){l.push(['tea','☕ 차 마시며 수다']);l.push(['sleepover','🌙 같이 자고 가기']);l.push(['allnight','🌅 새벽까지 같이 깨어있기'])}l.push(['clean','🧹 집 정리']);l.push(['sleep','😴 잠자기(월 1회)']);l.push(['leave','🚪 집에서 나가기']);return l.concat([['wave','👋 인사']])},
+ enter(V){C3.night=null;const gid=C3.guest;C3.homeV={gain:0,cook:false,movie:false,game:false};if(gid==='*party'){C3.npcs.forEach(q=>rideGain(q,3));S.partyM=S.t;S.partyN=(S.partyN||0)+1;setTimeout(()=>{if(C3.run&&C3.vname==='home'){C3.npcs.forEach((q,i)=>setTimeout(()=>{if(C3.run)c3Speak(q,pickNew('pt',['집들이 초대 고마워요~ 집 너무 좋다!','와, 사람 진짜 많다! 신난다 ㅎㅎ','선물은 없지만 마음만 가득 가져왔어요!','다 같이 모이니까 분위기 최고네요.']),5)},i*600));c3Note('🎉 집들이 파티 시작! 음식·건배·게임으로 분위기를 띄워보세요 (초대한 사람 모두 호감/우정 +3)')}},900)}else if(gid){const P=C3.npcs[0];setTimeout(()=>{if(C3.run&&C3.vname==='home')c3Speak(P,pickNew('hm',homeGuestOk(gid)==='love'?['우와, 집 예쁘다… 초대해 줘서 고마워요 ☺️','여기가 사장님… 아니, 당신의 집이군요. 아늑해요.']:['우와 집 좋다!! 구경해도 돼?','여기서 맨날 사는 거야? 부럽다~','초대해줘서 고마워!']),7)},900)}},
+ actions:()=>{if(C3.guest==='*party')return[['pcook','🍳 음식 차리기'],['ptoast','🥂 다 같이 건배'],['pgame','🎮 단체 게임'],['pmovie','📺 같이 영화'],['pspeech','🎤 인사말 하기'],['leave','🚪 파티 마치기'],['wave','👋 인사']];if(C3.night&&C3.night.on)return[['n_coffee','☕ 커피 한잔 (졸음↓)'],['n_game','🎮 게임 (졸음↓)'],['n_talk','💬 속마음 수다 (졸음↓)'],['n_air','🌬 창가 바람 쐬기 (졸음↓)'],['n_movie','📺 영화 (졸음↑)'],['n_quit','😴 그만 자기'],['wave','👋 인사']];const g=!!C3.guest,l=[['cook','🍳 요리하기'],['movie','📺 영화 보기'],['game','🎮 게임하기']];if(g){l.push(['tea','☕ 차 마시며 수다']);l.push(['sleepover','🌙 같이 자고 가기']);l.push(['allnight','🌅 새벽까지 같이 깨어있기'])}l.push(['clean','🧹 집 정리']);l.push(['sleep','😴 잠자기(월 1회)']);l.push(['leave','🚪 집에서 나가기']);return l.concat([['wave','👋 인사']])},
  locs:[[/소파|거실/,-1,2,'거실'],[/주방|부엌/,4,-2,'주방'],[/침실|침대/,4,4,'침실'],[/창|창가/,0,-3,'창가']],
  act(k){
   const me=C3.me,now=performance.now(),P=C3.guest?C3.npcs[0]:null,dr=Math.round(50000*wage(S.t)/1000)*1000,hv=C3.homeV||(C3.homeV={gain:0}),w=wage(S.t);
+  if(C3.guest==='*party'){const r=partyAct(k);if(r!==undefined)return r}
   const gainB=a=>{if(!P)return;const g=Math.min(a,Math.max(0,16-hv.gain));if(g>0){hv.gain+=g;rideGain(P,g)}};
   const kind=P?(S.secretary&&S.secretary.n===P.def.n?'충성도':(homeGuestOk(P.def.n)==='love'?'호감':'우정')):'';
   const rx=async(txt,fb)=>{if(!P)return;C3.busy=true;P.faceMe=true;setBubble(P,'…',20);let rep=null;if(aiOn()){try{rep=await aiNpc(P,'(플레이어의 집에서 함께: '+txt+')')}catch(e){S.aiErr=String(e.message||e).slice(0,200)}}C3.busy=false;c3Speak(P,rep||fb,7)};
@@ -1683,6 +1694,7 @@ const ACH=[
 ['sec','사장님','비서를 채용했다',()=>!!S.secretary],
 ['meet','단둘이','따로 만나기를 해봤다',()=>(S.meetN||0)>=1],
 ['trip','여행가','드라이브 목적지 3곳을 방문했다',()=>Object.keys(S.destSeen||{}).length>=3],
+['party','집들이 주인공','집들이 파티를 열었다',()=>(S.partyN||0)>=1],
 ['allnight','밤샘 친구','새벽까지 같이 깨어 일출을 봤다',()=>(S.allnights||0)>=1],
 ['myhome','자택 마련','자기 집을 지정했다',()=>!!S.home],
 ['ride','드라이브 메이트','누군가와 같이 차를 탔다',()=>(S.ridesN||0)>=1],
@@ -1964,7 +1976,7 @@ function tabTown(){
  +btn('field','🚌','현장학습·운동회','도시락·달리기·줄다리기·경제 캠프 퀴즈 · 친구들과 우정 쌓기')
  +btn('office','🏢','비서실',(S.secretary?'일상 비서 '+S.secretary.n+' · 충성도 '+Math.round(S.secretary.loyal)+' · 월급 '+won(S.secretary.sal):'비서가 없어요 — 🪩 클럽에서 마음에 드는 사람에게 "비서 채용 신청"'))
  +(()=>{const L=(S.cars&&S.cars.length)?rideList():[];return L.length?'<div class="stock"><b>🚗 같이 차타기</b> <span class="mut">친구·호감 30 이상·비서와 드라이브 (함께 탄 사람과 대화·호감/우정 상승)</span><div class="row" style="margin-top:6px">'+L.map(x=>'<button class="pri" data-a="ride3d" data-id="'+x.n+'">'+(x.kind==='love'?'💗':x.kind==='sec'?'🧑‍💼':'🤝')+' '+x.n+'</button>').join('')+'</div></div>':''})()
- +(()=>{const own=PROPS.filter(p=>S.props[p.id]&&S.props[p.id].q>0),H=S.home&&HOMES[S.home],G=H?homeGuests():[];return '<div class="stock"><b>🏠 내 집</b> <span class="mut">'+(H?H.n+' (월세 수익은 거주 중인 1채 제외)':'아직 없어요 — 모델하우스에서 집을 사세요')+'</span><div class="row" style="margin-top:6px">'+(H?'<button class="pri" data-a="home3d" data-id="">🏠 집 가기</button>':'')+'<button class="pri" data-a="go3d" data-id="realty">🏘 모델하우스(집 사기)</button>'+own.filter(p=>p.id!==S.home).map(p=>'<button data-a="sethome" data-id="'+p.id+'">🔑 '+p.name+'로 이사</button>').join('')+'</div>'+(G.length?'<div class="mut" style="margin-top:6px">🏠 같이 집 가기</div><div class="row" style="margin-top:4px">'+G.map(x=>'<button data-a="home3d" data-id="'+x.n+'">'+(x.kind==='love'?'💗':x.kind==='sec'?'🧑‍💼':'🤝')+' '+x.n+'</button>').join('')+'</div>':'')+'</div>'})()
+ +(()=>{const own=PROPS.filter(p=>S.props[p.id]&&S.props[p.id].q>0),H=S.home&&HOMES[S.home],G=H?homeGuests():[];return '<div class="stock"><b>🏠 내 집</b> <span class="mut">'+(H?H.n+' (월세 수익은 거주 중인 1채 제외)':'아직 없어요 — 모델하우스에서 집을 사세요')+'</span><div class="row" style="margin-top:6px">'+(H?'<button class="pri" data-a="home3d" data-id="">🏠 집 가기</button>':'')+(H&&G.length>=2?'<button class="pri" data-a="party3d" data-id="">🎉 집들이 파티 열기</button>':'')+'<button class="pri" data-a="go3d" data-id="realty">🏘 모델하우스(집 사기)</button>'+own.filter(p=>p.id!==S.home).map(p=>'<button data-a="sethome" data-id="'+p.id+'">🔑 '+p.name+'로 이사</button>').join('')+'</div>'+(G.length?'<div class="mut" style="margin-top:6px">🏠 같이 집 가기</div><div class="row" style="margin-top:4px">'+G.map(x=>'<button data-a="home3d" data-id="'+x.n+'">'+(x.kind==='love'?'💗':x.kind==='sec'?'🧑‍💼':'🤝')+' '+x.n+'</button>').join('')+'</div>':'')+'</div>'})()
  +btn('road','🛣','드라이브 (차 몰기)','내 차로 달려요! 기름값·과속 벌금·충돌 수리비가 실제로 나가요'+((S.cars&&S.cars.length)?'':' · 먼저 자동차 매장에서 차를 사세요'))
  +btn('academy','📖','학원','수강 중: '+(act.join(', ')||'없음')+' · 분석력을 올려요')
  +btn('cars','🚗','자동차 매장','보유 차량: '+car+(a<19&&S.diff!=='god'?' · 미성년자는 계약 불가':''))
@@ -2235,6 +2247,7 @@ document.addEventListener('click',e=>{
  if(a==='send')return doSend();
  if(a==='chip'){S.cdraft=b.dataset.t;return doSend()}
  if(a==='pickf'){S.cf=id;S.cdraft='';const h=S.chat.f[id]||(S.chat.f[id]=[]);if(!h.length){const n=NPCS.find(x=>x.id===id);pushC(h,{w:id,n:n.name,e:n.emoji,t:pick(PER[id].g)})}save();return render()}
+ if(a==='party3d'){if(!S.home)return toast('🏠 내 집이 없어요!');if(S.partyM===S.t)return toast('이번 달엔 이미 집들이를 했어요');if(homeGuests().length<2)return toast('초대할 사람이 2명 이상 필요해요');const c=Math.round(50000*wage(S.t)/1000)*1000*10;if(c>S.cash)return toast('파티 준비비 '+won(c)+'이 필요해요');pay(c);C3.spent=(C3.spent||0)+c;C3.guest='*party';return void c3Open('home')}
  if(a==='home3d'){if(!S.home)return toast('🏠 내 집이 없어요! 모델하우스에서 먼저 사세요');C3.guest=id||null;return void c3Open('home')}
  if(a==='sethome'){S.home=id;save();return toast('🔑 '+HOMES[id].n+'(으)로 이사했어요!')}
  if(a==='ride3d'){if(!(S.cars&&S.cars.length))return toast('🚗 차가 없어요! 자동차 매장에서 먼저 구입하세요');C3.pax=id;return void c3Open('road')}
