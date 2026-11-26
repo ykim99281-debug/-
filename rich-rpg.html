@@ -1237,6 +1237,10 @@ VENUES.cafe={where:'단둘이 만난 카페',title:()=>'☕ 카페 — '+(C3.mee
 const HOMES={pl:{n:'지방 소형 아파트',w:9,d:8,floor:0xb89a70,wall:0xefe6d6,view:'town',lux:0},ps:{n:'서울 아파트',w:12,d:10,floor:0x9a7a55,wall:0xf2eee6,view:'city',lux:1},pg:{n:'대치동 아파트',w:15,d:12,floor:0x4a3a30,wall:0xe8e2da,view:'night',lux:2}};
 function homeGuestOk(id){if(S.secretary&&S.secretary.n===id)return 'sec';const k=meetOk(id);if(k==='love')return (S.love[id]||0)>=50?'love':null;return k==='friend'?'friend':null}
 function homeGuests(){const out=[];if(S.secretary)out.push({n:S.secretary.n,kind:'sec'});[...new Set([...Object.keys(S.love||{}),...Object.keys(S.fr||{})])].forEach(n=>{if(out.some(o=>o.n===n))return;const k=homeGuestOk(n);if(k)out.push({n,kind:k})});return out}
+function c3Fade(text,ms,cb){
+ let el=document.getElementById('c3fade');if(!el){el=document.createElement('div');el.id='c3fade';el.style.cssText='position:absolute;inset:0;background:#000;color:#ffe9b8;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:20px;font-weight:700;opacity:0;transition:opacity .7s;z-index:9;pointer-events:none';$('c3').appendChild(el)}
+ el.textContent=text;el.style.pointerEvents='auto';requestAnimationFrame(()=>el.style.opacity=1);
+ setTimeout(()=>{try{cb&&cb()}catch(e){}el.style.opacity=0;setTimeout(()=>el.style.pointerEvents='none',800)},ms)}
 function c3InviteHome(){
  if(!S.home)return c3Note('내 집이 없어요! 🏘 모델하우스에서 집을 먼저 사세요');
  const T=c3Near();if(!T||(T.def.hired&&!T.sec))return c3Note('같이 갈 사람 가까이에서 신청하세요');
@@ -1277,7 +1281,7 @@ VENUES.home={where:'플레이어의 집',title:()=>'🏠 '+((HOMES[S.home]||{}).
   const me=newMe();me.g.position.set(0,0,hd-1);me.yaw=Math.PI;me.g.rotation.y=Math.PI;sc.add(me.g);
   return{sc,npcs,crowd:[],me,all:[...npcs,me],ROOM:{x0:-hw+.5,x1:hw-.5,z0:-hd+.5,z1:hd-.5},OBST:OB,spawn:[0,hd-1,Math.PI],meKey:meKey()}},
  enter(V){const gid=C3.guest;C3.homeV={gain:0,cook:false,movie:false,game:false};if(gid){const P=C3.npcs[0];setTimeout(()=>{if(C3.run&&C3.vname==='home')c3Speak(P,pickNew('hm',homeGuestOk(gid)==='love'?['우와, 집 예쁘다… 초대해 줘서 고마워요 ☺️','여기가 사장님… 아니, 당신의 집이군요. 아늑해요.']:['우와 집 좋다!! 구경해도 돼?','여기서 맨날 사는 거야? 부럽다~','초대해줘서 고마워!']),7)},900)}},
- actions:()=>{const g=!!C3.guest,l=[['cook','🍳 요리하기'],['movie','📺 영화 보기'],['game','🎮 게임하기']];if(g)l.push(['tea','☕ 차 마시며 수다']);l.push(['clean','🧹 집 정리']);l.push(['sleep','😴 잠자기(월 1회)']);l.push(['leave','🚪 집에서 나가기']);return l.concat([['wave','👋 인사']])},
+ actions:()=>{const g=!!C3.guest,l=[['cook','🍳 요리하기'],['movie','📺 영화 보기'],['game','🎮 게임하기']];if(g){l.push(['tea','☕ 차 마시며 수다']);l.push(['sleepover','🌙 같이 자고 가기'])}l.push(['clean','🧹 집 정리']);l.push(['sleep','😴 잠자기(월 1회)']);l.push(['leave','🚪 집에서 나가기']);return l.concat([['wave','👋 인사']])},
  locs:[[/소파|거실/,-1,2,'거실'],[/주방|부엌/,4,-2,'주방'],[/침실|침대/,4,4,'침실'],[/창|창가/,0,-3,'창가']],
  act(k){
   const me=C3.me,now=performance.now(),P=C3.guest?C3.npcs[0]:null,dr=Math.round(50000*wage(S.t)/1000)*1000,hv=C3.homeV||(C3.homeV={gain:0}),w=wage(S.t);
@@ -1290,6 +1294,20 @@ VENUES.home={where:'플레이어의 집',title:()=>'🏠 '+((HOMES[S.home]||{}).
   if(k==='movie'){if(hv.movie){c3Note('오늘 영화는 이미 봤어요');return true}hv.movie=true;me.ov={state:'sit',until:now+4500};if(P)P.ov={state:'sit',until:now+4500};S.mental=Math.min(100,S.mental+3);gainB(5);c3Log('나','📺 소파에서 영화를 봤다 (멘탈 +3'+(P?', '+kind+' +5':'')+')','me');rx('거실 소파에서 함께 영화를 봄','영화 진짜 재밌었다! 다음엔 내가 고를게요.');save();return true}
   if(k==='game'){if(hv.game){c3Note('오늘 게임은 이미 했어요');return true}hv.game=true;me.ov={state:'cheer',until:now+3500};if(P)P.ov={state:'cheer',until:now+3500};S.mental=Math.min(100,S.mental+3);gainB(5);c3Log('나','🎮 같이 게임했다 (멘탈 +3'+(P?', '+kind+' +5':'')+')','me');rx('같이 게임을 하며 놂','한 판 더요! 이번엔 안 져요 ㅋㅋ');save();return true}
   if(k==='tea'){if(!P)return true;if(hv.tea){c3Note('이미 차를 마셨어요');return true}if(!spend(Math.round(dr*.8),'차·간식'))return true;hv.tea=true;me.ov={state:'toast',until:now+3000};P.ov={state:'toast',until:now+3000};gainB(4);c3Log('나','☕ 차를 마시며 수다 ('+kind+' +4)','me');rx('집에서 차를 마시며 편하게 수다를 떪','이렇게 편하게 얘기하니까 좋네요.');save();return true}
+  if(k==='sleepover'){
+   if(!P){c3Note('같이 잘 사람이 없어요');return true}const id=P.def.n,kd=homeGuestOk(id);S.sleepM=S.sleepM||{};
+   if(S.sleepM[id]===S.t){c3Note('이번 달엔 이미 같이 자고 갔어요');return true}
+   if(kd==='sec'){c3Note('비서와는 업무 관계라 같이 자고 갈 수 없어요');return true}
+   if(kd==='love'){if(isMinor()){c3Note('연애 상대와는 만 19세부터 가능해요');return true}if(!(S.partner===id&&(S.love[id]||0)>=80)){c3Note('연인 사이이고 호감 80 이상일 때만 가능해요 (현재 '+(S.partner===id?'연인':'연인 아님')+', 호감 '+(S.love[id]||0)+')');return true}}
+   else if(kd==='friend'){if((S.fr[id]||0)<40){c3Note('우정 40 이상일 때 같이 자고 갈 수 있어요 (현재 '+(S.fr[id]||0)+')');return true}}
+   else{c3Note('아직 그럴 사이가 아니에요');return true}
+   if(!spend(Math.round(dr*1.5),'야식·간식'))return true;S.sleepM[id]=S.t;const love=kd==='love';
+   c3Fade(love?'🌙 서로에게 기대어 조용히 잠이 들었다…':'🌙 밤새 수다를 떨다 스르르 잠이 들었다… (잠옷 파티)',3400,async()=>{
+    S.mental=Math.min(100,S.mental+(love?12:10));rideGain(P,8);P.g.position.set(-C3.V.home.ROOM.x1*.1,0,C3.V.home.ROOM.z1*.2);P.ov={state:'bow',until:performance.now()+1500};me.ov={state:'cheer',until:performance.now()+1500};
+    c3Log('','☀️ 아침이 밝았다 (멘탈 +'+(love?12:10)+', '+(love?'호감':'우정')+' +8)','sys');
+    C3.busy=true;setBubble(P,'…',20);let rep=null;if(aiOn()){try{rep=await aiNpc(P,'(함께 하룻밤 자고 일어난 아침이다. 건전하게 아침 인사와 소감을 한두 문장으로. 성적인 묘사는 절대 하지 마라)')}catch(e){S.aiErr=String(e.message||e).slice(0,200)}}
+    C3.busy=false;c3Speak(P,rep||pickNew('mo',love?['잘 잤어요? 옆에 있어서 푹 잔 것 같아요 ☺️','좋은 아침이에요. 아침은 같이 먹을래요?']:['잘 잤어? 어제 수다 떨다가 먼저 잠들었더라 ㅋㅋ','아침이다! 라면 끓여 먹을까?']),8);save()});
+   return true}
   if(k==='clean'){if(S.homeClean===S.t){c3Note('이번 달엔 이미 정리했어요');return true}S.homeClean=S.t;me.ov={state:'pour',until:now+3000};S.mental=Math.min(100,S.mental+3);c3Log('나','🧹 집을 정리했다 (멘탈 +3)','me');if(P)c3Speak(P,'깨끗해서 기분 좋다!',4);save();return true}
   if(k==='sleep'){if(S.homeSleep===S.t){c3Note('이번 달엔 이미 푹 쉬었어요');return true}if(P){c3Note('손님이 있을 땐 잠을 잘 수 없어요 😅');return true}S.homeSleep=S.t;me.ov={state:'sit',until:now+3000};S.mental=Math.min(100,S.mental+12);c3Log('나','😴 집에서 푹 잤다 (멘탈 +12)','me');c3Note('😴 푹 자고 일어났다! 멘탈 +12');save();return true}
   return false}};
