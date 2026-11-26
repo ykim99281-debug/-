@@ -561,6 +561,7 @@ function bottleService(){
  save()}
 /* ---- 행동 ---- */
 function c3Action(k){
+ if(k==='ride')return c3Ride();
  if(k==='meetup')return c3MeetUp();
  if(k==='hire')return c3Hire();
  if(k==='gift'||k==='date'||k==='confess')return c3Love(k);
@@ -762,7 +763,7 @@ VENUES.school={where:'학교',title:()=>'🏫 '+SCH_NAME[stageKey()],stage:stage
   const npcs=spawnDefs(sc,defs);
   const me=newMe();me.g.position.set(2,0,0);me.yaw=Math.PI/2;me.g.rotation.y=me.yaw;sc.add(me.g);
   return{sc,npcs,crowd:[],me,all:[...npcs,me],ROOM:{x0:-11.5,x1:12.5,z0:-8.5,z1:8.5},OBST:OB,spawn:[2,0,Math.PI/2],meKey:meKey()}},
- actions:()=>[['study','📚 수업 듣기'],['ask','✋ 질문하기'],['exam','📝 시험 보기'],['lunch','🍱 '+(stageKey()==='u'?'학식':'급식')],['play','⚽ 친구와 놀기'],['meetup','💞 따로 만나기'],['studytog','🤝 같이 공부'],['tipfr','🤫 단짝에게 정보'],['clubact','🎯 동아리 활동'],['club_eco','📈 경제동아리 가입'],['club_cod','💻 코딩동아리 가입'],['club_soc','⚽ 축구부 가입'],['club_band','🎸 밴드부 가입'],['pres','🗳 '+(stageKey()==='u'?'학생회장':'학급회장')+' 출마'],['market','🏪 장터 열기'],['wave','👋 인사']].concat(stageKey()==='u'?[['gift','🎁 선물'],['date','🍽 데이트'],['confess','💘 고백']]:[]),
+ actions:()=>[['study','📚 수업 듣기'],['ask','✋ 질문하기'],['exam','📝 시험 보기'],['lunch','🍱 '+(stageKey()==='u'?'학식':'급식')],['play','⚽ 친구와 놀기'],['meetup','💞 따로 만나기'],['ride','🚗 같이 차타기'],['studytog','🤝 같이 공부'],['tipfr','🤫 단짝에게 정보'],['clubact','🎯 동아리 활동'],['club_eco','📈 경제동아리 가입'],['club_cod','💻 코딩동아리 가입'],['club_soc','⚽ 축구부 가입'],['club_band','🎸 밴드부 가입'],['pres','🗳 '+(stageKey()==='u'?'학생회장':'학급회장')+' 출마'],['market','🏪 장터 열기'],['wave','👋 인사']].concat(stageKey()==='u'?[['gift','🎁 선물'],['date','🍽 데이트'],['confess','💘 고백']]:[]),
  locs:[[/교실|칠판|선생/,-9.3,0,'교실'],[/운동장|밖|축구/,7,0,'운동장'],[/정문|문/,-.2,0,'교실 문']],
  act(k,T){
   const s=schoolMonth(),me=C3.me,now=performance.now(),teacher=C3.npcs[0],st=stageKey(),inRoom=me.g.position.x<-1;
@@ -885,20 +886,34 @@ VENUES.road={where:'도로(드라이브 코스)',title:()=>'🛣 드라이브',
   lb('📸 과속 단속',5,7,RDZ*1.14,'#ff7a7a');lb('📸 과속 단속',5,7,-RDZ*1.14,'#ff7a7a');lb('🛣 톨게이트',-RDX,5,0,'#ffd878');
   const me=newMe();me.g.position.set(RDX,0,-2);me.yaw=0;me.g.rotation.y=0;sc.add(me.g);
   return{sc,npcs:[],crowd:[],me,all:[me],ROOM:{x0:-120,x1:120,z0:-90,z1:90},OBST:OB,spawn:[RDX,-2,0],meKey:meKey()}},
- actions:()=>[['park','🅿 주차하고 내리기'],['honk','📯 경적']],
+ actions:()=>[['park','🅿 주차하고 내리기'],['radio','📻 음악 틀기'],['snack','☕ 휴게소 들르기'],['honk','📯 경적']],
  locs:[],
  enter(V){
   const own=(S.cars||[]);if(!own.length){c3Note('차가 없어요! 자동차 매장에서 먼저 구입하세요');return}
   const best=own.reduce((a,c)=>c.p>a.p?c:a,own[0]),d=CARS[best.m],g=makeCar(d);g.position.set(C3.me.g.position.x,.18,C3.me.g.position.z);C3.sc.add(g);
-  C3.drive={g,d,car:best};C3.me.g.visible=false;C3.dist=9.5;C3.me.yaw=0;
-  C3.rdv={sp:0,dist:0,cool:0,cam:0,toll:0,cost:0,th:0,auto:isMinor(),km:0};
+  C3.drive={g,d,car:best};C3.me.g.visible=true;C3.me.body.position.set(.5,.3,-.1);C3.me.ov={state:'sit',until:Infinity};C3.dist=9.5;C3.me.yaw=0;
+  if(V.pax){C3.sc.remove(V.pax.g);let i=V.npcs.indexOf(V.pax);if(i>=0)V.npcs.splice(i,1);i=V.all.indexOf(V.pax);if(i>=0)V.all.splice(i,1);V.pax=null}
+  if(C3.pax)S.ridesN=(S.ridesN||0)+1;
+  if(C3.pax){const isSec=S.secretary&&S.secretary.n===C3.pax,d2=Object.assign({},isSec?secDef():meetDef(C3.pax),{sec:false,fix:true,wander:false,state:'sit',look:null,hired:false,vip:false,gate:false,pos:[0,0,0]}),P2=makePerson(d2.o);P2.def=d2;P2.name=d2.n;P2.state='sit';P2.g.position.set(C3.me.g.position.x,.3,C3.me.g.position.z);C3.sc.add(P2.g);V.npcs.push(P2);V.all.push(P2);V.pax=P2;NPC_REG[d2.n]=NPC_REG[d2.n]||d2;setTimeout(()=>{if(C3.run&&C3.vname==='road')c3Speak(P2,pickNew('rd',isMinor()?['와~ 차 타고 놀러 가는 거다!','안전벨트 매야지! 출발~!']:['오늘 드라이브 기대돼요!','안전운전 부탁해요 😊','창밖 구경하기 딱 좋은 날이에요.']),6)},1200)}
+  C3.rdv={sp:0,dist:0,cool:0,cam:0,toll:0,cost:0,th:0,auto:isMinor(),km:0,gain:0,gt:0,crashes:0,nextG:400,warn:0,radio:false,snack:false};
   $('c3spd').style.display='block';$('c3pad').style.display=isMinor()?'none':'flex';
   c3Log('나','🚗 '+d.n+'에 탑승! '+(isMinor()?'(미성년자라 기사님이 운전해요 — 구경만 하세요)':'WASD/방향키 또는 화면 버튼으로 운전'),'me');
   c3Note(isMinor()?'🚖 기사님 운전으로 드라이브 중':'🏎 운전 시작! 과속·충돌은 벌금·수리비가 나가요')},
  act(k){
   if(k==='park'){roadEnd();return true}
   if(k==='honk'){sfx('err');c3Note('📯 빵빵!');return true}
+  if(k==='radio'){const r=C3.rdv,V=C3.V.road;if(!r||r.radio){c3Note('이미 음악을 틀었어요');return true}r.radio=true;sfx('coin');c3Log('나','📻 음악을 틀었다 ♪','me');if(V&&V.pax){rideGain(V.pax,1);V.pax.mood='smile';V.pax.moodUntil=performance.now()+5000;c3Speak(V.pax,pickNew('ra',['어! 이 노래 좋아해요!','음악 센스 좋은데요? ㅎㅎ','드라이브엔 역시 노래죠~']),5)}S.mental=Math.min(100,S.mental+2);return true}
+  if(k==='snack'){const r=C3.rdv,V=C3.V.road,c=Math.round(50000*wage(S.t)/1000)*1000*2;if(!r||r.snack){c3Note('이번 드라이브엔 이미 들렀어요');return true}if(c>S.cash){c3Note('💸 잔액 부족 (필요 '+won(c)+')');return true}pay(c);r.snack=true;C3.spent=(C3.spent||0)+c;c3Log('','☕ 휴게소 간식 −'+won(c),'sys');S.mental=Math.min(100,S.mental+3);if(V&&V.pax){rideGain(V.pax,3);c3Speak(V.pax,pickNew('sn',['휴게소 간식 최고예요! 고마워요~','같이 먹으니까 더 맛있다 ㅎㅎ']),5)}return true}
   return false}};
+function rideGain(P,a){const id=P.def.n;if(C3.rdv)C3.rdv.gt+=a;if(S.secretary&&S.secretary.n===id){S.secretary.loyal=Math.max(0,Math.min(100,S.secretary.loyal+a));return}
+ if(meetOk(id)==='love'||((S.love[id]||0)>=30&&!isMinor()&&(baseDef(id)||{}).love))S.love[id]=Math.max(0,Math.min(100,(S.love[id]||0)+a));else{S.fr=S.fr||{};S.fr[id]=Math.max(0,Math.min(100,(S.fr[id]||0)+a))}}
+function rideOk(id){return !!(S.secretary&&S.secretary.n===id)||!!meetOk(id)}
+function rideList(){const out=[];if(S.secretary)out.push({n:S.secretary.n,kind:'sec'});meetList().forEach(x=>{if(!out.some(o=>o.n===x.n))out.push(x)});return out}
+function c3Ride(){
+ if(!(S.cars&&S.cars.length))return c3Note('차가 없어요! 🚗 자동차 매장에서 먼저 구입하세요');
+ const T=c3Near();if(!T||T.def.hired&&!T.sec)return c3Note('같이 탈 사람 가까이에서 신청하세요 (우정·호감 30 이상, 또는 비서)');
+ const id=T.def.n;if(!rideOk(id))return c3Note(id+'와(과)는 아직 같이 차 탈 사이가 아니에요 (호감도/우정 30 이상 필요)');
+ C3.pax=id;c3Close();c3Open('road')}
 function roadMove(dt){
  const me=C3.me,r=C3.rdv,dv=C3.drive;if(!r||!dv)return;
  const k=C3.keys,d=dv.d,maxv=d.t==='sup'?42:d.t==='sport'?36:d.t==='kei'?22:28,P=me.g.position;
@@ -914,17 +929,21 @@ function roadMove(dt){
   const nx=P.x+Math.sin(me.yaw)*r.sp*dt,nz=P.z+Math.cos(me.yaw)*r.sp*dt;
   let hit=false;OBST.forEach(o=>{if(nx>o.x0-1.1&&nx<o.x1+1.1&&nz>o.z0-1.1&&nz<o.z1+1.1)hit=true});
   if(Math.abs(nx)>118||Math.abs(nz)>88)hit=true;
-  if(hit){const v=Math.abs(r.sp);if(v>5&&r.cool<=0){const dmg=Math.round(dv.car.p*(v/45)*.12/1e4)*1e4;pay(dmg);r.cost+=dmg;S.mental=Math.max(1,S.mental-3);c3Log('','💥 충돌! 수리비 −'+won(dmg),'sys');c3Note('💥 쾅! 수리비 '+won(dmg));sfx('err');r.cool=1.2}r.sp=-r.sp*.3}
+  if(hit){const v=Math.abs(r.sp);if(v>5&&r.cool<=0){const dmg=Math.round(dv.car.p*(v/45)*.12/1e4)*1e4;pay(dmg);r.cost+=dmg;S.mental=Math.max(1,S.mental-3);c3Log('','💥 충돌! 수리비 −'+won(dmg),'sys');{const V0=C3.V.road;if(V0&&V0.pax&&r.crashes<5){r.crashes++;rideGain(V0.pax,-3);c3Speak(V0.pax,pickNew('cs',['꺅! 안전운전해 주세요!!','깜짝이야… 다치진 않았어요?','천천히 가요, 무서워요…']),4)}}c3Note('💥 쾅! 수리비 '+won(dmg));sfx('err');r.cool=1.2}r.sp=-r.sp*.3}
   else{P.x=nx;P.z=nz;r.dist+=Math.abs(r.sp)*dt}
  }
  r.cool-=dt;r.cam-=dt;r.toll-=dt;
  if(r.cam<=0)[[0,RDZ],[0,-RDZ]].forEach(p=>{if(Math.hypot(P.x-(p[0]+2),P.z-p[1])<7&&r.sp>22&&!r.auto){const fine=Math.round(150000*wage(S.t)*(r.sp/22)/1e3)*1e3;pay(fine);r.cost+=fine;r.cam=6;c3Log('','📸 과속 단속! 벌금 −'+won(fine)+' ('+Math.round(r.sp*3.6)+'km/h)','sys');c3Note('📸 과속 벌금 '+won(fine))}});
  if(r.toll<=0&&Math.hypot(P.x+RDX,P.z)<4){const t=Math.round(3000*wage(S.t)/100)*100;pay(t);r.cost+=t;r.toll=8;c3Log('','🛣 통행료 −'+won(t),'sys')}
+ {const V=C3.V.road;if(V&&V.pax){const P2=V.pax,yw=me.yaw;P2.g.position.set(P.x-Math.cos(yw)*.5+Math.sin(yw)*-.1,.3,P.z+Math.sin(yw)*.5+Math.cos(yw)*-.1);P2.yaw=yw;P2.g.rotation.y=yw;P2.state='sit';
+  r.warn-=dt;if(r.sp>30&&!r.auto&&r.warn<=0){r.warn=12;rideGain(P2,-1);c3Speak(P2,pickNew('sw',['너무 빨라요… 천천히 가요!','속도 좀 줄여요, 무서워요!']),4)}
+  if(r.dist>=r.nextG&&r.gain<8){r.nextG+=400;r.gain++;rideGain(P2,1)}}}
  let a=(me.yaw+Math.PI)-C3.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));C3.yaw+=a*Math.min(1,dt*2.5);
  $('c3spd').textContent='🚗 '+Math.round(Math.abs(r.sp)*3.6)+' km/h · '+(r.dist/1000).toFixed(2)+' km'+(r.cost?' · 💸 −'+won(r.cost):'')}
 function roadSettle(){
  const r=C3.rdv;if(!r)return;C3.rdv=null;const km=r.dist/1000,fuel=Math.round(km*1500*wage(S.t)/100)*100;
  if(fuel>0)pay(fuel);S.driven=(S.driven||0)+r.dist;S.mental=Math.min(100,S.mental+Math.min(8,Math.round(km*1.5)));
+ {const V0=C3.V.road;if(V0&&V0.pax&&r.gt)c3Log('','🚗 '+V0.pax.def.n+'와(과) 같이 드라이브 → '+(r.gt>=0?'+':'')+r.gt+' ('+(S.secretary&&S.secretary.n===V0.pax.def.n?'충성도':(meetOk(V0.pax.def.n)==='love'?'호감':'우정'))+')','sys')}
  c3Log('','🛣 드라이브 종료: '+km.toFixed(2)+'km · 기름값 −'+won(fuel)+(r.cost?' · 벌금/수리 −'+won(r.cost):'')+' · 멘탈 +'+Math.min(8,Math.round(km*1.5)),'sys');save()}
 function roadEnd(){roadSettle();$('c3spd').style.display='none';$('c3pad').style.display='none';if(C3.drive)carPark();c3Close()}
 (function(){const st=document.createElement('style');st.textContent='#c3spd{position:absolute;left:50%;top:92px;transform:translateX(-50%);background:#000b;border:1px solid var(--gold);border-radius:12px;padding:6px 14px;font-weight:800;display:none;z-index:3}#c3pad{position:absolute;left:12px;right:12px;bottom:116px;justify-content:space-between;display:none;pointer-events:none;z-index:3}#c3pad div{display:flex;gap:8px;pointer-events:auto}#c3pad button{width:62px;height:62px;font-size:24px;border-radius:50%;background:#000a}';document.head.appendChild(st)})();
@@ -984,7 +1003,7 @@ VENUES.cars={where:'자동차 매장',title:()=>'🚗 자동차 매장',
   if(k==='showkey'){if(!(S.cars&&S.cars.length)){c3Note('아직 차가 없어요!');return true}S.carSeen=true;me.ov={state:'pose',until:now+2500};c3Log('나','🔑 내 차 키를 슬쩍 보여준다','me');remember(sp.def.n,'본인 소유 차량이 있음을 보여줌');S.ctrust[sp.def.n]=Math.min(40,(S.ctrust[sp.def.n]||0)+5);c3Speak(sp,'오, 보유 차량이 있으시군요. 대단하세요!',5);save();return true}
   return false}};
 /* ---- 클럽 정의 ---- */
-const CLUB_ACTS=[['wave','👋 인사'],['dance','💃 춤추기'],['toast','🥂 건배'],['drink','🍹 음료 사기'],['round','🎉 전체 쏘기'],['card','💳 카드 보여주기'],['brag','😎 자랑하기'],['namecard','📇 명함 교환'],['clap','👏 박수'],['bow','🙇 인사(허리)'],['req','🎤 신청곡'],['photo','📸 같이 사진'],['gift','🎁 선물'],['date','🍽 데이트'],['confess','💘 고백'],['carkey','🔑 차 키 자랑'],['meetup','💞 따로 만나기'],['hire','🧑‍💼 비서 채용 신청'],['cargive','🚗 차 뿌리기'],['vipreq','👑 VIP 신청'],['vipjudge','📝 VIP 심사 받기'],['bottle','🍾 보틀 서비스(VIP)']];
+const CLUB_ACTS=[['wave','👋 인사'],['dance','💃 춤추기'],['toast','🥂 건배'],['drink','🍹 음료 사기'],['round','🎉 전체 쏘기'],['card','💳 카드 보여주기'],['brag','😎 자랑하기'],['namecard','📇 명함 교환'],['clap','👏 박수'],['bow','🙇 인사(허리)'],['req','🎤 신청곡'],['photo','📸 같이 사진'],['gift','🎁 선물'],['date','🍽 데이트'],['confess','💘 고백'],['carkey','🔑 차 키 자랑'],['meetup','💞 따로 만나기'],['ride','🚗 같이 차타기'],['ride','🚗 같이 차타기'],['hire','🧑‍💼 비서 채용 신청'],['cargive','🚗 차 뿌리기'],['vipreq','👑 VIP 신청'],['vipjudge','📝 VIP 심사 받기'],['bottle','🍾 보틀 서비스(VIP)']];
 VENUES.club={where:'클럽 〈BEAT〉',title:()=>'🪩 BEAT',
  build(){const sc=new THREE.Scene();buildClub(sc);C3.me=null;buildPeople(sc);return{sc,npcs:C3.npcs,crowd:C3.crowd,me:C3.me,all:C3.all,ROOM:CLUB_ROOM,OBST:CLUB_OBST,spawn:[0,8.5,Math.PI],meKey:meKey()}},
  actions:()=>CLUB_ACTS,locs:[[/바|칵테일|술집/,7.2,-.6,'바'],[/dj|디제이|부스/i,0,-6.4,'DJ 부스'],[/플로어|가운데|춤추는/,0,.6,'플로어'],[/소파|라운지/,-6.8,1.8,'라운지'],[/vip|경호|브이아이피/i,-6.9,-4.8,'VIP 입구'],[/입구|문|출구/,0,9.2,'입구']]};
@@ -1041,7 +1060,7 @@ function carDrive(){
  if(!d)return c3Note('전시 차 앞에서 시승하거나, 내 차가 있어야 해요!');
  const g=makeCar(d);g.position.set(me.g.position.x,.18,me.g.position.z);g.rotation.y=me.yaw;C3.sc.add(g);C3.drive={g,d};me.g.visible=false;C3.dist=8.5;me.dest=null;me.follow=null;
  S.mental=Math.min(100,S.mental+3);c3Log('나','🏎 '+d.n+' 시승/운전 시작!'+(isMinor()?' (기사님이 운전)':''),'me');c3Note('🏎 바닥을 탭하면 달려가요! WASD/방향키도 가능 · 끝내려면 🅿 주차')}
-function carPark(){if(!C3.drive){return c3Note('운전 중이 아니에요')}C3.sc.remove(C3.drive.g);C3.drive=null;C3.me.g.visible=true;C3.dist=6.2;c3Log('나','🅿 주차했다','me')}
+function carPark(){if(!C3.drive){return c3Note('운전 중이 아니에요')}C3.sc.remove(C3.drive.g);C3.drive=null;C3.me.g.visible=true;C3.me.body.position.set(0,0,0);C3.me.ov=null;C3.dist=6.2;c3Log('나','🅿 주차했다','me')}
 function carSell(){
  const n=(S.cars||[]).length;if(!n)return c3Note('팔 차가 없어요');const v=Math.round(carVal()*.92/1e4)*1e4;
  if(!confirm('🚗 내 차 '+n+'대를 모두 '+won(v)+'에 팔까요? (감가 반영)'))return;
@@ -1163,7 +1182,7 @@ VENUES.cafe={where:'단둘이 만난 카페',title:()=>'☕ 카페 — '+(C3.mee
   if(first){S.meetM[id]=S.t;if(k==='love')S.love[id]=Math.min(100,(S.love[id]||0)+3);else frUp(P,3);S.meetN=(S.meetN||0)+1;c3Log('','💞 '+id+'와(과) 단둘이 만났다 ('+(k==='love'?'호감':'우정')+' +3)','sys')}
   const L=k==='love'?['오늘은 둘이서만 보네요. 와줘서 고마워요 ☺️','여기 제가 좋아하는 자리예요. 앉아서 천천히 얘기해요.','시간 내줘서 고마워요. 오늘 어땠어요?']:['왔구나! 뭐 먹을래?','오늘은 우리 둘이서만 놀자 ㅎㅎ','여기 자리 맡아놨어~'];
   setTimeout(()=>{if(C3.run&&C3.vname==='cafe')c3Speak(P,pickNew('cf',L),7)},900)},
- actions:()=>{const k=meetOk(C3.meet),l=[['order','☕ 음료 주문'],['dessert','🍰 디저트 나눠먹기'],['gift','🎁 선물'],['walk','🚶 같이 산책'],['photo','📸 같이 사진']];if(k==='love')l.push(['confess','💘 고백']);l.push(['leave','🚪 헤어지기(나가기)']);return l.concat([['wave','👋 인사']])},
+ actions:()=>{const k=meetOk(C3.meet),l=[['order','☕ 음료 주문'],['dessert','🍰 디저트 나눠먹기'],['gift','🎁 선물'],['walk','🚶 같이 산책'],['photo','📸 같이 사진']];if(k==='love')l.push(['confess','💘 고백']);l.push(['ride','🚗 같이 드라이브']);l.push(['leave','🚪 헤어지기(나가기)']);return l.concat([['wave','👋 인사']])},
  locs:[[/창|창가/,.5,-4,'창가'],[/카운터|바리스타/,-3,-3.5,'카운터'],[/자리|테이블/,1.2,-1.2,'자리']],
  act(k){
   const id=C3.meet,P=C3.npcs[0],ba=C3.npcs[1],me=C3.me,now=performance.now(),dr=Math.round(50000*wage(S.t)/1000)*1000,kind=meetOk(id)||'friend',love=kind==='love';
@@ -1459,6 +1478,7 @@ const ACH=[
 ['drive','드라이버','5km 이상 운전했다',()=>(S.driven||0)>=5000],
 ['sec','사장님','비서를 채용했다',()=>!!S.secretary],
 ['meet','단둘이','따로 만나기를 해봤다',()=>(S.meetN||0)>=1],
+['ride','드라이브 메이트','누군가와 같이 차를 탔다',()=>(S.ridesN||0)>=1],
 ['car','자동차 오너','자동차를 구매했다',()=>!!(S.cars&&S.cars.length)],
 ['cargive','차 뿌리기','근처 사람들에게 차를 선물했다',()=>(S.carsGiven||0)>=1],
 ['fleet','차 부자','차를 10대 이상 보유했다',()=>(S.cars||[]).length>=10],
@@ -1736,6 +1756,7 @@ function tabTown(){
  +btn('school','🏫',SCH_NAME[st],'수업·시험·친구·급식. 성적 '+Math.round(sc.grade)+'점'+(a>=19?' · 대학 캠퍼스에는 연애 후보도 있어요':''))
  +btn('field','🚌','현장학습·운동회','도시락·달리기·줄다리기·경제 캠프 퀴즈 · 친구들과 우정 쌓기')
  +btn('office','🏢','비서실',(S.secretary?'일상 비서 '+S.secretary.n+' · 충성도 '+Math.round(S.secretary.loyal)+' · 월급 '+won(S.secretary.sal):'비서가 없어요 — 🪩 클럽에서 마음에 드는 사람에게 "비서 채용 신청"'))
+ +(()=>{const L=(S.cars&&S.cars.length)?rideList():[];return L.length?'<div class="stock"><b>🚗 같이 차타기</b> <span class="mut">친구·호감 30 이상·비서와 드라이브 (함께 탄 사람과 대화·호감/우정 상승)</span><div class="row" style="margin-top:6px">'+L.map(x=>'<button class="pri" data-a="ride3d" data-id="'+x.n+'">'+(x.kind==='love'?'💗':x.kind==='sec'?'🧑‍💼':'🤝')+' '+x.n+'</button>').join('')+'</div></div>':''})()
  +btn('road','🛣','드라이브 (차 몰기)','내 차로 달려요! 기름값·과속 벌금·충돌 수리비가 실제로 나가요'+((S.cars&&S.cars.length)?'':' · 먼저 자동차 매장에서 차를 사세요'))
  +btn('academy','📖','학원','수강 중: '+(act.join(', ')||'없음')+' · 분석력을 올려요')
  +btn('cars','🚗','자동차 매장','보유 차량: '+car+(a<19&&S.diff!=='god'?' · 미성년자는 계약 불가':''))
@@ -2006,9 +2027,10 @@ document.addEventListener('click',e=>{
  if(a==='send')return doSend();
  if(a==='chip'){S.cdraft=b.dataset.t;return doSend()}
  if(a==='pickf'){S.cf=id;S.cdraft='';const h=S.chat.f[id]||(S.chat.f[id]=[]);if(!h.length){const n=NPCS.find(x=>x.id===id);pushC(h,{w:id,n:n.name,e:n.emoji,t:pick(PER[id].g)})}save();return render()}
+ if(a==='ride3d'){if(!(S.cars&&S.cars.length))return toast('🚗 차가 없어요! 자동차 매장에서 먼저 구입하세요');C3.pax=id;return void c3Open('road')}
  if(a==='meet3d'){C3.meet=id;return void c3Open('cafe')}
  if(a==='go3d'){if(id==='office'&&!S.secretary)return toast('🧑‍💼 비서가 없어요! 클럽에서 먼저 채용하세요');
-  if(id==='road'&&!(S.cars&&S.cars.length))return toast('🚗 차가 없어요! 자동차 매장에서 먼저 구입하세요');
+  if(id==='road'&&!(S.cars&&S.cars.length))return toast('🚗 차가 없어요! 자동차 매장에서 먼저 구입하세요');if(id==='road')C3.pax=null;
   if(id==='club'){if(S.clubIn!==S.t){clubAct('enter');if(S.clubIn!==S.t)return}}return void c3Open(id)}
  if(a==='club3d'){if(S.clubIn!==S.t){clubAct('enter');if(S.clubIn!==S.t)return}return void c3Open()}
  if(a==='clubenter')return clubAct('enter');
