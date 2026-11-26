@@ -342,16 +342,18 @@ function c3Init(){
  if(C3.ready)return true;
  if(!window.THREE){return false}
  const wrap=document.createElement('div');wrap.id='c3';wrap.innerHTML=
-  '<canvas id="c3cv"></canvas><div id="c3top"><div><b id="c3name">🪩 BEAT</b> <span id="c3who"></span></div><div class="c3r"><button id="c3snd">🔊</button><button id="c3x">✖ 나가기</button></div></div>'
+  '<canvas id="c3cv"></canvas><div id="c3top"><div><b id="c3name">🪩 BEAT</b> <span id="c3who"></span></div><div class="c3r"><button id="c3q">🎞 높음</button><button id="c3snd">🔊</button><button id="c3x">✖ 나가기</button></div></div>'
   +'<div id="c3vibe"><span>VIBE</span><div class="bar"><i id="c3vb"></i></div></div><div id="c3note"></div>'
   +'<div id="c3tgt" hidden></div><div id="c3log"></div>'
   +'<div id="c3bar"><input id="c3in" maxlength="120" placeholder="말 걸기 / 행동은 앞에 /를 붙여 자유롭게 (예: /바로 가서 춤춘다)"><button class="pri" id="c3send">전송</button><button id="c3actb">🎬 행동</button></div><div id="c3spd"></div><div id="c3pad"><div><button data-p="pad_l">◀</button><button data-p="pad_r">▶</button></div><div><button data-p="pad_dn">🛑</button><button data-p="pad_up">⛽</button></div></div><div id="c3help">탭: 이동/선택 · 드래그: 시점 · WASD/방향키: 이동</div><div id="c3act" hidden></div>';
  document.body.appendChild(wrap);
  const cv=$('c3cv');
- const rd=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});rd.outputEncoding=THREE.sRGBEncoding;rd.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+ const rd=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});rd.outputEncoding=THREE.sRGBEncoding;C3.q=(()=>{try{return localStorage.getItem('richrpg_q')||'high'}catch(e){return'high'}})();rd.setPixelRatio(qRatio());
  const sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(55,1,.1,80);
  C3.rd=rd;C3.sc=sc;C3.cam=cam;C3.yaw=0;C3.pitch=.4;C3.dist=6.2;C3.keys={};C3.clock=performance.now();
  C3.ready=true;return true}
+function qRatio(){const d=window.devicePixelRatio||1;return C3.q==='low'?1:C3.q==='mid'?Math.min(d,1.5):Math.min(d,2)}
+function c3ApplyQ(){if(!C3.rd)return;C3.rd.setPixelRatio(qRatio());if(C3.pts)C3.pts.visible=C3.q!=='low';(C3.cones||[]).forEach(c=>c.visible=C3.q==='high');const b=$('c3q');if(b)b.textContent='🎞 '+({high:'높음',mid:'보통',low:'낮음'}[C3.q]);c3Resize()}
 function c3Resize(){const w=window.innerWidth,h=window.innerHeight;C3.rd.setSize(w,h,false);C3.cam.aspect=w/h;C3.cam.updateProjectionMatrix()}
 
 /* ---- 입력 ---- */
@@ -366,6 +368,7 @@ function c3Bind(){
  window.addEventListener('keyup',e=>{C3.keys[e.key.toLowerCase()]=false});
  window.addEventListener('resize',()=>{if(C3.run)c3Resize()});
  document.querySelectorAll('#c3pad button').forEach(b=>{const k=b.dataset.p;const on=e=>{e.preventDefault();C3.keys[k]=true},off=()=>{C3.keys[k]=false};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointerleave',off);b.addEventListener('pointercancel',off)});
+ $('c3q').onclick=()=>{C3.q=C3.q==='high'?'mid':C3.q==='mid'?'low':'high';try{localStorage.setItem('richrpg_q',C3.q)}catch(e){}c3ApplyQ();c3Note('🎞 화질: '+({high:'높음',mid:'보통',low:'낮음 (느린 기기용)'}[C3.q]))};
  $('c3x').onclick=c3Close;$('c3send').onclick=c3Send;$('c3actb').onclick=()=>{const a=$('c3act');a.hidden=!a.hidden};
  $('c3snd').onclick=()=>{SOUND=!SOUND;try{localStorage.setItem('richrpg_snd',SOUND?'1':'0')}catch(e){}$('c3snd').textContent=SOUND?'🔊':'🔇';c3Audio()};
  $('c3in').addEventListener('input',e=>{});
@@ -677,7 +680,7 @@ function c3Open(v){
  $('c3name').textContent=VN.title();$('c3vibe').style.display=v==='club'?'':'none';$('c3spd').style.display='none';$('c3pad').style.display='none';c3SetActions();$('c3act').hidden=true;
  $('c3').style.display='block';$('c3snd').textContent=SOUND?'🔊':'🔇';
  C3.nextAmb=performance.now()+9000;C3.nextCrowd=performance.now()+3000;C3.met={};C3.amb=false;C3.busy=false;
- C3.yaw=0;C3.run=true;C3.clock=performance.now();c3Resize();
+ C3.yaw=0;C3.run=true;C3.clock=performance.now();c3ApplyQ();
  if(C3.lastV!==v){C3.log=[];C3.lastV=v;C3.spent=C3.spent||0;c3Log('','📍 '+VN.title()+' — 사람 가까이 걸어가 말을 걸거나 🎬 행동을 눌러보세요.','sys')}else c3Log('','','');
  if(VN.enter)VN.enter(V);
  c3Audio();requestAnimationFrame(c3Frame);return true}
@@ -1918,9 +1921,9 @@ function stockRow(s){
  +'<button data-a="maxbuy" data-id="'+s.id+'">최대매수('+maxBuy(s.id).toLocaleString()+')</button>'+(h?'<button data-a="maxsell" data-id="'+s.id+'">전량</button>':'')+'</div></div>'
 }
 function tipHtml(id){return S.tips.filter(x=>x.id===id).map(x=>'<span class="tag">'+x.src+': '+(x.up?'▲ 오를 것':'▼ 내릴 것')+' ('+Math.round(x.acc*100)+'%)</span>').join(' ')}
-function tabBar(){const T=[['stock','📈 증권'],['prop','🏠 부동산'],['biz','🏢 회사'],['npc','🤝 인맥'],['friend','👥 친구 채팅'],['club','🪩 클럽'],['town','🏙 마을(3D)'],['alt','💰 금·달러·코인'],['ach','🏆 업적'],['tax','🧾 세금'],['bank','🏦 은행']];
+function tabBar(){const T=[['stock','📈 증권'],['prop','🏠 부동산'],['biz','🏢 회사'],['npc','🤝 인맥'],['friend','👥 친구 채팅'],['club','🪩 클럽'],['town','🏙 마을(3D)'],['alt','💰 금·달러·코인'],['ach','🏆 업적'],['help','❓ 도움말'],['tax','🧾 세금'],['bank','🏦 은행']];
  return'<div class="row" style="margin:12px 0 0">'+T.map(x=>'<button data-a="tab" data-id="'+x[0]+'" '+((S.tab||'stock')===x[0]?'class="pri"':'')+'>'+x[1]+'</button>').join('')+'</div>'}
-function tabBody(){return{stock:tabStock,prop:tabProp,biz:tabBiz,npc:tabNpc,friend:tabFriend,club:tabClub,town:tabTown,alt:tabAlt,ach:tabAch,tax:tabTax,bank:tabBank}[S.tab||'stock']()}
+function tabBody(){return{stock:tabStock,prop:tabProp,biz:tabBiz,npc:tabNpc,friend:tabFriend,club:tabClub,town:tabTown,alt:tabAlt,ach:tabAch,help:tabHelp,tax:tabTax,bank:tabBank}[S.tab||'stock']()}
 function tabStock(){return'<div class="card"><b>📈 종목 시장</b> <span class="mut">(수수료 매수 '+(bf()*100).toFixed(2)+'% / 매도 '+(sf()*100).toFixed(2)+'%)</span>'+STOCKS.map(stockRow).join('')+'</div>'}
 function propRow(p){
  const t=S.t,pr=price(p.id),prev=t>0?P[p.id][t-1]:pr,ch=prev?pr/prev-1:0,h=S.props[p.id],tp=tipHtml(p.id);
@@ -1983,6 +1986,18 @@ function tabTown(){
  +btn('club','🪩','클럽 〈BEAT〉','VIP·연애·사장님 심사 · 입장료 '+won(Math.round(30000*wage(S.t)/1000)*1000))
  +(()=>{const L=meetList();return L.length?'<div class="stock"><b>💞 따로 만나기</b> <span class="mut">호감도/우정 30 이상인 사람과 단둘이</span><div class="row" style="margin-top:6px">'+L.map(x=>'<button class="pri" data-a="meet3d" data-id="'+x.n+'">'+(x.kind==='love'?'💗':'🤝')+' '+x.n+'</button>').join('')+'</div></div>':'<div class="mut" style="margin-top:6px">💞 따로 만나기: 호감도(연애 후보) 또는 우정(친구)이 30 이상이면 단둘이 만날 수 있어요</div>'})()
  +'<div class="mut" style="margin-top:8px">💑 연애: '+(S.partner?S.partner+' (연인)':(a<19?'만 19세부터 가능해요':'아직 없음 — 클럽·캠퍼스에서 만나보세요. 상대가 내 재력을 알면 호감 확률이 올라가요'))+'</div></div>'}
+function tabHelp(){
+ const sec=(t,items)=>'<div class="stock"><b>'+t+'</b><div class="mut" style="margin-top:4px">'+items.map(i=>'• '+i).join('<br>')+'</div></div>';
+ return'<div class="card"><b>❓ 도움말</b> <span class="mut">(이 게임의 모든 기능 한눈에)</span>'
+ +sec('🎮 기본',['한 턴은 한 달이에요. 아래 ▶ 다음 달로를 누르면 월급·세금·배당·월세·유지비가 정산돼요.','행동은 한 달에 한 번(신문·알바·휴식). 3D 장소 활동은 장소마다 월별 횟수가 있어요.','난이도: 쉬움~지옥, 겁나 이지(어린이 CEO). 시작 연도는 1992/1998.'])
+ +sec('🏙 3D 마을',['🏙 마을 탭에서 학교·학원·자동차 매장·클럽·드라이브·비서실·내 집을 걸어 다니며 즐겨요.','조작: 바닥/사람을 탭해 이동, 드래그로 시점, WASD·방향키로 이동. 입력창에서 말 걸기, /로 시작하면 내 행동을 자유롭게(예: /바에서 칵테일 3잔을 주문한다).','자유 행동은 실제 돈이 나가요(음료·선물·팁·파손·기부 등). 금액을 직접 쓰면 그 금액이 나가요.','3D가 느리면 화면 위 🎞 버튼으로 화질을 낮춰요.'])
+ +sec('💬 사람들',['신뢰도: 어린이가 "1조 있다"고 하면 바로 안 믿어요. 💳 카드 제시·한턱·차 뿌리기로 증거를 보여주세요.','AI 대화: 친구·클럽·3D 모든 사람과 Gemini로 대화해요. 🔑 키는 대화창의 AI 줄에서 입력 (결제 안 된 키는 Pro 불가, Flash로 자동 전환).','우정·호감: 놀기·선물·데이트로 올려요. 30 이상이면 따로 만나기, 50 이상이면 집에 초대할 수 있어요. (연애는 만 19세부터)'])
+ +sec('🏫 학교·학원',['수업·시험·급식·동아리·학급회장·장터·현장학습(🚌)으로 성적·분석력·우정을 올려요.','학원은 과목별 월 수강료. 투자·경제 반이 분석력을 가장 많이 올려요.'])
+ +sec('🚗 자동차',['매장에서 1·5·20대씩 무제한 구매(대량 할인), 차 뿌리기, 시승, 전부 팔기. 구매는 월 유지비·감가가 있어요.','🛣 드라이브: 직접 운전(어른)·기사님 운전(어린이). 충돌 수리비·과속 벌금·통행료·기름값이 나가요. 해변·야경·맛집·놀이공원 목적지와 같이 차타기!'])
+ +sec('🏠 집·비서',['모델하우스에서 내 집을 사고(대출 가능), 집에서 요리·영화·게임·수다·잠·같이 자기·밤샘·집들이를 해요.','클럽에서 마음에 드는 사람을 일상 비서로 채용하면 월급을 받고 따라다니며 챙겨줘요. 비서실에서 식사·심부름·휴식을 부탁해요.'])
+ +sec('💰 투자',['증권 25종목·금·달러·비트코인(30% 한도)·부동산·회사 설립·IPO. 세금 탭에서 배당·금융소득·종부세·양도세를 확인해요.','돈의 가치(물가)를 화면 위와 그래프에서 확인해요. 실질금리가 마이너스면 예금해도 가치가 줄어요.'])
+ +sec('💾 저장',['3개 슬롯에 자동 저장(브라우저). 게임 중 📂 슬롯/새 게임으로 전환.','앱처럼 설치: 📲 앱으로 설치 (https 주소에서만).'])
+ +'</div>'}
 function tabAch(){const n=Object.keys(S.ach).length;
  return'<div class="card"><b>🏆 업적</b> <span class="mut">('+n+' / '+ACH.length+')</span>'+ACH.map(a=>{const d=S.ach[a[0]];return'<div class="stock"><b>'+(d!==undefined?'✅ ':'⬜ ')+a[1]+'</b> <span class="mut">'+a[2]+(d!==undefined?' · '+ymOf(d).y+'년 '+ymOf(d).m+'월':'')+'</span></div>'}).join('')+'</div>'}
 function tabBank(){
