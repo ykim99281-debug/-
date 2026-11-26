@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>편의점 사장 키우기</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--card2:#273449;--tx:#f1f5f9;--mut:#94a3b8;--pri:#22c55e;--acc:#facc15;--red:#ef4444;--blue:#38bdf8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif;min-height:100vh;display:flex;justify-content:center}
+#app{width:100%;max-width:480px;padding:12px 12px 80px}
+header{text-align:center;margin-bottom:8px}
+h1{font-size:20px;margin:4px 0}
+.rank{display:inline-block;background:var(--acc);color:#222;font-weight:700;border-radius:99px;padding:2px 12px;font-size:13px}
+.money{font-size:30px;font-weight:800;color:var(--acc);margin:6px 0 0}
+.sub{font-size:12px;color:var(--mut)}
+.bar{height:8px;background:var(--card);border-radius:9px;overflow:hidden;margin:8px 0}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--pri),var(--blue));width:0;transition:width .3s}
+#store{position:relative;background:var(--card);border-radius:16px;padding:14px;text-align:center;margin-bottom:10px;overflow:hidden}
+#sign{font-size:14px;font-weight:800;letter-spacing:2px;background:#16a34a;color:#fff;border-radius:6px;padding:4px 10px;display:inline-block;margin-bottom:8px}
+#shop{font-size:54px;line-height:1.1;min-height:64px;word-break:break-all}
+#tap{width:100%;margin-top:10px;padding:16px;font-size:18px;font-weight:800;border:0;border-radius:14px;background:var(--pri);color:#052e16;cursor:pointer;transition:transform .05s}
+#tap:active{transform:scale(.97)}
+.float{position:absolute;pointer-events:none;font-weight:800;color:var(--acc);animation:fl 1s forwards;text-shadow:0 1px 2px #000}
+@keyframes fl{to{transform:translateY(-70px);opacity:0}}
+.tabs{display:flex;gap:6px;margin:10px 0}
+.tabs button{flex:1;padding:9px 0;border:0;border-radius:10px;background:var(--card);color:var(--mut);font-weight:700;font-size:13px;cursor:pointer}
+.tabs button.on{background:var(--blue);color:#082f49}
+.item{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:10px;margin-bottom:8px}
+.item .ic{font-size:28px;width:38px;text-align:center}
+.item .in{flex:1;min-width:0}
+.item .nm{font-weight:700;font-size:14px}
+.item .ds{font-size:11px;color:var(--mut);margin-top:2px}
+.item button{border:0;border-radius:10px;padding:8px 10px;font-weight:700;font-size:12px;background:var(--pri);color:#052e16;cursor:pointer;min-width:78px}
+.item button:disabled{background:var(--card2);color:#64748b}
+.stats{background:var(--card);border-radius:12px;padding:12px;font-size:13px;line-height:1.9}
+.btn2{width:100%;padding:12px;border:0;border-radius:12px;font-weight:800;margin-top:8px;cursor:pointer}
+.prest{background:linear-gradient(90deg,#f59e0b,#ef4444);color:#fff}
+.reset{background:var(--card2);color:var(--mut)}
+#log{font-size:12px;color:var(--mut);height:34px;overflow:hidden;text-align:center;margin-top:6px}
+#event{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);width:calc(100% - 24px);max-width:456px;background:#fff;color:#111;border-radius:14px;padding:12px;display:none;z-index:9;box-shadow:0 6px 24px #000a}
+#event b{display:block;margin-bottom:6px}
+#event .row{display:flex;gap:8px}
+#event button{flex:1;padding:9px;border:0;border-radius:9px;font-weight:700;cursor:pointer;background:var(--pri);color:#052e16}
+#event button.no{background:#e2e8f0;color:#334155}
+#toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:8px 14px;border-radius:99px;font-size:13px;display:none;z-index:10}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <h1>🏪 편의점 사장 키우기</h1>
+  <span class="rank" id="rank"></span>
+  <div class="money" id="money"></div>
+  <div class="sub" id="rate"></div>
+  <div class="bar"><i id="prog"></i></div>
+  <div class="sub" id="progt"></div>
+</header>
+
+<div id="store">
+  <div id="sign">CONVENIENCE 24</div>
+  <div id="shop"></div>
+  <button id="tap">🧾 손님 응대하기</button>
+  <div id="log"></div>
+</div>
+
+<div class="tabs">
+  <button data-t="staff" class="on">👥 직원</button>
+  <button data-t="goods">📦 상품</button>
+  <button data-t="store">🏬 매장</button>
+  <button data-t="info">📊 정보</button>
+</div>
+<div id="list"></div>
+</div>
+
+<div id="event"></div>
+<div id="toast"></div>
+
+<script>
+const fmt=n=>{n=Math.floor(n);const u=['','만','억','조','경','해'];if(n<10000)return n.toLocaleString();let i=0,v=n;while(v>=10000&&i<u.length-1){v/=10000;i++}return (v>=100?v.toFixed(0):v.toFixed(1))+u[i]};
+
+// 직원: 초당 수입
+const STAFF=[
+ {id:'part',ic:'🧑‍🎓',nm:'알바생',ds:'친절한 야간 알바',base:50,cost:15,ps:1},
+ {id:'cashier',ic:'💁',nm:'전담 캐셔',ds:'계산이 빠르다',base:400,cost:120,ps:8},
+ {id:'manager',ic:'🧑‍💼',nm:'점장',ds:'매장을 책임진다',base:3000,cost:900,ps:60},
+ {id:'barista',ic:'☕',nm:'바리스타',ds:'커피 코너 운영',base:25000,cost:7000,ps:450},
+ {id:'ai',ic:'🤖',nm:'무인 계산 로봇',ds:'24시간 풀가동',base:300000,cost:80000,ps:5000},
+];
+// 상품: 클릭 수입 증가
+const GOODS=[
+ {id:'snack',ic:'🍫',nm:'과자·음료',ds:'클릭당 +1',base:30,add:1},
+ {id:'lunch',ic:'🍙',nm:'삼각김밥·도시락',ds:'클릭당 +5',base:300,add:5},
+ {id:'ice',ic:'🍦',nm:'아이스크림',ds:'클릭당 +30',base:3000,add:30},
+ {id:'beer',ic:'🍺',nm:'주류 코너',ds:'클릭당 +200',base:30000,add:200},
+ {id:'gift',ic:'🎁',nm:'택배·상품권',ds:'클릭당 +1,500',base:300000,add:1500},
+];
+// 매장 업그레이드 (1회성)
+const UPS=[
+ {id:'sign',ic:'💡',nm:'LED 간판',ds:'모든 수입 +10%',cost:500,m:.1},
+ {id:'fridge',ic:'🧊',nm:'대형 냉장고',ds:'모든 수입 +20%',cost:5000,m:.2},
+ {id:'atm',ic:'🏧',nm:'ATM 설치',ds:'모든 수입 +30%',cost:50000,m:.3},
+ {id:'h24',ic:'🌙',nm:'24시간 영업',ds:'모든 수입 +50%',cost:500000,m:.5},
+ {id:'app',ic:'📱',nm:'멤버십 앱',ds:'모든 수입 +100%',cost:5000000,m:1},
+];
+const RANKS=[
+ [0,'🥱 초보 알바','🏚️'],[500,'🙂 야간 점장','🏪'],[10000,'😎 동네 사장님','🏪🏪'],
+ [300000,'🤑 3호점 사장','🏬'],[10000000,'👔 프랜차이즈 본부장','🏢'],[500000000,'👑 편의점 재벌','🏙️🏢🏙️'],
+ [30000000000,'🌍 글로벌 회장','🌍🏢🌍']
+];
+const EVENTS=[
+ {t:'🧓 단골 할머니가 "수고 많네~" 하며 팁을 주려 해요!',y:'받는다',gain:s=>60*s.ps+200},
+ {t:'🥫 유통기한 임박 상품! 1+1 할인 행사를 할까요?',y:'행사 진행',gain:s=>40*s.ps+300,loss:false},
+ {t:'😡 진상 손님이 환불을 요구해요. 환불해줄까요?',y:'환불해준다',gain:s=>-(20*s.ps+100),n:'거절한다',ngain:s=>0,bad:true},
+ {t:'📦 택배 대량 입고! 정리하면 수당이 나와요.',y:'정리한다',gain:s=>80*s.ps+500},
+ {t:'🎉 근처 축제로 손님이 몰려와요! 서둘러 응대!',y:'파이팅!',gain:s=>120*s.ps+1000},
+];
+
+const KEY='cvs_boss_v1';
+let S=load();
+function def(){return{money:0,total:0,staff:{},goods:{},ups:{},fran:0,t:Date.now(),taps:0}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d)return Object.assign(def(),d)}catch(e){}return def()}
+function save(){S.t=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+
+const lv=(o,id)=>o[id]||0;
+const cost=(it,n)=>Math.floor(it.base*Math.pow(1.15,n));
+const mult=()=>(1+UPS.reduce((a,u)=>a+(S.ups[u.id]?u.m:0),0))*(1+S.fran*0.5);
+const perSec=()=>STAFF.reduce((a,s)=>a+lv(S.staff,s.id)*s.ps,0)*mult();
+const perTap=()=>(1+GOODS.reduce((a,g)=>a+lv(S.goods,g.id)*g.add,0))*mult();
+const rankIdx=()=>{let r=0;RANKS.forEach((x,i)=>{if(S.total>=x[0])r=i});return r};
+
+let tab='staff';
+const $=id=>document.getElementById(id);
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',2200)}
+function log(m){$('log').textContent=m}
+
+function render(force){
+  const ri=rankIdx(),nx=RANKS[ri+1];
+  $('rank').textContent=RANKS[ri][1]+(S.fran?` · 🏆${S.fran}호`:'');
+  $('shop').textContent=RANKS[ri][2];
+  $('money').textContent='₩ '+fmt(S.money);
+  $('rate').textContent=`초당 ₩${fmt(perSec())} · 클릭당 ₩${fmt(perTap())} · 수입배율 ×${mult().toFixed(2)}`;
+  if(nx){const p=(S.total-RANKS[ri][0])/(nx[0]-RANKS[ri][0]);$('prog').style.width=Math.min(100,p*100)+'%';$('progt').textContent=`다음 등급 ${nx[1]} 까지 ₩${fmt(nx[0]-S.total)}`}
+  else{$('prog').style.width='100%';$('progt').textContent='최고 등급 달성!'}
+  const sig=tab+[...STAFF,...GOODS].map(i=>S.money>=cost(i,lv(S.staff,i.id)+lv(S.goods,i.id))?1:0).join('')+UPS.map(u=>S.ups[u.id]?2:S.money>=u.cost?1:0).join('')+S.total*0+(tab==='info'?Math.floor(S.total):'');
+  if(sig!==render.sig||force){render.sig=sig;renderList()}
+}
+function row(ic,nm,ds,btn,dis,fn){
+  const d=document.createElement('div');d.className='item';
+  d.innerHTML=`<div class="ic">${ic}</div><div class="in"><div class="nm">${nm}</div><div class="ds">${ds}</div></div>`;
+  if(btn){const b=document.createElement('button');b.innerHTML=btn;b.disabled=dis;b.onclick=fn;d.appendChild(b)}
+  return d;
+}
+function renderList(){
+  const L=$('list');L.innerHTML='';
+  if(tab==='staff')STAFF.forEach(s=>{const n=lv(S.staff,s.id),c=cost(s,n);
+    L.appendChild(row(s.ic,`${s.nm} Lv.${n}`,`${s.ds} · 초당 +${fmt(s.ps*mult())}`,`고용<br>₩${fmt(c)}`,S.money<c,()=>{if(S.money>=c){S.money-=c;S.staff[s.id]=n+1;render(1)}}))});
+  else if(tab==='goods')GOODS.forEach(g=>{const n=lv(S.goods,g.id),c=cost(g,n);
+    L.appendChild(row(g.ic,`${g.nm} Lv.${n}`,g.ds,`입고<br>₩${fmt(c)}`,S.money<c,()=>{if(S.money>=c){S.money-=c;S.goods[g.id]=n+1;render(1)}}))});
+  else if(tab==='store')UPS.forEach(u=>{const have=S.ups[u.id];
+    L.appendChild(row(u.ic,u.nm,u.ds,have?'완료':`구매<br>₩${fmt(u.cost)}`,have||S.money<u.cost,()=>{if(S.money>=u.cost){S.money-=u.cost;S.ups[u.id]=1;render(1)}}))});
+  else{
+    const need=100000000*Math.pow(3,S.fran);
+    const d=document.createElement('div');d.className='stats';
+    d.innerHTML=`누적 매출: ₩${fmt(S.total)}<br>총 클릭: ${S.taps.toLocaleString()}회<br>프랜차이즈 지점: ${S.fran}개 (수입 +${S.fran*50}%)<br>
+    <span class="sub">누적 매출 ₩${fmt(need)} 달성 시 프랜차이즈를 열 수 있어요. 모든 진행은 초기화되지만 영구 수입 +50%!</span>`;
+    const b=document.createElement('button');b.className='btn2 prest';b.textContent=`🏆 프랜차이즈 ${S.fran+1}호점 오픈`;b.disabled=S.total<need;b.style.opacity=b.disabled?.4:1;
+    b.onclick=()=>{if(S.total<need||!confirm('진행 상황이 초기화되고 영구 보너스를 얻습니다. 진행할까요?'))return;const f=S.fran+1,tp=S.taps;S=def();S.fran=f;S.taps=tp;save();render(1);toast('🎉 프랜차이즈 오픈!')};
+    const r=document.createElement('button');r.className='btn2 reset';r.textContent='데이터 완전 초기화';
+    r.onclick=()=>{if(confirm('정말 모든 데이터를 삭제할까요?')){S=def();save();render(1)}};
+    d.appendChild(b);d.appendChild(r);L.appendChild(d);
+  }
+}
+
+const MSG=['어서오세요!','봉투 필요하세요?','포인트 적립하시나요?','데워드릴까요?','영수증 드릴까요?','담배 뭐 드릴까요?','택배 찾으러 왔어요~'];
+$('tap').addEventListener('click',e=>{
+  const g=perTap();S.money+=g;S.total+=g;S.taps++;
+  const f=document.createElement('div');f.className='float';f.textContent='+'+fmt(g);
+  const r=$('store').getBoundingClientRect();f.style.left=(e.clientX-r.left-12)+'px';f.style.top=(e.clientY-r.top-20)+'px';
+  $('store').appendChild(f);setTimeout(()=>f.remove(),1000);
+  log('"'+MSG[Math.floor(Math.random()*MSG.length)]+'"');
+  render();
+});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');tab=b.dataset.t;render(1)});
+
+// 오프라인 수입
+(function(){const sec=Math.min((Date.now()-S.t)/1000,8*3600);if(sec>30&&perSec()>0){const g=perSec()*sec*.5;S.money+=g;S.total+=g;setTimeout(()=>toast(`💤 자리를 비운 동안 ₩${fmt(g)} 벌었어요!`),300)}})();
+
+// 틱
+let last=Date.now(),lastRank=rankIdx();
+setInterval(()=>{
+  const now=Date.now(),dt=(now-last)/1000;last=now;
+  const g=perSec()*dt;S.money+=g;S.total+=g;
+  const ri=rankIdx();if(ri>lastRank){toast('🎊 승진! '+RANKS[ri][1]);lastRank=ri}
+  render();
+},500);
+setInterval(save,5000);
+addEventListener('beforeunload',save);
+
+// 랜덤 이벤트
+function spawn(){
+  if($('event').style.display==='block'||perSec()<=0&&S.total<100)return;
+  const e=EVENTS[Math.floor(Math.random()*EVENTS.length)],s={ps:perSec()||perTap()};
+  const el=$('event');
+  el.innerHTML=`<b>${e.t}</b><div class="row"><button id="ey">${e.y}</button><button class="no" id="en">${e.n||'무시'}</button></div>`;
+  el.style.display='block';
+  const close=()=>{el.style.display='none'};
+  $('ey').onclick=()=>{const g=e.gain(s);S.money=Math.max(0,S.money+g);if(g>0)S.total+=g;toast((g>=0?'+':'')+'₩'+fmt(g));close();render()};
+  $('en').onclick=close;
+  setTimeout(close,12000);
+}
+setInterval(()=>{if(Math.random()<.5)spawn()},20000);
+
+render();
+</script>
+</body>
+</html>
