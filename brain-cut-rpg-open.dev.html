@@ -1603,7 +1603,7 @@ function openAch(){mode='dialog';bagOpen=true;const sc=$('#scr');G.ach=G.ach||{}
 
 /* ================= ADMIN / EVENTS / BAN ================= */
 const SUPERMAIL="geab980ebaa85eca480@brainrpg.local";
-const BUILD=2026111901,TAG='r11 (펫·업적)';
+const BUILD=2026111901,TAG='r12 (메인주소·자동업데이트)';
 let kicked=false,CFG={};
 let banned=false,ADM={role:null},EVT={type:null,until:0,by:''},srvOff=0,unsubAll=[];
 const EVTS={xp3:{n:'경험치 3배',i:'📈'},gold3:{n:'골드 3배',i:'💰'},atk2:{n:'공격력 2배',i:'⚔️'},god:{n:'받는 피해 절반',i:'🛡️'}};
@@ -1764,6 +1764,12 @@ $('#viewb').onclick=()=>{const m=$('#viewm');m.style.display=m.style.display==='
 $('#hudx').onclick=()=>{V.hud='mini';applyView()};$('#hudmini').onclick=()=>{V.hud='full';applyView()};
 const mq=matchMedia('(max-width:760px)');function placeHud(){const h=$('#hud'),mi=$('#hudmini');if(mq.matches){$('#tl').insertBefore(h,$('#quest'));$('#tl').insertBefore(mi,$('#quest'))}else{$('#wui').appendChild(h);$('#wui').appendChild(mi)}}
 (mq.addEventListener?mq.addEventListener('change',placeHud):mq.addListener(placeHud));placeHud();applyView();
+
+
+/* ================= AUTO UPDATE CHECK (hosted copy) ================= */
+let updShown=false;
+async function checkUpdate(){if(location.protocol==='file:'||updShown)return;try{const r=await fetch('version.json?t='+Date.now(),{cache:'no-store'});if(!r.ok)return;const v=await r.json();if(v&&v.tag&&v.tag!==TAG){updShown=true;const b=document.createElement('button');b.id='updb';b.textContent='🔄 새 버전이 나왔어요! 눌러서 업데이트 ('+String(v.tag).slice(0,24)+')';b.style.cssText='position:fixed;left:50%;top:max(54px,calc(env(safe-area-inset-top) + 48px));transform:translateX(-50%);z-index:60;padding:9px 16px;font-size:14px;border-radius:20px;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis;animation:pu .7s infinite alternate;background:linear-gradient(180deg,#ffd84d,#ff9a3d);color:#3a2008;border:2px solid #fff3b0';b.onclick=()=>{try{forceCloud=true;saveGame()}catch(e){}setTimeout(()=>location.reload(),600)};document.body.appendChild(b)}}catch(e){}}
+setTimeout(checkUpdate,6000);setInterval(checkUpdate,150000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdate()});
 
 /* ================= INPUT ================= */
 document.querySelectorAll('.sk').forEach(b=>{const f=e=>{e.preventDefault();doAction(b.dataset.a)};b.addEventListener('pointerdown',f)});
