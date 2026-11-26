@@ -1,0 +1,8 @@
+{
+  "name": "convenience-boss-3d",
+  "private": true,
+  "description": "편의점 사장 키우기 3D 빌드 (npm i && npm run build → ../convenience.html)",
+  "scripts": { "build": "node build.js" },
+  "dependencies": { "three": "0.160.0" },
+  "devDependencies": { "esbuild": "^0.21.5" }
+}
