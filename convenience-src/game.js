@@ -1,5 +1,5 @@
 import { createWorld } from './scene.js';
-let V3=null;
+let V3=null,padMsg=0;
 
 const fmt=n=>{n=Math.floor(n);const u=['','만','억','조','경','해'];if(n<10000)return n.toLocaleString();let i=0,v=n;while(v>=10000&&i<u.length-1){v/=10000;i++}return (v>=100?v.toFixed(0):v.toFixed(1))+u[i]};
 
@@ -95,6 +95,21 @@ const perTap=()=>(1+GOODS.reduce((a,g)=>a+lv(S.goods,g.id)*g.add,0))*mult();
 const rankIdx=()=>{let r=0;RANKS.forEach((x,i)=>{if(S.total>=x[0])r=i});return r};
 
 let tab='staff';
+function buy(id){
+  const [k,key]=id.split(':');let it,n,c;
+  if(k==='s'){it=STAFF.find(x=>x.id===key);n=lv(S.staff,key);c=cost(it,n);if(S.money<c)return false;S.money-=c;S.staff[key]=n+1}
+  else if(k==='g'){it=GOODS.find(x=>x.id===key);n=lv(S.goods,key);c=cost(it,n);if(S.money<c)return false;S.money-=c;S.goods[key]=n+1}
+  else{it=UPS.find(x=>x.id===key);if(S.ups[key]||S.money<it.cost)return false;S.money-=it.cost;S.ups[key]=1}
+  beep('buy');checkAch();render(1);return true;
+}
+function padList(){
+  const L=[];
+  STAFF.forEach((s,i)=>{const n=lv(S.staff,s.id),c=cost(s,n);L.push({id:'s:'+s.id,kind:'staff',icon:s.ic,name:s.nm,sub:'Lv.'+n+' · 초당 +'+fmt(s.ps*mult()),cost:'₩'+fmt(c),state:S.money>=c?'ok':'no'})});
+  GOODS.forEach((g,i)=>{const n=lv(S.goods,g.id),c=cost(g,n);L.push({id:'g:'+g.id,kind:'goods',icon:g.ic,name:g.nm.length>7?g.nm.slice(0,7):g.nm,sub:'Lv.'+n+' · '+g.ds,cost:'₩'+fmt(c),state:S.money>=c?'ok':'no'})});
+  UPS.forEach(u=>{if(S.ups[u.id])return;L.push({id:'u:'+u.id,kind:'up',icon:u.ic,name:u.nm,sub:u.ds.replace('모든 수입 ','수입 '),cost:'₩'+fmt(u.cost),state:S.money>=u.cost?'ok':'no'})});
+  return L;
+}
+const NAMES=()=>{const o={};STAFF.forEach(s=>{const n=lv(S.staff,s.id);o[s.id]=[0,1].map(i=>s.names[(Math.max(0,n-1-(1-i)*0)+i*1)%s.names.length]);o[s.id]=[s.names[0],s.names[1%s.names.length]]});return o};
 const $=id=>document.getElementById(id);
 function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(toast.h);toast.h=setTimeout(()=>t.style.display='none',2200)}
 function log(m){const l=$('log');l.textContent=m;l.style.opacity=1;clearTimeout(log.h);log.h=setTimeout(()=>l.style.opacity=0,1200)}
@@ -102,13 +117,13 @@ function log(m){const l=$('log');l.textContent=m;l.style.opacity=1;clearTimeout(
 function render(force){
   const ri=rankIdx(),nx=RANKS[ri+1];
   $('rank').textContent=RANKS[ri][1]+(S.fran?` · 🏆${S.fran}호`:'');
-  if(V3){V3.sync(S,ri);V3.setRate(perSec())}
+  if(V3){V3.sync(S,ri,NAMES());V3.setRate(perSec())}
   $('money').textContent='₩ '+fmt(S.money);
   $('rate').textContent=`초당 ₩${fmt(perSec())} · 클릭당 ₩${fmt(perTap())} · 수입배율 ×${mult().toFixed(2)}`;
   if(nx){const p=(S.total-RANKS[ri][0])/(nx[0]-RANKS[ri][0]);$('prog').style.width=Math.min(100,p*100)+'%';$('progt').textContent=`다음 등급 ${nx[1]} 까지 ₩${fmt(nx[0]-S.total)}`}
   else{$('prog').style.width='100%';$('progt').textContent='최고 등급 달성!'}
   const sig=tab+[...STAFF,...GOODS].map(i=>S.money>=cost(i,lv(S.staff,i.id)+lv(S.goods,i.id))?1:0).join('')+UPS.map(u=>S.ups[u.id]?2:S.money>=u.cost?1:0).join('')+S.total*0+(tab==='info'?Math.floor(S.total):'');
-  if(sig!==render.sig||force){render.sig=sig;renderList()}
+  if(sig!==render.sig||force){render.sig=sig;renderList();if(V3)V3.setPads(padList())}
 }
 function row(ic,nm,ds,btn,dis,fn){
   const d=document.createElement('div');d.className='item';
@@ -119,11 +134,11 @@ function row(ic,nm,ds,btn,dis,fn){
 function renderList(){
   const L=$('list');L.innerHTML='';
   if(tab==='staff')STAFF.forEach(s=>{const n=lv(S.staff,s.id),c=cost(s,n);
-    L.appendChild(row(s.ic,`${s.nm} Lv.${n}`,`${s.ds} · 초당 +${fmt(s.ps*mult())}${n?'<br>👋 최근 고용: '+s.names[(n-1)%s.names.length]+(n>s.names.length?' '+Math.ceil(n/s.names.length)+'호':''):''}`,`고용<br>₩${fmt(c)}`,S.money<c,()=>{if(S.money>=c){S.money-=c;S.staff[s.id]=n+1;beep('buy');checkAch();render(1)}}))});
+    L.appendChild(row(s.ic,`${s.nm} Lv.${n}`,`${s.ds} · 초당 +${fmt(s.ps*mult())}${n?'<br>👋 최근 고용: '+s.names[(n-1)%s.names.length]+(n>s.names.length?' '+Math.ceil(n/s.names.length)+'호':''):''}`,`고용<br>₩${fmt(c)}`,S.money<c,()=>buy('s:'+s.id)))});
   else if(tab==='goods')GOODS.forEach(g=>{const n=lv(S.goods,g.id),c=cost(g,n);
-    L.appendChild(row(g.ic,`${g.nm} Lv.${n}`,g.ds,`입고<br>₩${fmt(c)}`,S.money<c,()=>{if(S.money>=c){S.money-=c;S.goods[g.id]=n+1;beep('buy');checkAch();render(1)}}))});
+    L.appendChild(row(g.ic,`${g.nm} Lv.${n}`,g.ds,`입고<br>₩${fmt(c)}`,S.money<c,()=>buy('g:'+g.id)))});
   else if(tab==='store')UPS.forEach(u=>{const have=S.ups[u.id];
-    L.appendChild(row(u.ic,u.nm,u.ds,have?'완료':`구매<br>₩${fmt(u.cost)}`,have||S.money<u.cost,()=>{if(S.money>=u.cost){S.money-=u.cost;S.ups[u.id]=1;beep('buy');checkAch();render(1)}}))});
+    L.appendChild(row(u.ic,u.nm,u.ds,have?'완료':`구매<br>₩${fmt(u.cost)}`,have||S.money<u.cost,()=>buy('u:'+u.id)))});
   else if(tab==='ach'){
     ACH.forEach(a=>{const d=row(S.ach[a.id]?'🏆':'🔒',a.nm,a.ds+' · 수입 +2%',null);d.classList.add('ach');if(S.ach[a.id])d.classList.add('done');L.appendChild(d)});
   }
@@ -143,12 +158,12 @@ function renderList(){
 const MSG=['어서오세요!','봉투 필요하세요?','포인트 적립하시나요?','데워드릴까요?','영수증 드릴까요?','담배 뭐 드릴까요?','택배 찾으러 왔어요~'];
 function doTap(x,y){
   const g=perTap();S.money+=g;S.total+=g;S.taps++;
-  const v=$('view'),r=v.getBoundingClientRect();
+  const v=document.body,r={left:0,top:0,width:innerWidth,height:innerHeight};
   const f=document.createElement('div');f.className='float';f.textContent='+'+fmt(g);
-  f.style.left=((x==null?r.width/2:x-r.left)-14)+'px';f.style.top=((y==null?r.height*.55:y-r.top)-20)+'px';
+  f.style.left=((x==null?r.width/2+(Math.random()-.5)*60:x)-14)+'px';f.style.top=((y==null?r.height*.42:y)-20)+'px';
   v.appendChild(f);setTimeout(()=>f.remove(),1000);
   log('"'+MSG[Math.floor(Math.random()*MSG.length)]+'"');
-  beep('tap');if(V3)V3.tap();checkAch();render();
+  beep('tap');checkAch();render();
 }
 $('tap').addEventListener('click',e=>doTap(null,null));
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
@@ -207,8 +222,17 @@ setInterval(()=>{if(Math.random()<.5)spawn()},20000);
 render();
 lastRank=rankIdx();
 try{
-  V3=createWorld($('gl'),$('view'),{onTap:(x,y)=>doTap(x,y),onPay:()=>{beep('coin')}});
-  setTimeout(()=>{const l=$('load');l.style.opacity=0;setTimeout(()=>l.remove(),600)},600);
+  V3=createWorld($('gl'),$('view'),{onTap:()=>doTap(null,null),onPad:id=>{const ok=buy(id);if(!ok&&Date.now()-(padMsg||0)>1500){padMsg=Date.now();toast('💸 돈이 부족해요!')}return ok},onPay:()=>{beep('coin')}});
+  window.__V3=V3;setTimeout(()=>{const l=$('load');l.style.opacity=0;setTimeout(()=>l.remove(),600)},600);
 }catch(e){console.warn('3D 불가',e);$('view').style.display='none';$('nogl').style.display='block'}
-render();checkAch();setTimeout(daily,800);
+render(1);checkAch();setTimeout(daily,800);
+$('menu').onclick=()=>{$('sheet').classList.toggle('open');render(1)};$('close').onclick=()=>$('sheet').classList.remove('open');
+$('jump').onclick=()=>V3&&V3.jump();
+(function(){const j=$('joy'),k=$('knob');let id=null;const R=44;
+ const set=(e)=>{const r=j.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const d=Math.hypot(dx,dy);if(d>R){dx=dx/d*R;dy=dy/d*R}k.style.transform=`translate(${dx}px,${dy}px)`;if(V3)V3.setJoy(dx/R,-dy/R)};
+ j.addEventListener('pointerdown',e=>{id=e.pointerId;j.setPointerCapture(id);set(e);e.preventDefault()});
+ j.addEventListener('pointermove',e=>{if(e.pointerId===id)set(e)});
+ const end=e=>{if(e.pointerId!==id)return;id=null;k.style.transform='';if(V3)V3.setJoy(0,0)};
+ j.addEventListener('pointerup',end);j.addEventListener('pointercancel',end)})();
+setTimeout(()=>{const h=$('hint');h.style.opacity=0},9000);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('convenience-sw.js').catch(()=>{});
