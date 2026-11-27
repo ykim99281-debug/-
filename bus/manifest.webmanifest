@@ -1,0 +1,17 @@
+{
+  "name": "버스 운전교실 타이쿤",
+  "short_name": "버스타이쿤",
+  "description": "광주를 달리는 3D 버스 운전·경영 시뮬레이션",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0c111d",
+  "theme_color": "#0c111d",
+  "lang": "ko",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
