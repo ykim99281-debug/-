@@ -1,9 +1,9 @@
 {
-  "name": "별빛 공명 연대기",
-  "short_name": "별빛 공명",
+  "name": "공명 월드",
+  "short_name": "공명 월드",
   "description": "별빛 공명으로 싸우는 온라인 액션 RPG",
   "id": "rpg.html",
-  "start_url": "rpg.html?src=app",
+  "start_url": "world.html?src=app",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
