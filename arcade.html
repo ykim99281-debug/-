@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NEON ARCADE</title>
+<style>
+  :root{--bg:#07070f;--c1:#00f0ff;--c2:#ff2fb3;--c3:#ffe14d;--ui:#cfd8ff}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--ui);font-family:"Segoe UI",system-ui,"Noto Sans KR",sans-serif;
+    background-image:radial-gradient(ellipse at 20% -10%,rgba(255,47,179,.18),transparent 55%),radial-gradient(ellipse at 90% 10%,rgba(0,240,255,.15),transparent 50%),
+    linear-gradient(rgba(0,240,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,240,255,.05) 1px,transparent 1px);background-size:auto,auto,48px 48px,48px 48px;background-attachment:fixed}
+  header{text-align:center;padding:56px 16px 24px}
+  h1{margin:0;font-size:clamp(40px,10vw,80px);letter-spacing:.14em;font-weight:900;color:#fff;text-shadow:0 0 12px var(--c1),0 0 36px var(--c1),0 0 72px var(--c2)}
+  h1 span{color:var(--c2);text-shadow:0 0 12px var(--c2),0 0 36px var(--c2)}
+  header p{margin:10px 0 0;opacity:.7}
+  main{max-width:1000px;margin:0 auto;padding:0 16px 40px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+  .card{display:block;position:relative;text-decoration:none;color:inherit;border-radius:16px;overflow:hidden;background:rgba(15,15,35,.85);border:1.5px solid rgba(0,240,255,.35);
+    box-shadow:0 0 0 rgba(0,240,255,0);transition:transform .2s,box-shadow .2s,border-color .2s}
+  .card:hover,.card:focus-visible{transform:translateY(-6px);border-color:var(--c1);box-shadow:0 8px 40px rgba(0,240,255,.35);outline:none}
+  .thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#2a0f4a,#0a2a4a);display:flex;align-items:center;justify-content:center;font-size:64px;overflow:hidden}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s}
+  .card:hover .thumb img{transform:scale(1.06)}
+  .body{padding:14px 16px 16px}
+  .body h3{margin:0 0 6px;color:#fff;letter-spacing:.08em;font-size:20px}
+  .body p{margin:0 0 10px;font-size:14px;line-height:1.5;opacity:.75}
+  .tags{display:flex;gap:6px;flex-wrap:wrap}
+  .tag{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid rgba(255,255,255,.25);opacity:.8}
+  .best{position:absolute;right:10px;top:10px;font-size:12px;font-weight:700;background:rgba(0,0,0,.6);padding:3px 9px;border-radius:99px;color:var(--c3);border:1px solid rgba(255,225,77,.4)}
+  .new{position:absolute;left:10px;top:10px;font-size:11px;font-weight:900;letter-spacing:.1em;background:var(--c2);color:#fff;padding:3px 9px;border-radius:99px;box-shadow:0 0 14px var(--c2)}
+  .soon{opacity:.5;border-style:dashed;display:flex;align-items:center;justify-content:center;min-height:240px;text-align:center;padding:20px}
+  h2{margin:44px 0 12px;font-size:16px;letter-spacing:.2em;color:#fff;opacity:.85}
+  .log{list-style:none;margin:0;padding:0;border-left:2px solid rgba(0,240,255,.35)}
+  .log li{padding:6px 0 6px 16px;font-size:14px;opacity:.85;position:relative}
+  .log li::before{content:"";position:absolute;left:-6px;top:14px;width:10px;height:10px;border-radius:50%;background:var(--c1);box-shadow:0 0 10px var(--c1)}
+  .log time{color:var(--c3);font-weight:700;margin-right:10px;font-size:12px}
+  footer{text-align:center;padding:24px;font-size:12px;opacity:.4}
+</style>
+</head>
+<body>
+<header>
+  <h1>NEON <span>ARCADE</span></h1>
+  <p id="count">게임을 불러오는 중…</p>
+</header>
+<main>
+  <div class="grid" id="grid"></div>
+  <h2>UPDATES</h2>
+  <ul class="log" id="log"></ul>
+</main>
+<footer>새 게임은 <code>games.js</code>에 항목만 추가하면 자동으로 나타납니다</footer>
+<script src="games.js"></script>
+<script>
+(() => {
+  const fmt = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+  const isNew = d => (Date.now() - new Date(d)) / 864e5 < 7;
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const games = (window.GAMES || []).slice().sort((a, b) => b.added.localeCompare(a.added));
+  const grid = document.getElementById('grid');
+  grid.innerHTML = games.map(g => {
+    let best = 0; try { best = +localStorage.getItem(g.bestKey) || 0; } catch (e) {}
+    const bestTxt = best ? `🏆 ${g.unit === 'time' ? fmt(best) : best + (g.unit || '')}` : '';
+    return `<a class="card" href="${esc(g.url)}">
+      ${isNew(g.added) ? '<span class="new">NEW</span>' : ''}${bestTxt ? `<span class="best">${bestTxt}</span>` : ''}
+      <div class="thumb">${g.thumb ? `<img src="${esc(g.thumb)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${esc(g.emoji || '🎮')}'">` : esc(g.emoji || '🎮')}</div>
+      <div class="body"><h3>${esc(g.title)}</h3><p>${esc(g.desc)}</p><div class="tags">${(g.tags || []).map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div></div></a>`;
+  }).join('') + `<div class="card soon"><div>🚧<br><b>다음 게임 준비 중…</b></div></div>`;
+  document.getElementById('count').textContent = `${games.length}개의 게임 · 계속 업데이트됩니다`;
+  document.getElementById('log').innerHTML = (window.UPDATES || []).map(u => `<li><time>${esc(u.date)}</time>${esc(u.text)}</li>`).join('');
+})();
+</script>
+</body>
+</html>
