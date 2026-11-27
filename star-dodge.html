@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>별똥별 피하기</title>
+<style>
+  html,body{margin:0;height:100%;background:#0b1026;color:#fff;font-family:system-ui,sans-serif;overflow:hidden;touch-action:none}
+  canvas{display:block;margin:0 auto;background:linear-gradient(#0b1026,#1b2a5a);max-width:100%;max-height:100%}
+  #ui{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:rgba(5,8,24,.7)}
+  #ui h1{font-size:2.2rem;margin:.2em}
+  #ui p{opacity:.85;margin:.3em;line-height:1.5}
+  button{font-size:1.2rem;padding:.7em 1.6em;border:0;border-radius:2em;background:#ffd23f;color:#222;font-weight:700;margin-top:1em}
+</style>
+</head>
+<body>
+<canvas id="c" width="400" height="640"></canvas>
+<div id="ui">
+  <h1>⭐ 별똥별 피하기</h1>
+  <p id="msg">좌우로 움직여 바위를 피하고<br>별을 모으세요!<br><small>← → / 화면 터치·드래그</small></p>
+  <button id="start">시작</button>
+</div>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const W=cv.width,H=cv.height;
+const ui=document.getElementById('ui'),msg=document.getElementById('msg');
+let player,objs,score,lives,t,spawn,running=false,best=+(localStorage.getItem('sd_best')||0),keys={},target=null;
+
+function reset(){
+  player={x:W/2,y:H-60,r:18};objs=[];score=0;lives=3;t=0;spawn=0;target=null;
+}
+function fit(){
+  const s=Math.min(innerWidth/W,innerHeight/H);
+  cv.style.width=W*s+'px';cv.style.height=H*s+'px';
+}
+addEventListener('resize',fit);fit();
+
+addEventListener('keydown',e=>{keys[e.key]=true});
+addEventListener('keyup',e=>{keys[e.key]=false});
+function pointer(e){
+  const r=cv.getBoundingClientRect();
+  const p=e.touches?e.touches[0]:e;
+  target=(p.clientX-r.left)/r.width*W;
+}
+cv.addEventListener('pointerdown',pointer);
+cv.addEventListener('pointermove',e=>{if(e.buttons||e.pointerType==='touch')pointer(e)});
+cv.addEventListener('touchmove',e=>{e.preventDefault();pointer(e)},{passive:false});
+
+document.getElementById('start').onclick=()=>{reset();running=true;ui.style.display='none';last=performance.now();requestAnimationFrame(loop)};
+
+function update(dt){
+  t+=dt;
+  const sp=320;
+  if(keys.ArrowLeft||keys.a){player.x-=sp*dt;target=null}
+  if(keys.ArrowRight||keys.d){player.x+=sp*dt;target=null}
+  if(target!==null){const d=target-player.x;player.x+=Math.sign(d)*Math.min(Math.abs(d),sp*1.5*dt)}
+  player.x=Math.max(player.r,Math.min(W-player.r,player.x));
+
+  spawn-=dt;
+  if(spawn<=0){
+    const lvl=1+t/20;
+    spawn=Math.max(.25,.8/lvl);
+    const star=Math.random()<.25;
+    objs.push({x:20+Math.random()*(W-40),y:-30,r:star?12:14+Math.random()*14,vy:(star?150:150+Math.random()*120)*Math.min(lvl,2.5),star,rot:0});
+  }
+  for(const o of objs){
+    o.y+=o.vy*dt;o.rot+=dt*2;
+    const dx=o.x-player.x,dy=o.y-player.y;
+    if(!o.dead&&dx*dx+dy*dy<(o.r+player.r-4)**2){
+      o.dead=true;
+      if(o.star)score+=10;else{lives--;if(lives<=0)return gameOver()}
+    }
+  }
+  objs=objs.filter(o=>!o.dead&&o.y<H+40);
+  score+=dt; // survival points
+}
+function star(x,y,r,rot){
+  ctx.beginPath();
+  for(let i=0;i<10;i++){const a=rot+i*Math.PI/5-Math.PI/2,rr=i%2?r*.45:r;ctx.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr)}
+  ctx.closePath();ctx.fill();
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#fff';
+  for(let i=0;i<40;i++){ctx.globalAlpha=.3+.4*((i*37)%10)/10;ctx.fillRect((i*97)%W,(i*53+t*30*(1+i%3))%H,2,2)}
+  ctx.globalAlpha=1;
+  for(const o of objs){
+    if(o.star){ctx.fillStyle='#ffd23f';star(o.x,o.y,o.r,o.rot)}
+    else{ctx.fillStyle='#8a6f5a';ctx.beginPath();ctx.arc(o.x,o.y,o.r,0,7);ctx.fill();ctx.fillStyle='#6b533f';ctx.beginPath();ctx.arc(o.x-o.r*.3,o.y-o.r*.2,o.r*.3,0,7);ctx.fill()}
+  }
+  // player rocket
+  ctx.fillStyle='#4fc3f7';ctx.beginPath();ctx.moveTo(player.x,player.y-player.r-6);ctx.lineTo(player.x+player.r,player.y+player.r);ctx.lineTo(player.x-player.r,player.y+player.r);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#ff7043';ctx.beginPath();ctx.moveTo(player.x-6,player.y+player.r);ctx.lineTo(player.x+6,player.y+player.r);ctx.lineTo(player.x,player.y+player.r+8+Math.random()*8);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='bold 20px system-ui';ctx.textAlign='left';
+  ctx.fillText('점수 '+Math.floor(score),12,28);
+  ctx.textAlign='right';ctx.fillText('❤'.repeat(lives),W-12,28);
+}
+function gameOver(){
+  running=false;
+  const s=Math.floor(score);
+  if(s>best){best=s;try{localStorage.setItem('sd_best',best)}catch(e){}}
+  msg.innerHTML='게임 오버!<br>점수 <b>'+s+'</b> · 최고 <b>'+best+'</b>';
+  document.querySelector('#ui h1').textContent='💥';
+  document.getElementById('start').textContent='다시 하기';
+  ui.style.display='flex';
+}
+let last=0;
+function loop(now){
+  if(!running)return;
+  const dt=Math.min((now-last)/1000,.05);last=now;
+  update(dt);if(running)draw();
+  requestAnimationFrame(loop);
+}
+reset();draw();
+</script>
+</body>
+</html>

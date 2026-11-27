@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>라떼 하우스 타이쿤</title>
+<meta name="description" content="작은 골목 카페를 전국 체인으로 키우는 3D 타이쿤 게임">
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1219;--panel:#171b26;--line:rgba(255,255,255,.1);--fg:#f3f1ea;--dim:#a7acbd;--gold:#ffd166;--mint:#5eead4;--coral:#ff7a6b;color-scheme:dark;
+ --fd:'Jua','Noto Sans KR',system-ui,sans-serif;--fb:'Noto Sans KR',system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--fb);line-height:1.6;-webkit-text-size-adjust:100%}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px))}
+.hero{position:relative;min-height:min(86vh,640px);display:flex;align-items:flex-end;background:#0b0e14 url(tycoon-cover.jpg) center/cover;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,18,25,.15) 0%,rgba(15,18,25,.55) 55%,var(--bg) 100%);z-index:-1}
+.hero .wrap{padding-block:40px 36px;width:100%}
+.tag{display:inline-flex;gap:8px;align-items:center;font-size:12px;letter-spacing:.14em;color:var(--mint);text-transform:uppercase}
+.tag b{padding:3px 9px;border-radius:99px;background:rgba(94,234,212,.15);letter-spacing:.04em;text-transform:none;font-weight:700}
+h1{font-family:var(--fd);font-weight:400;font-size:clamp(44px,9vw,92px);line-height:1;margin:10px 0 12px;letter-spacing:-.01em;text-wrap:balance}
+h1 em{font-style:normal;color:var(--gold)}
+.lead{max-width:34em;color:#d8d9e0;font-size:clamp(15px,2.2vw,18px);margin:0 0 22px}
+.cta{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 26px;border-radius:14px;font-family:var(--fd);font-size:22px;text-decoration:none;color:#2a1a08;background:linear-gradient(135deg,#ffd166,#ff9f68);transition:transform .12s,filter .12s}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.07)}
+.btn.alt{background:rgba(255,255,255,.1);color:var(--fg);font-family:var(--fb);font-size:15px;font-weight:500;border:1px solid var(--line)}
+.btn:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
+section{padding-block:44px 0}
+h2{font-family:var(--fd);font-weight:400;font-size:30px;margin:0 0 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.f{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.f i{font-style:normal;font-size:26px}
+.f h3{margin:8px 0 4px;font-size:16px}
+.f p{margin:0;color:var(--dim);font-size:13.5px}
+.log{display:grid;gap:14px}
+.rel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.rel header{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px}
+.rel .v{font-family:var(--fd);font-size:22px;color:var(--gold)}
+.rel .t{font-weight:700}
+.rel time{margin-left:auto;color:var(--dim);font-size:13px;font-variant-numeric:tabular-nums}
+.rel ul{margin:0;padding-left:1.2em;color:#d3d5de;font-size:14px}
+.rel.new{border-color:rgba(94,234,212,.45)}
+.new-b{font-size:11px;padding:2px 8px;border-radius:99px;background:var(--mint);color:#06231f;font-weight:700}
+.road{display:flex;flex-wrap:wrap;gap:8px}
+.road span{padding:8px 14px;border-radius:99px;border:1px dashed rgba(255,255,255,.22);color:var(--dim);font-size:14px}
+.how{columns:2 260px;gap:24px;color:var(--dim);font-size:14px}
+.how div{break-inside:avoid;padding:4px 0}.how b{color:var(--fg);font-weight:500}
+footer{padding-block:48px max(40px,env(safe-area-inset-bottom,0px));color:var(--dim);font-size:13px}
+#state{font-size:13px;color:var(--dim);margin-top:12px}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <div class="tag">CAFÉ TYCOON 3D <b id="ver">v–</b></div>
+  <h1>라떼 <em>하우스</em></h1>
+  <p class="lead">작은 골목 카페에서 시작해 전국 체인까지. 가구를 배치하고, 바리스타를 고용하고, 별 5개를 노려 보세요. 설치 없이 브라우저에서 바로 플레이하고, 인터넷이 끊겨도 이어서 할 수 있어요.</p>
+  <div class="cta"><a class="btn" href="tycoon3d.html">▶ 게임 시작</a><a class="btn alt" href="#updates">업데이트 소식</a></div>
+  <div id="state"></div>
+</div></header>
+
+<main class="wrap">
+  <section><h2>이런 게임이에요</h2>
+    <div class="grid">
+      <div class="f"><i>🏪</i><h3>3D 카페 꾸미기</h3><p>가구 12종 이상, 테라스와 매장 확장, 낮과 밤이 바뀌는 도시.</p></div>
+      <div class="f"><i>👩‍🍳</i><h3>직원 키우기</h3><p>바리스타 교육, 파티시에 고용으로 더 빠르고 비싸게.</p></div>
+      <div class="f"><i>🌧</i><h3>날씨와 이벤트</h3><p>비 오는 날, 동네 축제. 매일 다른 하루가 열려요.</p></div>
+      <div class="f"><i>🏬</i><h3>프랜차이즈</h3><p>지점을 열어 자동 수익을 얻고 전국 체인을 완성하세요.</p></div>
+    </div>
+  </section>
+
+  <section id="updates"><h2>업데이트 노트</h2><div class="log" id="log"></div></section>
+  <section><h2>다음 업데이트 예정</h2><div class="road" id="road"></div></section>
+
+  <section><h2>조작법</h2>
+    <div class="how">
+      <div><b>좌클릭</b> 배치 · 확정</div><div><b>드래그</b> 카메라 회전</div>
+      <div><b>우클릭 드래그 · WASD</b> 이동</div><div><b>휠 · 핀치</b> 확대 / 축소</div>
+      <div><b>R · Esc</b> 회전 · 취소</div><div><b>Space</b> 일시정지</div>
+    </div>
+  </section>
+</main>
+<footer><div class="wrap">라떼 하우스 타이쿤 · 진행 상황은 이 브라우저에 자동 저장돼요.</div></footer>
+
+<script>
+const FALLBACK={"version":"1.3.0","entries":[{"version":"1.3.0","date":"2026-11-26","title":"대형 업데이트","items":["테라스, 지점, 직원 교육, 도전과제, 배경음악"]}],"roadmap":["계절 이벤트"]};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function render(d){
+  document.getElementById('ver').textContent='v'+d.version;
+  document.getElementById('log').innerHTML=d.entries.map((e,i)=>`<article class="rel ${i?'':'new'}"><header><span class="v">v${esc(e.version)}</span><span class="t">${esc(e.title)}</span>${i?'':'<span class="new-b">NEW</span>'}<time>${esc(e.date)}</time></header><ul>${e.items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></article>`).join('');
+  document.getElementById('road').innerHTML=(d.roadmap||[]).map(x=>`<span>${esc(x)}</span>`).join('');
+}
+render(FALLBACK);
+fetch('tycoon-updates.json',{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject()).then(render).catch(()=>{});
+try{const s=JSON.parse(localStorage.getItem('latte-house-3d-v1')||'null');if(s&&s.S)document.getElementById('state').textContent=`저장된 게임: DAY ${s.S.day} · 서빙 ${(s.S.served||0).toLocaleString('ko-KR')}명 · 평점 ${(+s.S.rep||0).toFixed(1)} — 이어하기로 계속할 수 있어요`;}catch(e){}
+if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('tycoon-sw.js',{scope:'./tycoon'}).catch(()=>{});
+</script>
+</body>
+</html>

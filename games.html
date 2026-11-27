@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>게임 허브</title>
+<style>
+  :root{--bg:#05060f;--fg:#eef;--mut:#8a93b8;--c:#37f0ff;--m:#ff3df2;--card:#0d1030}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(ellipse at top,#14184a,var(--bg) 60%) fixed;color:var(--fg);font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif;min-height:100vh}
+  main{max-width:760px;margin:0 auto;padding:28px 16px 60px}
+  h1{margin:.2em 0;font-size:clamp(2rem,8vw,3rem);letter-spacing:.06em;background:linear-gradient(90deg,var(--c),var(--m));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--mut);margin:0 0 1.6em}
+  h2{font-size:1.05rem;color:var(--mut);letter-spacing:.12em;margin:2em 0 .8em;text-transform:uppercase}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+  a.card{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid #fff2;border-radius:18px;padding:18px;position:relative;transition:.15s;overflow:hidden}
+  a.card:hover{transform:translateY(-3px);border-color:var(--cc);box-shadow:0 0 28px color-mix(in srgb,var(--cc) 35%,transparent)}
+  .ic{font-size:2.4rem}
+  .t{font-weight:800;font-size:1.2rem;margin:.3em 0 .2em;color:var(--cc)}
+  .d{color:var(--mut);font-size:.9rem;line-height:1.5}
+  .meta{margin-top:.8em;font-size:.75rem;color:var(--mut);display:flex;gap:.5em;flex-wrap:wrap}
+  .tag{border:1px solid #fff3;border-radius:2em;padding:.1em .7em}
+  .new{position:absolute;top:12px;right:12px;background:var(--m);color:#fff;font-weight:800;font-size:.7rem;padding:.2em .6em;border-radius:2em}
+  .log{border-left:2px solid #fff2;margin-left:6px}
+  .u{padding:0 0 1.2em 16px;position:relative}
+  .u::before{content:"";position:absolute;left:-6px;top:.35em;width:10px;height:10px;border-radius:50%;background:var(--c)}
+  .u b{color:var(--c)} .u small{color:var(--mut);margin-left:.5em}
+  .u ul{margin:.4em 0 0;padding-left:1.2em;color:#cdd3ee;font-size:.92rem;line-height:1.6}
+  .soon{display:flex;gap:.5em;flex-wrap:wrap}
+  .soon span{border:1px dashed #fff4;border-radius:2em;padding:.3em .9em;color:var(--mut);font-size:.9rem}
+  footer{margin-top:3em;color:var(--mut);font-size:.8rem}
+</style>
+</head>
+<body>
+<main>
+  <h1>GAME HUB</h1>
+  <p class="sub" id="sub"></p>
+  <h2>Games</h2><div class="grid" id="games"></div>
+  <h2>업데이트 소식</h2><div class="log" id="log"></div>
+  <h2>준비 중</h2><div class="soon" id="soon"></div>
+  <footer>새 게임·업데이트는 <code>games-data.js</code>만 수정하면 이 페이지에 반영됩니다.</footer>
+</main>
+<script src="games-data.js"></script>
+<script>
+const D=window.GAMES_DATA||{games:[],updates:[],soon:[]};
+const byId=Object.fromEntries(D.games.map(g=>[g.id,g]));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const days=d=>(Date.now()-new Date(d))/864e5;
+const latest=D.updates[0];
+document.getElementById('sub').textContent=latest?`최근 업데이트 ${latest.date} · ${byId[latest.game]?.title||latest.game} v${latest.version}`:'';
+document.getElementById('games').innerHTML=D.games.map(g=>`
+  <a class="card" href="${esc(g.url)}" style="--cc:${esc(g.color)}">
+    ${days(g.updated)<=7?'<span class="new">UPDATED</span>':''}
+    <div class="ic">${g.icon}</div><div class="t">${esc(g.title)}</div>
+    <div class="d">${esc(g.desc)}</div>
+    <div class="meta"><span>v${esc(g.version)}</span><span>${esc(g.updated)}</span>${g.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+  </a>`).join('');
+document.getElementById('log').innerHTML=D.updates.map(u=>`
+  <div class="u"><b>${esc(byId[u.game]?.title||u.game)} v${esc(u.version)}</b><small>${esc(u.date)}</small>
+  <ul>${u.notes.map(n=>`<li>${esc(n)}</li>`).join('')}</ul></div>`).join('');
+document.getElementById('soon').innerHTML=(D.soon||[]).map(s=>`<span>${esc(s)}</span>`).join('');
+</script>
+</body>
+</html>
