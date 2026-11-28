@@ -4,6 +4,17 @@
    ============================================================ */
 window.GAMES = [
   {
+    id: 'spike-rush',
+    title: 'SPIKE RUSH',
+    emoji: '🎯',
+    desc: '5v5 택티컬 슈터. 요원 4종 · 능력 · 스파이크 설치/해체 · 구매 단계 · 봇 대전.',
+    tags: ['슈터', '3D', '모바일'],
+    url: 'spike-rush.html',
+    thumb: 'arcade-thumbs/spike-rush.jpg',
+    added: '2026-11-28',
+    bestKey: 'sr_wins', unit: '승',
+  },
+  {
     id: 'hook-swing',
     title: 'HOOK SWING',
     emoji: '🕸️',
@@ -28,6 +39,7 @@ window.GAMES = [
 ];
 
 window.UPDATES = [
+  { date: '2026-11-28', text: 'SPIKE RUSH 출시! 발로란트풍 5v5 3D 택티컬 슈터' },
   { date: '2026-11-26', text: '게임 허브 오픈! HOOK SWING, NEON SURVIVOR 수록' },
   { date: '2026-11-26', text: 'NEON SURVIVOR: 대시 · 콤보 · 연쇄 번개 · 유도 미사일 · 습격 이벤트 추가' },
 ];
