@@ -4,6 +4,16 @@
    ============================================================ */
 window.GAMES = [
   {
+    id: 'brainrot-heist',
+    title: '브레인롯 훔치기',
+    emoji: '🦈',
+    desc: '컨베이어에서 브레인롯을 사 모으고, 라이벌 기지에서 훔치고, 도둑은 막아라! 변이·환생·도감까지.',
+    tags: ['방치형', '수집', '모바일'],
+    url: 'brainrot-heist.html',
+    added: '2026-11-28',
+    bestKey: 'brainrot_heist_best', unit: '점',
+  },
+  {
     id: 'zone-royale',
     title: 'ZONE ROYALE',
     emoji: '🔫',
@@ -48,6 +58,7 @@ window.GAMES = [
 ];
 
 window.UPDATES = [
+  { date: '2026-11-28', text: '신작 브레인롯 훔치기 출시' },
   { date: '2026-11-28', text: '신작 ZONE ROYALE 출시 — 배틀로얄 슈터' },
   { date: '2026-11-28', text: '신작 MERGE POP 출시 — 과일 합치기 퍼즐' },
   { date: '2026-11-26', text: '게임 허브 오픈! HOOK SWING, NEON SURVIVOR 수록' },

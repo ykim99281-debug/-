@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>브레인롯 훔치기</title>
+<style>
+  :root{--bg:#120a24;--pn:#1f1440;--ac:#ff3df0;--ac2:#38f2ff;--gold:#ffd23f}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:#fff;font-family:system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;overflow:hidden;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+  #app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 6px) 10px 10px;gap:8px;background:radial-gradient(circle at 50% -10%,#3a1a6e,transparent 60%)}
+  #top{display:flex;gap:8px}
+  .box{background:var(--pn);border:2px solid #3b2a70;border-radius:14px;padding:8px 12px}
+  #money{flex:1.4}#money b{font-size:24px;color:var(--gold);display:block}#money small,#inc small{opacity:.6;font-size:11px}
+  #inc{flex:1;text-align:right}#inc b{font-size:17px;color:var(--ac2);display:block}
+  #lane{position:relative;height:118px;border-radius:14px;overflow:hidden;background:repeating-linear-gradient(90deg,#241650 0 22px,#1d1242 22px 44px);border:2px solid #3b2a70;flex:none}
+  #lane:before{content:"▶ 컨베이어 · 터치해서 구매";position:absolute;top:4px;left:8px;font-size:10px;opacity:.5;z-index:2}
+  .cv{position:absolute;top:18px;width:84px;height:92px;border-radius:12px;background:#2c1d5c;border:3px solid;text-align:center;padding-top:4px;cursor:pointer;will-change:transform}
+  .cv .e{font-size:36px;line-height:42px}.cv .n{font-size:10px;line-height:11px;height:22px;overflow:hidden;opacity:.9;padding:0 2px}.cv .p{font-size:12px;font-weight:800;color:var(--gold)}
+  #grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;align-content:start;overflow-y:auto;padding-bottom:4px}
+  .sl{position:relative;aspect-ratio:1/1.05;border-radius:14px;background:var(--pn);border:3px solid #3b2a70;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2px;overflow:hidden}
+  .sl .e{font-size:38px;line-height:44px}.sl .n{font-size:10px;line-height:11px;opacity:.9;padding:0 3px}.sl .i{font-size:12px;font-weight:800;color:var(--ac2)}
+  .sl .lv{position:absolute;top:3px;left:5px;font-size:10px;font-weight:800;background:#0006;border-radius:6px;padding:0 5px}
+  .sl .mu{position:absolute;top:3px;right:5px;font-size:10px;font-weight:800}
+  .sl.empty{border-style:dashed;opacity:.5;font-size:12px}
+  .sl.lock{opacity:.7;border-style:dashed;color:var(--gold);font-weight:800;font-size:13px}
+  .sl.thief{animation:blink .25s infinite;border-color:#f33}
+  @keyframes blink{50%{background:#8a1020}}
+  .th{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:54px;background:#0008}
+  #bar{display:flex;gap:8px;flex:none}
+  .btn{flex:1;font:inherit;font-weight:800;font-size:15px;padding:13px 4px;border:0;border-radius:12px;color:#fff;background:linear-gradient(180deg,#ff3df0,#a21caf);box-shadow:0 4px 0 #5b0f66}
+  .btn.b2{background:linear-gradient(180deg,#38f2ff,#0891b2);box-shadow:0 4px 0 #064e5e;color:#022}
+  .btn.b3{background:linear-gradient(180deg,#ffd23f,#d99a00);box-shadow:0 4px 0 #805b00;color:#321}
+  .btn:active{transform:translateY(3px);box-shadow:none}.btn:disabled{filter:grayscale(1) brightness(.6)}
+  #toast{position:fixed;left:50%;top:22%;transform:translateX(-50%);background:#000c;padding:10px 18px;border-radius:20px;font-weight:700;z-index:30;pointer-events:none;opacity:0;transition:opacity .2s;text-align:center;max-width:90%}
+  .md{position:fixed;inset:0;background:#000a;z-index:20;display:none;align-items:center;justify-content:center;padding:14px}
+  .md>div{background:var(--pn);border:2px solid #5a3fb0;border-radius:18px;padding:16px;width:100%;max-width:440px;max-height:88%;overflow-y:auto}
+  .md h2{margin:0 0 10px;font-size:19px}
+  .row{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;background:#0003;margin-bottom:6px}
+  .row .e{font-size:28px}.row .t{flex:1;font-size:13px}.row .t small{opacity:.6;display:block}
+  .row button{font:inherit;font-weight:800;border:0;border-radius:8px;padding:8px 12px;background:var(--ac);color:#fff}
+  .x{float:right;background:none!important;color:#fff!important;font-size:20px;padding:0 4px!important}
+  .rv{border:2px solid #3b2a70;border-radius:12px;padding:8px;margin-bottom:10px}
+  .rv h3{margin:0 0 6px;font-size:14px}
+  #sg{text-align:center}#sgbar{position:relative;height:34px;background:#0006;border-radius:10px;overflow:hidden;margin:14px 0}
+  #sgz{position:absolute;top:0;bottom:0;background:#22c55e88;border-left:2px solid #22c55e;border-right:2px solid #22c55e}
+  #sgc{position:absolute;top:0;bottom:0;width:6px;background:#fff;box-shadow:0 0 8px #fff}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <div class="box" id="money"><small>💰 보유 금액</small><b id="mv">0</b></div>
+    <div class="box" id="inc"><small>초당 수입 · 환생 <span id="rb">0</span>회</small><b id="iv">0/s</b></div>
+  </div>
+  <div id="lane"></div>
+  <div id="grid"></div>
+  <div id="bar">
+    <button class="btn b2" id="bSteal">🥷 훔치러 가기</button>
+    <button class="btn b3" id="bDex">📖 도감</button>
+    <button class="btn" id="bReb">♻ 환생</button>
+  </div>
+</div>
+<div id="toast"></div>
+<div class="md" id="mSteal"><div><button class="row x" onclick="closeM()" style="background:none">✕</button><h2>🥷 라이벌 기지 침투</h2><div id="rvs"></div></div></div>
+<div class="md" id="mGame"><div id="sg"><h2 id="sgt">잠입 중...</h2><p style="font-size:13px;opacity:.8;margin:0">경비가 졸 때(초록 구간) 정확히 눌러라!</p><div id="sgbar"><div id="sgz"></div><div id="sgc"></div></div><button class="btn" id="sgb">지금!</button></div></div>
+<div class="md" id="mSlot"><div id="slc"></div></div>
+<div class="md" id="mDex"><div><button class="row x" onclick="closeM()" style="background:none">✕</button><h2>📖 브레인롯 도감 <small id="dxc"></small></h2><div id="dxl"></div></div></div>
+<div class="md" id="mReb"><div id="rbc"></div></div>
+<script>
+const RAR=[{n:'일반',c:'#9e9e9e',w:50,p:25},{n:'희귀',c:'#42a5f5',w:28,p:100},{n:'영웅',c:'#ab47bc',w:13,p:400},{n:'전설',c:'#ffb300',w:6,p:1500},{n:'신화',c:'#ff1744',w:2.4,p:6000},{n:'시크릿',c:'#00e5ff',w:.6,p:25000}];
+const CH=[
+ ['🪵','퉁퉁퉁 사후르',0],['🐸','브르르 스타피림',0],['☕','카푸치노 아사시노',0],
+ ['🐒','침판지니 바나니니',1],['🦈','트랄랄레로 트랄랄라',1],['🐘','리릴리 라릴라',1],
+ ['🐊','봄바르디로 크로커딜로',2],['🦍','글로르비오 프루티',2],['🐟','발레리나 카푸치나',2],
+ ['🐄','라 바카 사투르노',3],['🐙','탈라탈라 문어',3],['🐌','스네일 로코',3],
+ ['🔱','네프투노 뇌절왕',4],['👑','킹 브레인롯',4],
+ ['🌌','코스믹 뇌절',5],['🧠','갓 브레인롯',5],['💎','다이아 트랄라',5]
+].map(a=>({e:a[0],n:a[1],r:a[2],p:RAR[a[2]].p,i:RAR[a[2]].p/12}));
+const MUT=[{n:'',c:'',pm:1,im:1},{n:'GOLD',c:'#ffd23f',pm:2,im:2.5},{n:'DIAMOND',c:'#38f2ff',pm:4,im:6},{n:'RAINBOW',c:'#ff3df0',pm:8,im:15}];
+const SLOTCOST=[0,0,0,0,0,0,800,3000,12000,50000,200000,800000];
+const KEY='brainrot_heist_v1';
+let S;
+function fresh(r=0,mult=1,dex={}){return{money:100,slots:Array(12).fill(null),nslots:6,rebirth:r,mult,dex,last:Date.now(),best:0}}
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!S.slots)S=fresh();
+const $=id=>document.getElementById(id);
+function fmt(n){if(n<1e3)return Math.floor(n)+'';const u=['K','M','B','T','Qa'];let i=-1;while(n>=1e3&&i<u.length-1){n/=1e3;i++}return(n<10?n.toFixed(2):n<100?n.toFixed(1):Math.floor(n))+u[i]}
+const val=b=>CH[b.id].p*MUT[b.mut].pm;
+const inc=b=>CH[b.id].i*MUT[b.mut].im*(1+.5*(b.lvl-1))*S.mult;
+const upc=b=>Math.floor(val(b)*.8*b.lvl);
+function totalInc(){let t=0;for(const b of S.slots)if(b)t+=inc(b);return t}
+let ac;function beep(f,d=.07,t='triangle',v=.06){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>t.style.opacity=0,1400)}
+function save(){S.last=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function pickCh(boost=1){
+  let tot=0;const w=RAR.map((r,i)=>(i>=3?r.w*boost:r.w));w.forEach(x=>tot+=x);let x=Math.random()*tot,ri=0;
+  for(;ri<w.length;ri++){x-=w[ri];if(x<=0)break}ri=Math.min(ri,5);
+  const list=CH.map((c,i)=>i).filter(i=>CH[i].r===ri);return list[Math.random()*list.length|0];
+}
+function pickMut(){const r=Math.random();return r<.015?3:r<.055?2:r<.155?1:0}
+// ---- offline
+(()=>{const dt=Math.min(3600,(Date.now()-S.last)/1000);if(dt>30){const g=totalInc()*dt*.5;if(g>0){S.money+=g;setTimeout(()=>toast('오프라인 수입 +$'+fmt(g)),500)}}})();
+// ---- UI
+function render(){
+  $('rb').textContent=S.rebirth;
+  const g=$('grid');g.innerHTML='';
+  S.slots.forEach((b,i)=>{
+    const d=document.createElement('div');
+    if(i>=S.nslots){d.className='sl lock';d.innerHTML=i===S.nslots?`🔒<br>$${fmt(SLOTCOST[i])}`:'🔒';if(i===S.nslots)d.onclick=()=>{if(S.money>=SLOTCOST[i]){S.money-=SLOTCOST[i];S.nslots++;beep(800);render()}else toast('돈이 부족해!')}}
+    else if(!b){d.className='sl empty';d.textContent='빈 자리'}
+    else{const c=CH[b.id],m=MUT[b.mut];d.className='sl';d.style.borderColor=RAR[c.r].c;if(m.c)d.style.boxShadow=`inset 0 0 18px ${m.c}88`;
+      d.innerHTML=`<span class="lv">Lv${b.lvl}</span>${m.n?`<span class="mu" style="color:${m.c}">${m.n}</span>`:''}<div class="e">${c.e}</div><div class="n">${c.n}</div><div class="i">+$${fmt(inc(b))}/s</div>`;
+      d.onclick=()=>slotMenu(i);d.id='sl'+i}
+    g.appendChild(d);
+  });
+}
+function slotMenu(i){
+  const b=S.slots[i];if(!b)return;const c=CH[b.id],m=MUT[b.mut];
+  $('slc').innerHTML=`<div class="row"><div class="e">${c.e}</div><div class="t"><b>${c.n}</b> ${m.n}<small>${RAR[c.r].n} · Lv${b.lvl} · +$${fmt(inc(b))}/s</small></div></div>
+   <div style="display:flex;gap:8px"><button class="btn b3" ${b.lvl>=10?'disabled':''} onclick="upgrade(${i})">⬆ 강화 $${fmt(upc(b))}</button><button class="btn" onclick="sell(${i})">판매 $${fmt(val(b)*.5*b.lvl)}</button></div><button class="btn b2" style="width:100%;margin-top:8px" onclick="closeM()">닫기</button>`;
+  $('mSlot').style.display='flex';
+}
+function upgrade(i){const b=S.slots[i];if(!b||b.lvl>=10)return;const c=upc(b);if(S.money<c){toast('돈이 부족해!');return}S.money-=c;b.lvl++;beep(900);closeM();render()}
+function sell(i){const b=S.slots[i];if(!b)return;S.money+=val(b)*.5*b.lvl;S.slots[i]=null;beep(300);closeM();render()}
+function closeM(){document.querySelectorAll('.md').forEach(m=>m.style.display='none')}
+document.querySelectorAll('.md').forEach(m=>m.addEventListener('pointerdown',e=>{if(e.target===m&&m.id!=='mGame')closeM()}));
+function freeIdx(){for(let i=0;i<S.nslots;i++)if(!S.slots[i])return i;return -1}
+function give(b){const i=freeIdx();if(i<0)return false;S.slots[i]=b;S.dex[b.id]=1;render();return true}
+// ---- conveyor
+const lane=$('lane');let cvs=[],spawnT=0;
+function spawn(){
+  const id=pickCh(1+S.rebirth*.15),mut=pickMut();const price=Math.floor(CH[id].p*MUT[mut].pm);
+  const el=document.createElement('div');el.className='cv';const c=CH[id],m=MUT[mut];
+  el.style.borderColor=m.c||RAR[c.r].c;if(m.c)el.style.boxShadow=`0 0 14px ${m.c}`;
+  el.innerHTML=`<div class="e">${c.e}</div><div class="n">${m.n?`<b style="color:${m.c}">${m.n}</b> `:''}${c.n}</div><div class="p">$${fmt(price)}</div>`;
+  const o={el,id,mut,price,x:lane.clientWidth+10};
+  el.addEventListener('pointerdown',()=>buy(o));lane.appendChild(el);cvs.push(o);
+}
+function buy(o){
+  if(o.sold)return;
+  if(S.money<o.price){toast('💸 돈이 부족해!');beep(150,.1,'square');return}
+  if(freeIdx()<0){toast('자리가 없어! 판매하거나 칸을 늘려봐');return}
+  S.money-=o.price;give({id:o.id,mut:o.mut,lvl:1});o.sold=1;o.el.remove();beep(600+CH[o.id].r*120,.12);
+  if(CH[o.id].r>=3||o.mut>=2)toast(`🎉 ${MUT[o.mut].n} ${CH[o.id].n} 획득!`);
+}
+// ---- rivals / steal
+const RN=['Rex','Mina','Joon'];
+let rivals=[],rivalT=0;
+function genRivals(){rivals=RN.map(n=>({n,cd:0,list:Array.from({length:4+(Math.random()*3|0)},()=>({id:pickCh(1.6+S.rebirth*.2),mut:pickMut(),lvl:1}))}))}
+function openSteal(){
+  const box=$('rvs');box.innerHTML='';
+  rivals.forEach((rv,ri)=>{
+    const d=document.createElement('div');d.className='rv';d.innerHTML=`<h3>🏠 ${rv.n}의 기지 ${rv.cd>0?'<span style="color:#f66">(경계 중 '+Math.ceil(rv.cd)+'s)</span>':''}</h3>`;
+    rv.list.forEach((b,bi)=>{const c=CH[b.id];const r=document.createElement('div');r.className='row';r.style.border='2px solid '+RAR[c.r].c;
+      r.innerHTML=`<div class="e">${c.e}</div><div class="t">${MUT[b.mut].n} ${c.n}<small>${RAR[c.r].n} · +$${fmt(inc(b))}/s</small></div><button ${rv.cd>0?'disabled':''}>훔치기</button>`;
+      r.querySelector('button').onclick=()=>startSteal(ri,bi);d.appendChild(r)});
+    if(!rv.list.length)d.innerHTML+='<small style="opacity:.6">텅 비었다…</small>';
+    box.appendChild(d)});
+  $('mSteal').style.display='flex';
+}
+let sg=null;
+function startSteal(ri,bi){
+  if(freeIdx()<0){toast('빈 자리가 없어!');return}
+  const rv=rivals[ri],b=rv.list[bi];if(!b)return;const rr=CH[b.id].r;
+  const w=Math.max(.1,.32-rr*.045)+(b.mut?-.02:0);const zs=.15+Math.random()*(.7-w);
+  $('sgz').style.left=zs*100+'%';$('sgz').style.width=w*100+'%';
+  $('sgt').textContent=`🥷 ${CH[b.id].e} ${CH[b.id].n} 훔치는 중`;
+  sg={ri,bi,b,zs,w,t:0,sp:1.1+rr*.28};closeM();$('mGame').style.display='flex';
+}
+function sgDone(ok){
+  const g=sg;sg=null;closeM();const rv=rivals[g.ri];
+  if(ok){const idx=rv.list.indexOf(g.b);if(idx>=0)rv.list.splice(idx,1);give({id:g.b.id,mut:g.b.mut,lvl:1});beep(1000,.2);toast(`✅ ${CH[g.b.id].n} 훔치기 성공!`)}
+  else{const loss=Math.floor(S.money*.12);S.money-=loss;rv.cd=20;beep(120,.3,'sawtooth');toast(`🚨 들켰다! -$${fmt(loss)}`)}
+}
+$('sgb').onclick=()=>{if(!sg)return;const p=(Math.sin(sg.t)+1)/2;sgDone(p>=sg.zs&&p<=sg.zs+sg.w)};
+// ---- thief on me
+let thief=null,thiefT=rnd(40,80);
+function rnd(a,b){return a+Math.random()*(b-a)}
+function spawnThief(){
+  const owned=S.slots.map((b,i)=>b?i:-1).filter(i=>i>=0);if(!owned.length)return;
+  const i=owned[Math.random()*owned.length|0];thief={i,t:3.5};
+  const el=$('sl'+i);if(el){el.classList.add('thief');const d=document.createElement('div');d.className='th';d.textContent='🥷';el.appendChild(d);
+    el.onclick=()=>{if(!thief)return;const b=S.slots[thief.i];const bonus=Math.max(50,totalInc()*15);S.money+=bonus;thief=null;beep(1200,.15);toast(`🛡 도둑 격퇴! 보상 +$${fmt(bonus)}`);render()}}
+  toast('🚨 도둑 침입! 빨리 눌러서 막아!');beep(220,.2,'square');
+}
+// ---- dex / rebirth
+$('bSteal').onclick=()=>{openSteal()};
+$('bDex').onclick=()=>{
+  const l=$('dxl');l.innerHTML='';let n=0;
+  CH.forEach((c,i)=>{const ok=S.dex[i];if(ok)n++;const r=document.createElement('div');r.className='row';r.style.opacity=ok?1:.45;
+    r.innerHTML=`<div class="e">${ok?c.e:'❓'}</div><div class="t">${ok?c.n:'???'}<small style="color:${RAR[c.r].c}">${RAR[c.r].n}</small></div>`;l.appendChild(r)});
+  $('dxc').textContent=`${n}/${CH.length}`;$('mDex').style.display='flex';
+};
+const rebReq=()=>20000*Math.pow(6,S.rebirth);
+$('bReb').onclick=()=>{
+  const ok=S.money>=rebReq();
+  $('rbc').innerHTML=`<h2>♻ 환생</h2><p style="font-size:14px;line-height:1.6">모든 돈과 브레인롯이 초기화되지만<br><b style="color:var(--gold)">영구 수입 배율 +50%</b> 와 더 좋은 컨베이어 확률을 얻어요.<br>필요 금액: <b>$${fmt(rebReq())}</b></p>
+  <div style="display:flex;gap:8px"><button class="btn b3" ${ok?'':'disabled'} onclick="rebirth()">환생하기</button><button class="btn b2" onclick="closeM()">취소</button></div>`;
+  $('mReb').style.display='flex';
+};
+function rebirth(){if(S.money<rebReq())return;S=fresh(S.rebirth+1,S.mult+.5,S.dex);S.dex=S.dex;closeM();save();render();beep(1500,.4);toast(`♻ 환생 ${S.rebirth}회! 수입 x${S.mult}`)}
+// ---- loop
+let last=performance.now(),saveT=0,hudT=0;
+function loop(t){
+  const dt=Math.min(.1,(t-last)/1000);last=t;
+  S.money+=totalInc()*dt;
+  spawnT-=dt;if(spawnT<=0){spawn();spawnT=rnd(1.4,2.4)}
+  const sp=lane.clientWidth/10;
+  for(let i=cvs.length-1;i>=0;i--){const o=cvs[i];o.x-=sp*dt;o.el.style.transform=`translateX(${o.x}px)`;if(o.x<-100||o.sold){o.el.remove();cvs.splice(i,1)}}
+  for(const rv of rivals)rv.cd=Math.max(0,rv.cd-dt);
+  rivalT-=dt;if(rivalT<=0){rivalT=45;rivals.forEach(rv=>{if(rv.list.length<7)rv.list.push({id:pickCh(1.6+S.rebirth*.2),mut:pickMut(),lvl:1})})}
+  if(sg)sg.t+=dt*sg.sp*4,$('sgc').style.left=((Math.sin(sg.t)+1)/2*(100-1.5))+'%';
+  if(thief){thief.t-=dt;if(thief.t<=0){const b=S.slots[thief.i];if(b){S.slots[thief.i]=null;toast(`😭 ${CH[b.id].n} 도둑맞았다!`);beep(110,.4,'sawtooth')}thief=null;render()}}
+  else{thiefT-=dt;if(thiefT<=0){thiefT=rnd(50,90);if(!sg)spawnThief()}}
+  hudT-=dt;if(hudT<=0){hudT=.15;$('mv').textContent='$'+fmt(S.money);$('iv').textContent='+$'+fmt(totalInc())+'/s';$('bReb').disabled=false;$('bReb').style.opacity=S.money>=rebReq()?1:.55}
+  saveT-=dt;if(saveT<=0){saveT=3;save()}
+  requestAnimationFrame(loop);
+}
+genRivals();render();for(let i=0;i<4;i++){spawn();cvs[i].x=lane.clientWidth-i*130}
+requestAnimationFrame(loop);
+addEventListener('visibilitychange',()=>{if(document.hidden)save()});
+window.__br={get S(){return S},buy,get cvs(){return cvs},spawnThief,rebirth};
+</script>
+</body>
+</html>
