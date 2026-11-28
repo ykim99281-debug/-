@@ -126,7 +126,7 @@ body.touch #fps{display:none}
 
 <div id="menu" class="ov">
   <h1>BATTLE ISLAND</h1>
-  <p class="sub">10 km × 10 km 초대형 섬 · 100명 생존전 · 마지막 1인이 되어라<br><small style="opacity:.6">PC(키보드+마우스) · 모바일(터치) 지원</small></p>
+  <p class="sub">24 km × 24 km 초대형 섬 · 150명 생존전 · 마지막 1인이 되어라<br><small style="opacity:.6">PC(키보드+마우스) · 모바일(터치) 지원</small></p>
   <button class="btn" id="play">게임 시작</button>
   <div class="touchhint">왼쪽 화면 드래그: 이동 (끝까지 밀면 달리기)<br>오른쪽 화면 드래그: 시점 · 버튼: 발사/조준/점프/줍기<br>가로 모드 권장</div>
   <div class="keys">
@@ -139,7 +139,7 @@ body.touch #fps{display:none}
 <div id="hud">
   <div id="scope"></div><div id="storm"></div><div id="dmg"></div>
   <div id="dirI"><i id="dirArrow"></i></div>
-  <div id="topL"><div class="pn"><small>생존자</small><span id="alive">100</span></div><div class="pn"><small>킬</small><span id="kills">0</span></div></div>
+  <div id="topL"><div class="pn"><small>생존자</small><span id="alive">150</span></div><div class="pn"><small>킬</small><span id="kills">0</span></div></div>
   <div id="zoneBox" class="pn"><div class="t" id="zt">--</div><div class="s" id="zs">--</div></div>
   <div id="hdg">N</div>
   <div id="mm"><canvas id="mmc" width="420" height="420"></canvas></div>
@@ -183,7 +183,7 @@ body.touch #fps{display:none}
 /* ============================== 상수 / 유틸 ============================== */
 const TOUCH=matchMedia('(pointer:coarse)').matches||(navigator.maxTouchPoints>0&&!matchMedia('(pointer:fine)').matches);
 if(TOUCH)document.body.classList.add('touch');
-const HALF=5000,SIZE=10000,GRID=TOUCH?512:768,MAPR=TOUCH?1024:1280,CELL=SIZE/GRID,N1=GRID+1;
+const HALF=12000,SIZE=24000,GRID=TOUCH?960:1536,MAPR=TOUCH?1024:1536,TCH=16,PER=GRID/TCH,CELL=SIZE/GRID,N1=GRID+1;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t;
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 const col=h=>new THREE.Color(h).convertSRGBToLinear();
@@ -219,7 +219,7 @@ renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const scene=new THREE.Scene();
 const FOGC=new THREE.Color(.80,.88,.96);
 scene.fog=new THREE.FogExp2(FOGC,.00042);
-const camera=new THREE.PerspectiveCamera(75,1,.08,7000);
+const camera=new THREE.PerspectiveCamera(75,1,.08,11000);
 camera.rotation.order='YXZ';scene.add(camera);
 function resize(){renderer.setSize(innerWidth,innerHeight,false);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
@@ -246,9 +246,9 @@ function cloudTex(){const c=document.createElement('canvas');c.width=c.height=12
     g.addColorStop(0,'rgba(255,255,255,.55)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,128,128)}
   const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;return t}
 const clouds=[];
-{const tex=cloudTex();for(let i=0;i<210;i++){
+{const tex=cloudTex();for(let i=0;i<520;i++){
   const m=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:.75,depthWrite:false,fog:true}));
-  const a=rnd()*6.283,d=Math.sqrt(rnd())*6200;m.position.set(Math.cos(a)*d,R(380,620),Math.sin(a)*d);
+  const a=rnd()*6.283,d=Math.sqrt(rnd())*14500;m.position.set(Math.cos(a)*d,R(380,620),Math.sin(a)*d);
   const s=R(260,620);m.scale.set(s,s*.55,1);scene.add(m);clouds.push(m)}}
 
 /* ============================== 지형 생성 ============================== */
@@ -266,9 +266,17 @@ function baseHeight(x,z){
   const lake=smooth(.5,.75,fbm(x*.0022+400,z*.0022+400,3));h-=lake*14*(1-mt);
   return h*m+(m-1)*34;
 }
+const CSH=400,siteHash=new Map();
+function buildSiteHash(){siteHash.clear();for(const s of sites){const k=((s.z+HALF)/CSH|0)*1000+((s.x+HALF)/CSH|0);let l=siteHash.get(k);if(!l){l=[];siteHash.set(k,l)}l.push(s)}}
+const NO_SITES=[];
+function nearSites(x,z){
+  const ci=((x+HALF)/CSH)|0,cj=((z+HALF)/CSH)|0;let out=null;
+  for(let j=cj-1;j<=cj+1;j++)for(let i=ci-1;i<=ci+1;i++){const l=siteHash.get(j*1000+i);if(l){if(!out)out=[];for(const s of l)out.push(s)}}
+  return out||NO_SITES;
+}
 function terrainH(x,z){
   let h=baseHeight(x,z);
-  for(const s of sites){const ex=x-s.x,ez=z-s.z,lim=s.R*1.25;if(ex*ex+ez*ez<lim*lim)h=lerp(h,s.h,1-smooth(s.R*.7,lim,Math.hypot(ex,ez)))}
+  for(const s of nearSites(x,z)){const ex=x-s.x,ez=z-s.z,lim=s.R*1.25;if(ex*ex+ez*ez<lim*lim)h=lerp(h,s.h,1-smooth(s.R*.7,lim,Math.hypot(ex,ez)))}
   return h;
 }
 function heightAt(x,z){
@@ -289,14 +297,29 @@ const SITE_SPECS=[
  {type:'village',R:95,name:'솔밭 마을'},{type:'village',R:95,name:'등대 곶'},{type:'village',R:95,name:'고원 마을'},
  {type:'village',R:95,name:'새벽 마을'},{type:'village',R:95,name:'바위 언덕'},
  {type:'farm',R:105,name:'풍차 농장'},{type:'farm',R:105,name:'노을 농장'},{type:'farm',R:105,name:'해바라기 농장'},
- {type:'town',R:150,name:'은빛 항구'},{type:'factory',R:125,name:'붉은 광산'},{type:'village',R:95,name:'안개 마을'},{type:'village',R:95,name:'자작나무골'},{type:'village',R:95,name:'절벽 마을'},{type:'village',R:95,name:'호두 마을'}
+ {type:'town',R:150,name:'은빛 항구'},{type:'factory',R:125,name:'붉은 광산'},{type:'village',R:95,name:'안개 마을'},{type:'village',R:95,name:'자작나무골'},{type:'village',R:95,name:'절벽 마을'},{type:'village',R:95,name:'호두 마을'},
+ {type:'town',R:150,name:'장미 읍'},{type:'town',R:150,name:'북부 시장'},{type:'town',R:150,name:'달빛 항'},{type:'town',R:150,name:'대나무 읍'},
+ {type:'base',R:175,name:'북부 요새'},{type:'factory',R:125,name:'제철소'},{type:'factory',R:125,name:'물류 창고'},
+ {type:'farm',R:105,name:'포도 농장'},{type:'farm',R:105,name:'목장'},{type:'farm',R:105,name:'보리밭 농장'},
+ {type:'village',R:95,name:'여우골'},{type:'village',R:95,name:'감나무 마을'},{type:'village',R:95,name:'돌담 마을'},{type:'village',R:95,name:'푸른 언덕'},
+ {type:'village',R:95,name:'안개 숲'},{type:'village',R:95,name:'벚꽃 마을'},{type:'village',R:95,name:'모래 마을'},{type:'village',R:95,name:'소금 마을'},
+ {type:'village',R:95,name:'구름 마을'},{type:'village',R:95,name:'밤나무골'},{type:'village',R:95,name:'바람 마을'},{type:'village',R:95,name:'양떼 마을'}
 ];
+function extraSpecs(){
+  const used=new Set(SITE_SPECS.map(s=>s.name));
+  const A=['붉은','푸른','큰','작은','새','옛','고요한','높은','깊은','맑은','달빛','별빛','솔','갈대','자작','버들','안개','바람','노을','은행','다람쥐','학','여우','늑대','곰','소나무','구름','샘물','돌','모래'];
+  const B={village:['마을','골','터','말','나루','울'],town:['읍','시장','항','시'],farm:['농장','목장'],factory:['공장','광산','창고'],base:['기지','요새']};
+  const plan=[['town',8],['village',34],['farm',8],['factory',4],['base',2]],R_={town:150,village:95,farm:105,factory:125,base:175},out=[];
+  for(const [t,n] of plan)for(let i=0;i<n;i++){let nm;let g=0;do{nm=pick(A)+' '+pick(B[t]);g++}while(used.has(nm)&&g<60);used.add(nm);out.push({type:t,R:R_[t],name:nm})}
+  return out;
+}
 function placeSites(){
-  for(const sp of SITE_SPECS){
+  const specs=SITE_SPECS.concat(extraSpecs());
+  for(const sp of specs){
     let best=null;
-    for(let at=0;at<900&&!best;at++){
-      const relax=at>500;
-      const a=rnd()*6.283,d=sp.near?Math.sqrt(rnd())*700:Math.sqrt(rnd())*3900;
+    for(let at=0;at<1400&&!best;at++){
+      const relax=at>800;
+      const a=rnd()*6.283,d=sp.near?Math.sqrt(rnd())*1000:Math.sqrt(rnd())*10200;
       const x=Math.cos(a)*d,z=Math.sin(a)*d,h=baseHeight(x,z);
       if(h<(relax?5:8)||h>(relax?70:42))continue;
       let rel=0;for(let k=0;k<8;k++){const aa=k*.785,hh=baseHeight(x+Math.cos(aa)*sp.R*.8,z+Math.sin(aa)*sp.R*.8);rel=Math.max(rel,Math.abs(hh-h));if(hh<2){rel=99;break}}
@@ -309,22 +332,25 @@ function placeSites(){
   }
 }
 function addCabins(){
-  for(let i=0,n=0;i<900&&n<60;i++){
-    const a=rnd()*6.283,d=Math.sqrt(rnd())*3800,x=Math.cos(a)*d,z=Math.sin(a)*d,h=baseHeight(x,z);
+  for(let i=0,n=0;i<6000&&n<200;i++){
+    const a=rnd()*6.283,d=Math.sqrt(rnd())*10100,x=Math.cos(a)*d,z=Math.sin(a)*d,h=baseHeight(x,z);
     if(h<6||h>55)continue;let rel=0;for(let k=0;k<6;k++){rel=Math.max(rel,Math.abs(baseHeight(x+Math.cos(k)*20,z+Math.sin(k)*20)-h))}if(rel>5)continue;
     let near=false;for(const s of sites)if(Math.hypot(s.x-x,s.z-z)<s.R*1.4+60){near=true;break}if(near)continue;
     sites.push({type:'cabin',R:26,name:'',x,z,h});n++;
   }
+  buildSiteHash();
 }
 
 /* ---- 도로 ---- */
 const roads=[]; // {pts:[[x,z]...],kind:'asphalt'|'dirt'}
 function buildRoads(){
   const n=sites.length,edges=new Set(),key=(a,b)=>a<b?a+'-'+b:b+'-'+a;
-  const dist=(a,b)=>Math.hypot(sites[a].x-sites[b].x,sites[a].z-sites[b].z);
+  const dist0=(a,b)=>Math.hypot(sites[a].x-sites[b].x,sites[a].z-sites[b].z);
+  const wcache={};const wet=(a,b)=>{const k=a<b?a+'-'+b:b+'-'+a;if(wcache[k]!==undefined)return wcache[k];let w=0;for(let i=1;i<20;i++){const t=i/20;if(baseHeight(lerp(sites[a].x,sites[b].x,t),lerp(sites[a].z,sites[b].z,t))<.5)w++}return wcache[k]=w/19};
+  const dist=(a,b)=>{const d=dist0(a,b);return wet(a,b)>.15?d+1e6:d};
   const inT=[0],rest=new Set();for(let i=1;i<n;i++)rest.add(i);
-  while(rest.size){let bd=1e9,ba=0,bb=0;for(const a of inT)for(const b of rest){const d=dist(a,b);if(d<bd){bd=d;ba=a;bb=b}}edges.add(key(ba,bb));inT.push(bb);rest.delete(bb)}
-  for(let i=0;i<n;i++){const ds=[];for(let j=0;j<n;j++)if(j!==i)ds.push([dist(i,j),j]);ds.sort((a,b)=>a[0]-b[0]);if(ds[0][0]<1400)edges.add(key(i,ds[0][1]));if(rnd()<.5&&ds[1][0]<1300)edges.add(key(i,ds[1][1]))}
+  while(rest.size){let bd=1e9,ba=0,bb=0;for(const a of inT)for(const b of rest){const d=dist(a,b);if(d<bd){bd=d;ba=a;bb=b}}if(bd<1e6)edges.add(key(ba,bb));inT.push(bb);rest.delete(bb)}
+  for(let i=0;i<n;i++){const ds=[];for(let j=0;j<n;j++)if(j!==i)ds.push([dist(i,j),j]);ds.sort((a,b)=>a[0]-b[0]);if(ds[0][0]<1800)edges.add(key(i,ds[0][1]));if(rnd()<.5&&ds[1][0]<1600)edges.add(key(i,ds[1][1]))}
   for(const e of edges){
     const [a,b]=e.split('-').map(Number),A=sites[a],B=sites[b];
     const len=Math.hypot(B.x-A.x,B.z-A.z),segs=Math.max(4,(len/90)|0),pts=[],nx=-(B.z-A.z)/len,nz=(B.x-A.x)/len;
@@ -582,7 +608,7 @@ async function buildTerrain(prog){
   for(let j=0;j<N1;j++){for(let i=0;i<N1;i++)H[j*N1+i]=terrainH(-HALF+i*CELL,-HALF+j*CELL);if(j%64===0){prog(j/N1);await tick()}}
 }
 async function buildTerrainTexture(prog){
-  const TS=TOUCH?2048:2560,cv=document.createElement('canvas');cv.width=cv.height=TS;const cx=cv.getContext('2d'),id=cx.createImageData(TS,TS),d=id.data,px=SIZE/TS;
+  const TS=TOUCH?2048:3584,cv=document.createElement('canvas');cv.width=cv.height=TS;const cx=cv.getContext('2d'),id=cx.createImageData(TS,TS),d=id.data,px=SIZE/TS;
   const sand=[222,200,150],gr1=[96,128,58],gr2=[70,104,46],dry=[138,134,76],forest=[38,70,36],rock=[116,110,100],snow=[238,244,250],dirt=[120,96,66];
   for(let j=0;j<TS;j++){
     for(let i=0;i<TS;i++){
@@ -618,8 +644,8 @@ async function buildTerrainTexture(prog){
   const mask=document.createElement('canvas');mask.width=mask.height=TS;const mx=mask.getContext('2d');mx.fillStyle='#000';mx.fillRect(0,0,TS,TS);mx.strokeStyle='#fff';mx.lineCap='round';mx.lineJoin='round';
   for(const r of roads){
     for(const [wd,cl] of r.kind==='asphalt'?[[10,'#44464a'],[.5,'#d8c870']]:[[7,'#9a8460'],[3,'#8a7550']]){
-      cx.strokeStyle=cl;cx.lineWidth=Math.max(wd/px,1);cx.setLineDash(wd<1?[3,6]:[]);cx.beginPath();r.pts.forEach((p,i)=>i?cx.lineTo(W2(p[0]),W2(p[1])):cx.moveTo(W2(p[0]),W2(p[1])));cx.stroke()}
-    mx.lineWidth=16/px;mx.beginPath();r.pts.forEach((p,i)=>i?mx.lineTo(W2(p[0]),W2(p[1])):mx.moveTo(W2(p[0]),W2(p[1])));mx.stroke();
+      cx.strokeStyle=cl;cx.lineWidth=Math.max(wd/px,wd<1?1:2.2);cx.setLineDash(wd<1?[3,6]:[]);cx.beginPath();r.pts.forEach((p,i)=>i?cx.lineTo(W2(p[0]),W2(p[1])):cx.moveTo(W2(p[0]),W2(p[1])));cx.stroke()}
+    mx.lineWidth=Math.max(16/px,4);mx.beginPath();r.pts.forEach((p,i)=>i?mx.lineTo(W2(p[0]),W2(p[1])):mx.moveTo(W2(p[0]),W2(p[1])));mx.stroke();
   }
   cx.setLineDash([]);
   for(const s of sites){mx.fillStyle='#fff';mx.beginPath();mx.arc(W2(s.x),W2(s.z),s.R*.6/px,0,Math.PI*2);mx.fill()}
@@ -629,25 +655,46 @@ async function buildTerrainTexture(prog){
 }
 let roadMask=null,TSZ=2048;
 const onRoad=(x,z)=>{const i=((x+HALF)/SIZE*TSZ)|0,j=((z+HALF)/SIZE*TSZ)|0;return i>=0&&j>=0&&i<TSZ&&j<TSZ&&roadMask[j*TSZ+i]>128};
+const terrainChunks=[];
 function addTerrainMeshes(tex){
-  const m=new THREE.MeshLambertMaterial({map:tex});
+  const m=new THREE.MeshLambertMaterial({map:tex,side:THREE.DoubleSide});
   m.onBeforeCompile=sh=>{sh.uniforms.detail={value:detailTex};
     sh.fragmentShader='uniform sampler2D detail;\n'+sh.fragmentShader.replace('#include <map_fragment>',`#include <map_fragment>
-      vec2 dUv=vUv*1750.;float dt1=texture2D(detail,dUv).r,dt2=texture2D(detail,dUv*.137).r;
+      vec2 dUv=vUv*4200.;float dt1=texture2D(detail,dUv).r,dt2=texture2D(detail,dUv*.137).r;
       diffuseColor.rgb*=(.62+.76*dt1)*(.8+.4*dt2);`)};
-  const CH=8,per=GRID/CH;
-  for(let cj=0;cj<CH;cj++)for(let ci=0;ci<CH;ci++){
-    const nv=per+1,pos=new Float32Array(nv*nv*3),nor=new Float32Array(nv*nv*3),uv=new Float32Array(nv*nv*2),idx=new Uint16Array(per*per*6);
-    for(let j=0;j<nv;j++)for(let i=0;i<nv;i++){
-      const gi=ci*per+i,gj=cj*per+j,k=j*nv+i,x=-HALF+gi*CELL,z=-HALF+gj*CELL;
-      pos[k*3]=x;pos[k*3+1]=H[gj*N1+gi];pos[k*3+2]=z;
-      const hl=H[gj*N1+Math.max(gi-1,0)],hr=H[gj*N1+Math.min(gi+1,GRID)],hu=H[Math.max(gj-1,0)*N1+gi],hd=H[Math.min(gj+1,GRID)*N1+gi];
-      const nx=hl-hr,nz=hu-hd,ny=2*CELL,l=Math.hypot(nx,ny,nz);nor[k*3]=nx/l;nor[k*3+1]=ny/l;nor[k*3+2]=nz/l;
-      uv[k*2]=(x+HALF)/SIZE;uv[k*2+1]=1-(z+HALF)/SIZE;
+  const steps=[1,3,6];
+  const build=(ci,cj,step)=>{
+    const n=PER/step,nv=n+1,SK=60,nvt=nv*nv+4*nv;
+    const pos=new Float32Array(nvt*3),nor=new Float32Array(nvt*3),uv=new Float32Array(nvt*2),idx=new Uint16Array(n*n*6+4*n*6);
+    const put=(k,gi,gj,drop)=>{
+      const x=-HALF+gi*CELL,z=-HALF+gj*CELL;pos[k*3]=x;pos[k*3+1]=H[gj*N1+gi]-drop;pos[k*3+2]=z;
+      const a=Math.max(gi-step,0),b=Math.min(gi+step,GRID),c=Math.max(gj-step,0),d=Math.min(gj+step,GRID);
+      const nx=H[gj*N1+a]-H[gj*N1+b],nz=H[c*N1+gi]-H[d*N1+gi],ny=(b-a)*CELL*(1),l=Math.hypot(nx,ny,nz);
+      nor[k*3]=nx/l;nor[k*3+1]=ny/l;nor[k*3+2]=nz/l;uv[k*2]=(x+HALF)/SIZE;uv[k*2+1]=1-(z+HALF)/SIZE;
+    };
+    for(let j=0;j<nv;j++)for(let i=0;i<nv;i++)put(j*nv+i,ci*PER+i*step,cj*PER+j*step,0);
+    let q=0;for(let j=0;j<n;j++)for(let i=0;i<n;i++){const a=j*nv+i,b=a+1,c=a+nv,d=c+1;idx[q++]=a;idx[q++]=c;idx[q++]=b;idx[q++]=b;idx[q++]=c;idx[q++]=d}
+    // 치마(skirt): 이웃 LOD 와의 틈 가리기
+    let base=nv*nv;
+    const edge=[(t)=>[t,0],(t)=>[t,n],(t)=>[0,t],(t)=>[n,t]];
+    for(const f of edge){
+      for(let t=0;t<=n;t++){const [i,j]=f(t);put(base+t,ci*PER+i*step,cj*PER+j*step,SK)}
+      for(let t=0;t<n;t++){const [i0_,j0_]=f(t),[i1_,j1_]=f(t+1);const a=j0_*nv+i0_,b=j1_*nv+i1_,c=base+t,d=base+t+1;idx[q++]=a;idx[q++]=c;idx[q++]=b;idx[q++]=b;idx[q++]=c;idx[q++]=d}
+      base+=nv;
     }
-    let q=0;for(let j=0;j<per;j++)for(let i=0;i<per;i++){const a=j*nv+i,b=a+1,c=a+nv,d=c+1;idx[q++]=a;idx[q++]=c;idx[q++]=b;idx[q++]=b;idx[q++]=c;idx[q++]=d}
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setIndex(new THREE.BufferAttribute(idx,1));
-    g.computeBoundingSphere();const me=new THREE.Mesh(g,m);me.receiveShadow=true;scene.add(me);
+    g.computeBoundingSphere();const me=new THREE.Mesh(g,m);me.receiveShadow=true;me.visible=false;scene.add(me);return me;
+  };
+  for(let cj=0;cj<TCH;cj++)for(let ci=0;ci<TCH;ci++){
+    const cs=SIZE/TCH;terrainChunks.push({cx:-HALF+(ci+.5)*cs,cz:-HALF+(cj+.5)*cs,m:steps.map(st=>build(ci,cj,st)),cur:-1});
+  }
+}
+function updateTerrainLOD(){
+  const cp=camera.position,cs=SIZE/TCH;
+  for(const c of terrainChunks){
+    const d=Math.hypot(Math.max(Math.abs(c.cx-cp.x)-cs/2,0),Math.max(Math.abs(c.cz-cp.z)-cs/2,0));
+    const want=d<1900?0:d<5200?1:2;
+    if(want!==c.cur){if(c.cur>=0)c.m[c.cur].visible=false;c.m[want].visible=true;c.cur=want}
   }
 }
 let waterMat;
@@ -677,7 +724,7 @@ function addWater(){
 }
 
 /* ============================== 나무/바위/덤불 (청크 인스턴싱) ============================== */
-const CHK=250,CHN=Math.ceil(SIZE/CHK),chunks=new Map();
+const CHK=320,CHN=Math.ceil(SIZE/CHK),chunks=new Map();
 const KINDS={};
 function buildKinds(){
   const g=(fn)=>{const b=new GB();fn(b);return b.geo()};
@@ -713,6 +760,7 @@ function finalizeInst(){
 }
 const frustum=new THREE.Frustum(),pm=new THREE.Matrix4(),sph=new THREE.Sphere();
 function updateChunks(){
+  updateTerrainLOD();
   pm.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);frustum.setFromProjectionMatrix(pm);
   const cp=camera.position;
   for(const c of chunkMeshes){
@@ -725,16 +773,16 @@ function updateChunks(){
 }
 async function placeVegetation(prog){
   buildKinds();
-  const step=12;let cnt=0;
+  const step=TOUCH?18:12,VK=TOUCH?.55:1;let cnt=0;
   for(let gz=-HALF+4;gz<HALF-4;gz+=step){
     for(let gx=-HALF+4;gx<HALF-4;gx+=step){
       const x=gx+rnd()*step,z=gz+rnd()*step,h=heightAt(x,z);
       if(h<1.8||h>115)continue;
       const fd=forestD(x,z),hf=1-smooth(60,110,h);
-      let pT=(fd*fd*.85+.012)*hf,pR=0,pB=fd*.55+.03;
+      let pT=(fd*fd*.8+.012)*hf*VK,pR=0,pB=(fd*.55+.03)*VK;
       const ny=normalY(x,z);if(ny<.82){pT*=.1;}pR=ny<.9?.05:.006+smooth(40,100,h)*.04;
       let skip=false;
-      for(const s of sites){const dd=Math.hypot(x-s.x,z-s.z);if(dd<s.R*.85){skip=true;break}if(dd<s.R*1.2){pT*=.15;pB*=.3}}
+      for(const s of nearSites(x,z)){const dd=Math.hypot(x-s.x,z-s.z);if(dd<s.R*.85){skip=true;break}if(dd<s.R*1.2){pT*=.15;pB*=.3}}
       if(skip)continue;if(onRoad(x,z))continue;
       const r=rnd();
       if(r<pT){const kind=h>55||noise(x*.01,z*.01)>.15?'pine':'oak';addInst(kind,x,z,R(.75,1.5),rnd());cnt++}
@@ -851,7 +899,7 @@ function updateParticles(dt){for(let i=0;i<PMAX;i++){const p=parts[i];if(p.l>0){
 const P={x:0,y:0,z:0,vx:0,vy:0,vz:0,yaw:0,pitch:0,mode:'menu',hp:100,armor:0,alive:false,crouch:0,sprint:false,ads:0,
   slots:[null,null,null],cur:0,reserve:{light:0,medium:0,shell:0,heavy:0},band:0,med:0,kills:0,reload:0,fireT:0,bloom:0,kick:0,healT:0,healKind:null,stepT:0,onGround:true,swim:false,veh:null,chuteOpen:false,swap:0,bob:0};
 const bots=[],items=[],vehicles=[];
-const G={phase:'loading',t:0,alive:100,paused:false,plane:null,zone:null,feedQ:[]};
+const G={phase:'loading',t:0,alive:150,paused:false,plane:null,zone:null,feedQ:[]};
 const keys={};let mouseL=false,mouseR=false,locked=false;
 
 /* ---- 비행기 ---- */
@@ -863,21 +911,21 @@ function makePlane(){
   g.traverse(o=>{if(o.isMesh)o.castShadow=false});scene.add(g);return g;
 }
 function setupPlane(){
-  const a=rnd()*6.283,lat=R(-900,900),dx=Math.cos(a),dz=Math.sin(a),nx=-dz,nz=dx,L=5700;
+  const a=rnd()*6.283,lat=R(-1500,1500),dx=Math.cos(a),dz=Math.sin(a),nx=-dz,nz=dx,L=13200;
   const mesh=makePlane();
-  G.plane={sx:-dx*L+nx*lat,sz:-dz*L+nz*lat,dx,dz,speed:110,alt:760,t:0,dur:2*L/110,mesh,x:0,z:0};
+  G.plane={sx:-dx*L+nx*lat,sz:-dz*L+nz*lat,dx,dz,speed:180,alt:800,t:0,dur:2*L/180,mesh,x:0,z:0};
   mesh.rotation.y=Math.atan2(dx,dz);
 }
 function planePos(t){const p=G.plane;return[p.sx+p.dx*p.speed*t,p.sz+p.dz*p.speed*t]}
 
 /* ---- 구역 ---- */
-const ZPH=[{w:125,s:100,r:2900,d:1.5},{w:80,s:80,r:1700,d:3},{w:60,s:60,r:900,d:5},{w:50,s:50,r:420,d:8},{w:40,s:40,r:170,d:11},{w:30,s:35,r:25,d:16}];
+const ZPH=[{w:160,s:130,r:7400,d:1.5},{w:100,s:110,r:4000,d:3},{w:75,s:90,r:2100,d:5},{w:55,s:65,r:1000,d:8},{w:42,s:50,r:380,d:11},{w:30,s:40,r:40,d:16}];
 function nextCircle(z){
   const ph=ZPH[z.phase];if(!ph)return;
   for(let k=0;k<30;k++){const a=rnd()*6.283,d=Math.sqrt(rnd())*Math.max(z.r-ph.r,0),x=z.cx+Math.cos(a)*d,zz=z.cz+Math.sin(a)*d;
     if(heightAt(x,zz)>1||k===29){z.tx=x;z.tz=zz;z.tr=ph.r;break}}
 }
-function setupZone(){G.zone={phase:0,state:'wait',t:0,cx:0,cz:0,r:5800,fx:0,fz:0,fr:5800};nextCircle(G.zone)}
+function setupZone(){G.zone={phase:0,state:'wait',t:0,cx:0,cz:0,r:14000,fx:0,fz:0,fr:14000};nextCircle(G.zone)}
 function updateZone(dt){
   const z=G.zone;if(!z||G.phase==='loading')return;const ph=ZPH[z.phase];z.t+=dt;
   if(!ph){return}
@@ -913,14 +961,14 @@ function randItem(rich){
   return{k:'armor',tier:Math.min(2,tier>>1),n:1};
 }
 const itemCells=new Map();
-function addItem(it,x,y,z){it.x=x;it.y=y;it.z=z;it.mesh=null;it.taken=false;items.push(it);const key=((z+HALF)/40|0)*400+((x+HALF)/40|0);let l=itemCells.get(key);if(!l){l=[];itemCells.set(key,l)}l.push(it);return it}
+function addItem(it,x,y,z){it.x=x;it.y=y;it.z=z;it.mesh=null;it.taken=false;items.push(it);const key=((z+HALF)/40|0)*700+((x+HALF)/40|0);let l=itemCells.get(key);if(!l){l=[];itemCells.set(key,l)}l.push(it);return it}
 function genLoot(){
   for(const sp of lootSpots){const it=randItem(sp.rich);addItem(it,sp.x,sp.y,sp.z);if(rnd()<.55+sp.rich*.2)addItem(randItem(sp.rich),sp.x+R(-.8,.8),sp.y,sp.z+R(-.8,.8))}
   for(const s of sites){
     const n=s.type==='city'?60:s.type==='base'?60:s.type==='factory'?30:s.type==='town'?26:16;
     for(let i=0;i<n;i++){const a=rnd()*6.283,d=Math.sqrt(rnd())*s.R*.75,x=s.x+Math.cos(a)*d,z=s.z+Math.sin(a)*d;addItem(randItem(s.type==='base'?1.5:s.type==='city'?.5:0),x,heightAt(x,z),z)}
   }
-  for(let i=0;i<720;i++){const a=rnd()*6.283,d=Math.sqrt(rnd())*4400,x=Math.cos(a)*d,z=Math.sin(a)*d,h=heightAt(x,z);if(h<1.5)continue;addItem(randItem(0),x,h,z)}
+  for(let i=0;i<3600;i++){const a=rnd()*6.283,d=Math.sqrt(rnd())*10800,x=Math.cos(a)*d,z=Math.sin(a)*d,h=heightAt(x,z);if(h<1.5)continue;addItem(randItem(0),x,h,z)}
 }
 const itemPool={};
 function showItem(it){
@@ -933,7 +981,7 @@ function updateItems(dt,t){
   itemT-=dt;
   if(itemT<=0){itemT=.3;const cx=P.x,cz=P.z,r=170;
     const next=new Set();
-    for(let j=((cz-r+HALF)/40)|0;j<=((cz+r+HALF)/40)|0;j++)for(let i=((cx-r+HALF)/40)|0;i<=((cx+r+HALF)/40)|0;i++){const l=itemCells.get(j*400+i);if(!l)continue;for(const it of l){if(it.taken)continue;if(Math.hypot(it.x-cx,it.z-cz)<r){showItem(it);next.add(it)}}}
+    for(let j=((cz-r+HALF)/40)|0;j<=((cz+r+HALF)/40)|0;j++)for(let i=((cx-r+HALF)/40)|0;i<=((cx+r+HALF)/40)|0;i++){const l=itemCells.get(j*700+i);if(!l)continue;for(const it of l){if(it.taken)continue;if(Math.hypot(it.x-cx,it.z-cz)<r){showItem(it);next.add(it)}}}
     for(const it of shown)if(!next.has(it))hideItem(it);shown.clear();for(const it of next)shown.add(it);
   }
   for(const it of shown){if(it.mesh&&it.mesh.userData.spin)it.mesh.userData.spin.rotation.y+=dt*1.5}
@@ -1052,11 +1100,11 @@ function killPlayer(src){
 function winGame(){G.phase='won';P.mode='won';setTimeout(()=>{exitLock();showEnd(true,1)},1500)}
 function showEnd(win,place,killer){
   $('end').style.display='flex';$('endT').textContent=win?'🏆 최후의 생존자!':`#${place} 위`;$('endT').style.color=win?'#ffd35a':'#ff6a5a';
-  $('endP').innerHTML=win?`축하합니다! 100명 중 마지막까지 살아남았습니다.<br>킬 ${P.kills}`:`${killer}에게 쓰러졌습니다.<br>킬 ${P.kills} · 생존 ${G.t|0}초`;
+  $('endP').innerHTML=win?`축하합니다! 150명 중 마지막까지 살아남았습니다.<br>킬 ${P.kills}`:`${killer}에게 쓰러졌습니다.<br>킬 ${P.kills} · 생존 ${G.t|0}초`;
 }
 
 /* ============================== 봇 AI ============================== */
-const BOTN=99;
+const BOTN=149;
 function createBots(){
   const used=new Set();
   for(let i=0;i<BOTN;i++){
@@ -1094,7 +1142,7 @@ function findTarget(b){
 }
 function botGoalItem(b){
   let bestIt=null,bd=1e9;const r=220;
-  for(let j=((b.z-r+HALF)/40)|0;j<=((b.z+r+HALF)/40)|0;j++)for(let i=((b.x-r+HALF)/40)|0;i<=((b.x+r+HALF)/40)|0;i++){const l=itemCells.get(j*400+i);if(!l)continue;
+  for(let j=((b.z-r+HALF)/40)|0;j<=((b.z+r+HALF)/40)|0;j++)for(let i=((b.x-r+HALF)/40)|0;i<=((b.x+r+HALF)/40)|0;i++){const l=itemCells.get(j*700+i);if(!l)continue;
     for(const it of l){if(it.taken||(b.wp&&it.k==='wpn'&&it.tier<=b.wp.tier)||(!b.wp&&it.k!=='wpn'))continue;if(b.wp&&it.k!=='wpn'&&it.k!=='armor'&&it.k!=='med')continue;
       const d=Math.hypot(it.x-b.x,it.z-b.z);if(d<bd){bd=d;bestIt=it}}}
   return bestIt;
@@ -1197,9 +1245,9 @@ function updateBot(b,dt){
 
 /* ============================== 차량 ============================== */
 const VT={
-  jeep:{name:'지프',maxF:34,maxR:-10,acc:.9,steer:.55,turn:1.3,rad:1.5,h:1.4,cam:9},
-  bike:{name:'오토바이',maxF:48,maxR:-8,acc:1.4,steer:.75,turn:2.0,rad:.8,h:1.4,cam:7},
-  boat:{name:'보트',maxF:32,maxR:-8,acc:.7,steer:.45,turn:1.0,rad:1.6,h:1.4,cam:12},
+  jeep:{name:'지프',maxF:46,maxR:-12,acc:.9,steer:.55,turn:1.3,rad:1.5,h:1.4,cam:9},
+  bike:{name:'오토바이',maxF:62,maxR:-9,acc:1.4,steer:.75,turn:2.0,rad:.8,h:1.4,cam:7},
+  boat:{name:'보트',maxF:44,maxR:-8,acc:.7,steer:.45,turn:1.0,rad:1.6,h:1.4,cam:12},
   heli:{name:'헬리콥터',cam:17}
 };
 function makeVehicleMesh(type){
@@ -1238,8 +1286,8 @@ function spawnVehicles(){
     for(let k=0;k<nh;k++){for(let t=0;t<12;t++){const a=rnd()*6.283,d=s.R*R(.82,1.0),x=s.x+Math.cos(a)*d,z=s.z+Math.sin(a)*d;if(heightAt(x,z)>1.5&&!onRoad(x,z)){addVehicle('heli',x,z);break}}}
   }
   let nb=0;
-  for(let t=0;t<9000&&nb<26;t++){
-    const a=rnd()*6.283,d=Math.sqrt(rnd())*4800,x=Math.cos(a)*d,z=Math.sin(a)*d,h=heightAt(x,z);
+  for(let t=0;t<30000&&nb<64;t++){
+    const a=rnd()*6.283,d=Math.sqrt(rnd())*11500,x=Math.cos(a)*d,z=Math.sin(a)*d,h=heightAt(x,z);
     if(h>-2.2||h<-6)continue;
     let land=false;for(let k=0;k<8;k++){if(heightAt(x+Math.cos(k*.785)*70,z+Math.sin(k*.785)*70)>2){land=true;break}}
     if(!land)continue;
@@ -1260,13 +1308,13 @@ function updateHeli(v,dt){
   let ground=false;
   if(v.y<=gh+.12){if(v.vy<-14&&v.air){crashHit(v,-v.vy*1.2,v.x,v.z);}v.y=gh+.12;v.vy=Math.max(v.vy,0);ground=true}
   v.air=!ground;
-  const tgt=(ground||!lift)?0:thr*58;v.speed+=(tgt-v.speed)*Math.min(dt*.8,1);
+  const tgt=(ground||!lift)?0:thr*100;v.speed+=(tgt-v.speed)*Math.min(dt*.8,1);
   if(!ground&&lift)v.yaw+=st*dt*1.15;
   const nx=Math.sin(v.yaw),nz=Math.cos(v.yaw);
   const probe={x:v.x+nx*v.speed*dt,y:v.y,z:v.z+nz*v.speed*dt};
   if(v.y-gh<14&&collide(probe,3,3)){crashHit(v,Math.abs(v.speed)+4,probe.x,probe.z);v.speed*=-.2}
   v.x=probe.x;v.z=probe.z;
-  v.pitch+=(clamp(v.speed/58*.3,-.3,.3)-v.pitch)*Math.min(dt*3,1);v.roll+=(-st*.25*(ground?0:1)-v.roll)*Math.min(dt*3,1);
+  v.pitch+=(clamp(v.speed/100*.3,-.3,.3)-v.pitch)*Math.min(dt*3,1);v.roll+=(-st*.25*(ground?0:1)-v.roll)*Math.min(dt*3,1);
   v.mesh.position.set(v.x,v.y,v.z);v.mesh.rotation.order='YXZ';v.mesh.rotation.set(v.pitch,v.yaw,v.roll);
   const U=v.mesh.userData;U.rotor.rotation.y+=v.rpm*dt*38;U.tail.rotation.x+=v.rpm*dt*45;
   if(drv){P.x=v.x;P.z=v.z;P.y=v.y;wake(v.x,v.z,260)}
@@ -1428,7 +1476,7 @@ function drawMap(ctx,size,cx,cz,span,big){
     ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.arc(W(z.cx),Hh(z.cz),z.r*k,0,Math.PI*2);ctx.stroke();
     if(z.tr!==undefined&&(z.state==='wait'||true)&&ZPH[z.phase]){ctx.strokeStyle='rgba(255,255,255,.7)';ctx.setLineDash([6,6]);ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(W(z.tx),Hh(z.tz),z.tr*k,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
   }
-  if(big){ctx.fillStyle='#fff';ctx.font='bold 15px sans-serif';ctx.textAlign='center';ctx.strokeStyle='#000';ctx.lineWidth=3;for(const s of sites){if(!s.name)continue;ctx.strokeText(s.name,W(s.x),Hh(s.z)-18);ctx.fillText(s.name,W(s.x),Hh(s.z)-18)}}
+  if(big){ctx.fillStyle='#fff';ctx.textAlign='center';ctx.strokeStyle='#000';ctx.lineWidth=3;for(const s of sites){if(!s.name)continue;ctx.font=(s.type==='village'?'bold 11px':'bold 14px')+' sans-serif';ctx.strokeText(s.name,W(s.x),Hh(s.z)-14);ctx.fillText(s.name,W(s.x),Hh(s.z)-14)}}
   if(G.plane&&G.plane.t<G.plane.dur){const p=G.plane;ctx.strokeStyle='rgba(255,255,255,.55)';ctx.setLineDash([8,6]);ctx.beginPath();ctx.moveTo(W(p.sx),Hh(p.sz));ctx.lineTo(W(p.sx+p.dx*p.speed*p.dur),Hh(p.sz+p.dz*p.speed*p.dur));ctx.stroke();ctx.setLineDash([]);
     const [ax,az]=planePos(p.t);ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(W(ax),Hh(az),5,0,Math.PI*2);ctx.fill()}
   for(const v of vehicles){if(v.driver)continue;const dx=W(v.x),dy=Hh(v.z);if(big||Math.hypot(dx-size/2,dy-size/2)<size/2){ctx.fillStyle='#ffd35a';ctx.fillRect(dx-2,dy-2,4,4)}}
@@ -1464,7 +1512,7 @@ function updateHUD(dt){
   else if(P.mode==='fall'||P.mode==='chute'){const ag=P.y-Math.max(heightAt(P.x,P.z),0);al.innerHTML=`${ag|0}<small> m</small>`;tp.innerHTML=P.mode==='fall'?'<small style="font-weight:600">'+(TOUCH?'드래그: 방향·각도 (아래를 보면 빠르게 하강) · 점프: 낙하산':'마우스: 방향·각도 조절 (아래를 보면 빠르게 하강) · Space: 낙하산 펴기')+'</small>':'<small style="font-weight:600">낙하산 활강 중 · W: 앞으로</small>'}
   else{if(tp.innerHTML&&P.mode!=='dead')tp.innerHTML='';al.innerHTML=''}
   if(P.mode==='vehicle'){const v=P.veh;al.innerHTML=v.type==='heli'?`${(v.y-Math.max(heightAt(v.x,v.z),0))|0}<small> m · ${Math.abs(v.speed*3.6)|0} km/h</small>`:`${Math.abs(v.speed*3.6)|0}<small> km/h</small>`}
-  mmc.setTransform(1,0,0,1,0,0);drawMap(mmc,420,P.x,P.z,P.mode==='fall'||P.mode==='chute'||P.mode==='plane'?2600:800,false);
+  mmc.setTransform(1,0,0,1,0,0);drawMap(mmc,420,P.x,P.z,P.mode==='fall'||P.mode==='chute'||P.mode==='plane'?5000:1000,false);
   if($('bigmap').style.display==='flex'){bmc.setTransform(1,0,0,1,0,0);drawMap(bmc,1000,0,0,SIZE,true)}
 }
 
@@ -1499,7 +1547,7 @@ function simulate(dt,t){
   if(chuteMesh.visible)chuteMesh.position.set(P.x,P.y,P.z);
   updateItems(dt,t);updateParticles(dt);
   for(const tr of tracers)if(tr.life>0){tr.life-=dt;if(tr.life<=0)tr.m.visible=false}
-  for(const c of clouds){c.position.x+=dt*4;if(c.position.x>6300)c.position.x=-6300}
+  for(const c of clouds){c.position.x+=dt*4;if(c.position.x>14600)c.position.x=-14600}
   if(P.mode==='vehicle')engine(true,P.veh.type==='heli'?30+P.veh.rpm*30+Math.abs(P.veh.speed):P.veh.speed);else engine(false);
   if(windG)windG.gain.value=P.mode==='fall'?.18:.04;
 }
@@ -1601,7 +1649,7 @@ function resetMatch(){
   chuteMesh.visible=false;engine(false);
   G.t=0;G.alive=BOTN+1;G.phase='play';G.paused=false;G.deathCam=null;
   $('alive').textContent=G.alive;$('kills').textContent=0;$('feed').innerHTML='';$('end').style.display='none';
-  feed('<b>BATTLE ISLAND</b> 100명이 비행기에서 뛰어내립니다!');
+  feed('<b>BATTLE ISLAND</b> 150명이 비행기에서 뛰어내립니다!');
 }
 async function newMatch(){
   // 이전 상태 정리
