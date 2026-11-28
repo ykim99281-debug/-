@@ -4,6 +4,16 @@
    ============================================================ */
 window.GAMES = [
   {
+    id: 'merge-pop',
+    title: 'MERGE POP',
+    emoji: '🍉',
+    desc: '같은 과일을 합쳐 수박까지! 요즘 유행하는 합치기 퍼즐. 드래그로 위치 조절, 손을 떼면 투하.',
+    tags: ['퍼즐', '합치기', '모바일'],
+    url: 'merge-pop.html',
+    added: '2026-11-28',
+    bestKey: 'mp_best', unit: '점',
+  },
+  {
     id: 'hook-swing',
     title: 'HOOK SWING',
     emoji: '🕸️',
@@ -28,6 +38,7 @@ window.GAMES = [
 ];
 
 window.UPDATES = [
+  { date: '2026-11-28', text: '신작 MERGE POP 출시 — 과일 합치기 퍼즐' },
   { date: '2026-11-26', text: '게임 허브 오픈! HOOK SWING, NEON SURVIVOR 수록' },
   { date: '2026-11-26', text: 'NEON SURVIVOR: 대시 · 콤보 · 연쇄 번개 · 유도 미사일 · 습격 이벤트 추가' },
 ];
