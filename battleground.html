@@ -82,6 +82,41 @@ canvas#c{display:block;position:fixed;inset:0;width:100%;height:100%}
 #pause{background:rgba(5,9,14,.6);display:none;z-index:22;cursor:pointer}
 #pause h2{font-size:32px}#pause p{opacity:.7;margin-top:8px}
 #fps{position:fixed;left:8px;bottom:4px;font-size:11px;opacity:.4;z-index:12}
+
+body{touch-action:none}
+#tc{position:fixed;inset:0;display:none;z-index:11;pointer-events:none}
+#zL,#zR{position:absolute;top:0;bottom:0;pointer-events:auto}
+#zL{left:0;width:42%}#zR{right:0;width:58%}
+#joy{position:fixed;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:rgba(255,255,255,.08);display:none;pointer-events:none}
+#joy i{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px;border-radius:50%;background:rgba(255,255,255,.4);border:2px solid rgba(255,255,255,.6)}
+.tb{position:absolute;pointer-events:auto;border-radius:50%;border:2px solid rgba(255,255,255,.45);background:rgba(20,28,40,.5);color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.1;backdrop-filter:blur(3px);-webkit-tap-highlight-color:transparent}
+.tb.on{background:rgba(255,176,32,.55);border-color:#ffb020}
+.tb.hot{border-color:#ffb020;box-shadow:0 0 14px #ffb020;background:rgba(255,176,32,.35)}
+#tbFire{right:26px;bottom:34px;width:92px;height:92px;font-size:15px;background:rgba(220,50,40,.45)}
+#tbJump{right:34px;bottom:140px;width:64px;height:64px}
+#tbAds{right:134px;bottom:42px;width:64px;height:64px}
+#tbUse{right:128px;bottom:116px;width:66px;height:66px;font-size:14px}
+#tbRel{right:206px;bottom:70px;width:52px;height:52px}
+#tbCrh{right:206px;bottom:132px;width:52px;height:52px}
+#tbBand{left:16px;bottom:186px;width:48px;height:48px}
+#tbMed{left:72px;bottom:186px;width:48px;height:48px}
+#tbMap{left:128px;bottom:186px;width:48px;height:48px}
+#rotate{position:fixed;inset:0;z-index:40;background:#0b1118;display:none;flex-direction:column;align-items:center;justify-content:center;font-size:20px;font-weight:700;gap:10px}
+.touchhint{display:none;margin-top:26px;font-size:14px;opacity:.85;line-height:1.8;max-width:520px;padding:0 18px}
+body.touch .keys{display:none}body.touch .touchhint{display:block}
+body.touch #mm{width:118px;height:118px;top:8px;right:8px;border-width:2px}
+body.touch #feed{left:12px;right:auto;top:64px;align-items:flex-start;font-size:11px;width:240px}
+body.touch #topL{left:10px;top:8px}body.touch #topL div{padding:4px 10px;font-size:15px}
+body.touch #zoneBox{top:6px;min-width:0;padding:4px 12px}body.touch #zoneBox .t{font-size:14px}body.touch #zoneBox .s{font-size:10px}
+body.touch #hdg{top:50px;font-size:11px}
+body.touch #bl{left:50%;transform:translateX(-50%);bottom:14px;width:230px}
+body.touch .hb{height:11px;margin-top:3px}body.touch #items{display:none}
+body.touch #br{right:134px;bottom:auto;top:6px}
+body.touch #ammo{font-size:24px}body.touch #wname{font-size:11px;margin-bottom:0}
+body.touch #slots{pointer-events:auto;margin-top:4px}body.touch .sl{width:52px;padding:5px 3px;font-size:10px;white-space:nowrap;overflow:hidden}
+body.touch #prompt{top:46%;font-size:13px}body.touch #tip{font-size:15px;top:26%}
+body.touch #fps{display:none}
+@media (orientation:portrait){body.touch #rotate{display:flex}}
 </style>
 </head>
 <body>
@@ -91,8 +126,9 @@ canvas#c{display:block;position:fixed;inset:0;width:100%;height:100%}
 
 <div id="menu" class="ov">
   <h1>BATTLE ISLAND</h1>
-  <p class="sub">10 km × 10 km 초대형 섬 · 100명 생존전 · 마지막 1인이 되어라<br><small style="opacity:.6">PC 전용 (키보드 + 마우스) · 크롬/엣지 권장</small></p>
+  <p class="sub">10 km × 10 km 초대형 섬 · 100명 생존전 · 마지막 1인이 되어라<br><small style="opacity:.6">PC(키보드+마우스) · 모바일(터치) 지원</small></p>
   <button class="btn" id="play">게임 시작</button>
+  <div class="touchhint">왼쪽 화면 드래그: 이동 (끝까지 밀면 달리기)<br>오른쪽 화면 드래그: 시점 · 버튼: 발사/조준/점프/줍기<br>가로 모드 권장</div>
   <div class="keys">
     <div><b>WASD</b>이동</div><div><b>Shift</b>달리기</div><div><b>C</b>앉기</div><div><b>Space</b>점프/낙하산</div>
     <div><b>마우스 좌</b>발사</div><div><b>마우스 우</b>조준</div><div><b>R</b>재장전</div><div><b>E</b>줍기/차량 탑승</div>
@@ -123,6 +159,19 @@ canvas#c{display:block;position:fixed;inset:0;width:100%;height:100%}
   <div id="fps"></div>
 </div>
 
+<div id="tc">
+  <div id="zL"></div><div id="zR"></div><div id="joy"><i></i></div>
+  <button class="tb" id="tbFire" data-act="fire">발사</button>
+  <button class="tb" id="tbJump" data-key="Space">점프</button>
+  <button class="tb" id="tbAds" data-act="ads">조준</button>
+  <button class="tb" id="tbUse" data-key="KeyE">줍기<br>/탑승</button>
+  <button class="tb" id="tbRel" data-key="KeyR">장전</button>
+  <button class="tb" id="tbCrh" data-key="KeyC">앉기</button>
+  <button class="tb" id="tbBand" data-key="Digit4" data-tap="1">붕대</button>
+  <button class="tb" id="tbMed" data-key="Digit5" data-tap="1">구급</button>
+  <button class="tb" id="tbMap" data-key="KeyM" data-tap="1">지도</button>
+</div>
+<div id="rotate"><div style="font-size:44px">📱↻</div><div>가로 모드로 돌려주세요</div></div>
 <div id="bigmap"><canvas id="bmc" width="1000" height="1000"></canvas></div>
 <div id="pause" class="ov"><h2>일시정지</h2><p>클릭하여 계속</p></div>
 <div id="end" class="ov"><h2 id="endT"></h2><p id="endP"></p><button class="btn" id="again">다시 하기</button></div>
@@ -132,7 +181,9 @@ canvas#c{display:block;position:fixed;inset:0;width:100%;height:100%}
 (()=>{
 'use strict';
 /* ============================== 상수 / 유틸 ============================== */
-const HALF=5000,SIZE=10000,GRID=768,MAPR=1280,CELL=SIZE/GRID,N1=GRID+1;
+const TOUCH=matchMedia('(pointer:coarse)').matches||(navigator.maxTouchPoints>0&&!matchMedia('(pointer:fine)').matches);
+if(TOUCH)document.body.classList.add('touch');
+const HALF=5000,SIZE=10000,GRID=TOUCH?512:768,MAPR=TOUCH?1024:1280,CELL=SIZE/GRID,N1=GRID+1;
 const clamp=(v,a,b)=>v<a?a:v>b?b:v,lerp=(a,b,t)=>a+(b-a)*t;
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 const col=h=>new THREE.Color(h).convertSRGBToLinear();
@@ -160,8 +211,8 @@ function fbm(x,y,o){let s=0,a=1,f=1,t=0;for(let i=0;i<o;i++){s+=noise(x*f,y*f)*a
 
 /* ============================== 렌더러 ============================== */
 const canvas=$('c');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.6));
+const renderer=new THREE.WebGLRenderer({canvas,antialias:!TOUCH,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio||1,TOUCH?1.25:1.6));
 renderer.outputEncoding=THREE.sRGBEncoding;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -176,7 +227,7 @@ addEventListener('resize',resize);resize();
 const SUN=new THREE.Vector3(.52,.62,.36).normalize();
 const hemi=new THREE.HemisphereLight(0xcfe3ff,0x6b5a40,.8);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff0d6,1.75);
-sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+sun.castShadow=true;sun.shadow.mapSize.set(TOUCH?1024:2048,TOUCH?1024:2048);
 Object.assign(sun.shadow.camera,{left:-110,right:110,top:110,bottom:-110,near:1,far:700});
 sun.shadow.bias=-.0004;sun.shadow.normalBias=.4;
 scene.add(sun,sun.target);
@@ -531,7 +582,7 @@ async function buildTerrain(prog){
   for(let j=0;j<N1;j++){for(let i=0;i<N1;i++)H[j*N1+i]=terrainH(-HALF+i*CELL,-HALF+j*CELL);if(j%64===0){prog(j/N1);await tick()}}
 }
 async function buildTerrainTexture(prog){
-  const TS=2560,cv=document.createElement('canvas');cv.width=cv.height=TS;const cx=cv.getContext('2d'),id=cx.createImageData(TS,TS),d=id.data,px=SIZE/TS;
+  const TS=TOUCH?2048:2560,cv=document.createElement('canvas');cv.width=cv.height=TS;const cx=cv.getContext('2d'),id=cx.createImageData(TS,TS),d=id.data,px=SIZE/TS;
   const sand=[222,200,150],gr1=[96,128,58],gr2=[70,104,46],dry=[138,134,76],forest=[38,70,36],rock=[116,110,100],snow=[238,244,250],dirt=[120,96,66];
   for(let j=0;j<TS;j++){
     for(let i=0;i<TS;i++){
@@ -637,7 +688,7 @@ function buildKinds(){
     lo:g(b=>{b.cone(0,0,0,.3,.22,3,4,brown,0);b.blob(0,4.3,0,2.8,2.2,2.8,go[1],0,.2)}),hiD:230,loD:1050,cast:true,cr:.5,cy:7};
   KINDS.bush={hi:g(b=>{b.blob(0,.5,0,.9,.6,.9,col('#3d6b30'),1,.3);b.blob(.6,.35,.3,.6,.4,.6,col('#4a7a38'),0,.3)}),lo:null,hiD:170,cast:false,cr:0};
   KINDS.rock={hi:g(b=>{b.blob(0,.5,0,1.5,1.0,1.3,col('#8a8780'),1,.45)}),lo:g(b=>{b.blob(0,.5,0,1.5,1.0,1.3,col('#8a8780'),0,.3)}),hiD:300,loD:900,cast:true,cr:1.2,cy:1.6};
-  for(const k in KINDS){KINDS[k].list=new Map()}
+  const VD=TOUCH?.62:1;for(const k in KINDS){const K=KINDS[k];K.list=new Map();K.hiD*=VD;if(K.loD)K.loD*=VD}
 }
 function addInst(kind,x,z,s,tint){
   const ci=((x+HALF)/CHK)|0,cj=((z+HALF)/CHK)|0,key=cj*CHN+ci;
@@ -1393,7 +1444,7 @@ function updateHUD(dt){
   const s=curW();
   $('wname').innerHTML=s?`<span style="color:${TIERS[s.tier].c}">${WEAPONS[s.id].name}</span>`:'맨손';
   $('ammo').innerHTML=s?`${s.mag}<small> / ${P.reserve[WEAPONS[s.id].ammo]}</small>${P.reload>0?'<small> 재장전…</small>':''}`:'';
-  let sl='';for(let i=0;i<3;i++){const w=P.slots[i];sl+=`<div class="sl pn ${i===P.cur?'on':''}"><em>${i+1}</em>${w?`<span style="color:${TIERS[w.tier].c}">${WEAPONS[w.id].name}</span>`:'-'}</div>`}
+  let sl='';for(let i=0;i<3;i++){const w=P.slots[i];sl+=`<div class="sl pn ${i===P.cur?'on':''}" data-i="${i}"><em>${i+1}</em>${w?`<span style="color:${TIERS[w.tier].c}">${WEAPONS[w.id].name}</span>`:'-'}</div>`}
   if($('slots').dataset.h!==sl){$('slots').innerHTML=sl;$('slots').dataset.h=sl}
   const z=G.zone;if(z){const ph=ZPH[Math.min(z.phase,ZPH.length-1)];let rem=z.state==='wait'?ph.w-z.t:ph.s-z.t;if(!ZPH[z.phase])rem=0;
     const m=Math.max(0,rem)|0;$('zt').textContent=(z.state==='wait'?'구역 대기 ':'구역 축소 중 ')+String((m/60)|0).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
@@ -1404,11 +1455,13 @@ function updateHUD(dt){
   const pr=$('prompt');let txt='';
   if(P.alive&&P.mode==='ground'){const it=nearestItem(2.8);if(it)txt=`<b>[E]</b> ${itemLabel(it)}`;else{let bv=null,bd=4.5;for(const v of vehicles){if(v.driver)continue;const d=Math.hypot(v.x-P.x,v.z-P.z);if(d<bd&&Math.abs(v.y-P.y)<4){bd=d;bv=v}}if(bv)txt=`<b>[E]</b> ${VT[bv.type].name} 탑승`}}
   else if(P.mode==='vehicle')txt=P.veh.type==='heli'?'<b>[E]</b> 내리기 · W/S 전후 · A/D 회전 · <b>Space</b> 상승 · <b>C</b> 하강':'<b>[E]</b> 내리기 · WASD 운전 · Space 브레이크';
+  if(TOUCH)txt=txt.replace(/<b>\[E\]<\/b>/,'<b>[줍기/탑승]</b>').replace(/<b>Space<\/b>/g,'<b>점프</b>').replace(/<b>C<\/b>/g,'<b>앉기</b>').replace(/W\/S 전후 · A\/D 회전/,'조이스틱 이동').replace(/WASD 운전 · Space 브레이크/,'조이스틱 운전 · 점프=브레이크');
+  $('tbUse').classList.toggle('hot',!!txt&&P.mode!=='vehicle');
   pr.style.display=txt?'block':'none';if(txt&&pr.dataset.t!==txt){pr.innerHTML=txt;pr.dataset.t=txt}
   // 팁
   const tp=$('tip'),al=$('alt');
-  if(P.mode==='plane'){tp.innerHTML='<span style="color:#ffd35a">Space</span> 를 눌러 낙하!<br><small style="font-weight:600;opacity:.8">마을 위에서 뛰어내리면 아이템이 많습니다 · M: 지도</small>';al.innerHTML=''}
-  else if(P.mode==='fall'||P.mode==='chute'){const ag=P.y-Math.max(heightAt(P.x,P.z),0);al.innerHTML=`${ag|0}<small> m</small>`;tp.innerHTML=P.mode==='fall'?'<small style="font-weight:600">마우스: 방향·각도 조절 (아래를 보면 빠르게 하강) · Space: 낙하산 펴기</small>':'<small style="font-weight:600">낙하산 활강 중 · W: 앞으로</small>'}
+  if(P.mode==='plane'){tp.innerHTML='<span style="color:#ffd35a">'+(TOUCH?'점프 버튼':'Space')+'</span> 을 눌러 낙하!<br><small style="font-weight:600;opacity:.8">마을 위에서 뛰어내리면 아이템이 많습니다 · M: 지도</small>';al.innerHTML=''}
+  else if(P.mode==='fall'||P.mode==='chute'){const ag=P.y-Math.max(heightAt(P.x,P.z),0);al.innerHTML=`${ag|0}<small> m</small>`;tp.innerHTML=P.mode==='fall'?'<small style="font-weight:600">'+(TOUCH?'드래그: 방향·각도 (아래를 보면 빠르게 하강) · 점프: 낙하산':'마우스: 방향·각도 조절 (아래를 보면 빠르게 하강) · Space: 낙하산 펴기')+'</small>':'<small style="font-weight:600">낙하산 활강 중 · W: 앞으로</small>'}
   else{if(tp.innerHTML&&P.mode!=='dead')tp.innerHTML='';al.innerHTML=''}
   if(P.mode==='vehicle'){const v=P.veh;al.innerHTML=v.type==='heli'?`${(v.y-Math.max(heightAt(v.x,v.z),0))|0}<small> m · ${Math.abs(v.speed*3.6)|0} km/h</small>`:`${Math.abs(v.speed*3.6)|0}<small> km/h</small>`}
   mmc.setTransform(1,0,0,1,0,0);drawMap(mmc,420,P.x,P.z,P.mode==='fall'||P.mode==='chute'||P.mode==='plane'?2600:800,false);
@@ -1489,21 +1542,55 @@ addEventListener('keydown',e=>{
   }
 });
 addEventListener('keyup',e=>{keys[e.code]=false});
-addEventListener('mousedown',e=>{if(!locked)return;if(e.button===0)mouseL=true;if(e.button===2)mouseR=true});
+addEventListener('mousedown',e=>{if(TOUCH||!locked)return;if(e.button===0)mouseL=true;if(e.button===2)mouseR=true});
 addEventListener('mouseup',e=>{if(e.button===0)mouseL=false;if(e.button===2)mouseR=false});
 addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('wheel',e=>{if(P.mode!=='ground'||!P.alive)return;const n=P.slots.filter(Boolean).length;if(!n)return;let i=P.cur;for(let k=0;k<3;k++){i=(i+(e.deltaY>0?1:2))%3;if(P.slots[i]){equip(i);break}}});
-addEventListener('mousemove',e=>{
-  if(!locked||G.paused)return;const s=curW(),sens=.0022*(P.mode==='ground'&&P.ads>.3?(s&&WEAPONS[s.id].zoom>3?.28:.6):1);
-  P.yaw-=e.movementX*sens;P.pitch=clamp(P.pitch-e.movementY*sens,-1.5,1.5);
-});
+function lookBy(dx,dy,base){
+  const s=curW(),sens=base*(P.mode==='ground'&&P.ads>.3?(s&&WEAPONS[s.id].zoom>3?.28:.6):1);
+  P.yaw-=dx*sens;P.pitch=clamp(P.pitch-dy*sens,-1.5,1.5);
+}
+addEventListener('mousemove',e=>{if(TOUCH||!locked||G.paused)return;lookBy(e.movementX,e.movementY,.0022)});
+
+/* ---------------- 터치 컨트롤 ---------------- */
+function startTouchUI(){
+  $('tc').style.display='block';locked=true;
+  try{(document.documentElement.requestFullscreen||function(){return Promise.reject()}).call(document.documentElement).catch(()=>{})}catch(e){}
+  try{screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape').catch(()=>{})}catch(e){}
+}
+if(TOUCH){
+  const kd=c=>window.dispatchEvent(new KeyboardEvent('keydown',{code:c})),ku=c=>window.dispatchEvent(new KeyboardEvent('keyup',{code:c}));
+  const zL=$('zL'),zR=$('zR'),joy=$('joy'),knob=joy.firstElementChild,JR=55;let jid=null,jx=0,jy=0,lid=null,lx=0,ly=0;
+  const setMove=(dx,dy)=>{const m=Math.min(Math.hypot(dx,dy),JR),a=Math.atan2(dy,dx),nx=Math.cos(a)*m,ny=Math.sin(a)*m;knob.style.transform=`translate(${nx}px,${ny}px)`;
+    const fw=-ny/JR,st=nx/JR;keys.KeyW=fw>.3;keys.KeyS=fw<-.3;keys.KeyD=st>.35;keys.KeyA=st<-.35;keys.ShiftLeft=fw>.92&&m>JR*.95};
+  const clearMove=()=>{keys.KeyW=keys.KeyS=keys.KeyA=keys.KeyD=keys.ShiftLeft=false;joy.style.display='none';jid=null};
+  const find=(e,id)=>{for(const t of e.changedTouches)if(t.identifier===id)return t;return null};
+  const O={passive:false};
+  zL.addEventListener('touchstart',e=>{e.preventDefault();if(jid!==null)return;const t=e.changedTouches[0];jid=t.identifier;jx=t.clientX;jy=t.clientY;joy.style.left=jx+'px';joy.style.top=jy+'px';joy.style.display='block';setMove(0,0)},O);
+  zL.addEventListener('touchmove',e=>{e.preventDefault();const t=find(e,jid);if(t)setMove(t.clientX-jx,t.clientY-jy)},O);
+  for(const ev of['touchend','touchcancel'])zL.addEventListener(ev,e=>{e.preventDefault();if(find(e,jid))clearMove()},O);
+  zR.addEventListener('touchstart',e=>{e.preventDefault();if(lid!==null)return;const t=e.changedTouches[0];lid=t.identifier;lx=t.clientX;ly=t.clientY},O);
+  zR.addEventListener('touchmove',e=>{e.preventDefault();const t=find(e,lid);if(t&&!G.paused){lookBy(t.clientX-lx,t.clientY-ly,.0046);lx=t.clientX;ly=t.clientY}},O);
+  for(const ev of['touchend','touchcancel'])zR.addEventListener(ev,e=>{e.preventDefault();if(find(e,lid))lid=null},O);
+  document.querySelectorAll('.tb').forEach(b=>{
+    const key=b.dataset.key,act=b.dataset.act,tap=b.dataset.tap;
+    b.addEventListener('touchstart',e=>{e.preventDefault();if(act!=='ads')b.classList.add('on');
+      if(key){if(tap){keys[key]=false;kd(key);ku(key)}else kd(key)}
+      if(act==='fire')mouseL=true;if(act==='ads'){mouseR=!mouseR;b.classList.toggle('on',mouseR)}},O);
+    const end=e=>{e.preventDefault();if(act!=='ads')b.classList.remove('on');if(key&&!tap)ku(key);if(act==='fire')mouseL=false};
+    b.addEventListener('touchend',end,O);b.addEventListener('touchcancel',end,O);
+  });
+  $('slots').addEventListener('touchstart',e=>{const d=e.target.closest('.sl');if(d){e.preventDefault();const c='Digit'+(+d.dataset.i+1);kd(c);ku(c)}},O);
+  $('bigmap').addEventListener('touchstart',()=>{$('bigmap').style.display='none'});
+  document.addEventListener('gesturestart',e=>e.preventDefault());
+}
 document.addEventListener('pointerlockchange',()=>{
   locked=document.pointerLockElement===canvas;
   if(!locked&&(G.phase==='play')&&P.alive){G.paused=true;$('pause').style.display='flex';mouseL=mouseR=false}
   else if(locked){G.paused=false;$('pause').style.display='none'}
 });
-$('pause').addEventListener('click',()=>{canvas.requestPointerLock()});
-canvas.addEventListener('click',()=>{if(G.phase==='play'&&!locked)canvas.requestPointerLock()});
+$('pause').addEventListener('click',()=>{if(!TOUCH)canvas.requestPointerLock()});
+canvas.addEventListener('click',()=>{if(!TOUCH&&G.phase==='play'&&!locked)canvas.requestPointerLock()});
 
 /* ============================== 시작 / 재시작 ============================== */
 function resetMatch(){
@@ -1556,12 +1643,13 @@ function menuLoop(){}
 $('play').addEventListener('click',async()=>{
   initAudio();if(AC&&AC.state==='suspended')AC.resume();
   $('menu').style.display='none';$('hud').style.display='block';
-  await newMatch();canvas.requestPointerLock();
+  if(TOUCH)startTouchUI();
+  await newMatch();if(!TOUCH)canvas.requestPointerLock();
 });
 $('again').addEventListener('click',async()=>{
   $('end').style.display='none';
   // 맵은 그대로 두고 새 매치
-  await newMatch();canvas.requestPointerLock();
+  await newMatch();if(!TOUCH)canvas.requestPointerLock();
 });
 
 requestAnimationFrame(frame);
