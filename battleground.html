@@ -859,7 +859,7 @@ const beamMats={};
 function beamMat(c){return beamMats[c]||(beamMats[c]=new THREE.MeshBasicMaterial({color:col(c),transparent:true,opacity:.28,depthWrite:false,fog:true}))}
 
 /* ============================== 로봇(병사) 모델 ============================== */
-const NAMEA=['빠른','푸른','검은','붉은','은빛','거친','조용한','용감한','날쌘','고독한'],NAMEB=['늑대','여우','호랑이','독수리','곰','매','표범','상어','까마귀','사자'];
+const NAMEA=['빠른','푸른','검은','붉은','은빛','거친','조용한','용감한','날쌘','고독한','굶주린','성난','교활한','외로운','잠든','미친'],NAMEB=['늑대','여우','호랑이','독수리','곰','매','표범','상어','까마귀','사자','뱀','올빼미','멧돼지','고래','두루미','사냥꾼'];
 const OUTFIT=[['#4d6b3a','#3a3f33'],['#7a4a3a','#2f3238'],['#3a5a7a','#2a2f3a'],['#6a6a3a','#43402f'],['#7a3a3a','#33302f'],['#4a4a5a','#252830'],['#8a6a3a','#3a352c'],['#3a6a62','#262e33']];
 function makeHuman(shirt,pants){
   const g=new THREE.Group(),skin='#d6a47a';g.rotation.order='YXZ';
@@ -1108,7 +1108,7 @@ const BOTN=149;
 function createBots(){
   const used=new Set();
   for(let i=0;i<BOTN;i++){
-    let name;do{name=pick(NAMEA)+' '+pick(NAMEB)}while(used.has(name));used.add(name);
+    let name,g=0;do{name=pick(NAMEA)+' '+pick(NAMEB);if(++g>40)name+=' '+((rnd()*99)|0)}while(used.has(name));used.add(name);
     const o=pick(OUTFIT),mesh=makeHuman(col(o[0]).getHex?o[0]:o[0],o[1]);mesh.visible=false;scene.add(mesh);
     const b={id:i,name,alive:true,hp:100,armor:0,mode:'plane',x:0,y:0,z:0,vx:0,vz:0,vy:0,yaw:rnd()*6.28,wp:null,mag:0,mesh,target:null,targetT:0,scan:rnd(),fireT:0,burst:0,goal:null,goalT:0,stuck:0,lx:0,lz:0,walk:0,jumpT:R(.1,.9)*G.plane.dur,
       tgx:0,tgz:0,strafe:1,strafeT:0,eng:0,react:R(.25,.7),skill:R(.55,1),flinch:0,reload:0,kills:0,regen:0,crouchH:1.82};
