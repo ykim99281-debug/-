@@ -4,6 +4,16 @@
    ============================================================ */
 window.GAMES = [
   {
+    id: 'zone-royale',
+    title: 'ZONE ROYALE',
+    emoji: '🔫',
+    desc: '12명 배틀로얄 탑다운 슈터. 무기 5종 파밍, 줄어드는 자기장, 마지막 1인이 되어라. 듀얼 스틱 조작.',
+    tags: ['슈팅', '배틀로얄', '모바일'],
+    url: 'zone-royale.html',
+    added: '2026-11-28',
+    bestKey: 'zr_best', unit: '점',
+  },
+  {
     id: 'merge-pop',
     title: 'MERGE POP',
     emoji: '🍉',
@@ -38,6 +48,7 @@ window.GAMES = [
 ];
 
 window.UPDATES = [
+  { date: '2026-11-28', text: '신작 ZONE ROYALE 출시 — 배틀로얄 슈터' },
   { date: '2026-11-28', text: '신작 MERGE POP 출시 — 과일 합치기 퍼즐' },
   { date: '2026-11-26', text: '게임 허브 오픈! HOOK SWING, NEON SURVIVOR 수록' },
   { date: '2026-11-26', text: 'NEON SURVIVOR: 대시 · 콤보 · 연쇄 번개 · 유도 미사일 · 습격 이벤트 추가' },
