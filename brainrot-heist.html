@@ -27,8 +27,21 @@
   .sl.thief{animation:blink .25s infinite;border-color:#f33}
   @keyframes blink{50%{background:#8a1020}}
   .th{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:54px;background:#0008}
-  #bar{display:flex;gap:8px;flex:none}
-  .btn{flex:1;font:inherit;font-weight:800;font-size:15px;padding:13px 4px;border:0;border-radius:12px;color:#fff;background:linear-gradient(180deg,#ff3df0,#a21caf);box-shadow:0 4px 0 #5b0f66}
+  #bar{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;flex:none}
+  #ev{display:none;text-align:center;font-weight:800;font-size:13px;padding:5px;border-radius:10px;background:linear-gradient(90deg,#7c3aed,#db2777,#7c3aed);background-size:200% 100%;animation:slide 2s linear infinite;flex:none}
+  @keyframes slide{to{background-position:-200% 0}}
+  #fx{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
+  .ft{position:absolute;font-weight:800;font-size:13px;text-shadow:0 1px 3px #000;animation:up 1s ease-out forwards;white-space:nowrap}
+  @keyframes up{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-46px)}}
+  .cf{position:absolute;font-size:22px;animation:cf .9s ease-out forwards}
+  @keyframes cf{from{opacity:1;transform:translate(0,0) scale(.6)}to{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.3) rotate(240deg)}}
+  .sl.r4{animation:glow 1.6s ease-in-out infinite}.sl.r5{animation:glow2 1.2s linear infinite}
+  @keyframes glow{50%{box-shadow:0 0 16px #ff1744aa}}
+  @keyframes glow2{0%{border-color:#00e5ff;box-shadow:0 0 14px #00e5ff}50%{border-color:#ff3df0;box-shadow:0 0 14px #ff3df0}100%{border-color:#00e5ff;box-shadow:0 0 14px #00e5ff}}
+  #rank{color:var(--gold)!important}
+  .cr{font-size:80px;text-align:center;margin:10px 0;min-height:96px}
+  .bar2{height:8px;background:#0006;border-radius:6px;overflow:hidden;margin-top:4px}.bar2 i{display:block;height:100%;background:var(--ac2)}
+  .btn{flex:1;font:inherit;font-weight:800;font-size:13px;padding:11px 2px;border:0;border-radius:12px;color:#fff;background:linear-gradient(180deg,#ff3df0,#a21caf);box-shadow:0 4px 0 #5b0f66}
   .btn.b2{background:linear-gradient(180deg,#38f2ff,#0891b2);box-shadow:0 4px 0 #064e5e;color:#022}
   .btn.b3{background:linear-gradient(180deg,#ffd23f,#d99a00);box-shadow:0 4px 0 #805b00;color:#321}
   .btn:active{transform:translateY(3px);box-shadow:none}.btn:disabled{filter:grayscale(1) brightness(.6)}
@@ -51,21 +64,31 @@
 <div id="app">
   <div id="top">
     <div class="box" id="money"><small>💰 보유 금액</small><b id="mv">0</b></div>
-    <div class="box" id="inc"><small>초당 수입 · 환생 <span id="rb">0</span>회</small><b id="iv">0/s</b></div>
+    <div class="box" id="inc"><small>환생 <span id="rb">0</span>회 · <span id="rank">🏆 #1</span></small><b id="iv">0/s</b></div>
   </div>
+  <div id="ev"></div>
   <div id="lane"></div>
   <div id="grid"></div>
   <div id="bar">
-    <button class="btn b2" id="bSteal">🥷 훔치러 가기</button>
-    <button class="btn b3" id="bDex">📖 도감</button>
+    <button class="btn b2" id="bSteal">🥷 훔치기</button>
+    <button class="btn b3" id="bCrate">📦 상자</button>
+    <button class="btn b2" id="bBoost">⚡ 부스트</button>
+    <button class="btn b3" id="bQuest">📋 미션</button>
+    <button class="btn" id="bUp">🛠 강화</button>
+    <button class="btn b2" id="bDex">📖 도감</button>
     <button class="btn" id="bReb">♻ 환생</button>
+    <button class="btn b3" id="bMute">🔊</button>
   </div>
 </div>
+<div id="fx"></div>
 <div id="toast"></div>
 <div class="md" id="mSteal"><div><button class="row x" onclick="closeM()" style="background:none">✕</button><h2>🥷 라이벌 기지 침투</h2><div id="rvs"></div></div></div>
 <div class="md" id="mGame"><div id="sg"><h2 id="sgt">잠입 중...</h2><p style="font-size:13px;opacity:.8;margin:0">경비가 졸 때(초록 구간) 정확히 눌러라!</p><div id="sgbar"><div id="sgz"></div><div id="sgc"></div></div><button class="btn" id="sgb">지금!</button></div></div>
 <div class="md" id="mSlot"><div id="slc"></div></div>
 <div class="md" id="mDex"><div><button class="row x" onclick="closeM()" style="background:none">✕</button><h2>📖 브레인롯 도감 <small id="dxc"></small></h2><div id="dxl"></div></div></div>
+<div class="md" id="mCrate"><div id="crc"></div></div>
+<div class="md" id="mQuest"><div id="qc"></div></div>
+<div class="md" id="mUp"><div id="upc"></div></div>
 <div class="md" id="mReb"><div id="rbc"></div></div>
 <script>
 const RAR=[{n:'일반',c:'#9e9e9e',w:50,p:25},{n:'희귀',c:'#42a5f5',w:28,p:100},{n:'영웅',c:'#ab47bc',w:13,p:400},{n:'전설',c:'#ffb300',w:6,p:1500},{n:'신화',c:'#ff1744',w:2.4,p:6000},{n:'시크릿',c:'#00e5ff',w:.6,p:25000}];
@@ -75,30 +98,44 @@ const CH=[
  ['🐊','봄바르디로 크로커딜로',2],['🦍','글로르비오 프루티',2],['🐟','발레리나 카푸치나',2],
  ['🐄','라 바카 사투르노',3],['🐙','탈라탈라 문어',3],['🐌','스네일 로코',3],
  ['🔱','네프투노 뇌절왕',4],['👑','킹 브레인롯',4],
- ['🌌','코스믹 뇌절',5],['🧠','갓 브레인롯',5],['💎','다이아 트랄라',5]
+ ['🌌','코스믹 뇌절',5],['🧠','갓 브레인롯',5],['💎','다이아 트랄라',5],
+ ['🍕','피자 노노',0],['🥥','코코넛 보보',1],['🦩','플라밍고 렌고',2],['🚁','헬리콥테로 시딩',3],['🐉','드래곤 카논',4],['👽','외계 뇌절 X',5]
 ].map(a=>({e:a[0],n:a[1],r:a[2],p:RAR[a[2]].p,i:RAR[a[2]].p/12}));
 const MUT=[{n:'',c:'',pm:1,im:1},{n:'GOLD',c:'#ffd23f',pm:2,im:2.5},{n:'DIAMOND',c:'#38f2ff',pm:4,im:6},{n:'RAINBOW',c:'#ff3df0',pm:8,im:15}];
 const SLOTCOST=[0,0,0,0,0,0,800,3000,12000,50000,200000,800000];
 const KEY='brainrot_heist_v1';
 let S;
-function fresh(r=0,mult=1,dex={}){return{money:100,slots:Array(12).fill(null),nslots:6,rebirth:r,mult,dex,last:Date.now(),best:0}}
+const today=()=>new Date().toISOString().slice(0,10);
+const newQuests=()=>({day:today(),p:{buy:0,steal:0,catch:0,crate:0},c:{}});
+function fresh(prev){const p=prev||{};return{money:100,slots:Array(12).fill(null),nslots:6,rebirth:p.rebirth||0,mult:p.mult||1,dex:p.dex||{},up:{sec:0,luck:0,amp:0},quests:p.quests||newQuests(),freeCrates:p.freeCrates||0,boostUntil:0,boostCd:0,muted:!!p.muted,peak:p.peak||0,last:Date.now()}}
 try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 if(!S||!S.slots)S=fresh();
+S.up=S.up||{sec:0,luck:0,amp:0};S.dex=S.dex||{};S.freeCrates=S.freeCrates||0;S.boostUntil=S.boostUntil||0;S.boostCd=S.boostCd||0;S.peak=S.peak||0;
+if(!S.quests||S.quests.day!==today())S.quests=newQuests();
+const QUESTS=[{k:'buy',t:'브레인롯 8마리 구매',n:8},{k:'steal',t:'라이벌에게서 2마리 훔치기',n:2},{k:'catch',t:'도둑 1번 막기',n:1},{k:'crate',t:'럭키 상자 1번 열기',n:1}];
+const UPS=[{k:'sec',n:'🛡 보안 시스템',d:'도둑 출현 빈도 감소 · 막을 시간 증가',base:1500,g:2.2},{k:'luck',n:'🍀 컨베이어 행운',d:'전설 이상 등장 확률 증가',base:3000,g:2.4},{k:'amp',n:'📈 수입 증폭기',d:'모든 수입 +10%',base:5000,g:2.6}];
+const upCost=k=>{const u=UPS.find(x=>x.k===k);return Math.floor(u.base*Math.pow(u.g,S.up[k]))};
+let ev=null,evT=rnd(70,120);
 const $=id=>document.getElementById(id);
 function fmt(n){if(n<1e3)return Math.floor(n)+'';const u=['K','M','B','T','Qa'];let i=-1;while(n>=1e3&&i<u.length-1){n/=1e3;i++}return(n<10?n.toFixed(2):n<100?n.toFixed(1):Math.floor(n))+u[i]}
 const val=b=>CH[b.id].p*MUT[b.mut].pm;
-const inc=b=>CH[b.id].i*MUT[b.mut].im*(1+.5*(b.lvl-1))*S.mult;
+const boostOn=()=>Date.now()<S.boostUntil;
+const inc=b=>CH[b.id].i*MUT[b.mut].im*(1+.5*(b.lvl-1))*S.mult*(1+.1*S.up.amp)*(boostOn()?2:1);
+const worth=()=>S.money+S.slots.reduce((a,b)=>a+(b?val(b)*b.lvl:0),0);
 const upc=b=>Math.floor(val(b)*.8*b.lvl);
 function totalInc(){let t=0;for(const b of S.slots)if(b)t+=inc(b);return t}
-let ac;function beep(f,d=.07,t='triangle',v=.06){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+let ac;function beep(f,d=.07,t='triangle',v=.06){if(S&&S.muted)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
 let tt;function toast(m){const t=$('toast');t.textContent=m;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>t.style.opacity=0,1400)}
-function save(){S.last=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const fxl=()=>document.getElementById('fx');
+function floatText(t,x,y,c){const d=document.createElement('div');d.className='ft';d.textContent=t;d.style.left=x+'px';d.style.top=y+'px';d.style.color=c||'#ffd23f';fxl().appendChild(d);setTimeout(()=>d.remove(),1000)}
+function burst(x,y,em){for(let i=0;i<9;i++){const d=document.createElement('div');d.className='cf';d.textContent=em[i%em.length];d.style.left=x+'px';d.style.top=y+'px';const a=Math.random()*6.28,r=40+Math.random()*60;d.style.setProperty('--dx',Math.cos(a)*r+'px');d.style.setProperty('--dy',Math.sin(a)*r-20+'px');fxl().appendChild(d);setTimeout(()=>d.remove(),900)}}
+function save(){S.last=Date.now();S.peak=Math.max(S.peak,Math.floor(worth()));try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem('brainrot_heist_best',S.peak)}catch(e){}}
 function pickCh(boost=1){
   let tot=0;const w=RAR.map((r,i)=>(i>=3?r.w*boost:r.w));w.forEach(x=>tot+=x);let x=Math.random()*tot,ri=0;
   for(;ri<w.length;ri++){x-=w[ri];if(x<=0)break}ri=Math.min(ri,5);
   const list=CH.map((c,i)=>i).filter(i=>CH[i].r===ri);return list[Math.random()*list.length|0];
 }
-function pickMut(){const r=Math.random();return r<.015?3:r<.055?2:r<.155?1:0}
+function pickMut(){const k=(ev&&ev.type==='rainbow')?3:1,r=Math.random()/k;return r<.015?3:r<.055?2:r<.155?1:0}
 // ---- offline
 (()=>{const dt=Math.min(3600,(Date.now()-S.last)/1000);if(dt>30){const g=totalInc()*dt*.5;if(g>0){S.money+=g;setTimeout(()=>toast('오프라인 수입 +$'+fmt(g)),500)}}})();
 // ---- UI
@@ -109,11 +146,12 @@ function render(){
     const d=document.createElement('div');
     if(i>=S.nslots){d.className='sl lock';d.innerHTML=i===S.nslots?`🔒<br>$${fmt(SLOTCOST[i])}`:'🔒';if(i===S.nslots)d.onclick=()=>{if(S.money>=SLOTCOST[i]){S.money-=SLOTCOST[i];S.nslots++;beep(800);render()}else toast('돈이 부족해!')}}
     else if(!b){d.className='sl empty';d.textContent='빈 자리'}
-    else{const c=CH[b.id],m=MUT[b.mut];d.className='sl';d.style.borderColor=RAR[c.r].c;if(m.c)d.style.boxShadow=`inset 0 0 18px ${m.c}88`;
+    else{const c=CH[b.id],m=MUT[b.mut];d.className='sl r'+c.r;d.style.borderColor=RAR[c.r].c;if(m.c)d.style.boxShadow=`inset 0 0 18px ${m.c}88`;
       d.innerHTML=`<span class="lv">Lv${b.lvl}</span>${m.n?`<span class="mu" style="color:${m.c}">${m.n}</span>`:''}<div class="e">${c.e}</div><div class="n">${c.n}</div><div class="i">+$${fmt(inc(b))}/s</div>`;
       d.onclick=()=>slotMenu(i);d.id='sl'+i}
     g.appendChild(d);
   });
+  applyThief();
 }
 function slotMenu(i){
   const b=S.slots[i];if(!b)return;const c=CH[b.id],m=MUT[b.mut];
@@ -130,7 +168,7 @@ function give(b){const i=freeIdx();if(i<0)return false;S.slots[i]=b;S.dex[b.id]=
 // ---- conveyor
 const lane=$('lane');let cvs=[],spawnT=0;
 function spawn(){
-  const id=pickCh(1+S.rebirth*.15),mut=pickMut();const price=Math.floor(CH[id].p*MUT[mut].pm);
+  const id=pickCh(1+S.rebirth*.15+S.up.luck*.25),mut=pickMut();const price=Math.floor(CH[id].p*MUT[mut].pm);
   const el=document.createElement('div');el.className='cv';const c=CH[id],m=MUT[mut];
   el.style.borderColor=m.c||RAR[c.r].c;if(m.c)el.style.boxShadow=`0 0 14px ${m.c}`;
   el.innerHTML=`<div class="e">${c.e}</div><div class="n">${m.n?`<b style="color:${m.c}">${m.n}</b> `:''}${c.n}</div><div class="p">$${fmt(price)}</div>`;
@@ -141,13 +179,15 @@ function buy(o){
   if(o.sold)return;
   if(S.money<o.price){toast('💸 돈이 부족해!');beep(150,.1,'square');return}
   if(freeIdx()<0){toast('자리가 없어! 판매하거나 칸을 늘려봐');return}
-  S.money-=o.price;give({id:o.id,mut:o.mut,lvl:1});o.sold=1;o.el.remove();beep(600+CH[o.id].r*120,.12);
+  S.money-=o.price;give({id:o.id,mut:o.mut,lvl:1});o.sold=1;const rc=o.el.getBoundingClientRect();o.el.remove();beep(600+CH[o.id].r*120,.12);S.quests.p.buy++;
+  burst(rc.left+rc.width/2,rc.top+30,CH[o.id].r>=3?['✨','⭐',CH[o.id].e]:['✨',CH[o.id].e]);
   if(CH[o.id].r>=3||o.mut>=2)toast(`🎉 ${MUT[o.mut].n} ${CH[o.id].n} 획득!`);
 }
 // ---- rivals / steal
 const RN=['Rex','Mina','Joon'];
+const rankOf=()=>{const w=worth();return 1+rivals.filter(r=>worth()*r.f>w).length};
 let rivals=[],rivalT=0;
-function genRivals(){rivals=RN.map(n=>({n,cd:0,list:Array.from({length:4+(Math.random()*3|0)},()=>({id:pickCh(1.6+S.rebirth*.2),mut:pickMut(),lvl:1}))}))}
+function genRivals(){rivals=RN.map((n,i)=>({n,f:.7+i*.2,cd:0,list:Array.from({length:4+(Math.random()*3|0)},()=>({id:pickCh(1.6+S.rebirth*.2),mut:pickMut(),lvl:1}))}))}
 function openSteal(){
   const box=$('rvs');box.innerHTML='';
   rivals.forEach((rv,ri)=>{
@@ -166,22 +206,25 @@ function startSteal(ri,bi){
   const w=Math.max(.1,.32-rr*.045)+(b.mut?-.02:0);const zs=.15+Math.random()*(.7-w);
   $('sgz').style.left=zs*100+'%';$('sgz').style.width=w*100+'%';
   $('sgt').textContent=`🥷 ${CH[b.id].e} ${CH[b.id].n} 훔치는 중`;
-  sg={ri,bi,b,zs,w,t:0,sp:1.1+rr*.28};closeM();$('mGame').style.display='flex';
+  sg={ri,bi,b,zs,w,t:0,sp:1.1+rr*.28,need:rr>=3?2:1,got:0};closeM();$('mGame').style.display='flex';
 }
 function sgDone(ok){
   const g=sg;sg=null;closeM();const rv=rivals[g.ri];
-  if(ok){const idx=rv.list.indexOf(g.b);if(idx>=0)rv.list.splice(idx,1);give({id:g.b.id,mut:g.b.mut,lvl:1});beep(1000,.2);toast(`✅ ${CH[g.b.id].n} 훔치기 성공!`)}
+  if(ok){const idx=rv.list.indexOf(g.b);if(idx>=0)rv.list.splice(idx,1);give({id:g.b.id,mut:g.b.mut,lvl:1});S.quests.p.steal++;beep(1000,.2);toast(`✅ ${CH[g.b.id].n} 훔치기 성공!`)}
   else{const loss=Math.floor(S.money*.12);S.money-=loss;rv.cd=20;beep(120,.3,'sawtooth');toast(`🚨 들켰다! -$${fmt(loss)}`)}
 }
-$('sgb').onclick=()=>{if(!sg)return;const p=(Math.sin(sg.t)+1)/2;sgDone(p>=sg.zs&&p<=sg.zs+sg.w)};
+$('sgb').onclick=()=>{if(!sg)return;const p=(Math.sin(sg.t)+1)/2;const ok=p>=sg.zs&&p<=sg.zs+sg.w;
+  if(!ok){sgDone(false);return}
+  sg.got++;if(sg.got>=sg.need){sgDone(true);return}
+  beep(900,.1);sg.zs=.15+Math.random()*(.7-sg.w);sg.sp*=1.25;$('sgz').style.left=sg.zs*100+'%';$('sgt').textContent=`🥷 ${CH[sg.b.id].n} 훔치는 중 (${sg.got+1}/${sg.need})`};
 // ---- thief on me
 let thief=null,thiefT=rnd(40,80);
 function rnd(a,b){return a+Math.random()*(b-a)}
+function applyThief(){if(!thief)return;const el=$('sl'+thief.i);if(!el)return;el.classList.add('thief');const d=document.createElement('div');d.className='th';d.textContent='🥷';el.appendChild(d);el.onclick=catchThief}
+function catchThief(){if(!thief)return;const bonus=Math.max(50,totalInc()*15);S.money+=bonus;thief=null;S.quests.p.catch++;beep(1200,.15);toast(`🛡 도둑 격퇴! 보상 +$${fmt(bonus)}`);render()}
 function spawnThief(){
   const owned=S.slots.map((b,i)=>b?i:-1).filter(i=>i>=0);if(!owned.length)return;
-  const i=owned[Math.random()*owned.length|0];thief={i,t:3.5};
-  const el=$('sl'+i);if(el){el.classList.add('thief');const d=document.createElement('div');d.className='th';d.textContent='🥷';el.appendChild(d);
-    el.onclick=()=>{if(!thief)return;const b=S.slots[thief.i];const bonus=Math.max(50,totalInc()*15);S.money+=bonus;thief=null;beep(1200,.15);toast(`🛡 도둑 격퇴! 보상 +$${fmt(bonus)}`);render()}}
+  const i=owned[Math.random()*owned.length|0];thief={i,t:3.5+S.up.sec*.3};applyThief();
   toast('🚨 도둑 침입! 빨리 눌러서 막아!');beep(220,.2,'square');
 }
 // ---- dex / rebirth
@@ -199,21 +242,65 @@ $('bReb').onclick=()=>{
   <div style="display:flex;gap:8px"><button class="btn b3" ${ok?'':'disabled'} onclick="rebirth()">환생하기</button><button class="btn b2" onclick="closeM()">취소</button></div>`;
   $('mReb').style.display='flex';
 };
-function rebirth(){if(S.money<rebReq())return;S=fresh(S.rebirth+1,S.mult+.5,S.dex);S.dex=S.dex;closeM();save();render();beep(1500,.4);toast(`♻ 환생 ${S.rebirth}회! 수입 x${S.mult}`)}
+function rebirth(){if(S.money<rebReq())return;S=fresh({rebirth:S.rebirth+1,mult:S.mult+.5,dex:S.dex,quests:S.quests,freeCrates:S.freeCrates,muted:S.muted,peak:S.peak});closeM();save();render();beep(1500,.4);toast(`♻ 환생 ${S.rebirth}회! 수입 x${S.mult}`)}
+// ---- boost / crate / quest / upgrade / mute
+$('bBoost').onclick=()=>{if(Date.now()<S.boostCd)return;S.boostUntil=Date.now()+60000;S.boostCd=Date.now()+180000;beep(1100,.25);toast('⚡ 60초 동안 수입 2배!')};
+$('bMute').onclick=()=>{S.muted=!S.muted};
+const crateCost=()=>Math.floor(300+totalInc()*45);
+$('bCrate').onclick=()=>{
+  const free=S.freeCrates>0;
+  $('crc').innerHTML=`<h2>📦 럭키 상자</h2><p style="font-size:13px;opacity:.8;margin:0">전설 이상 확률이 3배! ${free?'🎁 무료 상자 '+S.freeCrates+'개 보유':''}</p><div class="cr" id="crv">📦</div>
+   <div style="display:flex;gap:8px"><button class="btn b3" id="crb">${free?'무료로 열기':'열기 $'+fmt(crateCost())}</button><button class="btn b2" onclick="closeM()">닫기</button></div>`;
+  $('mCrate').style.display='flex';$('crb').onclick=openCrate;
+};
+let crating=false;
+function openCrate(){
+  if(crating)return;const free=S.freeCrates>0,c=crateCost();
+  if(freeIdx()<0){toast('빈 자리가 없어!');return}
+  if(!free&&S.money<c){toast('💸 돈이 부족해!');return}
+  if(free)S.freeCrates--;else S.money-=c;crating=true;
+  const em=CH.map(x=>x.e);let n=0;const iv=setInterval(()=>{$('crv').textContent=em[Math.random()*em.length|0];beep(400+n*20,.04);n++;
+    if(n>14){clearInterval(iv);const id=pickCh(3+S.up.luck*.3),mut=pickMut();give({id,mut,lvl:1});S.quests.p.crate++;crating=false;
+      const ch=CH[id];$('crv').innerHTML=`${ch.e}<div style="font-size:14px;margin-top:6px;color:${MUT[mut].c||RAR[ch.r].c}">${MUT[mut].n} ${ch.n} · ${RAR[ch.r].n}</div>`;
+      beep(1000+ch.r*150,.3);const rc=$('crv').getBoundingClientRect();burst(rc.left+rc.width/2,rc.top+40,['✨','⭐',ch.e]);$('crb').textContent=(S.freeCrates>0?'무료로 열기':'한 번 더 $'+fmt(crateCost()))}},90);
+}
+function qReward(){return Math.floor(Math.max(500,totalInc()*100))}
+$('bQuest').onclick=()=>{
+  const q=S.quests;let allDone=true;
+  const html=QUESTS.map(x=>{const pr=Math.min(x.n,q.p[x.k]),done=pr>=x.n,cl=q.c[x.k];if(!cl)allDone=false;
+    return `<div class="row"><div class="t">${x.t}<small>${pr}/${x.n} · 보상 $${fmt(qReward())}</small><div class="bar2"><i style="width:${pr/x.n*100}%"></i></div></div><button ${done&&!cl?'':'disabled'} onclick="claimQ('${x.k}')">${cl?'완료':'받기'}</button></div>`}).join('');
+  $('qc').innerHTML=`<button class="row x" onclick="closeM()" style="background:none">✕</button><h2>📋 오늘의 미션</h2>${html}<p style="font-size:12px;opacity:.7;margin:6px 0 0">4개 모두 완료하면 🎁 무료 럭키 상자! ${q.c.all?'(수령 완료)':''}</p>`;
+  $('mQuest').style.display='flex';
+};
+function claimQ(k){const q=S.quests;if(q.c[k])return;S.money+=qReward();q.c[k]=1;beep(1000,.2);
+  if(QUESTS.every(x=>q.c[x.k])&&!q.c.all){q.c.all=1;S.freeCrates++;toast('🎁 무료 럭키 상자 획득!')}
+  $('bQuest').onclick()}
+$('bUp').onclick=()=>{
+  $('upc').innerHTML=`<button class="row x" onclick="closeM()" style="background:none">✕</button><h2>🛠 강화 (환생 시 초기화)</h2>`+UPS.map(u=>{const lv=S.up[u.k];return `<div class="row"><div class="t"><b>${u.n}</b> Lv${lv}/10<small>${u.d}</small></div><button ${lv>=10?'disabled':''} onclick="buyUp('${u.k}')">${lv>=10?'MAX':'$'+fmt(upCost(u.k))}</button></div>`}).join('');
+  $('mUp').style.display='flex';
+};
+function buyUp(k){const c=upCost(k);if(S.up[k]>=10)return;if(S.money<c){toast('💸 돈이 부족해!');return}S.money-=c;S.up[k]++;beep(900);render();$('bUp').onclick()}
 // ---- loop
-let last=performance.now(),saveT=0,hudT=0;
+let last=performance.now(),saveT=0,hudT=0,floatT=1;
 function loop(t){
   const dt=Math.min(.1,(t-last)/1000);last=t;
   S.money+=totalInc()*dt;
-  spawnT-=dt;if(spawnT<=0){spawn();spawnT=rnd(1.4,2.4)}
-  const sp=lane.clientWidth/10;
+  const rain=ev&&ev.type==='rain';
+  spawnT-=dt;if(spawnT<=0){spawn();spawnT=rnd(1.4,2.4)/(rain?2.2:1)}
+  const sp=lane.clientWidth/10*(rain?1.35:1);
+  evT-=dt;if(!ev&&evT<=0){ev=Math.random()<.5?{type:'rain',t:30}:{type:'rainbow',t:20};toast(ev.type==='rain'?'🌧 브레인롯 폭우! 컨베이어 폭주!':'🌈 레인보우 러시! 변이 확률 UP!');beep(1000,.3);$('ev').style.display='block'}
+  if(ev){ev.t-=dt;$('ev').textContent=(ev.type==='rain'?'🌧 브레인롯 폭우':'🌈 레인보우 러시')+' '+Math.ceil(ev.t)+'s';if(ev.t<=0){ev=null;evT=rnd(110,180);$('ev').style.display='none'}}
+  floatT-=dt;if(floatT<=0){floatT=.9;const own=S.slots.map((b,i)=>b?i:-1).filter(i=>i>=0);if(own.length){const i=own[Math.random()*own.length|0],el=$('sl'+i);if(el){const rc=el.getBoundingClientRect();floatText('+$'+fmt(inc(S.slots[i])),rc.left+rc.width/2-18,rc.top+10,'#7dffb0')}}}
   for(let i=cvs.length-1;i>=0;i--){const o=cvs[i];o.x-=sp*dt;o.el.style.transform=`translateX(${o.x}px)`;if(o.x<-100||o.sold){o.el.remove();cvs.splice(i,1)}}
   for(const rv of rivals)rv.cd=Math.max(0,rv.cd-dt);
   rivalT-=dt;if(rivalT<=0){rivalT=45;rivals.forEach(rv=>{if(rv.list.length<7)rv.list.push({id:pickCh(1.6+S.rebirth*.2),mut:pickMut(),lvl:1})})}
   if(sg)sg.t+=dt*sg.sp*4,$('sgc').style.left=((Math.sin(sg.t)+1)/2*(100-1.5))+'%';
   if(thief){thief.t-=dt;if(thief.t<=0){const b=S.slots[thief.i];if(b){S.slots[thief.i]=null;toast(`😭 ${CH[b.id].n} 도둑맞았다!`);beep(110,.4,'sawtooth')}thief=null;render()}}
-  else{thiefT-=dt;if(thiefT<=0){thiefT=rnd(50,90);if(!sg)spawnThief()}}
-  hudT-=dt;if(hudT<=0){hudT=.15;$('mv').textContent='$'+fmt(S.money);$('iv').textContent='+$'+fmt(totalInc())+'/s';$('bReb').disabled=false;$('bReb').style.opacity=S.money>=rebReq()?1:.55}
+  else{thiefT-=dt;if(thiefT<=0){thiefT=rnd(50,90)*(1+S.up.sec*.15);if(!sg)spawnThief()}}
+  hudT-=dt;if(hudT<=0){hudT=.15;$('mv').textContent='$'+fmt(S.money);$('iv').textContent='+$'+fmt(totalInc())+'/s';$('bReb').style.opacity=S.money>=rebReq()?1:.55;
+    $('rank').textContent='🏆 #'+rankOf()+'/4';rivals.forEach(r=>{r.f=Math.max(.4,Math.min(1.6,r.f+(Math.random()-.5)*.03))});
+    const bl=S.boostUntil-Date.now(),cl=S.boostCd-Date.now();$('bBoost').textContent=bl>0?'⚡ '+Math.ceil(bl/1000)+'s':cl>0?'⏳ '+Math.ceil(cl/1000)+'s':'⚡ 2배';$('bBoost').disabled=cl>0&&bl<=0;
+    $('bMute').textContent=S.muted?'🔇':'🔊'}
   saveT-=dt;if(saveT<=0){saveT=3;save()}
   requestAnimationFrame(loop);
 }
